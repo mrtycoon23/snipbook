@@ -535,6 +535,10 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         {/* ── CALENDAR ── */}
         {screen==="calendar"&&(
           <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{background:"#1a1a2e",padding:"10px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+              <button onClick={()=>setScreen("dashboard")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.3)",color:"white",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>‹ Back</button>
+              <div style={{fontSize:14,fontWeight:700,color:"white"}}>📅 Calendar</div>
+            </div>
             <div style={{background:"#fff",borderBottom:"2px solid #e8edf3",padding:"10px 12px"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                 <div style={{fontWeight:900,fontSize:14}}>{MONTHS[selDate.getMonth()]} {selDate.getFullYear()}</div>
@@ -565,6 +569,10 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         {/* ── CLIENTS ── */}
         {screen==="clients"&&(
           <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            <div style={{background:"#1a1a2e",padding:"10px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+              <button onClick={()=>setScreen("dashboard")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.3)",color:"white",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>‹ Back</button>
+              <div style={{fontSize:14,fontWeight:700,color:"white"}}>👥 Clients</div>
+            </div>
             <div style={{background:"#fff",padding:"10px 14px",borderBottom:"2px solid #e8edf3"}}>
               <button onClick={()=>setShowAddClient(true)} style={{width:"100%",padding:"11px",background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:10,boxShadow:"0 3px 10px rgba(34,197,94,0.3)"}}>➕ Add New Customer</button>
               <div style={{position:"relative",marginBottom:9}}>
@@ -599,33 +607,59 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         {/* ── STAFF ── */}
         {screen==="staff"&&(
           <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
-            <StaffManagement/>
+            <div style={{background:"#1a1a2e",padding:"10px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+              <button onClick={()=>setScreen("dashboard")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.3)",color:"white",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>‹ Back</button>
+              <div style={{fontSize:14,fontWeight:700,color:"white"}}>👨‍💼 Staff Management</div>
+            </div>
+            <StaffManagement
+              role="owner"
+              currentUser={user}
+              showRevenue={showRevenue}
+              setShowRevenue={setShowRevenue}
+            />
           </div>
         )}
 
         {/* ── CUSTOMER HISTORY ── */}
         {screen==="history"&&(
           <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
-            <CustomerHistory onBookAppointment={()=>setScreen("calendar")}/>
+            <div style={{background:"#1a1a2e",padding:"10px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+              <button onClick={()=>setScreen("dashboard")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.3)",color:"white",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>‹ Back</button>
+              <div style={{fontSize:14,fontWeight:700,color:"white"}}>📋 Customer History</div>
+            </div>
+            <CustomerHistory
+              currentUser={{...user, role:"owner"}}
+              onBookAppointment={()=>setScreen("calendar")}
+            />
           </div>
         )}
 
         {/* ── ENGAGEMENT CENTER ── */}
         {screen==="engage"&&(
           <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+            <div style={{background:"#1a1a2e",padding:"10px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+              <button onClick={()=>setScreen("dashboard")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.3)",color:"white",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>‹ Back</button>
+              <div style={{fontSize:14,fontWeight:700,color:"white"}}>💫 Engagement Center</div>
+            </div>
             <EngagementCenter/>
           </div>
         )}
 
         {/* ── SETTINGS ── */}
         {screen==="settings"&&(
-          <Settings
-            user={user}
-            onLogout={onLogout}
-            onSalonUpdate={(newName)=>setUser(prev=>({...prev,salon:newName}))}
-            showRevenue={showRevenue}
-            setShowRevenue={setShowRevenue}
-          />
+          <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+            <div style={{background:"#1a1a2e",padding:"10px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+              <button onClick={()=>setScreen("dashboard")} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.3)",color:"white",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>‹ Back</button>
+              <div style={{fontSize:14,fontWeight:700,color:"white"}}>⚙️ Settings</div>
+            </div>
+            <Settings
+              user={user}
+              onLogout={onLogout}
+              onSalonUpdate={(newName)=>setUser(prev=>({...prev,salon:newName}))}
+              showRevenue={showRevenue}
+              setShowRevenue={setShowRevenue}
+            />
+          </div>
         )}
       </div>
 
@@ -647,29 +681,47 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
 
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function SnipBook(){
-  const [page,setPage]=useState("landing");
-  const [user,setUser]=useState(null);
-  const [staffUser,setStaffUser]=useState(null);
-  const [showRevenue,setShowRevenue]=useState(DEFAULT_SHOW_REVENUE);
+  // localStorage se restore karo on refresh
+  const [page,setPage]=useState(()=>{
+    try{const s=localStorage.getItem("sb_page");return s||"landing";}catch{return "landing";}
+  });
+  const [user,setUser]=useState(()=>{
+    try{const s=localStorage.getItem("sb_user");return s?JSON.parse(s):null;}catch{return null;}
+  });
+  const [staffUser,setStaffUser]=useState(()=>{
+    try{const s=localStorage.getItem("sb_staff");return s?JSON.parse(s):null;}catch{return null;}
+  });
+  const [showRevenue,setShowRevenue]=useState(()=>{
+    try{const s=localStorage.getItem("sb_revenue");return s?JSON.parse(s):DEFAULT_SHOW_REVENUE;}catch{return DEFAULT_SHOW_REVENUE;}
+  });
+
+  // Save helpers
+  function goPage(p){setPage(p);try{localStorage.setItem("sb_page",p);}catch{}}
+  function saveUser(u){setUser(u);try{u?localStorage.setItem("sb_user",JSON.stringify(u)):localStorage.removeItem("sb_user");}catch{}}
+  function saveStaff(s){setStaffUser(s);try{s?localStorage.setItem("sb_staff",JSON.stringify(s)):localStorage.removeItem("sb_staff");}catch{}}
+  function saveRevenue(v){setShowRevenue(v);try{localStorage.setItem("sb_revenue",JSON.stringify(v));}catch{}}
+
+  function ownerLogout(){saveUser(null);goPage("landing");}
+  function staffLogout(){saveStaff(null);goPage("login");}
 
   return(
     <>
-      {page==="landing"&&<Landing onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}
+      {page==="landing"&&<Landing onStart={()=>goPage("onboarding")} onLogin={()=>goPage("login")}/>}
 
       {page==="login"&&(
         <LoginPage
-          onOwnerLogin={u=>{setUser(u);setPage("app");}}
-          onStaffLogin={()=>setPage("staffLogin")}
-          onSignup={()=>setPage("onboarding")}
-          onBack={()=>setPage("landing")}
+          onOwnerLogin={u=>{saveUser(u);goPage("app");}}
+          onStaffLogin={()=>goPage("staffLogin")}
+          onSignup={()=>goPage("onboarding")}
+          onBack={()=>goPage("landing")}
         />
       )}
 
       {page==="staffLogin"&&(
         <StaffLoginPage
           staffList={DEMO_STAFF_LIST}
-          onLogin={s=>{setStaffUser(s);setPage("staffApp");}}
-          onBack={()=>setPage("login")}
+          onLogin={s=>{saveStaff(s);goPage("staffApp");}}
+          onBack={()=>goPage("login")}
         />
       )}
 
@@ -677,19 +729,19 @@ export default function SnipBook(){
         <StaffDashboard
           staff={staffUser}
           showRevenue={showRevenue}
-          onLogout={()=>{setStaffUser(null);setPage("login");}}
+          onLogout={staffLogout}
         />
       )}
 
-      {page==="onboarding"&&<Onboarding onComplete={u=>{setUser(u);setPage("app");}} onBack={()=>setPage("landing")}/>}
+      {page==="onboarding"&&<Onboarding onComplete={u=>{saveUser(u);goPage("app");}} onBack={()=>goPage("landing")}/>}
 
       {page==="app"&&user&&(
         <MainApp
           user={user}
-          setUser={setUser}
-          onLogout={()=>{setUser(null);setPage("landing");}}
+          setUser={saveUser}
+          onLogout={ownerLogout}
           showRevenue={showRevenue}
-          setShowRevenue={setShowRevenue}
+          setShowRevenue={saveRevenue}
         />
       )}
     </>
