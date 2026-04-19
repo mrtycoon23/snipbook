@@ -1756,85 +1756,45 @@ function StaffSelfView({ staff, logs, setLogs, attendance, setAttendance, nextLo
 }
 
 // ─── ROOT APP ─────────────────────────────────────────────────────────────────
-export default function StaffManagement() {
-  const [mode, setMode] = useState("select");
-  const [loggedInStaff, setLoggedInStaff] = useState(null);
-
-  // Shared state
+// Props: role = "owner" | "staff", currentUser = user object, showRevenue = bool, setShowRevenue = fn
+export default function StaffManagement({ role = "owner", currentUser, showRevenue = false, setShowRevenue }) {
   const [staffList, setStaffList] = useState(INITIAL_STAFF);
   const [logs, setLogs] = useState(INITIAL_LOGS);
   const [attendance, setAttendance] = useState(INITIAL_ATTENDANCE);
   const [nextLogId, setNextLogId] = useState(11);
-
-  // Owner-controlled privacy setting
-  const [showRevenueToStaff, setShowRevenueToStaff] = useState(false);
-
-  // Absent notes — COMPLETELY SEPARATE per side
-  // staffAbsentNotes: { "staffId_date": "reason" } — staff likhta hai, sirf staff dekhta hai
-  // ownerAbsentNotes: { "staffId_date": "internal note" } — owner likhta hai, sirf owner dekhta hai
   const [staffAbsentNotes, setStaffAbsentNotes] = useState({});
   const [ownerAbsentNotes, setOwnerAbsentNotes] = useState({});
 
-  if (mode === "select") {
+  // Find logged in staff from staffList if role is staff
+  const loggedInStaff = role === "staff"
+    ? staffList.find(s => s.id === currentUser?.staffId) || staffList[0]
+    : null;
+
+  if (role === "owner") {
     return (
-      <div style={{ minHeight: "100vh", background: "#f5f5f0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ fontSize: 28, fontWeight: 800, color: "#1a1a2e", marginBottom: 4 }}>✂️ SnipBook</div>
-        <div style={{ fontSize: 14, color: "#888", marginBottom: 40 }}>Staff Management Demo</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, width: "100%", maxWidth: 320 }}>
-          <button style={{ ...styles.btnSave, padding: 16, fontSize: 16, borderRadius: 14 }} onClick={() => setMode("owner")}>
-            👑 Owner View
-            <div style={{ fontSize: 12, fontWeight: 400, marginTop: 3, color: "#a0c4ff" }}>Poora dashboard — sab control karo</div>
-          </button>
-          <button style={{ ...styles.btnCancel, padding: 16, fontSize: 16, borderRadius: 14, background: "white" }} onClick={() => setMode("staffLogin")}>
-            👤 Staff View
-            <div style={{ fontSize: 12, fontWeight: 400, marginTop: 3, color: "#888" }}>Apna kaam log karo, attendance mark karo</div>
-          </button>
-        </div>
-      </div>
+      <OwnerDashboard
+        staffList={staffList} setStaffList={setStaffList}
+        logs={logs} setLogs={setLogs}
+        attendance={attendance} setAttendance={setAttendance}
+        showRevenueToStaff={showRevenue}
+        setShowRevenueToStaff={setShowRevenue || (() => {})}
+        absentNotes={ownerAbsentNotes}
+        setAbsentNotes={setOwnerAbsentNotes}
+      />
     );
   }
 
-  if (mode === "owner") {
-    return (
-      <>
-        <div style={{ padding: "8px 14px", background: "#1a1a2e" }}>
-          <button onClick={() => setMode("select")} style={{ ...styles.backBtn, fontSize: 11 }}>← Mode Select</button>
-        </div>
-        <OwnerDashboard
-          staffList={staffList} setStaffList={setStaffList}
-          logs={logs} setLogs={setLogs}
-          attendance={attendance} setAttendance={setAttendance}
-          showRevenueToStaff={showRevenueToStaff}
-          setShowRevenueToStaff={setShowRevenueToStaff}
-          absentNotes={ownerAbsentNotes}
-          setAbsentNotes={setOwnerAbsentNotes}
-        />
-      </>
-    );
-  }
-
-  if (mode === "staffLogin") {
-    return (
-      <>
-        <div style={{ padding: "8px 14px", background: "#1a1a2e", position: "absolute", top: 0, left: 0, right: 0 }}>
-          <button onClick={() => setMode("select")} style={{ ...styles.backBtn, fontSize: 11 }}>← Mode Select</button>
-        </div>
-        <StaffLogin staffList={staffList} onLogin={s => { setLoggedInStaff(s); setMode("staffView"); }} />
-      </>
-    );
-  }
-
-  if (mode === "staffView" && loggedInStaff) {
+  if (role === "staff" && loggedInStaff) {
     return (
       <StaffSelfView
         staff={loggedInStaff}
         logs={logs} setLogs={setLogs}
         attendance={attendance} setAttendance={setAttendance}
         nextLogId={nextLogId} setNextLogId={setNextLogId}
-        showRevenue={showRevenueToStaff}
+        showRevenue={showRevenue}
         absentNotes={staffAbsentNotes}
         setAbsentNotes={setStaffAbsentNotes}
-        onLogout={() => { setLoggedInStaff(null); setMode("staffLogin"); }}
+        onLogout={() => {}}
       />
     );
   }
