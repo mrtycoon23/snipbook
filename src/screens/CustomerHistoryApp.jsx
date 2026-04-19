@@ -833,28 +833,20 @@ function LoginPage({onLogin}){
 }
 
 // ── ROOT ───────────────────────────────────────────────────────────────────────
-export default function App(){
-  const [currentUser,setCurrentUser]=useState(null);
+// Props: currentUser = {name, role: "owner"|"staff"}, onBookAppointment = fn
+export default function CustomerHistory({ currentUser, onBookAppointment }){
   const [customers,setCustomers]=useState(INIT);
   const [selectedId,setSelectedId]=useState(null);
-  const [ownerTab,setOwnerTab]=useState("customers"); // "dashboard" | "customers"
+  const [ownerTab,setOwnerTab]=useState("customers");
 
   const isStaff=currentUser?.role==="staff";
   const isOwner=currentUser?.role==="owner";
   const selected=customers.find(c=>c.id===selectedId)||null;
 
   function handleUpdate(cId,ch){setCustomers(prev=>prev.map(c=>c.id===cId?{...c,...ch}:c));}
-  if(!currentUser)return <LoginPage onLogin={setCurrentUser}/>;
 
   return(
-    <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,-apple-system,sans-serif",color:T.text,background:T.bg,overflow:"hidden"}}>
-      {/* Top bar */}
-      <div style={{background:T.surface,borderBottom:`2px solid ${T.border}`,padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}><div style={{width:30,height:30,background:T.green,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15}}>✂️</div><span style={{fontWeight:900,fontSize:14}}>Snip<span style={{color:T.green}}>Book</span></span></div>
-        <div style={{display:"flex",alignItems:"center",gap:6,background:isStaff?"#fef3c7":T.gl,border:`1.5px solid ${isStaff?"#fde68a":T.gm}`,borderRadius:20,padding:"4px 10px"}}><div style={{width:6,height:6,borderRadius:"50%",background:isStaff?"#f59e0b":T.green}}/><span style={{fontSize:11,fontWeight:800,color:isStaff?"#92400e":T.gd}}>{isStaff?"👨‍💼":"👑"} {currentUser.name}</span></div>
-        <button onClick={()=>{setCurrentUser(null);setSelectedId(null);}} style={{background:"none",border:`1.5px solid ${T.border}`,borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,color:T.ts,cursor:"pointer",fontFamily:"inherit"}}>Logout</button>
-      </div>
-
+    <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"system-ui,-apple-system,sans-serif",color:T.text,background:T.bg,overflow:"hidden"}}>
       {/* Owner tab switcher — Dashboard vs Customers */}
       {isOwner&&!selected&&(
         <div style={{background:T.surface,borderBottom:`2px solid ${T.border}`,display:"flex",flexShrink:0}}>
