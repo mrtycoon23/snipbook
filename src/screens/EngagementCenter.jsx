@@ -294,6 +294,7 @@ function ReengagementTab(){
   const [sentIds,setSentIds]=useState([]);
   const [selectedInactive,setSelectedInactive]=useState([]);
   const [allSearch,setAllSearch]=useState("");
+  const [allLastVisitFilter,setAllLastVisitFilter]=useState(0);
   const [allTagFilter,setAllTagFilter]=useState("All");
   const [allGender,setAllGender]=useState("all");
   const [allBulkModal,setAllBulkModal]=useState(false);
@@ -310,12 +311,15 @@ function ReengagementTab(){
   const filteredAll=CUSTOMERS
     .filter(c=>allTagFilter==="All"?true:c.tag===allTagFilter)
     .filter(c=>allGender==="all"?true:c.gender===allGender)
+    .filter(c=>allLastVisitFilter===0?true:daysSince(c.lastVisitDate)>=allLastVisitFilter)
     .filter(c=>{const q=allSearch.toLowerCase();return !q||c.name.toLowerCase().includes(q)||c.phone.includes(q);});
 
   const FILTERS=[
-    {val:30,label:"30+ days",color:T.yt,bg:T.yellow},
-    {val:60,label:"60+ days",color:T.ot,bg:T.orange},
-    {val:90,label:"90+ days",color:T.rt,bg:T.red},
+    {val:7, label:"7+ Din",  color:"#2563eb",bg:T.blue,  border:T.bb},
+    {val:15,label:"15+ Din", color:T.yt,    bg:T.yellow,border:T.yb},
+    {val:30,label:"30+ Din", color:T.ot,    bg:T.orange,border:T.ob},
+    {val:60,label:"60+ Din", color:T.rt,    bg:T.red,   border:T.rb},
+    {val:90,label:"90+ Din", color:"#7c3aed",bg:"#faf5ff",border:"#d8b4fe"},
   ];
 
   function getReengageMsg(c){return `🙏 *Namaste ${c.name}!*\n\nAapko yaad kar rahe hain hum! 😊\n\nKaafi dino se aap nahi aaye — ${c.days} din ho gaye. Kya sab theek hai? 💇\n\n✨ *Wapas aao offer:*\nApni next visit pe *15% OFF*!\n\nReply karo ya call karo 📞\n\n_Miss you! 💈 - Sharma's Salon_`;}
@@ -324,7 +328,7 @@ function ReengagementTab(){
   const allInactiveSel=selectedInactive.length===lostCustomers.length&&lostCustomers.length>0;
   const allClientsSel=selectedAll.length===filteredAll.length&&filteredAll.length>0;
 
-  const iGenderCounts={all:CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)>=filter).length,male:CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)>=filter&&c.gender==="male").length,female:CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)>=filter&&c.gender==="female").length};
+  const iGenderCounts={all:CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)>=filter&&(genderFilter==="all"?true:c.gender===genderFilter)).length,male:CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)>=filter&&c.gender==="male").length,female:CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)>=filter&&c.gender==="female").length};
   const aGenderCounts={all:CUSTOMERS.length,male:CUSTOMERS.filter(c=>c.gender==="male").length,female:CUSTOMERS.filter(c=>c.gender==="female").length};
 
   return(
@@ -343,12 +347,13 @@ function ReengagementTab(){
       {subTab==="inactive"&&(
         <>
           <GenderFilter value={genderFilter} onChange={(g)=>{setGenderFilter(g);setSelectedInactive([]);}} counts={iGenderCounts}/>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:7,marginBottom:14}}>
             {FILTERS.map(f=>{
               const count=CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)>=f.val&&(genderFilter==="all"?true:c.gender===genderFilter)).length;
-              return(<div key={f.val} onClick={()=>{setFilter(f.val);setSelectedInactive([]);}} style={{background:filter===f.val?f.bg:T.surface,border:`2px solid ${filter===f.val?f.color:T.border}`,borderRadius:12,padding:"12px 8px",textAlign:"center",cursor:"pointer",transition:"all 0.15s"}}>
-                <div style={{fontWeight:900,fontSize:22,color:f.color}}>{count}</div>
-                <div style={{fontSize:10,color:filter===f.val?f.color:T.ts,fontWeight:700,marginTop:2}}>{f.label}</div>
+              const isSel=filter===f.val;
+              return(<div key={f.val} onClick={()=>{setFilter(f.val);setSelectedInactive([]);}} style={{background:isSel?f.bg:T.surface,border:`2px solid ${isSel?f.color:T.border}`,borderRadius:12,padding:"10px 4px",textAlign:"center",cursor:"pointer",transition:"all 0.15s"}}>
+                <div style={{fontWeight:900,fontSize:20,color:isSel?f.color:T.ts}}>{count}</div>
+                <div style={{fontSize:9,color:isSel?f.color:T.ts,fontWeight:700,marginTop:2}}>{f.label}</div>
               </div>);
             })}
           </div>
@@ -422,6 +427,21 @@ function ReengagementTab(){
           </div>
 
           <GenderFilter value={allGender} onChange={(g)=>{setAllGender(g);setSelectedAll([]);}} counts={aGenderCounts}/>
+          {/* Last Visit Filter — All Clients */}
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:10,fontWeight:800,color:T.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:7}}>Last Visit Filter</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:6,marginBottom:allLastVisitFilter>0?8:0}}>
+              {[{val:0,label:"Sabko",color:T.gd,bg:T.gl,border:T.gm},...FILTERS].map(f=>{
+                const count=f.val===0?CUSTOMERS.filter(c=>(allTagFilter==="All"?true:c.tag===allTagFilter)&&(allGender==="all"?true:c.gender===allGender)).length:CUSTOMERS.filter(c=>(allTagFilter==="All"?true:c.tag===allTagFilter)&&(allGender==="all"?true:c.gender===allGender)&&daysSince(c.lastVisitDate)>=f.val).length;
+                const isSel=allLastVisitFilter===f.val;
+                return(<div key={f.val} onClick={()=>{setAllLastVisitFilter(f.val);setSelectedAll([]);}} style={{background:isSel?f.bg:T.surface,border:`2px solid ${isSel?f.color:T.border}`,borderRadius:10,padding:"8px 3px",textAlign:"center",cursor:"pointer"}}>
+                  <div style={{fontWeight:900,fontSize:14,color:isSel?f.color:T.ts}}>{count}</div>
+                  <div style={{fontSize:8,color:isSel?f.color:T.ts,fontWeight:700,marginTop:1}}>{f.label}</div>
+                </div>);
+              })}
+            </div>
+            {allLastVisitFilter>0&&<div style={{background:T.yellow,border:`1.5px solid ${T.yb}`,borderRadius:8,padding:"6px 10px",fontSize:11,color:T.yt,fontWeight:700,marginBottom:8}}>✅ {CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)<allLastVisitFilter).length} recently visited exclude ho rahe hain!</div>}
+          </div>
           <div style={{display:"flex",gap:6,marginBottom:8}}>
             {["All","VIP","Regular","New"].map(f=>(
               <button key={f} onClick={()=>{setAllTagFilter(f);setSelectedAll([]);}} style={{padding:"5px 10px",borderRadius:20,border:`2px solid ${allTagFilter===f?T.green:T.border}`,background:allTagFilter===f?T.green:T.surface,color:allTagFilter===f?"#fff":T.ts,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{f}</button>
@@ -558,16 +578,27 @@ function CampaignsTab(){
   const [customMsg,setCustomMsg]=useState("");
   const [targetTag,setTargetTag]=useState("All");
   const [targetGender,setTargetGender]=useState("all");
+  const [lastVisitFilter,setLastVisitFilter]=useState(0); // 0 = sabko, 7, 15, 30, 60, 90
   const [bulkModal,setBulkModal]=useState(null);
+
+  const VISIT_FILTERS=[
+    {val:0,  label:"Sabko Bhejo",  desc:"Sab customers",      color:T.green,  bg:T.gl,  border:T.gm},
+    {val:7,  label:"7+ Din",       desc:"Last week ke baad",  color:"#2563eb",bg:T.blue,border:T.bb},
+    {val:15, label:"15+ Din",      desc:"2 week pehle aaye",  color:T.yt,     bg:T.yellow,border:T.yb},
+    {val:30, label:"30+ Din",      desc:"1 mahina (Recommended)", color:T.ot, bg:T.orange,border:T.ob},
+    {val:60, label:"60+ Din",      desc:"2 mahine pehle",     color:T.rt,     bg:T.red, border:T.rb},
+    {val:90, label:"90+ Din",      desc:"3+ mahine inactive", color:"#7c3aed",bg:"#faf5ff",border:"#d8b4fe"},
+  ];
 
   const filteredCustomers=CUSTOMERS
     .filter(c=>targetTag==="All"?true:c.tag===targetTag)
-    .filter(c=>targetGender==="all"?true:c.gender===targetGender);
+    .filter(c=>targetGender==="all"?true:c.gender===targetGender)
+    .filter(c=>lastVisitFilter===0?true:daysSince(c.lastVisitDate)>=lastVisitFilter);
 
   const genderCounts={
-    all:CUSTOMERS.filter(c=>targetTag==="All"?true:c.tag===targetTag).length,
-    male:CUSTOMERS.filter(c=>(targetTag==="All"?true:c.tag===targetTag)&&c.gender==="male").length,
-    female:CUSTOMERS.filter(c=>(targetTag==="All"?true:c.tag===targetTag)&&c.gender==="female").length,
+    all:CUSTOMERS.filter(c=>(targetTag==="All"?true:c.tag===targetTag)&&(lastVisitFilter===0?true:daysSince(c.lastVisitDate)>=lastVisitFilter)).length,
+    male:CUSTOMERS.filter(c=>(targetTag==="All"?true:c.tag===targetTag)&&c.gender==="male"&&(lastVisitFilter===0?true:daysSince(c.lastVisitDate)>=lastVisitFilter)).length,
+    female:CUSTOMERS.filter(c=>(targetTag==="All"?true:c.tag===targetTag)&&c.gender==="female"&&(lastVisitFilter===0?true:daysSince(c.lastVisitDate)>=lastVisitFilter)).length,
   };
 
   const categories=[...new Set(CAMPAIGNS.map(c=>c.category))];
@@ -626,6 +657,43 @@ function CampaignsTab(){
               ))}
             </div>
             <GenderFilter value={targetGender} onChange={setTargetGender} counts={genderCounts}/>
+          </div>
+
+          {/* Last Visit Filter */}
+          <div style={{marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+              <SL>Last Visit Filter</SL>
+              <div style={{fontSize:10,color:T.ts,background:T.sub,border:`1.5px solid ${T.border}`,borderRadius:20,padding:"2px 8px",fontWeight:700}}>
+                {lastVisitFilter===0?"Sabko include kar raha hai":`${lastVisitFilter}+ din pehle aaye = ${filteredCustomers.length} log`}
+              </div>
+            </div>
+            <div style={{background:T.sub,border:`2px solid ${T.border}`,borderRadius:12,padding:"12px",marginBottom:8}}>
+              <div style={{fontSize:11,color:T.ts,marginBottom:10,lineHeight:1.6}}>
+                💡 <strong>Tip:</strong> Recently aaye customers ko offer bhejne se spam feel aata hai. 
+                Sirf unhe bhejo jinki visit ek mahine pehle ya zyada thi.
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7}}>
+                {VISIT_FILTERS.map(f=>{
+                  const count=CUSTOMERS
+                    .filter(c=>targetTag==="All"?true:c.tag===targetTag)
+                    .filter(c=>targetGender==="all"?true:c.gender===targetGender)
+                    .filter(c=>f.val===0?true:daysSince(c.lastVisitDate)>=f.val).length;
+                  const isSelected=lastVisitFilter===f.val;
+                  return(
+                    <div key={f.val} onClick={()=>setLastVisitFilter(f.val)} style={{background:isSelected?f.bg:T.surface,border:`2px solid ${isSelected?f.color:T.border}`,borderRadius:10,padding:"10px 8px",textAlign:"center",cursor:"pointer",transition:"all 0.15s"}}>
+                      <div style={{fontWeight:900,fontSize:17,color:isSelected?f.color:T.ts}}>{count}</div>
+                      <div style={{fontSize:10,fontWeight:800,color:isSelected?f.color:T.ts,marginTop:2}}>{f.label}</div>
+                      <div style={{fontSize:9,color:isSelected?f.color:T.tg,marginTop:2,lineHeight:1.3}}>{f.desc}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              {lastVisitFilter>0&&(
+                <div style={{marginTop:10,background:T.yellow,border:`1.5px solid ${T.yb}`,borderRadius:8,padding:"8px 10px",fontSize:11,color:T.yt,fontWeight:700}}>
+                  ✅ {CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)<lastVisitFilter).length} recently visited customers automatically exclude ho rahe hain!
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Campaign name — only for custom */}
