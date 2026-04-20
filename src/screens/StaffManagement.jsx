@@ -1804,7 +1804,7 @@ export default function StaffManagement({ role = "owner", currentUser, showReven
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = {
-  page: { background: "#f5f5f0", minHeight: "100vh", paddingBottom: 80, fontFamily: "'Segoe UI', sans-serif" },
+  page: { background: "#f5f5f0", minHeight: "100vh", paddingBottom: 80, fontFamily: "'Segoe UI', sans-serif", overflowY: "auto", height: "100%" },
   header: { background: "#1a1a2e", color: "white", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" },
   headerTitle: { fontSize: 17, fontWeight: 700 },
   headerSub: { fontSize: 11, color: "#a0a0c0", marginTop: 1 },
