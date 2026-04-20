@@ -381,7 +381,7 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
 }
 
 // ─── Tab 2: Customer History ──────────────────────────────────────────────────
-function CustomerHistoryTab({staff, customers, setCustomers}){
+function CustomerHistoryTab({staff, customers, setCustomers, showRevenue=false}){
   const [selectedId,setSelectedId]=useState(null);
   const [search,setSearch]=useState("");
   const [filter,setFilter]=useState("All");
@@ -430,7 +430,7 @@ function CustomerHistoryTab({staff, customers, setCustomers}){
           </div>
           {/* Stats */}
           <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>
-            {[{val:selected.visits,label:"Visits"},{val:`₹${selected.totalSpent.toLocaleString()}`,label:"Total Spent"},{val:selected.lastVisit,label:"Last Visit"}].map(s=>(
+            {[{val:selected.visits,label:"Visits"},{val:showRevenue?`₹${selected.totalSpent.toLocaleString()}`:"Hidden",label:"Total Spent"},{val:selected.lastVisit,label:"Last Visit"}].map(s=>(
               <div key={s.label} style={{background:T.sub,border:`2px solid ${T.border}`,borderRadius:11,padding:"10px",textAlign:"center"}}>
                 <div style={{fontWeight:900,fontSize:13,color:T.green}}>{s.val}</div>
                 <div style={{fontSize:10,color:T.tf,fontWeight:700,marginTop:2}}>{s.label}</div>
@@ -457,7 +457,7 @@ function CustomerHistoryTab({staff, customers, setCustomers}){
                   <div style={{fontWeight:800,fontSize:14,color:T.text}}>{v.date}</div>
                   <div style={{fontSize:12,color:T.ts,marginTop:2}}>{v.services.join(" + ")} · {v.stylist}</div>
                 </div>
-                <div style={{background:T.gl,color:T.gd,border:`1.5px solid ${T.gm}`,padding:"4px 12px",borderRadius:20,fontSize:14,fontWeight:900}}>₹{v.amount}</div>
+                {showRevenue&&<div style={{background:T.gl,color:T.gd,border:`1.5px solid ${T.gm}`,padding:"4px 12px",borderRadius:20,fontSize:14,fontWeight:900}}>₹{v.amount}</div>}
               </div>
               {(v.notes||v.products?.length>0)&&(
                 <div style={{padding:"10px 14px"}}>
@@ -595,6 +595,7 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
             staff={staff}
             customers={customers}
             setCustomers={setCustomers}
+            showRevenue={showRevenue}
           />
         )}
       </div>
