@@ -91,6 +91,50 @@ function SL({children,color}){
   return <div style={{fontSize:10,fontWeight:800,color:color||T.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>{children}</div>;
 }
 
+// ─── Last Visit Filter Input ─────────────────────────────────────────────────
+function LastVisitInput({value, onChange, totalCount, matchCount}){
+  return(
+    <div style={{background:"#f8fafc",border:"2px solid #e8edf3",borderRadius:12,padding:"12px 14px",marginBottom:12}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+        <div style={{fontSize:12,fontWeight:800,color:"#555"}}>📅 Last Visit Filter</div>
+        <div style={{fontSize:10,color:"#888",fontWeight:600}}>
+          {value===0?`Sabko include (${totalCount})`:`${matchCount} / ${totalCount} customers`}
+        </div>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:value>0?10:0}}>
+        <div style={{flex:1,position:"relative"}}>
+          <input
+            type="number"
+            min={0}
+            max={365}
+            value={value===0?"":value}
+            onChange={e=>{
+              const v=parseInt(e.target.value)||0;
+              onChange(v);
+            }}
+            placeholder="0 = sabko"
+            style={{width:"100%",padding:"10px 44px 10px 13px",border:"2px solid #e8edf3",borderRadius:10,fontSize:15,fontWeight:800,fontFamily:"inherit",outline:"none",boxSizing:"border-box",background:"#fff",color:"#1a1a2e"}}
+            onFocus={e=>e.target.style.borderColor="#22c55e"}
+            onBlur={e=>e.target.style.borderColor="#e8edf3"}
+          />
+          <div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:12,fontWeight:700,color:"#888"}}>din</div>
+        </div>
+        {value>0&&(
+          <button onClick={()=>onChange(0)} style={{padding:"10px 14px",background:"#fff",border:"2px solid #e8edf3",borderRadius:10,fontSize:12,fontWeight:700,color:"#888",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>✕ Clear</button>
+        )}
+      </div>
+      {value>0&&(
+        <div style={{background:matchCount>0?"#e8fdf0":"#fff0f0",border:`1.5px solid ${matchCount>0?"#bbf7d0":"#fca5a5"}`,borderRadius:8,padding:"7px 10px",fontSize:11,fontWeight:700,color:matchCount>0?"#16a34a":"#dc2626"}}>
+          {matchCount>0
+            ? `✅ ${matchCount} customers jinki last visit ${value}+ din pehle thi`
+            : `❌ Koi customer nahi mila ${value}+ din ke filter mein`
+          }
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Gender Badge ─────────────────────────────────────────────────────────────
 function GBadge({gender}){
   return(
@@ -314,13 +358,7 @@ function ReengagementTab(){
     .filter(c=>allLastVisitFilter===0?true:daysSince(c.lastVisitDate)>=allLastVisitFilter)
     .filter(c=>{const q=allSearch.toLowerCase();return !q||c.name.toLowerCase().includes(q)||c.phone.includes(q);});
 
-  const FILTERS=[
-    {val:7, label:"7+ Din",  color:"#2563eb",bg:T.blue,  border:T.bb},
-    {val:15,label:"15+ Din", color:T.yt,    bg:T.yellow,border:T.yb},
-    {val:30,label:"30+ Din", color:T.ot,    bg:T.orange,border:T.ob},
-    {val:60,label:"60+ Din", color:T.rt,    bg:T.red,   border:T.rb},
-    {val:90,label:"90+ Din", color:"#7c3aed",bg:"#faf5ff",border:"#d8b4fe"},
-  ];
+  // No static FILTERS array needed — using custom input
 
   function getReengageMsg(c){return `🙏 *Namaste ${c.name}!*\n\nAapko yaad kar rahe hain hum! 😊\n\nKaafi dino se aap nahi aaye — ${c.days} din ho gaye. Kya sab theek hai? 💇\n\n✨ *Wapas aao offer:*\nApni next visit pe *15% OFF*!\n\nReply karo ya call karo 📞\n\n_Miss you! 💈 - Sharma's Salon_`;}
   const bulkTemplate=`🙏 *Namaste {name}!*\n\nAapko yaad kar rahe hain hum! 😊\n\nKaafi dino se aap nahi aaye. Kya sab theek hai? 💇\n\n✨ *Wapas aao offer:*\nApni next visit pe *15% OFF*!\n\nReply karo ya call karo 📞\n\n_Miss you! 💈 - Sharma's Salon_`;
@@ -347,16 +385,12 @@ function ReengagementTab(){
       {subTab==="inactive"&&(
         <>
           <GenderFilter value={genderFilter} onChange={(g)=>{setGenderFilter(g);setSelectedInactive([]);}} counts={iGenderCounts}/>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:7,marginBottom:14}}>
-            {FILTERS.map(f=>{
-              const count=CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)>=f.val&&(genderFilter==="all"?true:c.gender===genderFilter)).length;
-              const isSel=filter===f.val;
-              return(<div key={f.val} onClick={()=>{setFilter(f.val);setSelectedInactive([]);}} style={{background:isSel?f.bg:T.surface,border:`2px solid ${isSel?f.color:T.border}`,borderRadius:12,padding:"10px 4px",textAlign:"center",cursor:"pointer",transition:"all 0.15s"}}>
-                <div style={{fontWeight:900,fontSize:20,color:isSel?f.color:T.ts}}>{count}</div>
-                <div style={{fontSize:9,color:isSel?f.color:T.ts,fontWeight:700,marginTop:2}}>{f.label}</div>
-              </div>);
-            })}
-          </div>
+          <LastVisitInput
+            value={filter}
+            onChange={(v)=>{setFilter(v);setSelectedInactive([]);}}
+            totalCount={CUSTOMERS.filter(c=>genderFilter==="all"?true:c.gender===genderFilter).length}
+            matchCount={CUSTOMERS.filter(c=>(genderFilter==="all"?true:c.gender===genderFilter)&&(filter===0?true:daysSince(c.lastVisitDate)>=filter)).length}
+          />
           {lostCustomers.length>0&&(
             <div style={{background:T.sub,border:`2px solid ${T.border}`,borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div style={{fontSize:13,fontWeight:800,color:T.text}}>{selectedInactive.length===0?`${lostCustomers.length} customers`:`${selectedInactive.length} selected`}</div>
@@ -427,21 +461,12 @@ function ReengagementTab(){
           </div>
 
           <GenderFilter value={allGender} onChange={(g)=>{setAllGender(g);setSelectedAll([]);}} counts={aGenderCounts}/>
-          {/* Last Visit Filter — All Clients */}
-          <div style={{marginBottom:10}}>
-            <div style={{fontSize:10,fontWeight:800,color:T.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:7}}>Last Visit Filter</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:6,marginBottom:allLastVisitFilter>0?8:0}}>
-              {[{val:0,label:"Sabko",color:T.gd,bg:T.gl,border:T.gm},...FILTERS].map(f=>{
-                const count=f.val===0?CUSTOMERS.filter(c=>(allTagFilter==="All"?true:c.tag===allTagFilter)&&(allGender==="all"?true:c.gender===allGender)).length:CUSTOMERS.filter(c=>(allTagFilter==="All"?true:c.tag===allTagFilter)&&(allGender==="all"?true:c.gender===allGender)&&daysSince(c.lastVisitDate)>=f.val).length;
-                const isSel=allLastVisitFilter===f.val;
-                return(<div key={f.val} onClick={()=>{setAllLastVisitFilter(f.val);setSelectedAll([]);}} style={{background:isSel?f.bg:T.surface,border:`2px solid ${isSel?f.color:T.border}`,borderRadius:10,padding:"8px 3px",textAlign:"center",cursor:"pointer"}}>
-                  <div style={{fontWeight:900,fontSize:14,color:isSel?f.color:T.ts}}>{count}</div>
-                  <div style={{fontSize:8,color:isSel?f.color:T.ts,fontWeight:700,marginTop:1}}>{f.label}</div>
-                </div>);
-              })}
-            </div>
-            {allLastVisitFilter>0&&<div style={{background:T.yellow,border:`1.5px solid ${T.yb}`,borderRadius:8,padding:"6px 10px",fontSize:11,color:T.yt,fontWeight:700,marginBottom:8}}>✅ {CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)<allLastVisitFilter).length} recently visited exclude ho rahe hain!</div>}
-          </div>
+          <LastVisitInput
+            value={allLastVisitFilter}
+            onChange={(v)=>{setAllLastVisitFilter(v);setSelectedAll([]);}}
+            totalCount={CUSTOMERS.filter(c=>(allTagFilter==="All"?true:c.tag===allTagFilter)&&(allGender==="all"?true:c.gender===allGender)).length}
+            matchCount={CUSTOMERS.filter(c=>(allTagFilter==="All"?true:c.tag===allTagFilter)&&(allGender==="all"?true:c.gender===allGender)&&(allLastVisitFilter===0?true:daysSince(c.lastVisitDate)>=allLastVisitFilter)).length}
+          />
           <div style={{display:"flex",gap:6,marginBottom:8}}>
             {["All","VIP","Regular","New"].map(f=>(
               <button key={f} onClick={()=>{setAllTagFilter(f);setSelectedAll([]);}} style={{padding:"5px 10px",borderRadius:20,border:`2px solid ${allTagFilter===f?T.green:T.border}`,background:allTagFilter===f?T.green:T.surface,color:allTagFilter===f?"#fff":T.ts,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{f}</button>
@@ -581,15 +606,6 @@ function CampaignsTab(){
   const [lastVisitFilter,setLastVisitFilter]=useState(0); // 0 = sabko, 7, 15, 30, 60, 90
   const [bulkModal,setBulkModal]=useState(null);
 
-  const VISIT_FILTERS=[
-    {val:0,  label:"Sabko Bhejo",  desc:"Sab customers",      color:T.green,  bg:T.gl,  border:T.gm},
-    {val:7,  label:"7+ Din",       desc:"Last week ke baad",  color:"#2563eb",bg:T.blue,border:T.bb},
-    {val:15, label:"15+ Din",      desc:"2 week pehle aaye",  color:T.yt,     bg:T.yellow,border:T.yb},
-    {val:30, label:"30+ Din",      desc:"1 mahina (Recommended)", color:T.ot, bg:T.orange,border:T.ob},
-    {val:60, label:"60+ Din",      desc:"2 mahine pehle",     color:T.rt,     bg:T.red, border:T.rb},
-    {val:90, label:"90+ Din",      desc:"3+ mahine inactive", color:"#7c3aed",bg:"#faf5ff",border:"#d8b4fe"},
-  ];
-
   const filteredCustomers=CUSTOMERS
     .filter(c=>targetTag==="All"?true:c.tag===targetTag)
     .filter(c=>targetGender==="all"?true:c.gender===targetGender)
@@ -659,42 +675,12 @@ function CampaignsTab(){
             <GenderFilter value={targetGender} onChange={setTargetGender} counts={genderCounts}/>
           </div>
 
-          {/* Last Visit Filter */}
-          <div style={{marginBottom:16}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-              <SL>Last Visit Filter</SL>
-              <div style={{fontSize:10,color:T.ts,background:T.sub,border:`1.5px solid ${T.border}`,borderRadius:20,padding:"2px 8px",fontWeight:700}}>
-                {lastVisitFilter===0?"Sabko include kar raha hai":`${lastVisitFilter}+ din pehle aaye = ${filteredCustomers.length} log`}
-              </div>
-            </div>
-            <div style={{background:T.sub,border:`2px solid ${T.border}`,borderRadius:12,padding:"12px",marginBottom:8}}>
-              <div style={{fontSize:11,color:T.ts,marginBottom:10,lineHeight:1.6}}>
-                💡 <strong>Tip:</strong> Recently aaye customers ko offer bhejne se spam feel aata hai. 
-                Sirf unhe bhejo jinki visit ek mahine pehle ya zyada thi.
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7}}>
-                {VISIT_FILTERS.map(f=>{
-                  const count=CUSTOMERS
-                    .filter(c=>targetTag==="All"?true:c.tag===targetTag)
-                    .filter(c=>targetGender==="all"?true:c.gender===targetGender)
-                    .filter(c=>f.val===0?true:daysSince(c.lastVisitDate)>=f.val).length;
-                  const isSelected=lastVisitFilter===f.val;
-                  return(
-                    <div key={f.val} onClick={()=>setLastVisitFilter(f.val)} style={{background:isSelected?f.bg:T.surface,border:`2px solid ${isSelected?f.color:T.border}`,borderRadius:10,padding:"10px 8px",textAlign:"center",cursor:"pointer",transition:"all 0.15s"}}>
-                      <div style={{fontWeight:900,fontSize:17,color:isSelected?f.color:T.ts}}>{count}</div>
-                      <div style={{fontSize:10,fontWeight:800,color:isSelected?f.color:T.ts,marginTop:2}}>{f.label}</div>
-                      <div style={{fontSize:9,color:isSelected?f.color:T.tg,marginTop:2,lineHeight:1.3}}>{f.desc}</div>
-                    </div>
-                  );
-                })}
-              </div>
-              {lastVisitFilter>0&&(
-                <div style={{marginTop:10,background:T.yellow,border:`1.5px solid ${T.yb}`,borderRadius:8,padding:"8px 10px",fontSize:11,color:T.yt,fontWeight:700}}>
-                  ✅ {CUSTOMERS.filter(c=>daysSince(c.lastVisitDate)<lastVisitFilter).length} recently visited customers automatically exclude ho rahe hain!
-                </div>
-              )}
-            </div>
-          </div>
+          <LastVisitInput
+            value={lastVisitFilter}
+            onChange={(v)=>setLastVisitFilter(v)}
+            totalCount={CUSTOMERS.filter(c=>(targetTag==="All"?true:c.tag===targetTag)&&(targetGender==="all"?true:c.gender===targetGender)).length}
+            matchCount={filteredCustomers.length}
+          />
 
           {/* Campaign name — only for custom */}
           {selected.id==="custom"&&(
