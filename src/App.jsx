@@ -87,7 +87,7 @@ function Landing({onStart,onLogin}){
         <Logo/>
         <div style={{display:"flex",gap:8}}>
           <button onClick={onLogin} style={{padding:"7px 16px",background:"#f0f4f8",border:"none",borderRadius:20,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",color:"#555"}}>Login</button>
-          <button onClick={onStart} style={{padding:"7px 16px",background:"#22c55e",border:"none",borderRadius:20,fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit",color:"#fff"}}>Free Trial →</button>
+          <button onClick={onStart} style={{padding:"7px 16px",background:"#22c55e",border:"none",borderRadius:20,fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit",color:"#fff"}}>Get Started →</button>
         </div>
       </nav>
       <section style={{background:"linear-gradient(160deg,#f0fdf4,#fff 60%,#f0f4f8)",padding:"48px 20px 40px",textAlign:"center",position:"relative",overflow:"hidden"}}>
@@ -99,14 +99,14 @@ function Landing({onStart,onLogin}){
           {!done?(
             <div style={{display:"flex",gap:8,maxWidth:400,margin:"0 auto 14px",flexWrap:"wrap",justifyContent:"center"}}>
               <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Apna email daalo..." style={{flex:1,minWidth:200,padding:"12px 16px",border:"2px solid #e8edf3",borderRadius:12,fontSize:14,fontFamily:"inherit",outline:"none"}} onFocus={e=>e.target.style.borderColor="#22c55e"} onBlur={e=>e.target.style.borderColor="#e8edf3"}/>
-              <button onClick={()=>{if(email)setDone(true); else onStart();}} style={{padding:"12px 20px",background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 14px rgba(34,197,94,0.35)"}}>30-Day Free Trial →</button>
+              <button onClick={()=>{if(email)setDone(true); else onStart();}} style={{padding:"12px 20px",background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontSize:14,fontWeight:800,cursor:"pointer",fontFamily:"inherit",boxShadow:"0 4px 14px rgba(34,197,94,0.35)"}}>Request Early Access →</button>
             </div>
           ):(
             <div style={{background:"#e8fdf0",border:"2px solid #86efac",borderRadius:14,padding:"14px",maxWidth:400,margin:"0 auto 14px",fontWeight:800,color:"#16a34a",fontSize:15}}>🎉 Check your email!</div>
           )}
-          <div style={{fontSize:12,color:"#aaa",fontWeight:700}}>✓ No credit card &nbsp;·&nbsp; ✓ 3 min setup &nbsp;·&nbsp; ✓ Cancel anytime</div>
+          <div style={{fontSize:12,color:"#aaa",fontWeight:700}}>✓ Quick setup &nbsp;·&nbsp; ✓ Indian salons ke liye &nbsp;·&nbsp; ✓ WhatsApp first</div>
           <div style={{display:"flex",justifyContent:"center",gap:28,marginTop:32,flexWrap:"wrap"}}>
-            {[{val:"2,400+",label:"Salons"},{val:"₹0",label:"Setup Cost"},{val:"70%",label:"Fewer No-shows"},{val:"3 min",label:"Setup"}].map(s=>(<div key={s.label} style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:900,color:"#22c55e"}}>{s.val}</div><div style={{fontSize:11,color:"#888",fontWeight:700,marginTop:2}}>{s.label}</div></div>))}
+            {[{val:"2,400+",label:"Salons"},{val:"India",label:"Made for"},{val:"70%",label:"Fewer No-shows"},{val:"3 min",label:"Setup"}].map(s=>(<div key={s.label} style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:900,color:"#22c55e"}}>{s.val}</div><div style={{fontSize:11,color:"#888",fontWeight:700,marginTop:2}}>{s.label}</div></div>))}
           </div>
         </div>
       </section>
@@ -257,7 +257,7 @@ function Onboarding({onComplete,onBack}){
           {step===3&&(<><div style={{marginBottom:14}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Working Days</div><div style={{display:"flex",flexWrap:"wrap",gap:7}}>{WEEK_DAYS.map(d=>{const a=data.workDays.includes(d);return(<button key={d} onClick={()=>setData(p=>({...p,workDays:a?p.workDays.filter(x=>x!==d):[...p.workDays,d]}))} style={{padding:"6px 12px",borderRadius:20,border:`2px solid ${a?"#22c55e":"#e8edf3"}`,background:a?"#e8fdf0":"#fff",color:a?"#16a34a":"#888",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{d}</button>);})}</div></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><F label="Opens At"><select value={data.openTime} onChange={e=>setData(p=>({...p,openTime:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}>{[6,7,8,9,10,11].map(h=><option key={h} value={h}>{h<=12?h:h-12}:00 {h<12?"AM":"PM"}</option>)}</select></F><F label="Closes At"><select value={data.closeTime} onChange={e=>setData(p=>({...p,closeTime:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}>{[18,19,20,21,22].map(h=><option key={h} value={h}>{h-12}:00 PM</option>)}</select></F></div></>)}
           {step===4&&(<div style={{display:"flex",flexDirection:"column",gap:8}}>{svcs.map(s=>(<div key={s.id} style={{background:s.active?"#f0fdf4":"#fafbfc",border:`2px solid ${s.active?"#86efac":"#e8edf3"}`,borderRadius:12,padding:"11px 13px",display:"flex",alignItems:"center",gap:10}}><button onClick={()=>setSvcs(prev=>prev.map(sv=>sv.id===s.id?{...sv,active:!sv.active}:sv))} style={{width:24,height:24,borderRadius:"50%",border:"none",background:s.active?"#22c55e":"#e8edf3",color:"#fff",fontSize:11,cursor:"pointer",flexShrink:0,fontWeight:800}}>{s.active?"✓":""}</button><span style={{fontSize:17}}>{s.emoji}</span><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:s.active?"#1a1a2e":"#bbb"}}>{s.name}</div><div style={{fontSize:11,color:"#aaa"}}>{s.duration} min</div></div>{s.active&&<div style={{fontWeight:800,fontSize:14,color:"#22c55e"}}>₹{s.price}</div>}</div>))}</div>)}
           {step===5&&(<><div style={{background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,padding:"14px",marginBottom:14,textAlign:"center"}}><div style={{fontSize:28,marginBottom:4}}>💬</div><div style={{fontWeight:900,fontSize:13,color:"#16a34a"}}>Connect WhatsApp Business</div></div><F label="WhatsApp Number"><input value={data.waNumber} onChange={e=>setData(p=>({...p,waNumber:e.target.value}))} placeholder="+91 98765 43210" style={{...is,marginTop:5}} onFocus={e=>e.target.style.borderColor="#22c55e"} onBlur={e=>e.target.style.borderColor="#e8edf3"}/></F></>)}
-          {step===6&&(<div style={{textAlign:"center"}}><div style={{fontSize:50,marginBottom:10}}>🎉</div><div style={{fontWeight:900,fontSize:19,marginBottom:6}}>You're all set!</div><div style={{fontSize:13,color:"#888",lineHeight:1.7,marginBottom:18}}>{data.salonName||"Your salon"} is now live!<br/>WhatsApp bot ready hai. 💈</div><div style={{background:"#fff8e6",border:"2px solid #fde68a",borderRadius:10,padding:"10px",fontSize:12,color:"#d97706",fontWeight:700}}>🎁 30-day FREE trial — no credit card!</div></div>)}
+          {step===6&&(<div style={{textAlign:"center"}}><div style={{fontSize:50,marginBottom:10}}>🎉</div><div style={{fontWeight:900,fontSize:19,marginBottom:6}}>You're all set!</div><div style={{fontSize:13,color:"#888",lineHeight:1.7,marginBottom:18}}>{data.salonName||"Your salon"} is now live!<br/>WhatsApp bot ready hai. 💈</div><div style={{background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:10,padding:"10px",fontSize:12,color:"#16a34a",fontWeight:700}}>✅ Early access activated!</div></div>)}
         </div>
         {step<6?(
           <div style={{padding:"0 20px 20px",display:"flex",gap:10}}>
@@ -406,10 +406,10 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
         {tab==="account"&&(<>
           <div style={{background:"#1a1a2e",borderRadius:16,padding:"18px",marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <div><div style={{fontSize:12,color:"#888"}}>Current Plan</div><div style={{fontWeight:900,fontSize:20,color:"#fff",marginTop:2}}>⚡ {user.plan}</div></div>
-              <div style={{textAlign:"right"}}><div style={{fontWeight:900,fontSize:26,color:"#22c55e"}}>₹399</div><div style={{fontSize:11,color:"#888"}}>/month</div></div>
+              <div><div style={{fontSize:12,color:"#888"}}>Current Plan</div><div style={{fontWeight:900,fontSize:20,color:"#fff",marginTop:2}}>⚡ Early Access</div></div>
+              <div style={{textAlign:"right"}}><div style={{fontWeight:700,fontSize:13,color:"#22c55e"}}>Beta User 🎉</div><div style={{fontSize:11,color:"#888",marginTop:2}}>Special pricing coming soon</div></div>
             </div>
-            <button style={{width:"100%",padding:"10px",background:"#22c55e",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>👑 Upgrade to Pro</button>
+            <button style={{width:"100%",padding:"10px",background:"#22c55e",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📩 Contact for Pricing</button>
           </div>
           <button onClick={onLogout} style={{width:"100%",padding:"14px",background:"#fff",border:"2px solid #e8edf3",borderRadius:14,color:"#dc2626",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:12}}>🚪 Logout</button>
         </>)}
