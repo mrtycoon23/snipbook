@@ -16,13 +16,14 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ status: "ok" });
   }
+
   return res.status(200).json({ status: "ok" });
 }
 
 async function sendWhatsAppMessage(to, message) {
   const apiKey = process.env.YCLOUD_API_KEY;
 
-  await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+  const response = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
     method: "POST",
     headers: {
       "X-API-Key": apiKey,
@@ -35,4 +36,7 @@ async function sendWhatsAppMessage(to, message) {
       text: { body: message },
     }),
   });
+
+  const data = await response.json();
+  console.log("YCloud response:", JSON.stringify(data));
 }
