@@ -70,7 +70,6 @@ const is={width:"100%",padding:"11px 13px",border:"2px solid #e8edf3",borderRadi
 const nb={width:30,height:30,borderRadius:8,border:"2px solid #e8edf3",background:"#fff",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"};
 const obIs={width:"100%",padding:"11px 13px",border:"2px solid #e8edf3",borderRadius:11,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fafbfc",boxSizing:"border-box"};
 
-// ✅ SnipBook default logo (used when no salon logo)
 function Logo({size=15,iconSize=32}){
   return(
     <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -80,7 +79,6 @@ function Logo({size=15,iconSize=32}){
   );
 }
 
-// ✅ Salon branding header — shows salon logo + name if available
 function SalonHeader({user, screen, onSettings}){
   const salonName = user?.salon || "My Salon";
   const logoUrl = user?.logo_url || null;
@@ -93,7 +91,6 @@ function SalonHeader({user, screen, onSettings}){
 
   return(
     <div style={{background:"#fff",borderBottom:"2px solid #e8edf3",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
-      {/* Salon Logo + Name */}
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         {logoUrl ? (
           <img src={logoUrl} alt="salon logo" style={{width:32,height:32,borderRadius:10,objectFit:"cover",border:"2px solid #e8edf3"}}/>
@@ -102,9 +99,7 @@ function SalonHeader({user, screen, onSettings}){
         )}
         <span style={{fontWeight:900,fontSize:13,color:"#1a1a2e",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{salonName}</span>
       </div>
-
       <div style={{fontSize:11,fontWeight:800,color:"#888",textTransform:"capitalize"}}>{screenLabel}</div>
-
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:5,background:"#e8fdf0",border:"1.5px solid #bbf7d0",borderRadius:20,padding:"4px 9px",fontSize:11,fontWeight:700,color:"#16a34a"}}>
           <div style={{width:6,height:6,borderRadius:"50%",background:"#22c55e"}}/>Bot ON
@@ -187,14 +182,11 @@ function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
     setLoading(true); setError("");
     try{
       let loginEmail = email.trim();
-      // ✅ Phone number se login support
       if(!loginEmail.includes("@")){
         const {data:salon}=await supabase.from("salons").select("id,owner_name,salon_name,city,plan,logo_url").eq("phone",loginEmail).single();
         if(!salon){setError("Is number se koi account nahi mila!");setLoading(false);return;}
-        // Get email from auth using salon id
         const {data:authData}=await supabase.from("salons").select("id").eq("id",salon.id).single();
         if(!authData){setError("Account nahi mila!");setLoading(false);return;}
-        // We need email — get it from salons table or ask user
         setError("Phone login ke liye apna registered email use karo abhi.");
         setLoading(false);return;
       }
@@ -317,7 +309,9 @@ function Onboarding({onComplete,onBack}){
       if(authErr)throw authErr;
       const userId=authData.user.id;
       const {error:salonErr}=await supabase.from("salons").insert({
-        id:userId,owner_name:data.ownerName,salon_name:data.salonName,phone:data.phone,city:data.city,plan:"free"
+        id:userId,owner_name:data.ownerName,salon_name:data.salonName,phone:data.phone,city:data.city,plan:"free",
+        services:svcs.filter(s=>s.active),working_days:data.workDays,open_time:data.openTime,close_time:data.closeTime,
+        whatsapp_number:data.waNumber,
       });
       if(salonErr)throw salonErr;
       onComplete({id:userId,name:data.ownerName,email:data.email,salon:data.salonName,city:data.city,plan:"Trial",logo_url:null});
@@ -368,7 +362,7 @@ function Onboarding({onComplete,onBack}){
   );
 }
 
-// ─── SETTINGS FIELD COMPONENT (outside to prevent re-render) ─────────────────
+// ─── SETTINGS FIELD COMPONENT ─────────────────────────────────────────────────
 const SF=({label,hint,children})=>(<div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#444",marginBottom:hint?3:5}}>{label}</div>{hint&&<div style={{fontSize:11,color:"#aaa",marginBottom:5}}>{hint}</div>}{children}</div>);
 const SCard=({title,icon,children,np})=>(<div style={{background:"#fff",border:"2px solid #e8edf3",borderRadius:16,overflow:"hidden",marginBottom:12}}><div style={{padding:"12px 16px",borderBottom:"2px solid #f0f4f8",display:"flex",alignItems:"center",gap:9}}><div style={{width:32,height:32,borderRadius:10,background:"#e8fdf0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{icon}</div><div style={{fontWeight:900,fontSize:14}}>{title}</div></div><div style={np?{}:{padding:"14px 16px"}}>{children}</div></div>);
 const SToggle=({val,onChange})=>(<div onClick={onChange} style={{width:44,height:24,borderRadius:12,cursor:"pointer",background:val?"#22c55e":"#e8edf3",position:"relative",transition:"background 0.2s",flexShrink:0}}><div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:3,transition:"left 0.2s",left:val?"23px":"3px",boxShadow:"0 1px 4px rgba(0,0,0,0.15)"}}/></div>);
@@ -377,11 +371,32 @@ const SToggle=({val,onChange})=>(<div onClick={onChange} style={{width:44,height
 function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const [tab,setTab]=useState("profile");
   const [saved,setSaved]=useState(false);
-  const [profile,setProfile]=useState({salonName:user.salon,ownerName:user.name,phone:"98765 43210",email:user.email,city:user.city||"Delhi",salonType:"unisex"});
+  const [loading,setLoading]=useState(true);
+
+  // ✅ profile state with address + mapsLink
+  const [profile,setProfile]=useState({
+    salonName:user.salon,
+    ownerName:user.name,
+    phone:"98765 43210",
+    email:user.email,
+    city:user.city||"Delhi",
+    salonType:"unisex",
+    address:"",
+    mapsLink:"",
+  });
+
   const [logoUrl,setLogoUrl]=useState(user.logo_url||null);
   const [logoUploading,setLogoUploading]=useState(false);
   const logoFileRef=useRef(null);
-  const [services,setServices]=useState([{id:1,emoji:"✂️",name:"Haircut",price:250,duration:30,active:true},{id:2,emoji:"✂️",name:"Haircut + Beard",price:450,duration:45,active:true},{id:3,emoji:"🎨",name:"Hair Colour",price:1200,duration:90,active:true},{id:4,emoji:"💆",name:"Facial + Cleanup",price:600,duration:60,active:false},{id:5,emoji:"💄",name:"Bridal Makeup",price:2000,duration:90,active:false}]);
+
+  const [services,setServices]=useState([
+    {id:1,emoji:"✂️",name:"Haircut",price:250,duration:30,active:true},
+    {id:2,emoji:"✂️",name:"Haircut + Beard",price:450,duration:45,active:true},
+    {id:3,emoji:"🎨",name:"Hair Colour",price:1200,duration:90,active:true},
+    {id:4,emoji:"💆",name:"Facial + Cleanup",price:600,duration:60,active:false},
+    {id:5,emoji:"💄",name:"Bridal Makeup",price:2000,duration:90,active:false},
+  ]);
+
   const [hours,setHours]=useState({workDays:["Mon","Tue","Wed","Thu","Fri","Sat"],openTime:9,closeTime:21,slotDuration:30});
   const [wa,setWa]=useState({number:"+91 98765 43210",autoReply:true,greeting:`🙏 Namaste! ${user.salon} mein aapka swagat hai!\n\n1️⃣ Appointment Book\n2️⃣ Services & Prices`,confirmMsg:"✅ Booking confirmed!\n\n👤 {name}\n💇 {service}\n📅 {date} at {time}\n\nSee you soon! 💈"});
   const [editId,setEditId]=useState(null);
@@ -390,7 +405,31 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
 
   const SETTING_TABS=[{id:"profile",icon:"🏪",label:"Salon"},{id:"services",icon:"💇",label:"Services"},{id:"hours",icon:"🕐",label:"Hours"},{id:"whatsapp",icon:"💬",label:"WhatsApp"},{id:"account",icon:"👤",label:"Account"}];
 
-  // ✅ Logo upload handler
+  // ✅ Load existing salon data from Supabase on mount
+  useEffect(()=>{
+    async function loadSalonData(){
+      try{
+        const {data:salon}=await supabase.from("salons").select("*").eq("id",user.id).single();
+        if(salon){
+          setProfile(p=>({
+            ...p,
+            salonName:salon.salon_name||p.salonName,
+            ownerName:salon.owner_name||p.ownerName,
+            city:salon.city||p.city,
+            address:salon.address||"",
+            mapsLink:salon.maps_link||"",
+          }));
+          if(salon.services&&salon.services.length>0) setServices(salon.services);
+          if(salon.working_days&&salon.working_days.length>0) setHours(h=>({...h,workDays:salon.working_days,openTime:salon.open_time||9,closeTime:salon.close_time||21}));
+          if(salon.whatsapp_number) setWa(w=>({...w,number:salon.whatsapp_number}));
+        }
+      }catch(e){console.error("Load error:",e);}
+      setLoading(false);
+    }
+    loadSalonData();
+  },[user.id]);
+
+  // ✅ Logo upload
   async function handleLogoUpload(e){
     const file = e.target.files[0];
     if(!file) return;
@@ -405,20 +444,30 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
       setLogoUrl(newUrl);
       await supabase.from("salons").update({ logo_url: newUrl }).eq("id", user.id);
       onSalonUpdate(profile.salonName, newUrl);
-    }catch(err){
-      console.error("Logo upload error:", err);
-    }
+    }catch(err){ console.error("Logo upload error:", err); }
     setLogoUploading(false);
     e.target.value = "";
   }
 
+  // ✅ Save — ab sab fields Supabase mein save honge
   async function save(){
     setSaved(true);
     try{
-      await supabase.from("salons").update({salon_name:profile.salonName,owner_name:profile.ownerName,city:profile.city}).eq("id",user.id);
+      await supabase.from("salons").update({
+        salon_name: profile.salonName,
+        owner_name: profile.ownerName,
+        city: profile.city,
+        address: profile.address || "",
+        maps_link: profile.mapsLink || "",
+        whatsapp_number: wa.number || "",
+        services: services,
+        working_days: hours.workDays,
+        open_time: hours.openTime,
+        close_time: hours.closeTime,
+      }).eq("id", user.id);
       onSalonUpdate(profile.salonName, logoUrl);
-    }catch(e){console.error(e);}
-    setTimeout(()=>setSaved(false),2500);
+    }catch(e){ console.error(e); }
+    setTimeout(()=>setSaved(false), 2500);
   }
 
   async function handleLogout(){
@@ -438,6 +487,8 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const Card=SCard;
   const Toggle=SToggle;
 
+  if(loading) return <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#888"}}>Loading...</div>;
+
   return(
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <div style={{background:"#fff",borderBottom:"2px solid #e8edf3",display:"flex",overflowX:"auto",flexShrink:0}}>
@@ -445,15 +496,12 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
       </div>
       <div style={{flex:1,overflowY:"auto",padding:"14px 14px 80px"}}>
         {tab==="profile"&&(<>
-          {/* ✅ Logo Upload Card */}
+          {/* Logo Upload */}
           <Card title="Salon Logo" icon="🖼️">
             <input ref={logoFileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleLogoUpload}/>
             <div style={{display:"flex",alignItems:"center",gap:14}}>
               <div style={{width:72,height:72,borderRadius:16,overflow:"hidden",border:"2px solid #e8edf3",background:"#f8fafc",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                {logoUrl
-                  ? <img src={logoUrl} alt="logo" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-                  : <span style={{fontSize:28}}>✂️</span>
-                }
+                {logoUrl ? <img src={logoUrl} alt="logo" style={{width:"100%",height:"100%",objectFit:"cover"}}/> : <span style={{fontSize:28}}>✂️</span>}
               </div>
               <div style={{flex:1}}>
                 <div style={{fontWeight:800,fontSize:13,marginBottom:4}}>{logoUrl?"Logo uploaded ✅":"No logo yet"}</div>
@@ -464,12 +512,17 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
               </div>
             </div>
           </Card>
+
+          {/* ✅ Salon Details with Address + Maps Link */}
           <Card title="Salon Details" icon="🏪">
             <F label="Salon Name"><input value={profile.salonName} onChange={e=>setProfile(p=>({...p,salonName:e.target.value}))} style={inputStyle}/></F>
             <F label="Owner Name"><input value={profile.ownerName} onChange={e=>setProfile(p=>({...p,ownerName:e.target.value}))} style={inputStyle}/></F>
             <F label="City"><input value={profile.city} onChange={e=>setProfile(p=>({...p,city:e.target.value}))} style={inputStyle}/></F>
+            <F label="Address" hint="Customers ko WhatsApp pe yeh address dikhega"><input value={profile.address} onChange={e=>setProfile(p=>({...p,address:e.target.value}))} placeholder="e.g. Shop 12, MG Road, Delhi" style={inputStyle}/></F>
+            <F label="Google Maps Link" hint="Paste karo apne salon ka Google Maps link"><input value={profile.mapsLink} onChange={e=>setProfile(p=>({...p,mapsLink:e.target.value}))} placeholder="https://maps.google.com/..." style={inputStyle}/></F>
             <F label="Salon Type"><select value={profile.salonType} onChange={e=>setProfile(p=>({...p,salonType:e.target.value}))} style={selStyle}><option value="unisex">💇 Unisex</option><option value="mens">💈 Men's Salon</option><option value="ladies">💄 Ladies Parlour</option><option value="bridal">👰 Bridal Studio</option></select></F>
           </Card>
+
           <Card title="Staff Settings" icon="👨‍💼">
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <div><div style={{fontWeight:800,fontSize:13}}>Staff ko Revenue dikhao?</div><div style={{fontSize:11,color:"#888",marginTop:2}}>{showRevenue?"Staff apni earnings dekh sakta hai":"Staff ko ₹ amounts hidden hain"}</div></div>
@@ -477,6 +530,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             </div>
           </Card>
         </>)}
+
         {tab==="services"&&(
           <Card title="Your Services" icon="💇" np>
             {services.map(s=>(<div key={s.id}>{editId===s.id?(
@@ -507,6 +561,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             )}
           </Card>
         )}
+
         {tab==="hours"&&(<>
           <Card title="Working Days" icon="📅"><div style={{display:"flex",flexWrap:"wrap",gap:7}}>{WEEK_DAYS.map(d=>{const a=hours.workDays.includes(d);return(<button key={d} onClick={()=>toggleDay(d)} style={{padding:"7px 14px",borderRadius:20,border:`2px solid ${a?"#22c55e":"#e8edf3"}`,background:a?"#e8fdf0":"#fff",color:a?"#16a34a":"#888",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{d}</button>);})}</div></Card>
           <Card title="Timings" icon="🕐">
@@ -517,10 +572,12 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             <div style={{background:"#f0fdf4",border:"2px solid #bbf7d0",borderRadius:11,padding:"10px 12px",fontSize:12,color:"#16a34a",fontWeight:700}}>📅 {hours.openTime}:00 → {hours.closeTime>12?hours.closeTime-12:hours.closeTime}:00</div>
           </Card>
         </>)}
+
         {tab==="whatsapp"&&(<>
           <Card title="WhatsApp Number" icon="📱"><F label="WhatsApp Business Number"><input value={wa.number} onChange={e=>setWa(p=>({...p,number:e.target.value}))} style={inputStyle}/></F><button style={{width:"100%",padding:"11px",background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:11,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📲 Send Test Message</button></Card>
           <Card title="Bot Messages" icon="💬"><F label="Greeting Message"><textarea value={wa.greeting} onChange={e=>setWa(p=>({...p,greeting:e.target.value}))} rows={4} style={{...is,marginTop:5,resize:"vertical",lineHeight:1.6}}/></F><F label="Confirmation Message"><textarea value={wa.confirmMsg} onChange={e=>setWa(p=>({...p,confirmMsg:e.target.value}))} rows={5} style={{...is,marginTop:5,resize:"vertical",lineHeight:1.6}}/></F></Card>
         </>)}
+
         {tab==="account"&&(<>
           <div style={{background:"#1a1a2e",borderRadius:16,padding:"18px",marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
@@ -549,8 +606,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
 }
 
 // ─── STAFF SALON ENTRY ────────────────────────────────────────────────────────
-// Staff apne salon ka phone number enter karta hai → uska staff list milta hai
-// ✅ NEW: Staff login directly with own phone + PIN
 function StaffSalonEntry({onFound,onBack}){
   const [phone,setPhone]=useState("");
   const [pin,setPin]=useState("");
@@ -562,12 +617,9 @@ function StaffSalonEntry({onFound,onBack}){
     if(!pin||pin.length!==4){setError("4-digit PIN daalo!");return;}
     setLoading(true);setError("");
     try{
-      // Staff dhundho by phone number
       const {data:staffData}=await supabase.from("staff").select("*").eq("phone",phone.trim()).single();
       if(!staffData){setError("Is number se koi staff nahi mila! Owner se check karo.");setLoading(false);return;}
-      // PIN verify karo
       if(staffData.pin!==pin){setError("PIN galat hai! Dobara try karo.");setPin("");setLoading(false);return;}
-      // Login success!
       onFound(staffData);
     }catch(e){
       setError("Koi staff nahi mila is number se!");
@@ -700,10 +752,9 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
 
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:"#1a1a2e",background:"#f0f4f8",overflow:"hidden"}}>
-      {/* ✅ Salon branded header */}
       <SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")}/>
-
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+
         {screen==="dashboard"&&(
           <div style={{padding:"14px 16px",overflowY:"auto",flex:1}}>
             <div style={{marginBottom:14}}>
@@ -839,8 +890,6 @@ export default function SnipBook(){
   const [user,setUser]=useState(null);
   const [staffUser,setStaffUser]=useState(null);
   const [showRevenue,setShowRevenue]=useState(DEFAULT_SHOW_REVENUE);
-  const [realStaffList,setRealStaffList]=useState([]);
-  const [staffSalonId,setStaffSalonId]=useState(null);
 
   useEffect(()=>{
     supabase.auth.getSession().then(async({data:{session}})=>{
@@ -853,7 +902,7 @@ export default function SnipBook(){
           salon:salon?.salon_name||"Mera Salon",
           city:salon?.city||"",
           plan:salon?.plan||"free",
-          logo_url:salon?.logo_url||null, // ✅ load logo on session restore
+          logo_url:salon?.logo_url||null,
         });
         setPage("app");
       } else {
@@ -884,7 +933,6 @@ export default function SnipBook(){
     <>
       {page==="landing"&&<Landing onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}
       {page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{
-        // Staff login pe pehle salon ID maango, phir staff load karo
         setPage("staffSalonEntry");
       }} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}
       {page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{
