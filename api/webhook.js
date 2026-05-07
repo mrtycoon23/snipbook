@@ -1,3 +1,6 @@
+export const config = {
+  maxDuration: 30,
+};
 const SALON_ID = "ba0e6447-c162-4bc7-b049-fe825121e092";
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY;
