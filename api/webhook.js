@@ -1,10 +1,8 @@
-const SALON_ID = "ba0e6447-c162-4bc7-b049-fe825121e092"; // SnipBook demo salon
+const SALON_ID = "ba0e6447-c162-4bc7-b049-fe825121e092";
 
-// ─── Supabase fetch ───────────────────────────────────────────────────────────
 async function getSalonData() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
-
   try {
     const res = await fetch(
       `${supabaseUrl}/rest/v1/salons?id=eq.${SALON_ID}&limit=1`,
@@ -17,61 +15,85 @@ async function getSalonData() {
       }
     );
     const data = await res.json();
-    console.log("Salon data fetched:", JSON.stringify(data?.[0]));
+    console.log("Salon fetched:", JSON.stringify(data?.[0]));
     return data?.[0] || null;
   } catch (e) {
-    console.error("Supabase fetch error:", e);
+    console.error("Supabase error:", e);
     return null;
   }
 }
 
-// ─── Main handler ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  res.status(200).json({ status: "ok" });
+  // GET request — webhook verify
+  if (req.method === "GET") {
+    const mode = req.query["hub.mode"];
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
+    if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
+      return res.status(200).send(challenge);
+    }
+    return res.status(403).send("Forbidden");
+  }
 
-  if (req.method !== "POST") return;
+  // POST request — message aaya
+  if (req.method !== "POST") {
+    return res.status(200).json({ status: "ok" });
+  }
 
   const body = req.body;
-  if (body.type !== "whatsapp.inbound_message.received") return;
+
+  if (body.type !== "whatsapp.inbound_message.received") {
+    return res.status(200).json({ status: "ok" });
+  }
 
   const msg = body.whatsappInboundMessage;
   const from = msg?.from;
   const text = msg?.text?.body?.trim().toLowerCase();
   const interactiveReply = msg?.interactive?.listReply?.id;
 
-  if (!from) return;
-
   console.log("From:", from, "Text:", text, "Interactive:", interactiveReply);
 
-  // Salon data fetch karo
-  const salon = await getSalonData();
-
-  const salonName  = salon?.salon_name   || "SnipBook Salon";
-  const address    = salon?.address      || "";
-  const mapsLink   = salon?.maps_link    || "";
-  const services   = salon?.services     || [];
-  const openTime   = salon?.open_time    || 9;
-  const closeTime  = salon?.close_time   || 21;
-  const workDays   = salon?.working_days || ["Mon","Tue","Wed","Thu","Fri","Sat"];
-  const phone      = salon?.phone        || "";
-
-  // Interactive list reply
-  if (interactiveReply) {
-    const reply = handleListReply(interactiveReply, { salonName, address, mapsLink, services, openTime, closeTime, workDays, phone });
-    if (reply) await sendTextMessage(from, reply);
-    return;
+  if (!from) {
+    return res.status(200).json({ status: "ok" });
   }
 
-  if (!text) return;
+  // Pehle 200 bhejo YCloud ko — timeout avoid karne ke liye
+  res.status(200).json({ status: "ok" });
 
-  const menuTriggers = ["hi","hello","hii","hey","namaste","start","help","menu","0","back","wapas","helo"];
-  if (menuTriggers.some(w => text === w || text.includes(w))) {
+  // Ab baaki kaam karo
+  try {
+    const salon = await getSalonData();
+
+    const salonName = salon?.salon_name   || "SnipBook Salon";
+    const address   = salon?.address      || "";
+    const mapsLink  = salon?.maps_link    || "";
+    const services  = salon?.services     || [];
+    const openTime  = salon?.open_time    || 9;
+    const closeTime = salon?.close_time   || 21;
+    const workDays  = salon?.working_days || ["Mon","Tue","Wed","Thu","Fri","Sat"];
+    const phone     = salon?.phone        || "";
+
+    if (interactiveReply) {
+      const reply = handleListReply(interactiveReply, { salonName, address, mapsLink, services, openTime, closeTime, workDays, phone });
+      if (reply) await sendTextMessage(from, reply);
+      return;
+    }
+
+    if (!text) return;
+
+    const menuTriggers = ["hi","hello","hii","hey","namaste","start","help","menu","0","back","wapas","helo"];
+    if (menuTriggers.some(w => text === w || text.includes(w))) {
+      await sendListMessage(from, salonName);
+      return;
+    }
+
+    // Default — kuch bhi likha
+    await sendTextMessage(from, "Namaste! 🙏 Neeche se apna option chunein 👇");
     await sendListMessage(from, salonName);
-    return;
-  }
 
-  await sendTextMessage(from, "Namaste! 🙏 Neeche se apna option chunein 👇");
-  await sendListMessage(from, salonName);
+  } catch (err) {
+    console.error("Handler error:", err);
+  }
 }
 
 // ─── List message ─────────────────────────────────────────────────────────────
@@ -107,7 +129,7 @@ async function sendListMessage(to, salonName) {
       body: JSON.stringify(payload),
     });
     const d = await r.json();
-    console.log("List msg response:", JSON.stringify(d));
+    console.log("List msg:", JSON.stringify(d));
   } catch (e) {
     console.error("List msg error:", e);
   }
@@ -115,7 +137,7 @@ async function sendListMessage(to, salonName) {
 
 // ─── List reply ───────────────────────────────────────────────────────────────
 function handleListReply(optionId, salon) {
-  const { salonName, address, mapsLink, services, openTime, closeTime, workDays, phone } = salon;
+  const { address, mapsLink, services, openTime, closeTime, workDays, phone } = salon;
 
   switch (optionId) {
     case "appointment":
@@ -173,12 +195,11 @@ _Wapas menu ke liye "Hi" type karein_`;
   }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatTime(hour) {
   const h = parseInt(hour);
-  if (h === 0)   return "12:00 AM";
-  if (h < 12)    return `${h}:00 AM`;
-  if (h === 12)  return "12:00 PM";
+  if (h === 0)  return "12:00 AM";
+  if (h < 12)   return `${h}:00 AM`;
+  if (h === 12) return "12:00 PM";
   return `${h - 12}:00 PM`;
 }
 
@@ -196,7 +217,7 @@ async function sendTextMessage(to, message) {
       }),
     });
     const d = await r.json();
-    console.log("Text msg response:", JSON.stringify(d));
+    console.log("Text msg:", JSON.stringify(d));
   } catch (e) {
     console.error("Text msg error:", e);
   }
