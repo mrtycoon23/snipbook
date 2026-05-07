@@ -18,27 +18,21 @@ async function getSalonData() {
     console.log("Salon fetched:", JSON.stringify(data?.[0]));
     return data?.[0] || null;
   } catch (e) {
-    console.error("Supabase error:", e);
+    console.error("Supabase error:", e.message);
     return null;
   }
 }
 
 export default async function handler(req, res) {
-  // GET request — webhook verify
   if (req.method === "GET") {
-    const mode = req.query["hub.mode"];
-    const token = req.query["hub.verify_token"];
-    const challenge = req.query["hub.challenge"];
+    const { "hub.mode": mode, "hub.verify_token": token, "hub.challenge": challenge } = req.query;
     if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
       return res.status(200).send(challenge);
     }
     return res.status(403).send("Forbidden");
   }
 
-  // POST request — message aaya
-  if (req.method !== "POST") {
-    return res.status(200).json({ status: "ok" });
-  }
+  if (req.method !== "POST") return res.status(200).json({ status: "ok" });
 
   const body = req.body;
 
@@ -51,16 +45,11 @@ export default async function handler(req, res) {
   const text = msg?.text?.body?.trim().toLowerCase();
   const interactiveReply = msg?.interactive?.listReply?.id;
 
-  console.log("From:", from, "Text:", text, "Interactive:", interactiveReply);
+  console.log("Incoming — From:", from, "Text:", text, "Interactive:", interactiveReply);
 
-  if (!from) {
-    return res.status(200).json({ status: "ok" });
-  }
+  if (!from) return res.status(200).json({ status: "ok" });
 
-  // Pehle 200 bhejo YCloud ko — timeout avoid karne ke liye
-  res.status(200).json({ status: "ok" });
-
-  // Ab baaki kaam karo
+  // ✅ Sab processing PEHLE karo — response BAAD mein bhejo
   try {
     const salon = await getSalonData();
 
@@ -76,27 +65,23 @@ export default async function handler(req, res) {
     if (interactiveReply) {
       const reply = handleListReply(interactiveReply, { salonName, address, mapsLink, services, openTime, closeTime, workDays, phone });
       if (reply) await sendTextMessage(from, reply);
-      return;
+    } else if (text) {
+      const menuTriggers = ["hi","hello","hii","hey","namaste","start","help","menu","0","back","wapas","helo"];
+      if (menuTriggers.some(w => text === w || text.includes(w))) {
+        await sendListMessage(from, salonName);
+      } else {
+        await sendTextMessage(from, "Namaste! 🙏 Neeche se apna option chunein 👇");
+        await sendListMessage(from, salonName);
+      }
     }
-
-    if (!text) return;
-
-    const menuTriggers = ["hi","hello","hii","hey","namaste","start","help","menu","0","back","wapas","helo"];
-    if (menuTriggers.some(w => text === w || text.includes(w))) {
-      await sendListMessage(from, salonName);
-      return;
-    }
-
-    // Default — kuch bhi likha
-    await sendTextMessage(from, "Namaste! 🙏 Neeche se apna option chunein 👇");
-    await sendListMessage(from, salonName);
-
   } catch (err) {
-    console.error("Handler error:", err);
+    console.error("Processing error:", err.message);
   }
+
+  // ✅ Response sabse aakhir mein
+  return res.status(200).json({ status: "ok" });
 }
 
-// ─── List message ─────────────────────────────────────────────────────────────
 async function sendListMessage(to, salonName) {
   const apiKey = process.env.YCLOUD_API_KEY;
   const payload = {
@@ -129,13 +114,12 @@ async function sendListMessage(to, salonName) {
       body: JSON.stringify(payload),
     });
     const d = await r.json();
-    console.log("List msg:", JSON.stringify(d));
+    console.log("List msg sent:", JSON.stringify(d));
   } catch (e) {
-    console.error("List msg error:", e);
+    console.error("List msg error:", e.message);
   }
 }
 
-// ─── List reply ───────────────────────────────────────────────────────────────
 function handleListReply(optionId, salon) {
   const { address, mapsLink, services, openTime, closeTime, workDays, phone } = salon;
 
@@ -160,27 +144,14 @@ _Wapas menu ke liye "Hi" type karein_`;
         const list = active.map(s => `${s.emoji || "✂️"} ${s.name} — ₹${s.price}`).join("\n");
         return `✂️ *Hamare Services*\n\n${list}\n\n_Appointment ke liye menu se option chunein_`;
       }
-      return `✂️ *Hamare Services*
-
-💈 Haircut — ₹200 se
-💈 Haircut + Beard — ₹350 se
-🎨 Hair Color — ₹800 se
-💆 Facial — ₹400 se
-💅 Manicure — ₹300 se
-
-_Appointment ke liye menu se option chunein_`;
+      return `✂️ *Hamare Services*\n\n💈 Haircut — ₹200 se\n💈 Haircut + Beard — ₹350 se\n🎨 Hair Color — ₹800 se\n💆 Facial — ₹400 se\n💅 Manicure — ₹300 se\n\n_Appointment ke liye menu se option chunein_`;
     }
 
     case "timing": {
       const days  = (workDays || []).join(", ") || "Mon - Sat";
       const open  = formatTime(openTime);
       const close = formatTime(closeTime);
-      return `🕐 *Salon Timings*
-
-📅 ${days}
-⏰ ${open} – ${close}
-
-_Wapas menu ke liye "Hi" type karein_`;
+      return `🕐 *Salon Timings*\n\n📅 ${days}\n⏰ ${open} – ${close}\n\n_Wapas menu ke liye "Hi" type karein_`;
     }
 
     case "contact": {
@@ -217,8 +188,8 @@ async function sendTextMessage(to, message) {
       }),
     });
     const d = await r.json();
-    console.log("Text msg:", JSON.stringify(d));
+    console.log("Text msg sent:", JSON.stringify(d));
   } catch (e) {
-    console.error("Text msg error:", e);
+    console.error("Text msg error:", e.message);
   }
 }
