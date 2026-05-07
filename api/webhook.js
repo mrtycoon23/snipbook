@@ -36,20 +36,33 @@ export default async function handler(req, res) {
 
   const body = req.body;
 
+  // ✅ Pura body log karo debug ke liye
+  console.log("Full body:", JSON.stringify(body));
+
   if (body.type !== "whatsapp.inbound_message.received") {
     return res.status(200).json({ status: "ok" });
   }
 
   const msg = body.whatsappInboundMessage;
-  const from = msg?.from;
-  const text = msg?.text?.body?.trim().toLowerCase();
-  const interactiveReply = msg?.interactive?.listReply?.id;
 
-  console.log("Incoming — From:", from, "Text:", text, "Interactive:", interactiveReply);
+  // ✅ Text
+  const text = msg?.text?.body?.trim().toLowerCase();
+
+  // ✅ YCloud interactive reply — dono formats try karo
+  const interactiveReply =
+    msg?.interactive?.listReply?.id ||      // camelCase
+    msg?.interactive?.list_reply?.id ||     // snake_case
+    msg?.interactive?.buttonReply?.id ||    // button reply
+    msg?.interactive?.button_reply?.id;
+
+  const from = msg?.from;
+
+  console.log("From:", from, "Text:", text, "Interactive:", interactiveReply);
+  console.log("Msg type:", msg?.type);
+  console.log("Interactive raw:", JSON.stringify(msg?.interactive));
 
   if (!from) return res.status(200).json({ status: "ok" });
 
-  // ✅ Sab processing PEHLE karo — response BAAD mein bhejo
   try {
     const salon = await getSalonData();
 
@@ -73,12 +86,14 @@ export default async function handler(req, res) {
         await sendTextMessage(from, "Namaste! 🙏 Neeche se apna option chunein 👇");
         await sendListMessage(from, salonName);
       }
+    } else {
+      // ✅ Koi bhi message aaye — menu dikhao
+      await sendListMessage(from, salonName);
     }
   } catch (err) {
     console.error("Processing error:", err.message);
   }
 
-  // ✅ Response sabse aakhir mein
   return res.status(200).json({ status: "ok" });
 }
 
@@ -144,7 +159,7 @@ _Wapas menu ke liye "Hi" type karein_`;
         const list = active.map(s => `${s.emoji || "✂️"} ${s.name} — ₹${s.price}`).join("\n");
         return `✂️ *Hamare Services*\n\n${list}\n\n_Appointment ke liye menu se option chunein_`;
       }
-      return `✂️ *Hamare Services*\n\n💈 Haircut — ₹200 se\n💈 Haircut + Beard — ₹350 se\n🎨 Hair Color — ₹800 se\n💆 Facial — ₹400 se\n💅 Manicure — ₹300 se\n\n_Appointment ke liye menu se option chunein_`;
+      return `✂️ *Hamare Services*\n\n💈 Haircut — ₹200 se\n💈 Haircut + Beard — ₹350 se\n🎨 Hair Color — ₹800 se\n💆 Facial — ₹400 se\n\n_Appointment ke liye menu se option chunein_`;
     }
 
     case "timing": {
