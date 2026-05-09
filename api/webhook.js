@@ -64,13 +64,11 @@ async function getBookedSlots(date) {
 // ─── YCloud helpers ───────────────────────────────────────────────────────────
 async function sendText(to, body) {
   try {
-    const r = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+    await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
       method: "POST",
       headers: { "X-API-Key": YCLOUD_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({ from: BOT_NUMBER, to, type: "text", text: { body } }),
     });
-    const d = await r.json();
-    console.log("sendText:", d?.status);
   } catch(e) { console.error("sendText error:", e.message); }
 }
 
@@ -94,7 +92,7 @@ async function sendButtons(to, bodyText, buttons) {
 
 async function sendList(to, headerText, bodyText, buttonLabel, rows, footerText = "Powered by SnipBook") {
   try {
-    const r = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+    await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
       method: "POST",
       headers: { "X-API-Key": YCLOUD_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -109,16 +107,13 @@ async function sendList(to, headerText, bodyText, buttonLabel, rows, footerText 
         }
       }),
     });
-    const d = await r.json();
-    console.log("sendList:", d?.status);
+    console.log("sendList: accepted");
   } catch(e) { console.error("sendList error:", e.message); }
 }
 
-// ─── Main Menu ────────────────────────────────────────────────────────────────
 async function sendMainMenu(to, salonName) {
   await sendList(
-    to,
-    `🙏 ${salonName}`,
+    to, `🙏 ${salonName}`,
     `Namaste! Aap kya karna chahte hain?\nNeeche se option chunein 👇`,
     "Menu Dekho",
     [
@@ -149,6 +144,7 @@ export default async function handler(req, res) {
 
   const msg  = body.whatsappInboundMessage;
   const from = msg?.from;
+  const msgId = msg?.id || "";
   const text = msg?.text?.body?.trim();
   const interactiveId =
     msg?.interactive?.listReply?.id ||
@@ -156,10 +152,22 @@ export default async function handler(req, res) {
     msg?.interactive?.buttonReply?.id ||
     msg?.interactive?.button_reply?.id;
 
-  console.log("From:", from, "Text:", text, "Interactive:", interactiveId);
+  console.log("From:", from, "Text:", text, "Interactive:", interactiveId, "MsgId:", msgId);
   if (!from) { res.status(200).json({ status: "ok" }); return; }
 
   try {
+    // ✅ Duplicate message check — same msgId dobara aaye toh ignore karo
+    if (msgId) {
+      const processed = await getSession(`dup_${msgId}`);
+      if (processed) {
+        console.log("Duplicate message ignored:", msgId);
+        res.status(200).json({ status: "ok" });
+        return;
+      }
+      // Mark as processed
+      await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
+    }
+
     const [salon, session] = await Promise.all([getSalon(), getSession(from)]);
 
     const salonName = salon?.salon_name   || "SnipBook Salon";
@@ -176,7 +184,7 @@ export default async function handler(req, res) {
 
     console.log("Step:", step, "Data:", JSON.stringify(data));
 
-    // ✅ 1. Hi/Hello — HAMESHA fresh start (sabse pehle check)
+    // ✅ Hi/Hello — fresh start
     const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
     if (text && resetWords.includes(text.toLowerCase())) {
       await clearSession(from);
@@ -185,8 +193,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ✅ 2. Booking flow — step by step
-    // Step: ask_name
+    // ─── BOOKING FLOW ──────────────────────────────────────────────────────────
+
+    // ask_name
     if (step === "ask_name" && text && !interactiveId) {
       await setSession(from, "ask_gender", { name: text });
       await sendButtons(from,
@@ -200,12 +209,11 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Step: ask_gender
+    // ask_gender
     if (step === "ask_gender" && (interactiveId === "gender_male" || interactiveId === "gender_female")) {
       const gender = interactiveId === "gender_male" ? "male" : "female";
       await setSession(from, "ask_service", { ...data, gender });
 
-      // Filter services by gender
       const filtered = services.filter(s => {
         if (!s.gender || s.gender === "both") return true;
         return s.gender === gender;
@@ -216,17 +224,15 @@ export default async function handler(req, res) {
         title: `${s.emoji || "✂️"} ${s.name}`.slice(0, 24),
         description: `₹${s.price} · ${s.duration} min`
       }));
-
-      // Add "Other/Custom" option
       rows.push({ id: "svc_custom", title: "✏️ Koi Aur Service", description: "Apni service khud likhein" });
 
       const genderLabel = gender === "male" ? "👨 Male" : "👩 Female";
-      await sendList(from, `✂️ ${genderLabel} Services`, "Konsi service chahiye?", "Service Chunein", rows);
+      await sendList(from, `✂️ ${genderLabel} Services`, `*${data.name}*, konsi service chahiye?`, "Service Chunein", rows);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // Step: ask_service — custom service type karo
+    // ask_service — custom
     if (step === "ask_service" && interactiveId === "svc_custom") {
       await setSession(from, "ask_service_custom", { ...data });
       await sendText(from, `✏️ *Apni service likhein:*\n\nJo service chahiye woh type karein\n(e.g. Keratin, Smoothening, Bridal Package)\n\n_Wapas menu ke liye "Hi" type karein_`);
@@ -234,43 +240,35 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Step: ask_service_custom — user ne custom service type ki
+    // ask_service_custom
     if (step === "ask_service_custom" && text && !interactiveId) {
-      await setSession(from, "ask_date", { ...data, service: text, price: 0, isCustom: true });
-      const days = getNextDays(workDays, 15);
-      const rows = days.map(d => ({ id: `date_${d.key}`, title: d.label, description: d.dayName }));
-      rows.push({ id: "date_custom", title: "📅 Koi Aur Date", description: "Khud date likhein" });
-      await sendList(from, "📅 Date Chunein", `*${text}*\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows);
+      await setSession(from, "ask_date", { ...data, service: text, price: 0 });
+      await sendDateList(from, data, workDays);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // Step: ask_service — service select ki
+    // ask_service — select kiya
     if (step === "ask_service" && interactiveId?.startsWith("svc_")) {
       const svcId = interactiveId.replace("svc_", "");
       const selected = services.find(s => String(s.id) === svcId);
       const serviceName  = selected?.name  || svcId;
       const servicePrice = selected?.price || 0;
       await setSession(from, "ask_date", { ...data, service: serviceName, price: servicePrice });
-
-      const days = getNextDays(workDays, 15);
-      const rows = days.map(d => ({ id: `date_${d.key}`, title: d.label, description: d.dayName }));
-      rows.push({ id: "date_custom", title: "📅 Koi Aur Date", description: "Khud date likhein" });
-
-      await sendList(from, "📅 Date Chunein", `*${serviceName}* — ₹${servicePrice}\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows);
+      await sendDateList(from, { ...data, service: serviceName, price: servicePrice }, workDays);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // Step: ask_date — custom date option
+    // ask_date — custom date option
     if (step === "ask_date" && interactiveId === "date_custom") {
       await setSession(from, "ask_date_custom", { ...data });
-      await sendText(from, `📅 *Kaunsi date chahiye?*\n\nDate likhein (e.g. *25 May* ya *2 June*)\n\n_Wapas menu ke liye "Hi" type karein_`);
+      await sendText(from, `📅 *Kaunsi date chahiye?*\n\nDate likhein:\n*25 May* ya *2 June* ya *15 Jun 2026*\n\n_Wapas menu ke liye "Hi" type karein_`);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // Step: ask_date_custom — user ne custom date type ki
+    // ask_date_custom — user ne type kiya
     if (step === "ask_date_custom" && text && !interactiveId) {
       const parsedDate = parseCustomDate(text);
       if (!parsedDate) {
@@ -290,7 +288,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Step: ask_date — date select ki
+    // ask_date — date select ki
     if (step === "ask_date" && interactiveId?.startsWith("date_")) {
       const dateKey = interactiveId.replace("date_", "");
       await setSession(from, "ask_time_part", { ...data, date: dateKey });
@@ -305,22 +303,19 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Step: ask_time_part — Morning ya Evening choose kiya
+    // ask_time_part
     if (step === "ask_time_part" && (interactiveId === "time_morning" || interactiveId === "time_evening")) {
       const isMorning = interactiveId === "time_morning";
       const startH = isMorning ? openTime : 14;
       const endH   = isMorning ? 14 : closeTime;
 
-      // Booked slots fetch karo
       const booked = await getBookedSlots(data.date);
-
       const allSlots = getTimeSlots(startH, endH);
       const available = allSlots.filter(s => !booked.includes(s.key));
 
       if (available.length === 0) {
-        await setSession(from, "ask_time_part", { ...data });
         await sendButtons(from,
-          `😔 *${isMorning ? "Morning" : "Evening"}* mein koi slot available nahi hai *${formatDate(data.date)}* ko!\n\nDusra time chunein:`,
+          `😔 Is time mein koi slot available nahi *${formatDate(data.date)}* ko!\n\nDusra time chunein:`,
           [
             { id: "time_morning", title: "🌅 Morning (9AM-2PM)" },
             { id: "time_evening", title: "🌆 Evening (2PM-9PM)" },
@@ -343,7 +338,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Step: ask_time — time select kiya
+    // ask_time
     if (step === "ask_time" && interactiveId?.startsWith("time_")) {
       const timeKey = interactiveId.replace("time_", "");
       await setSession(from, "confirm", { ...data, time: timeKey });
@@ -366,7 +361,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Step: confirm — Yes
+    // confirm — yes
     if (step === "confirm" && interactiveId === "confirm_yes") {
       await fetch(`${SUPABASE_URL}/rest/v1/appointments`, {
         method: "POST",
@@ -395,15 +390,14 @@ export default async function handler(req, res) {
         `✂️ ${data.service}\n` +
         `📅 ${formatDate(data.date)} at ${formatTime12(data.time)}\n` +
         `💰 ${priceText}\n\n` +
-        `📲 Aapko 1 ghante pehle reminder milega.\n\n` +
-        `See you soon! 💈`;
+        `📲 Aapko 1 ghante pehle reminder milega.\n\nSee you soon! 💈`;
 
       await sendButtons(from, successMsg, [{ id: "main_menu", title: "🏠 Main Menu" }]);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // Step: confirm — No
+    // confirm — no
     if (step === "confirm" && interactiveId === "confirm_no") {
       await clearSession(from);
       await sendText(from, "Koi baat nahi! 😊\nKabhi bhi book karne ke liye \"Hi\" type karein.");
@@ -412,7 +406,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Main menu pe wapas
     if (interactiveId === "main_menu") {
       await clearSession(from);
       await sendMainMenu(from, salonName);
@@ -420,21 +413,27 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ✅ 3. Main menu options
+    // ─── MAIN MENU OPTIONS ─────────────────────────────────────────────────────
     if (interactiveId === "appointment") {
-      await setSession(from, "ask_name", {});
-      await sendText(from,
-        `📅 *Appointment Book Karein*\n\n` +
-        `Great! Let's book your appointment. 😊\n\n` +
-        `*Aapka naam kya hai?*`
-      );
+      // ✅ Agar naam pehle se session mein hai toh skip karo
+      if (data.name) {
+        await setSession(from, "ask_gender", data);
+        await sendButtons(from,
+          `Welcome back, *${data.name}!* 🙌\n\nAap kaunsi services chahte hain?`,
+          [
+            { id: "gender_male",   title: "👨 Male Services" },
+            { id: "gender_female", title: "👩 Female Services" },
+          ]
+        );
+      } else {
+        await setSession(from, "ask_name", {});
+        await sendText(from, `📅 *Appointment Book Karein*\n\nGreat! Let's book your appointment. 😊\n\n*Aapka naam kya hai?*`);
+      }
       res.status(200).json({ status: "ok" });
       return;
     }
 
     if (interactiveId === "services") {
-      const maleServices   = services.filter(s => !s.gender || s.gender === "male"   || s.gender === "both");
-      const femaleServices = services.filter(s => !s.gender || s.gender === "female" || s.gender === "both");
       const allList = services.length > 0
         ? services.map(s => `${s.emoji || "✂️"} *${s.name}* — ₹${s.price}`).join("\n")
         : "✂️ Haircut — ₹250\n✂️ Haircut + Beard — ₹450\n🎨 Hair Colour — ₹1200";
@@ -460,7 +459,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Default — kuch samajh nahi aaya
+    // Default
     await clearSession(from);
     await sendMainMenu(from, salonName);
     res.status(200).json({ status: "ok" });
@@ -469,6 +468,15 @@ export default async function handler(req, res) {
     console.error("Handler error:", err.message);
     res.status(200).json({ status: "ok" });
   }
+}
+
+// ─── Send date list helper ────────────────────────────────────────────────────
+async function sendDateList(to, data, workDays) {
+  const days = getNextDays(workDays, 9); // 9 dates + 1 custom = 10
+  const rows = days.map(d => ({ id: `date_${d.key}`, title: d.label, description: d.dayName }));
+  rows.push({ id: "date_custom", title: "📅 Koi Aur Date", description: "Khud date likhein" });
+  const priceText = data.price > 0 ? ` — ₹${data.price}` : "";
+  await sendList(to, "📅 Date Chunein", `*${data.service}*${priceText}\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows);
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -502,10 +510,12 @@ function getTimeSlots(open, close) {
 }
 
 function parseCustomDate(text) {
-  const MN = { jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
-    january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12 };
+  const MN = {
+    jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12,
+    january:1, february:2, march:3, april:4, june:6, july:7, august:8,
+    september:9, october:10, november:11, december:12
+  };
   const t = text.toLowerCase().trim();
-  // "25 may" or "25 may 2026"
   const m = t.match(/(\d{1,2})\s+([a-z]+)(?:\s+(\d{4}))?/);
   if (!m) return null;
   const day = parseInt(m[1]);
