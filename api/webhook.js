@@ -1,6 +1,6 @@
 export const config = { maxDuration: 30 };
 
-const SALON_ID    = "ba0e6447-c162-4bc7-b049-fe825121e092";
+const SALON_ID     = "ba0e6447-c162-4bc7-b049-fe825121e092";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const YCLOUD_KEY   = process.env.YCLOUD_API_KEY;
@@ -16,40 +16,55 @@ async function getSalon() {
 
 async function getSession(phone) {
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${phone}&limit=1`, {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(phone)}&limit=1`, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
     const d = await r.json();
+    console.log("Session fetch result:", JSON.stringify(d));
     return d?.[0] || null;
-  } catch { return null; }
+  } catch(e) {
+    console.error("getSession error:", e.message);
+    return null;
+  }
 }
 
 async function setSession(phone, step, data = {}) {
-  await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
-    method: "POST",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: "resolution=merge-duplicates",
-    },
-    body: JSON.stringify({ phone, step, data, updated_at: new Date().toISOString() }),
-  });
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates",
+      },
+      body: JSON.stringify({ phone, step, data, updated_at: new Date().toISOString() }),
+    });
+    console.log("setSession status:", r.status, "step:", step);
+  } catch(e) {
+    console.error("setSession error:", e.message);
+  }
 }
 
 async function clearSession(phone) {
-  await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${phone}`, {
-    method: "DELETE",
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(phone)}`, {
+      method: "DELETE",
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+  } catch(e) {
+    console.error("clearSession error:", e.message);
+  }
 }
 
 async function sendText(to, body) {
-  await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+  const r = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
     method: "POST",
     headers: { "X-API-Key": YCLOUD_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({ from: BOT_NUMBER, to, type: "text", text: { body } }),
   });
+  const d = await r.json();
+  console.log("sendText:", d?.status);
 }
 
 async function sendButtons(to, bodyText, buttons) {
@@ -69,7 +84,7 @@ async function sendButtons(to, bodyText, buttons) {
 }
 
 async function sendList(to, headerText, bodyText, buttonLabel, rows) {
-  await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+  const r = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
     method: "POST",
     headers: { "X-API-Key": YCLOUD_KEY, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -84,6 +99,8 @@ async function sendList(to, headerText, bodyText, buttonLabel, rows) {
       }
     }),
   });
+  const d = await r.json();
+  console.log("sendList:", d?.status);
 }
 
 async function sendMainMenu(to, salonName) {
@@ -96,48 +113,45 @@ async function sendMainMenu(to, salonName) {
 }
 
 export default async function handler(req, res) {
-  // ✅ Sirf ek res — bilkul end mein
+  if (req.method === "GET") {
+    const { "hub.mode": mode, "hub.verify_token": token, "hub.challenge": challenge } = req.query;
+    if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
+      res.status(200).send(challenge);
+    } else {
+      res.status(403).send("Forbidden");
+    }
+    return;
+  }
+
+  if (req.method !== "POST") {
+    res.status(200).json({ status: "ok" });
+    return;
+  }
+
+  const body = req.body;
+  if (body.type !== "whatsapp.inbound_message.received") {
+    res.status(200).json({ status: "ok" });
+    return;
+  }
+
+  const msg  = body.whatsappInboundMessage;
+  const from = msg?.from;
+  const text = msg?.text?.body?.trim();
+  const interactiveId =
+    msg?.interactive?.listReply?.id ||
+    msg?.interactive?.list_reply?.id ||
+    msg?.interactive?.buttonReply?.id ||
+    msg?.interactive?.button_reply?.id;
+
+  console.log("From:", from, "Text:", text, "Interactive:", interactiveId);
+
+  if (!from) {
+    res.status(200).json({ status: "ok" });
+    return;
+  }
+
   try {
-    if (req.method === "GET") {
-      const { "hub.mode": mode, "hub.verify_token": token, "hub.challenge": challenge } = req.query;
-      if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
-        res.status(200).send(challenge);
-      } else {
-        res.status(403).send("Forbidden");
-      }
-      return;
-    }
-
-    if (req.method !== "POST") {
-      res.status(200).json({ status: "ok" });
-      return;
-    }
-
-    const body = req.body;
-
-    if (body.type !== "whatsapp.inbound_message.received") {
-      res.status(200).json({ status: "ok" });
-      return;
-    }
-
-    const msg  = body.whatsappInboundMessage;
-    const from = msg?.from;
-    const text = msg?.text?.body?.trim();
-    const interactiveId =
-      msg?.interactive?.listReply?.id ||
-      msg?.interactive?.list_reply?.id ||
-      msg?.interactive?.buttonReply?.id ||
-      msg?.interactive?.button_reply?.id;
-
-    console.log("From:", from, "Text:", text, "Interactive:", interactiveId);
-
-    if (!from) {
-      res.status(200).json({ status: "ok" });
-      return;
-    }
-
-    const salon   = await getSalon();
-    const session = await getSession(from);
+    const [salon, session] = await Promise.all([getSalon(), getSession(from)]);
 
     const salonName = salon?.salon_name   || "SnipBook Salon";
     const services  = (salon?.services    || []).filter(s => s.active !== false);
@@ -151,65 +165,10 @@ export default async function handler(req, res) {
     const step = session?.step || "menu";
     const data = session?.data || {};
 
-    console.log("Salon:", salonName, "Step:", step);
+    console.log("Salon:", salonName, "Step:", step, "Data:", JSON.stringify(data));
 
-    // Reset triggers
-    const resetTriggers = ["hi","hello","hii","hey","namaste","menu","start","0","wapas","back","helo"];
-    if (text && resetTriggers.some(w => text.toLowerCase() === w || text.toLowerCase().includes(w))) {
-      await clearSession(from);
-      await sendMainMenu(from, salonName);
-      res.status(200).json({ status: "ok" });
-      return;
-    }
-
-    // Main menu selections
-    if (interactiveId === "appointment") {
-      await setSession(from, "ask_name", {});
-      await sendText(from, `📅 *Appointment Book Karein*\n\nGreat! Let's book your appointment. 😊\n\n*Aapka naam kya hai?*`);
-      res.status(200).json({ status: "ok" });
-      return;
-    }
-
-    if (interactiveId === "services") {
-      const list = services.length > 0
-        ? services.map(s => `${s.emoji || "✂️"} *${s.name}* — ₹${s.price}`).join("\n")
-        : "✂️ Haircut — ₹250\n✂️ Haircut + Beard — ₹450\n🎨 Hair Colour — ₹1200";
-      await sendText(from, `✂️ *Hamare Services*\n\n${list}\n\n_Appointment ke liye "Appointment Book Karo" chunein_`);
-      res.status(200).json({ status: "ok" });
-      return;
-    }
-
-    if (interactiveId === "timing") {
-      const days = (workDays || []).join(", ");
-      await sendText(from, `🕐 *Salon Timings*\n\n📅 ${days}\n⏰ ${formatTime(openTime)} – ${formatTime(closeTime)}\n\n_Wapas menu ke liye "Hi" type karein_`);
-      res.status(200).json({ status: "ok" });
-      return;
-    }
-
-    if (interactiveId === "contact") {
-      let m = `📞 *Humse Sampark Karein*\n\n📱 Phone: +91 ${phone}`;
-      if (address)  m += `\n📍 Address: ${address}`;
-      if (mapsLink) m += `\n🗺️ Location: ${mapsLink}`;
-      m += `\n\n_Wapas menu ke liye "Hi" type karein_`;
-      await sendText(from, m);
-      res.status(200).json({ status: "ok" });
-      return;
-    }
-
-    if (interactiveId === "main_menu") {
-      await clearSession(from);
-      await sendMainMenu(from, salonName);
-      res.status(200).json({ status: "ok" });
-      return;
-    }
-
-    // Booking flow
-    if (step === "ask_name") {
-      if (!text) {
-        await sendText(from, "Kripya apna naam likhein 👇");
-        res.status(200).json({ status: "ok" });
-        return;
-      }
+    // ✅ BOOKING FLOW — check karo PEHLE (reset se pehle!)
+    if (step === "ask_name" && text && !interactiveId) {
       await setSession(from, "ask_service", { name: text });
       const rows = services.slice(0, 10).map(s => ({
         id: `svc_${s.id}`,
@@ -237,7 +196,7 @@ export default async function handler(req, res) {
       await setSession(from, "ask_date", { ...data, service: serviceName, price: servicePrice });
       const days = getNextDays(workDays, 5);
       const rows = days.map(d => ({ id: `date_${d.key}`, title: d.label, description: d.dayName }));
-      await sendList(from, "📅 Date Chunein", `*${serviceName}* — ₹${servicePrice}\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows);
+      await sendList(from, "📅 Date Chunein", `*${serviceName}* — ₹${servicePrice}\n\nKaunsa din?`, "Din Dekho", rows);
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -247,7 +206,7 @@ export default async function handler(req, res) {
       await setSession(from, "ask_time", { ...data, date: dateKey });
       const slots = getTimeSlots(openTime, closeTime);
       const rows  = slots.map(s => ({ id: `time_${s.key}`, title: `🟢 ${s.label}`, description: "Available" }));
-      await sendList(from, "🕐 Time Chunein", `📅 *${formatDate(dateKey)}*\n\nKaunsa time slot chahiye?`, "Slot Dekho", rows);
+      await sendList(from, "🕐 Time Chunein", `📅 *${formatDate(dateKey)}*\n\nKaunsa time slot?`, "Slot Dekho", rows);
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -303,13 +262,63 @@ export default async function handler(req, res) {
       return;
     }
 
+    // ✅ RESET triggers — sirf tab jab koi active booking flow nahi
+    const resetTriggers = ["hi","hello","hii","hey","namaste","menu","start","0","wapas","back","helo"];
+    if (text && resetTriggers.some(w => text.toLowerCase() === w || text.toLowerCase().includes(w))) {
+      await clearSession(from);
+      await sendMainMenu(from, salonName);
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    // Main menu selections
+    if (interactiveId === "appointment") {
+      await setSession(from, "ask_name", {});
+      await sendText(from, `📅 *Appointment Book Karein*\n\nGreat! Let's book your appointment. 😊\n\n*Aapka naam kya hai?*`);
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    if (interactiveId === "services") {
+      const list = services.length > 0
+        ? services.map(s => `${s.emoji || "✂️"} *${s.name}* — ₹${s.price}`).join("\n")
+        : "✂️ Haircut — ₹250\n✂️ Haircut + Beard — ₹450\n🎨 Hair Colour — ₹1200";
+      await sendText(from, `✂️ *Hamare Services*\n\n${list}\n\n_Appointment ke liye "Appointment Book Karo" chunein_`);
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    if (interactiveId === "timing") {
+      const days = (workDays || []).join(", ");
+      await sendText(from, `🕐 *Salon Timings*\n\n📅 ${days}\n⏰ ${formatTime(openTime)} – ${formatTime(closeTime)}\n\n_Wapas menu ke liye "Hi" type karein_`);
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    if (interactiveId === "contact") {
+      let m = `📞 *Humse Sampark Karein*\n\n📱 Phone: +91 ${phone}`;
+      if (address)  m += `\n📍 Address: ${address}`;
+      if (mapsLink) m += `\n🗺️ Location: ${mapsLink}`;
+      m += `\n\n_Wapas menu ke liye "Hi" type karein_`;
+      await sendText(from, m);
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    if (interactiveId === "main_menu") {
+      await clearSession(from);
+      await sendMainMenu(from, salonName);
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
     // Default
     await clearSession(from);
     await sendMainMenu(from, salonName);
     res.status(200).json({ status: "ok" });
 
   } catch (err) {
-    console.error("Error:", err.message);
+    console.error("Handler error:", err.message);
     res.status(200).json({ status: "ok" });
   }
 }
@@ -325,7 +334,9 @@ function getNextDays(workDays, count) {
     const dayName = DN[d.getDay()];
     if (!workDays || workDays.includes(dayName)) {
       const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-      const label = i === 1 ? `Tomorrow (${d.getDate()} ${MN[d.getMonth()]})` : `${dayName}, ${d.getDate()} ${MN[d.getMonth()]}`;
+      const label = i === 1
+        ? `Tomorrow (${d.getDate()} ${MN[d.getMonth()]})`
+        : `${dayName}, ${d.getDate()} ${MN[d.getMonth()]}`;
       result.push({ key, label, dayName });
     }
   }
