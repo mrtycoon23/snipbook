@@ -156,7 +156,7 @@ export default async function handler(req, res) {
   if (!from) { res.status(200).json({ status: "ok" }); return; }
 
   try {
-    // ✅ Duplicate message check — same msgId dobara aaye toh ignore karo
+    // ✅ Duplicate message check
     if (msgId) {
       const processed = await getSession(`dup_${msgId}`);
       if (processed) {
@@ -164,7 +164,6 @@ export default async function handler(req, res) {
         res.status(200).json({ status: "ok" });
         return;
       }
-      // Mark as processed
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
@@ -184,7 +183,7 @@ export default async function handler(req, res) {
 
     console.log("Step:", step, "Data:", JSON.stringify(data));
 
-    // ✅ Hi/Hello — fresh start
+    // ✅ Hi/Hello — fresh start (naam persistent session delete NAHI hoga)
     const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
     if (text && resetWords.includes(text.toLowerCase())) {
       await clearSession(from);
@@ -197,6 +196,8 @@ export default async function handler(req, res) {
 
     // ask_name
     if (step === "ask_name" && text && !interactiveId) {
+      // ✅ FIX 1: Naam persistent key mein save karo (separate se, kabhi delete nahi hoga)
+      await setSession(`name_${from}`, "saved", { name: text });
       await setSession(from, "ask_gender", { name: text });
       await sendButtons(from,
         `Nice to meet you, *${text}!* 🙌\n\nAap kaunsi services chahte hain?`,
@@ -414,12 +415,16 @@ export default async function handler(req, res) {
     }
 
     // ─── MAIN MENU OPTIONS ─────────────────────────────────────────────────────
+
     if (interactiveId === "appointment") {
-      // ✅ Agar naam pehle se session mein hai toh skip karo
-      if (data.name) {
-        await setSession(from, "ask_gender", data);
+      // ✅ FIX 2: Pehle persistent naam session check karo
+      const nameSession = await getSession(`name_${from}`);
+      const savedName = nameSession?.data?.name || data.name;
+
+      if (savedName) {
+        await setSession(from, "ask_gender", { ...data, name: savedName });
         await sendButtons(from,
-          `Welcome back, *${data.name}!* 🙌\n\nAap kaunsi services chahte hain?`,
+          `Welcome back, *${savedName}!* 🙌\n\nAap kaunsi services chahte hain?`,
           [
             { id: "gender_male",   title: "👨 Male Services" },
             { id: "gender_female", title: "👩 Female Services" },
@@ -434,10 +439,20 @@ export default async function handler(req, res) {
     }
 
     if (interactiveId === "services") {
+      // ✅ FIX 3: Services list ke baad booking button bhi bhejo
       const allList = services.length > 0
         ? services.map(s => `${s.emoji || "✂️"} *${s.name}* — ₹${s.price}`).join("\n")
         : "✂️ Haircut — ₹250\n✂️ Haircut + Beard — ₹450\n🎨 Hair Colour — ₹1200";
-      await sendText(from, `✂️ *Hamare Services*\n\n${allList}\n\n_Appointment ke liye "Appointment Book Karo" chunein_`);
+
+      await sendText(from, `✂️ *Hamare Services*\n\n${allList}\n\n_Appointment ke liye neeche button dabayein_ 👇`);
+
+      await sendButtons(from,
+        `Koi service pasand aayi? 😊`,
+        [
+          { id: "appointment", title: "📅 Book Appointment" },
+          { id: "main_menu",   title: "🏠 Main Menu" },
+        ]
+      );
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -472,7 +487,7 @@ export default async function handler(req, res) {
 
 // ─── Send date list helper ────────────────────────────────────────────────────
 async function sendDateList(to, data, workDays) {
-  const days = getNextDays(workDays, 9); // 9 dates + 1 custom = 10
+  const days = getNextDays(workDays, 9);
   const rows = days.map(d => ({ id: `date_${d.key}`, title: d.label, description: d.dayName }));
   rows.push({ id: "date_custom", title: "📅 Koi Aur Date", description: "Khud date likhein" });
   const priceText = data.price > 0 ? ` — ₹${data.price}` : "";
