@@ -196,16 +196,23 @@ export default async function handler(req, res) {
 
     // ask_name
     if (step === "ask_name" && text && !interactiveId) {
-      // ✅ FIX 1: Naam persistent key mein save karo (separate se, kabhi delete nahi hoga)
+      // ✅ Naam persistent key mein save karo
       await setSession(`name_${from}`, "saved", { name: text });
-      await setSession(from, "ask_gender", { name: text });
-      await sendButtons(from,
-        `Nice to meet you, *${text}!* 🙌\n\nAap kaunsi services chahte hain?`,
-        [
-          { id: "gender_male",   title: "👨 Male Services" },
-          { id: "gender_female", title: "👩 Female Services" },
-        ]
-      );
+
+      // Agar browse flow se pending service thi toh seedha date pe jao
+      if (data.pendingService) {
+        await setSession(from, "ask_date", { name: text, service: data.pendingService, price: data.pendingPrice || 0 });
+        await sendDateList(from, { name: text, service: data.pendingService, price: data.pendingPrice || 0 }, workDays);
+      } else {
+        await setSession(from, "ask_gender", { name: text });
+        await sendButtons(from,
+          `Nice to meet you, *${text}!* 🙌\n\nAap kaunsi services chahte hain?`,
+          [
+            { id: "gender_male",   title: "👨 Male Services" },
+            { id: "gender_female", title: "👩 Female Services" },
+          ]
+        );
+      }
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -439,20 +446,130 @@ export default async function handler(req, res) {
     }
 
     if (interactiveId === "services") {
-      // ✅ FIX 3: Services list ke baad booking button bhi bhejo
-      const allList = services.length > 0
-        ? services.map(s => `${s.emoji || "✂️"} *${s.name}* — ₹${s.price}`).join("\n")
-        : "✂️ Haircut — ₹250\n✂️ Haircut + Beard — ₹450\n🎨 Hair Colour — ₹1200";
-
-      await sendText(from, `✂️ *Hamare Services*\n\n${allList}\n\n_Appointment ke liye neeche button dabayein_ 👇`);
-
+      // ✅ Services Dekho → pehle gender chunein
+      await setSession(from, "browse_services_gender", { ...data });
       await sendButtons(from,
-        `Koi service pasand aayi? 😊`,
+        `✂️ *Hamare Services*\n\nKaunsi services dekhna chahte hain?`,
         [
-          { id: "appointment", title: "📅 Book Appointment" },
-          { id: "main_menu",   title: "🏠 Main Menu" },
+          { id: "browse_male",   title: "👨 Male Services" },
+          { id: "browse_female", title: "👩 Female Services" },
         ]
       );
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    // browse_services_gender — Male ya Female select kiya
+    if (step === "browse_services_gender" && (interactiveId === "browse_male" || interactiveId === "browse_female")) {
+      const gender = interactiveId === "browse_male" ? "male" : "female";
+      await setSession(from, "browse_services_list", { ...data, gender });
+
+      const filtered = services.filter(s => {
+        if (!s.gender || s.gender === "both") return true;
+        return s.gender === gender;
+      });
+
+      const rows = filtered.slice(0, 9).map(s => ({
+        id: `browse_svc_${s.id}`,
+        title: `${s.emoji || "✂️"} ${s.name}`.slice(0, 24),
+        description: `₹${s.price} · ${s.duration} min`
+      }));
+      rows.push({ id: "browse_svc_custom", title: "✏️ Koi Aur Service", description: "Apni service khud likhein" });
+
+      const genderLabel = gender === "male" ? "👨 Male" : "👩 Female";
+      await sendList(from, `✂️ ${genderLabel} Services`, `Koi bhi service select karein ya book karein 👇`, "Services Dekho", rows);
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    // browse_services_list — service select ki → book karne ka option do
+    if (step === "browse_services_list" && interactiveId?.startsWith("browse_svc_")) {
+      const svcId = interactiveId.replace("browse_svc_", "");
+
+      if (svcId === "custom") {
+        await setSession(from, "browse_services_custom", { ...data });
+        await sendText(from, `✏️ *Apni service likhein:*\n\nJo service chahiye woh type karein\n(e.g. Keratin, Smoothening, Bridal Package)\n\n_Wapas menu ke liye "Hi" type karein_`);
+        res.status(200).json({ status: "ok" });
+        return;
+      }
+
+      const selected = services.find(s => String(s.id) === svcId);
+      const serviceName  = selected?.name  || svcId;
+      const servicePrice = selected?.price || 0;
+      const serviceDur   = selected?.duration || "";
+
+      const priceText = servicePrice > 0 ? `₹${servicePrice}` : "Price on visit";
+      const durText   = serviceDur ? ` · ${serviceDur} min` : "";
+
+      await setSession(from, "browse_services_list", { ...data });
+      await sendButtons(from,
+        `✂️ *${serviceName}*\n💰 ${priceText}${durText}\n\nIs service ko book karna chahte hain?`,
+        [
+          { id: `book_svc_${svcId}`, title: "📅 Appointment Book Karo" },
+          { id: "browse_back",        title: "⬅️ Wapas Services" },
+        ]
+      );
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    // browse_services_custom — custom service type ki
+    if (step === "browse_services_custom" && text && !interactiveId) {
+      await sendButtons(from,
+        `✂️ *${text}*\n\nIs service ko book karna chahte hain?`,
+        [
+          { id: `book_custom_${encodeURIComponent(text).slice(0,20)}`, title: "📅 Appointment Book Karo" },
+          { id: "browse_back", title: "⬅️ Wapas Services" },
+        ]
+      );
+      await setSession(from, "browse_services_list", { ...data, pendingCustomService: text });
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    // browse_back — wapas services list
+    if (interactiveId === "browse_back") {
+      const gender = data.gender || "male";
+      const filtered = services.filter(s => {
+        if (!s.gender || s.gender === "both") return true;
+        return s.gender === gender;
+      });
+      const rows = filtered.slice(0, 9).map(s => ({
+        id: `browse_svc_${s.id}`,
+        title: `${s.emoji || "✂️"} ${s.name}`.slice(0, 24),
+        description: `₹${s.price} · ${s.duration} min`
+      }));
+      rows.push({ id: "browse_svc_custom", title: "✏️ Koi Aur Service", description: "Apni service khud likhein" });
+      const genderLabel = gender === "male" ? "👨 Male" : "👩 Female";
+      await sendList(from, `✂️ ${genderLabel} Services`, `Koi bhi service select karein ya book karein 👇`, "Services Dekho", rows);
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    // book_svc_* → appointment flow mein le jao (naam check karke)
+    if (interactiveId?.startsWith("book_svc_") || interactiveId?.startsWith("book_custom_")) {
+      let serviceName, servicePrice;
+
+      if (interactiveId.startsWith("book_custom_")) {
+        serviceName  = data.pendingCustomService || "Custom Service";
+        servicePrice = 0;
+      } else {
+        const svcId  = interactiveId.replace("book_svc_", "");
+        const sel    = services.find(s => String(s.id) === svcId);
+        serviceName  = sel?.name  || svcId;
+        servicePrice = sel?.price || 0;
+      }
+
+      const nameSession = await getSession(`name_${from}`);
+      const savedName   = nameSession?.data?.name || data.name;
+
+      if (savedName) {
+        await setSession(from, "ask_date", { name: savedName, service: serviceName, price: servicePrice });
+        await sendDateList(from, { name: savedName, service: serviceName, price: servicePrice }, workDays);
+      } else {
+        await setSession(from, "ask_name", { pendingService: serviceName, pendingPrice: servicePrice });
+        await sendText(from, `📅 *Appointment Book Karein*\n\nGreat! Let's book your appointment. 😊\n\n*Aapka naam kya hai?*`);
+      }
       res.status(200).json({ status: "ok" });
       return;
     }
