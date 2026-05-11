@@ -410,6 +410,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const [wa,setWa]=useState({number:"+91 98765 43210",autoReply:true,greeting:`🙏 Namaste! ${user.salon} mein aapka swagat hai!\n\n1️⃣ Appointment Book\n2️⃣ Services & Prices`,confirmMsg:"✅ Booking confirmed!\n\n👤 {name}\n💇 {service}\n📅 {date} at {time}\n\nSee you soon! 💈"});
   const [editId,setEditId]=useState(null);
   const [showAdd,setShowAdd]=useState(false);
+  const [openSection,setOpenSection]=useState(null); // null = dono band
   // ✅ FIX: gender added to newSvc default state
   const [newSvc,setNewSvc]=useState({emoji:"✂️",name:"",price:"",duration:30,gender:"both"});
 
@@ -552,12 +553,19 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             const sectionBorder= genderSection==="male" ? "#93c5fd" : "#f9a8d4";
             const sectionLabel = genderSection==="male" ? "👨 Male Services" : "👩 Female Services";
             const isAdding     = showAdd === genderSection;
+            const isOpen       = openSection === genderSection;
             return(
-              <div key={genderSection} style={{background:"#fff",border:`2px solid ${sectionBorder}`,borderRadius:16,overflow:"hidden",marginBottom:12}}>
-                <div style={{padding:"12px 16px",background:sectionBg,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <div style={{fontWeight:900,fontSize:14,color:sectionColor}}>{sectionLabel}</div>
-                  <div style={{fontSize:11,fontWeight:700,color:sectionColor}}>{sectionSvcs.filter(s=>s.active).length} active</div>
+              <div key={genderSection} style={{background:"#fff",border:`2px solid ${isOpen?sectionColor:sectionBorder}`,borderRadius:16,overflow:"hidden",marginBottom:12,transition:"all 0.2s"}}>
+                {/* ✅ Clickable header — click se open/close */}
+                <div onClick={()=>{setOpenSection(isOpen?null:genderSection);setShowAdd(false);setEditId(null);}} style={{padding:"14px 16px",background:isOpen?sectionBg:"#fff",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background 0.2s"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{fontWeight:900,fontSize:14,color:isOpen?sectionColor:"#1a1a2e"}}>{sectionLabel}</div>
+                    <div style={{background:isOpen?sectionColor+"22":"#f0f4f8",color:isOpen?sectionColor:"#888",fontSize:11,fontWeight:800,padding:"2px 8px",borderRadius:20}}>{sectionSvcs.filter(s=>s.active).length} services</div>
+                  </div>
+                  <div style={{fontSize:16,color:isOpen?sectionColor:"#aaa",transition:"transform 0.2s",transform:isOpen?"rotate(180deg)":"rotate(0deg)"}}>⌄</div>
                 </div>
+                {/* ✅ Content — sirf tab dikhao jab open ho */}
+                {isOpen&&<>
                 {sectionSvcs.map(s=>(<div key={s.id}>{editId===s.id?(
                   <div style={{padding:"13px 14px",borderBottom:"2px solid #f0f4f8",background:"#f8fafc"}}>
                     <div style={{fontWeight:800,fontSize:13,color:sectionColor,marginBottom:9}}>✏️ {s.name}</div>
@@ -614,6 +622,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
                     </button>
                   </div>
                 )}
+                </>}
               </div>
             );
           })}
