@@ -271,7 +271,7 @@ export default async function handler(req, res) {
     // ask_date — custom date option
     if (step === "ask_date" && interactiveId === "date_custom") {
       await setSession(from, "ask_date_custom", { ...data });
-      await sendText(from, `📅 *Kaunsi date chahiye?*\n\nDate likhein:\n*25 May* ya *2 June* ya *15 Jun 2026*\n\n_Wapas menu ke liye "Hi" type karein_`);
+      await sendText(from, `📅 *Apni marzi ki date likhein*\n\nKoi bhi aane wali date type karein 👇\n_(Jaise: 25 May, 3 June, 15 Jul)_\n\n_Wapas menu ke liye "Hi" type karein_`);
       res.status(200).json({ status: "ok" });
       return;
     }

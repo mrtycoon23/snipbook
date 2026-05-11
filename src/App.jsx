@@ -273,7 +273,16 @@ function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 const OB_STEPS=[{id:1,title:"Create Account",icon:"👤"},{id:2,title:"Salon Info",icon:"✂️"},{id:3,title:"Working Hours",icon:"🕐"},{id:4,title:"Services",icon:"💇"},{id:5,title:"WhatsApp",icon:"💬"},{id:6,title:"All Set!",icon:"🎉"}];
-const DEF_SVCS=[{id:1,emoji:"✂️",name:"Haircut",price:250,duration:30,active:true},{id:2,emoji:"✂️",name:"Haircut + Beard",price:450,duration:45,active:true},{id:3,emoji:"🎨",name:"Hair Colour",price:1200,duration:90,active:false},{id:4,emoji:"💆",name:"Facial + Cleanup",price:600,duration:60,active:false},{id:5,emoji:"💄",name:"Bridal Makeup",price:2000,duration:90,active:false},{id:6,emoji:"💆",name:"Hair Spa",price:700,duration:60,active:false}];
+
+// ✅ FIX: gender field added to DEF_SVCS
+const DEF_SVCS=[
+  {id:1,emoji:"✂️",name:"Haircut",price:250,duration:30,active:true,gender:"male"},
+  {id:2,emoji:"✂️",name:"Haircut + Beard",price:450,duration:45,active:true,gender:"male"},
+  {id:3,emoji:"🎨",name:"Hair Colour",price:1200,duration:90,active:false,gender:"both"},
+  {id:4,emoji:"💆",name:"Facial + Cleanup",price:600,duration:60,active:false,gender:"both"},
+  {id:5,emoji:"💄",name:"Bridal Makeup",price:2000,duration:90,active:false,gender:"female"},
+  {id:6,emoji:"💆",name:"Hair Spa",price:700,duration:60,active:false,gender:"both"},
+];
 
 function OBF({label,children}){
   return(<div style={{marginBottom:14}}><label style={{fontSize:13,fontWeight:800,color:"#555",display:"block",marginBottom:5}}>{label}</label>{children}</div>);
@@ -373,7 +382,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const [saved,setSaved]=useState(false);
   const [loading,setLoading]=useState(true);
 
-  // ✅ profile state with address + mapsLink
   const [profile,setProfile]=useState({
     salonName:user.salon,
     ownerName:user.name,
@@ -389,23 +397,24 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const [logoUploading,setLogoUploading]=useState(false);
   const logoFileRef=useRef(null);
 
+  // ✅ FIX: gender field in default services
   const [services,setServices]=useState([
-    {id:1,emoji:"✂️",name:"Haircut",price:250,duration:30,active:true},
-    {id:2,emoji:"✂️",name:"Haircut + Beard",price:450,duration:45,active:true},
-    {id:3,emoji:"🎨",name:"Hair Colour",price:1200,duration:90,active:true},
-    {id:4,emoji:"💆",name:"Facial + Cleanup",price:600,duration:60,active:false},
-    {id:5,emoji:"💄",name:"Bridal Makeup",price:2000,duration:90,active:false},
+    {id:1,emoji:"✂️",name:"Haircut",price:250,duration:30,active:true,gender:"male"},
+    {id:2,emoji:"✂️",name:"Haircut + Beard",price:450,duration:45,active:true,gender:"male"},
+    {id:3,emoji:"🎨",name:"Hair Colour",price:1200,duration:90,active:true,gender:"both"},
+    {id:4,emoji:"💆",name:"Facial + Cleanup",price:600,duration:60,active:false,gender:"both"},
+    {id:5,emoji:"💄",name:"Bridal Makeup",price:2000,duration:90,active:false,gender:"female"},
   ]);
 
   const [hours,setHours]=useState({workDays:["Mon","Tue","Wed","Thu","Fri","Sat"],openTime:9,closeTime:21,slotDuration:30});
   const [wa,setWa]=useState({number:"+91 98765 43210",autoReply:true,greeting:`🙏 Namaste! ${user.salon} mein aapka swagat hai!\n\n1️⃣ Appointment Book\n2️⃣ Services & Prices`,confirmMsg:"✅ Booking confirmed!\n\n👤 {name}\n💇 {service}\n📅 {date} at {time}\n\nSee you soon! 💈"});
   const [editId,setEditId]=useState(null);
   const [showAdd,setShowAdd]=useState(false);
-  const [newSvc,setNewSvc]=useState({emoji:"✂️",name:"",price:"",duration:30});
+  // ✅ FIX: gender added to newSvc default state
+  const [newSvc,setNewSvc]=useState({emoji:"✂️",name:"",price:"",duration:30,gender:"both"});
 
   const SETTING_TABS=[{id:"profile",icon:"🏪",label:"Salon"},{id:"services",icon:"💇",label:"Services"},{id:"hours",icon:"🕐",label:"Hours"},{id:"whatsapp",icon:"💬",label:"WhatsApp"},{id:"account",icon:"👤",label:"Account"}];
 
-  // ✅ Load existing salon data from Supabase on mount
   useEffect(()=>{
     async function loadSalonData(){
       try{
@@ -429,7 +438,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
     loadSalonData();
   },[user.id]);
 
-  // ✅ Logo upload
   async function handleLogoUpload(e){
     const file = e.target.files[0];
     if(!file) return;
@@ -449,7 +457,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
     e.target.value = "";
   }
 
-  // ✅ Save — ab sab fields Supabase mein save honge
   async function save(){
     setSaved(true);
     try{
@@ -478,7 +485,12 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   function toggleSvc(id){setServices(p=>p.map(s=>s.id===id?{...s,active:!s.active}:s));}
   function updSvc(id,f,v){setServices(p=>p.map(s=>s.id===id?{...s,[f]:v}:s));}
   function delSvc(id){setServices(p=>p.filter(s=>s.id!==id));setEditId(null);}
-  function addSvc(){if(!newSvc.name.trim())return;setServices(p=>[...p,{id:Date.now(),emoji:newSvc.emoji,name:newSvc.name.trim(),price:parseInt(newSvc.price)||0,duration:newSvc.duration,active:true}]);setNewSvc({emoji:"✂️",name:"",price:"",duration:30});setShowAdd(false);}
+  function addSvc(){
+    if(!newSvc.name.trim())return;
+    setServices(p=>[...p,{id:Date.now(),emoji:newSvc.emoji,name:newSvc.name.trim(),price:parseInt(newSvc.price)||0,duration:newSvc.duration,active:true,gender:newSvc.gender||"both"}]);
+    setNewSvc({emoji:"✂️",name:"",price:"",duration:30,gender:"both"});
+    setShowAdd(false);
+  }
   function toggleDay(d){setHours(p=>({...p,workDays:p.workDays.includes(d)?p.workDays.filter(x=>x!==d):[...p.workDays,d]}));}
 
   const inputStyle={...is,marginTop:5};
@@ -486,6 +498,9 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const F=SF;
   const Card=SCard;
   const Toggle=SToggle;
+
+  // Gender label helper
+  const genderLabel=(g)=>g==="male"?"👨 Male":g==="female"?"👩 Female":"👥 Both";
 
   if(loading) return <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#888"}}>Loading...</div>;
 
@@ -496,7 +511,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
       </div>
       <div style={{flex:1,overflowY:"auto",padding:"14px 14px 80px"}}>
         {tab==="profile"&&(<>
-          {/* Logo Upload */}
           <Card title="Salon Logo" icon="🖼️">
             <input ref={logoFileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleLogoUpload}/>
             <div style={{display:"flex",alignItems:"center",gap:14}}>
@@ -513,7 +527,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             </div>
           </Card>
 
-          {/* ✅ Salon Details with Address + Maps Link */}
           <Card title="Salon Details" icon="🏪">
             <F label="Salon Name"><input value={profile.salonName} onChange={e=>setProfile(p=>({...p,salonName:e.target.value}))} style={inputStyle}/></F>
             <F label="Owner Name"><input value={profile.ownerName} onChange={e=>setProfile(p=>({...p,ownerName:e.target.value}))} style={inputStyle}/></F>
@@ -536,15 +549,37 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             {services.map(s=>(<div key={s.id}>{editId===s.id?(
               <div style={{padding:"13px 14px",borderBottom:"2px solid #f0f4f8",background:"#f8fafc"}}>
                 <div style={{fontWeight:800,fontSize:13,color:"#22c55e",marginBottom:9}}>✏️ {s.name}</div>
-                <div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}><select value={s.emoji} onChange={e=>updSvc(s.id,"emoji",e.target.value)} style={{...selStyle,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select><input value={s.name} onChange={e=>updSvc(s.id,"name",e.target.value)} style={{...is,height:44}}/></div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:11}}><div><div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Price (₹)</div><input type="number" value={s.price} onChange={e=>updSvc(s.id,"price",parseInt(e.target.value)||0)} style={is}/></div><div><div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Duration</div><select value={s.duration} onChange={e=>updSvc(s.id,"duration",parseInt(e.target.value))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div></div>
-                <div style={{display:"flex",gap:8}}><button onClick={()=>setEditId(null)} style={{flex:1,padding:"10px",background:"#22c55e",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>✓ Done</button><button onClick={()=>delSvc(s.id)} style={{padding:"10px 14px",background:"#fff0f0",border:"2px solid #fca5a5",borderRadius:10,color:"#dc2626",fontFamily:"inherit",fontSize:13,cursor:"pointer"}}>🗑</button></div>
+                <div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}>
+                  <select value={s.emoji} onChange={e=>updSvc(s.id,"emoji",e.target.value)} style={{...selStyle,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select>
+                  <input value={s.name} onChange={e=>updSvc(s.id,"name",e.target.value)} style={{...is,height:44}}/>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:9}}>
+                  <div><div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Price (₹)</div><input type="number" value={s.price} onChange={e=>updSvc(s.id,"price",parseInt(e.target.value)||0)} style={is}/></div>
+                  <div><div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Duration</div><select value={s.duration} onChange={e=>updSvc(s.id,"duration",parseInt(e.target.value))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div>
+                </div>
+                {/* ✅ FIX: Gender dropdown in edit form */}
+                <div style={{marginBottom:11}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Gender</div>
+                  <select value={s.gender||"both"} onChange={e=>updSvc(s.id,"gender",e.target.value)} style={{...is,cursor:"pointer"}}>
+                    <option value="both">👥 Both (Male + Female)</option>
+                    <option value="male">👨 Male Only</option>
+                    <option value="female">👩 Female Only</option>
+                  </select>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setEditId(null)} style={{flex:1,padding:"10px",background:"#22c55e",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>✓ Done</button>
+                  <button onClick={()=>delSvc(s.id)} style={{padding:"10px 14px",background:"#fff0f0",border:"2px solid #fca5a5",borderRadius:10,color:"#dc2626",fontFamily:"inherit",fontSize:13,cursor:"pointer"}}>🗑</button>
+                </div>
               </div>
             ):(
               <div style={{display:"flex",alignItems:"center",gap:11,padding:"12px 14px",borderBottom:"2px solid #f0f4f8",background:s.active?"#fff":"#fafbfc"}}>
                 <button onClick={()=>toggleSvc(s.id)} style={{width:22,height:22,borderRadius:"50%",border:"none",background:s.active?"#22c55e":"#e8edf3",color:"#fff",fontSize:10,fontWeight:800,cursor:"pointer",flexShrink:0}}>{s.active?"✓":""}</button>
                 <span style={{fontSize:18,flexShrink:0}}>{s.emoji}</span>
-                <div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:s.active?"#1a1a2e":"#aaa"}}>{s.name}</div><div style={{fontSize:11,color:"#aaa"}}>{s.duration} min</div></div>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:800,fontSize:13,color:s.active?"#1a1a2e":"#aaa"}}>{s.name}</div>
+                  {/* ✅ FIX: Gender badge in service list */}
+                  <div style={{fontSize:11,color:"#aaa"}}>{s.duration} min · <span style={{color:s.gender==="male"?"#3b82f6":s.gender==="female"?"#ec4899":"#888"}}>{genderLabel(s.gender||"both")}</span></div>
+                </div>
                 <div style={{fontWeight:800,fontSize:13,color:s.active?"#22c55e":"#ccc"}}>₹{s.price}</div>
                 <button onClick={()=>setEditId(s.id)} style={{width:30,height:30,border:"2px solid #e8edf3",borderRadius:8,background:"#fff",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>✏️</button>
               </div>
@@ -552,9 +587,27 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             {showAdd?(
               <div style={{padding:"13px 14px",background:"#f0fdf4"}}>
                 <div style={{fontWeight:800,fontSize:13,color:"#16a34a",marginBottom:9}}>➕ New Service</div>
-                <div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}><select value={newSvc.emoji} onChange={e=>setNewSvc(p=>({...p,emoji:e.target.value}))} style={{...selStyle,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select><input value={newSvc.name} onChange={e=>setNewSvc(p=>({...p,name:e.target.value}))} placeholder="Service name" style={{...is,height:44}}/></div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:11}}><div><div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Price (₹)</div><input type="number" value={newSvc.price} onChange={e=>setNewSvc(p=>({...p,price:e.target.value}))} placeholder="450" style={is}/></div><div><div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Duration</div><select value={newSvc.duration} onChange={e=>setNewSvc(p=>({...p,duration:parseInt(e.target.value)}))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div></div>
-                <div style={{display:"flex",gap:8}}><button onClick={addSvc} style={{flex:1,padding:"10px",background:"#22c55e",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>➕ Add</button><button onClick={()=>setShowAdd(false)} style={{padding:"10px 14px",background:"#fff",border:"2px solid #e8edf3",borderRadius:10,fontFamily:"inherit",fontSize:13,cursor:"pointer",color:"#888"}}>Cancel</button></div>
+                <div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}>
+                  <select value={newSvc.emoji} onChange={e=>setNewSvc(p=>({...p,emoji:e.target.value}))} style={{...selStyle,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select>
+                  <input value={newSvc.name} onChange={e=>setNewSvc(p=>({...p,name:e.target.value}))} placeholder="Service name" style={{...is,height:44}}/>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:9}}>
+                  <div><div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Price (₹)</div><input type="number" value={newSvc.price} onChange={e=>setNewSvc(p=>({...p,price:e.target.value}))} placeholder="450" style={is}/></div>
+                  <div><div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Duration</div><select value={newSvc.duration} onChange={e=>setNewSvc(p=>({...p,duration:parseInt(e.target.value)}))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div>
+                </div>
+                {/* ✅ FIX: Gender dropdown in add form */}
+                <div style={{marginBottom:11}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#555",marginBottom:4}}>Gender</div>
+                  <select value={newSvc.gender} onChange={e=>setNewSvc(p=>({...p,gender:e.target.value}))} style={{...is,cursor:"pointer"}}>
+                    <option value="both">👥 Both (Male + Female)</option>
+                    <option value="male">👨 Male Only</option>
+                    <option value="female">👩 Female Only</option>
+                  </select>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={addSvc} style={{flex:1,padding:"10px",background:"#22c55e",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>➕ Add</button>
+                  <button onClick={()=>setShowAdd(false)} style={{padding:"10px 14px",background:"#fff",border:"2px solid #e8edf3",borderRadius:10,fontFamily:"inherit",fontSize:13,cursor:"pointer",color:"#888"}}>Cancel</button>
+                </div>
               </div>
             ):(
               <div style={{padding:"11px 14px"}}><button onClick={()=>setShowAdd(true)} style={{width:"100%",padding:"10px",background:"#f0fdf4",border:"2px dashed #86efac",borderRadius:11,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>➕ Add New Service</button></div>
