@@ -1034,6 +1034,17 @@ export default function SnipBook(){
   const [showRevenue,setShowRevenue]=useState(DEFAULT_SHOW_REVENUE);
 
   useEffect(()=>{
+    // ✅ Check staff session first
+    const savedStaff = localStorage.getItem("snipbook_staff");
+    if(savedStaff){
+      try{
+        const staffData = JSON.parse(savedStaff);
+        setStaffUser(staffData);
+        setPage("staffApp");
+        return;
+      }catch(e){ localStorage.removeItem("snipbook_staff"); }
+    }
+
     supabase.auth.getSession().then(async({data:{session}})=>{
       if(session){
         const {data:salon}=await supabase.from("salons").select("*").eq("id",session.user.id).single();
@@ -1059,7 +1070,11 @@ export default function SnipBook(){
   },[]);
 
   function ownerLogout(){supabase.auth.signOut();setUser(null);setPage("landing");}
-  function staffLogout(){setStaffUser(null);setPage("login");}
+  function staffLogout(){
+    setStaffUser(null);
+    localStorage.removeItem("snipbook_staff");
+    setPage("login");
+  }
 
   if(page==="loading"){
     return(
@@ -1078,7 +1093,9 @@ export default function SnipBook(){
         setPage("staffSalonEntry");
       }} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}
       {page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{
-        setStaffUser({...staffData,salon_id:staffData.salon_id});
+        const sd = {...staffData,salon_id:staffData.salon_id};
+        setStaffUser(sd);
+        localStorage.setItem("snipbook_staff", JSON.stringify(sd));
         setPage("staffApp");
       }} onBack={()=>setPage("login")}/>}
       {page==="staffApp"&&staffUser&&<StaffDashboard staff={staffUser} showRevenue={showRevenue} onLogout={staffLogout}/>}

@@ -77,9 +77,7 @@ function AddPhotoBtn({visitId, onAdd}){
       if(error){ console.error("Upload error:", error); setUploading(false); return; }
       const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
       onAdd({ url: urlData.publicUrl, path });
-    } catch(err){
-      console.error("Upload failed:", err);
-    }
+    } catch(err){ console.error("Upload failed:", err); }
     setUploading(false);
     e.target.value = "";
   }
@@ -99,7 +97,7 @@ function AddPhotoBtn({visitId, onAdd}){
 function WAPrompt({customer,visit,onSend,onSkip}){
   const [sent,setSent]=useState(false);
   const photoCount=(visit.photos||[]).length;
-  const msg=[`🙏 Namaste ${customer.name}!`,``,`✂️ *Visit Summary — ${visit.date}*`,`💈 Sharma's Salon`,``,`*Services:*`,...(visit.services||[]).map(s=>`• ${s}`),visit.notes?`\n📝 ${visit.notes}`:"",``,`💰 *Amount: ₹${visit.amount}*`,photoCount>0?`📸 ${photoCount} photo${photoCount>1?"s":""} saved`:"",``,`Thank you for visiting! 💈`,`_Powered by SnipBook_`].filter(Boolean).join("\n").trim();
+  const msg=[`🙏 Namaste ${customer.name}!`,``,`✂️ *Visit Summary — ${visit.date}*`,`💈 Salon`,``,`*Services:*`,...(visit.services||[]).map(s=>`• ${s}`),visit.notes?`\n📝 ${visit.notes}`:"",``,`💰 *Amount: ₹${visit.amount}*`,photoCount>0?`📸 ${photoCount} photo${photoCount>1?"s":""} saved`:"",``,`Thank you for visiting! 💈`,`_Powered by SnipBook_`].filter(Boolean).join("\n").trim();
   const waUrl=`https://wa.me/${customer.phone}?text=${encodeURIComponent(msg)}`;
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:800,display:"flex",alignItems:"flex-end"}}>
@@ -107,7 +105,7 @@ function WAPrompt({customer,visit,onSend,onSkip}){
         <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
           <div style={{width:44,height:44,borderRadius:14,background:"#e7fce8",border:"2px solid #a7f3c0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>💬</div>
-          <div><div style={{fontWeight:900,fontSize:15,color:T.text}}>Send Visit Summary?</div><div style={{fontSize:12,color:T.ts,marginTop:2}}>to {customer.name} · +91 {customer.phone}</div></div>
+          <div><div style={{fontWeight:900,fontSize:15,color:T.text}}>Send Visit Summary?</div><div style={{fontSize:12,color:T.ts,marginTop:2}}>to {customer.name}</div></div>
         </div>
         <div style={{background:"#e5ddd5",borderRadius:12,padding:12,marginBottom:14}}>
           <div style={{background:"#fff",borderRadius:"10px 10px 10px 3px",padding:"10px 12px",maxWidth:"85%"}}>
@@ -217,14 +215,13 @@ function BookModal({customer,onClose,onConfirm}){
 
 function parseVisitDate(dateStr){
   if(!dateStr) return null;
-  if(dateStr.includes("-") && dateStr.length === 10){
-    return new Date(dateStr + "T00:00:00");
-  }
+  if(dateStr.includes("-") && dateStr.length === 10) return new Date(dateStr + "T00:00:00");
   const months={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
   const parts=dateStr.split(" ");
   if(parts.length===3) return new Date(parseInt(parts[2]),months[parts[1]],parseInt(parts[0]));
   return null;
 }
+
 function getDateRange(preset,customFrom,customTo){
   const now=new Date();
   const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
@@ -298,27 +295,10 @@ function VisitCard({visit,index,isStaff,onUpdate,onWA}){
   const isFirst=index===0;
   const photos = visit.photos || [];
 
-  async function sN(){
-    onUpdate(visit.id,{notes:nV});
-    setEN(false);
-    await supabase.from("visit_history").update({notes:nV}).eq("id",visit.id);
-  }
-  async function sA(){
-    const newAmt=parseInt(aV)||0;
-    onUpdate(visit.id,{amount:newAmt});
-    setEA(false);
-    await supabase.from("visit_history").update({amount:newAmt}).eq("id",visit.id);
-  }
-  async function addPhoto(newPhoto){
-    const newPhotos = [...photos, newPhoto];
-    onUpdate(visit.id, {photos: newPhotos});
-    await supabase.from("visit_history").update({photos: newPhotos}).eq("id", visit.id);
-  }
-  async function removePhoto(i){
-    const newPhotos = photos.filter((_,idx)=>idx!==i);
-    onUpdate(visit.id, {photos: newPhotos});
-    await supabase.from("visit_history").update({photos: newPhotos}).eq("id", visit.id);
-  }
+  async function sN(){onUpdate(visit.id,{notes:nV});setEN(false);await supabase.from("visit_history").update({notes:nV}).eq("id",visit.id);}
+  async function sA(){const newAmt=parseInt(aV)||0;onUpdate(visit.id,{amount:newAmt});setEA(false);await supabase.from("visit_history").update({amount:newAmt}).eq("id",visit.id);}
+  async function addPhoto(newPhoto){const newPhotos=[...photos,newPhoto];onUpdate(visit.id,{photos:newPhotos});await supabase.from("visit_history").update({photos:newPhotos}).eq("id",visit.id);}
+  async function removePhoto(i){const newPhotos=photos.filter((_,idx)=>idx!==i);onUpdate(visit.id,{photos:newPhotos});await supabase.from("visit_history").update({photos:newPhotos}).eq("id",visit.id);}
 
   return(
     <div style={{display:"flex",gap:0,marginBottom:0}}>
@@ -415,9 +395,7 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
       stylist:nv.stylist,amount:nv.amount,notes:nv.notes,
       photos:[],
     }).select().single();
-    const newVisit=res
-      ?{...nv,id:res.id,photos:[]}
-      :{...nv,id:"v"+Date.now(),photos:[]};
+    const newVisit=res?{...nv,id:res.id,photos:[]}:{...nv,id:"v"+Date.now(),photos:[]};
     onUpdate(customer.id,{
       visitHistory:[newVisit,...(customer.visitHistory||[])],
       visits:(customer.visits||0)+1,
@@ -444,7 +422,9 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
               <div style={{background:tag.bg,color:tag.color,border:`1.5px solid ${tag.border}`,fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:20}}>{tag.label}</div>
               {bday&&<div style={{background:bday.bg,color:bday.color,fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:20}}>🎂</div>}
             </div>
-            <div style={{fontSize:12,color:T.ts}}>📱 +91 {customer.phone} · 📍 {customer.city}</div>
+            {/* ✅ FIX: Phone sirf owner ko dikhega, staff ko nahi */}
+            {!isStaff && <div style={{fontSize:12,color:T.ts}}>📱 +91 {customer.phone} · 📍 {customer.city}</div>}
+            {isStaff && <div style={{fontSize:12,color:T.ts}}>📍 {customer.city}</div>}
           </div>
         </div>
         <div style={{display:"flex",borderTop:`2px solid ${T.border}`}}>
@@ -535,6 +515,7 @@ function CustomerList({customers,isStaff,onSelect}){
   const [filter,setFilter]=useState("All");
   const filtered=customers.filter(c=>{
     const q=search.toLowerCase();
+    // ✅ Search by name OR phone (even if staff can't see phone)
     const ms=!q||c.name.toLowerCase().includes(q)||(c.phone||"").includes(q);
     const mf=filter==="All"?true:filter==="VIP"?c.tag==="VIP":filter==="Regular"?c.tag==="Regular":filter==="New"?c.tag==="New":filter==="WhatsApp"?c.src==="wa"||c.source==="wa":c.src==="walk"||c.source==="walk";
     return ms&&mf;
@@ -562,14 +543,16 @@ function CustomerList({customers,isStaff,onSelect}){
                   <div style={{width:44,height:44,borderRadius:14,flexShrink:0,background:(c.color||"#22c55e")+"22",border:`2px solid ${(c.color||"#22c55e")}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:900,color:c.color||"#22c55e"}}>{c.avatar||(c.name?.slice(0,2)||"??").toUpperCase()}</div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontWeight:800,fontSize:15,color:T.text,display:"flex",alignItems:"center",gap:6}}>{c.name}{bday&&<span style={{fontSize:14}}>🎂</span>}</div>
-                    <div style={{fontSize:11,color:T.ts,marginTop:2}}>📍 {c.city} · {c.src==="wa"||c.source==="wa"?"💬 WhatsApp":"🚶 Walk-in"}</div>
+                    {/* ✅ FIX: Phone sirf owner ko dikhega */}
+                    {!isStaff && <div style={{fontSize:11,color:T.ts,marginTop:2}}>📱 {c.phone} · 📍 {c.city} · {c.src==="wa"||c.source==="wa"?"💬 WhatsApp":"🚶 Walk-in"}</div>}
+                    {isStaff && <div style={{fontSize:11,color:T.ts,marginTop:2}}>📍 {c.city} · {c.src==="wa"||c.source==="wa"?"💬 WhatsApp":"🚶 Walk-in"}</div>}
                   </div>
                   <div style={{background:tag.bg,color:tag.color,border:`1.5px solid ${tag.border}`,fontSize:10,fontWeight:800,padding:"3px 9px",borderRadius:20,flexShrink:0}}>{tag.label}</div>
                 </div>
                 {bday&&<div style={{background:bday.bg,border:`1.5px solid ${bday.border}`,borderRadius:8,padding:"6px 10px",marginBottom:10,fontSize:11,fontWeight:700,color:bday.color}}>{bday.label}</div>}
                 <div style={{height:1,background:T.border,marginBottom:12}}/>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                  {[{label:"Visits",val:c.visits||0},{label:"Total Spent",val:`₹${(c.total_spent||c.totalSpent||0).toLocaleString()}`},{label:"Last Visit",val:c.last_visit||c.lastVisit||"-"}].map(s=>(
+                  {[{label:"Visits",val:c.visits||0},{label:"Total Spent",val:isStaff?"—":`₹${(c.total_spent||c.totalSpent||0).toLocaleString()}`},{label:"Last Visit",val:c.last_visit||c.lastVisit||"-"}].map(s=>(
                     <div key={s.label} style={{background:T.sub,borderRadius:9,padding:"8px 6px",textAlign:"center",border:`1.5px solid ${T.border}`}}><div style={{fontWeight:900,fontSize:13,color:T.text}}>{s.val}</div><div style={{fontSize:9,color:T.tf,fontWeight:700,marginTop:2}}>{s.label}</div></div>
                   ))}
                 </div>
@@ -589,7 +572,6 @@ export default function CustomerHistory({ currentUser }){
   const [loading, setLoading] = useState(true);
   const isStaff = currentUser?.role === "staff";
   const isOwner = currentUser?.role === "owner";
-  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     async function loadData() {
@@ -624,7 +606,7 @@ export default function CustomerHistory({ currentUser }){
       setLoading(false);
     }
     if (currentUser?.id) loadData();
-  }, [currentUser?.id, reloadKey]);
+  }, [currentUser?.id]);
 
   function handleUpdate(cId, changes) {
     setCustomers(prev => prev.map(c => c.id === cId ? {...c, ...changes} : c));
