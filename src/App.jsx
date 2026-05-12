@@ -79,7 +79,7 @@ function Logo({size=15,iconSize=32}){
   );
 }
 
-function SalonHeader({user, screen, onSettings}){
+function SalonHeader({user, screen, onSettings, unreadCount=0, onBell}){
   const salonName = user?.salon || "My Salon";
   const logoUrl = user?.logo_url || null;
   const initials = user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2) || "??";
@@ -103,6 +103,11 @@ function SalonHeader({user, screen, onSettings}){
       <div style={{display:"flex",alignItems:"center",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:5,background:"#e8fdf0",border:"1.5px solid #bbf7d0",borderRadius:20,padding:"4px 9px",fontSize:11,fontWeight:700,color:"#16a34a"}}>
           <div style={{width:6,height:6,borderRadius:"50%",background:"#22c55e"}}/>Bot ON
+        </div>
+        {/* ✅ Bell notification icon */}
+        <div onClick={onBell} style={{position:"relative",width:32,height:32,borderRadius:"50%",background:unreadCount>0?"#fff8e6":"#f8fafc",border:`2px solid ${unreadCount>0?"#fcd34d":"#e8edf3"}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <span style={{fontSize:15}}>🔔</span>
+          {unreadCount>0&&<div style={{position:"absolute",top:-3,right:-3,width:16,height:16,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
         </div>
         <div onClick={onSettings} style={{width:30,height:30,borderRadius:"50%",background:"#22c55e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",border:screen==="settings"?"2px solid #1a1a2e":"2px solid transparent"}}>
           {initials}
@@ -746,6 +751,36 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const pending=Object.values(dayData).filter(b=>b.status==="pending").length;
 
   const [selDate,setSelDate]=useState(today);
+  const [showNotifs,setShowNotifs]=useState(false);
+  const [notifications,setNotifications]=useState([]);
+  const [unreadCount,setUnreadCount]=useState(0);
+
+  // ✅ Load recent bookings as notifications
+  useEffect(()=>{
+    async function loadNotifications(){
+      try{
+        const {data}=await supabase.from("appointments").select("*").eq("salon_id",user.id).eq("status","confirmed").order("created_at",{ascending:false}).limit(10);
+        if(data&&data.length>0){
+          setNotifications(data);
+          // Last seen time se compare karo
+          const lastSeen = localStorage.getItem(`notif_seen_${user.id}`) || "0";
+          const unseen = data.filter(a=>new Date(a.created_at)>new Date(lastSeen));
+          setUnreadCount(unseen.length);
+        }
+      }catch(e){console.error("notif error",e);}
+    }
+    loadNotifications();
+    // Har 30 sec mein refresh
+    const interval = setInterval(loadNotifications, 30000);
+    return ()=>clearInterval(interval);
+  },[user.id]);
+
+  function handleBell(){
+    setShowNotifs(v=>!v);
+    // Mark as seen
+    localStorage.setItem(`notif_seen_${user.id}`, new Date().toISOString());
+    setUnreadCount(0);
+  }
   const [weekStart,setWeekStart]=useState(()=>{const d=new Date(today);d.setDate(d.getDate()-d.getDay());return d;});
   const [calModal,setCalModal]=useState(null);
   const [calForm,setCalForm]=useState({name:"",service:SERVICES_LIST[0],price:"",src:"wa"});
@@ -839,7 +874,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
 
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:"#1a1a2e",background:"#f0f4f8",overflow:"hidden"}}>
-      <SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")}/>
+      <SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell}/>
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
 
         {screen==="dashboard"&&(
@@ -966,6 +1001,34 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
           </div>
         );})}
       </div>
+      {/* ✅ Notification Drawer */}
+      {showNotifs&&(
+        <div onClick={()=>setShowNotifs(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-start",justifyContent:"flex-end"}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",width:"90%",maxWidth:360,height:"100vh",overflowY:"auto",boxShadow:"-4px 0 20px rgba(0,0,0,0.15)"}}>
+            <div style={{padding:"16px",borderBottom:"2px solid #f0f4f8",display:"flex",alignItems:"center",justifyContent:"space-between",background:"#fff",position:"sticky",top:0}}>
+              <div style={{fontWeight:900,fontSize:16}}>🔔 Notifications</div>
+              <button onClick={()=>setShowNotifs(false)} style={{background:"none",border:"none",fontSize:18,cursor:"pointer",color:"#888"}}>✕</button>
+            </div>
+            {notifications.length===0?(
+              <div style={{padding:32,textAlign:"center",color:"#aaa",fontSize:14}}>Koi notification nahi</div>
+            ):(
+              notifications.map((n,i)=>(
+                <div key={i} onClick={()=>{setScreen("calendar");setSelDate(new Date(n.date));setShowNotifs(false);}} style={{padding:"14px 16px",borderBottom:"2px solid #f0f4f8",cursor:"pointer",background:"#fff"}} onMouseOver={e=>e.currentTarget.style.background="#f8fafc"} onMouseOut={e=>e.currentTarget.style.background="#fff"}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{width:38,height:38,borderRadius:12,background:"#e8fdf0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>📅</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:800,fontSize:13,color:"#1a1a2e"}}>{n.customer_name||"WhatsApp Customer"}</div>
+                      <div style={{fontSize:11,color:"#888",marginTop:2}}>{n.service} · ₹{n.amount||0}</div>
+                      <div style={{fontSize:11,color:"#22c55e",marginTop:2,fontWeight:700}}>{n.date} at {n.time_slot}</div>
+                    </div>
+                    <div style={{fontSize:10,color:"#ccc",fontWeight:700,flexShrink:0}}>{new Date(n.created_at).toLocaleDateString("en-IN",{day:"numeric",month:"short"})}</div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
       <style>{`@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}`}</style>
     </div>
   );
