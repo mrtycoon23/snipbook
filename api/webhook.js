@@ -371,6 +371,35 @@ export default async function handler(req, res) {
 
     // confirm — yes
     if (step === "confirm" && interactiveId === "confirm_yes") {
+      // ✅ Auto-save customer to customers table agar nahi hai
+      try {
+        const custCheck = await fetch(
+          `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&limit=1`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
+        const custData = await custCheck.json();
+        if (!custData || custData.length === 0) {
+          // Naya customer — save karo
+          await fetch(`${SUPABASE_URL}/rest/v1/customers`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+              "Content-Type": "application/json",
+              Prefer: "return=minimal",
+            },
+            body: JSON.stringify({
+              salon_id: SALON_ID,
+              name: data.name || "WhatsApp Customer",
+              phone: from,
+              source: "wa",
+              tag: "New",
+            }),
+          });
+          console.log("New customer saved:", data.name, from);
+        }
+      } catch(e) { console.error("Customer save error:", e.message); }
+
       // ✅ FIX 1: customer_name bhi save karo
       await fetch(`${SUPABASE_URL}/rest/v1/appointments`, {
         method: "POST",

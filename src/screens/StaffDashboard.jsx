@@ -383,10 +383,10 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
           </div>
         )}
         {/* ✅ FIX: CustomerHistory same component as owner — photos + visits fully working */}
-        {tab==="customers"&&(
+        {tab==="customers"&&salonId&&(
           <CustomerHistory
+            key={salonId}
             currentUser={{
-              ...staff,
               id: salonId,
               salon_id: salonId,
               role: "staff",
