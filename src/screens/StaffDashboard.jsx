@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import CustomerHistory from "./CustomerHistoryApp";
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 const T = {
@@ -34,22 +35,6 @@ function avc(id){const n=typeof id==="string"?id.charCodeAt(0):(id||1);return AV
 function fc(n){return "₹"+Number(n).toLocaleString("en-IN");}
 function fd(d){return new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"});}
 
-function getBirthdayStatus(dob){
-  if(!dob)return null;
-  const now=new Date();const bday=new Date(dob);
-  bday.setFullYear(now.getFullYear());
-  const diff=Math.ceil((bday-now)/(1000*60*60*24));
-  if(diff===0)return{label:"🎂 Birthday Today!",color:T.rt,bg:T.red,border:T.rb};
-  if(diff>0&&diff<=7)return{label:`🎂 Birthday in ${diff} day${diff>1?"s":""}`,color:T.yt,bg:T.yellow,border:T.yb};
-  return null;
-}
-
-const TAG_STYLES={
-  VIP:{bg:T.yellow,color:T.yt,border:T.yb,label:"⭐ VIP"},
-  Regular:{bg:T.gl,color:T.gd,border:T.gm,label:"Regular"},
-  New:{bg:T.blue,color:T.bt,border:T.bb,label:"New"},
-};
-
 // ─── Add Work Log Modal ────────────────────────────────────────────────────────
 function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   const [clientName,setClientName]=useState("");
@@ -57,14 +42,12 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   const [amount,setAmount]=useState("");
   const [date,setDate]=useState(today);
   const [saving,setSaving]=useState(false);
-  // New customer popup state
   const [showNewCustomer,setShowNewCustomer]=useState(false);
   const [newCustPhone,setNewCustPhone]=useState("");
   const [newCustDob,setNewCustDob]=useState("");
   const [savingCustomer,setSavingCustomer]=useState(false);
   const [pendingLogData,setPendingLogData]=useState(null);
 
-  // ✅ Issue 2: Check present before allowing log
   if(!isPresent){
     return(
       <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
@@ -85,11 +68,9 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
     if(!clientName.trim()||!amount||isNaN(amount))return;
     setSaving(true);
     try{
-      // ✅ Issue 1: Check if customer exists
       if(salonId){
         const {data:existingCustomers}=await supabase.from("customers").select("id").eq("salon_id",salonId).eq("name",clientName.trim());
         if(!existingCustomers||existingCustomers.length===0){
-          // New customer! Show popup
           setPendingLogData({staffId,clientName:clientName.trim(),service,amount:Number(amount),date});
           setSaving(false);
           setShowNewCustomer(true);
@@ -98,7 +79,6 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
       }
       await saveLog({staffId,clientName:clientName.trim(),service,amount:Number(amount),date});
     }catch(e){
-      // Customer not found - show new customer popup
       setPendingLogData({staffId,clientName:clientName.trim(),service,amount:Number(amount),date});
       setSaving(false);
       setShowNewCustomer(true);
@@ -113,19 +93,19 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
           client_name:logData.clientName, service:logData.service,
           amount:logData.amount, date:logData.date
         }).select().single();
-const custRes = await supabase.from("customers").select("id").eq("salon_id", salonId).eq("name", logData.clientName).single();
-if(custRes.data){
-  await supabase.from("visit_history").insert({
-    salon_id: salonId,
-    customer_id: custRes.data.id,
-    date: logData.date,
-    services: [logData.service],
-    stylist: logData.staffId,
-    amount: logData.amount,
-    notes: "",
-    photos: []
-  });
-}
+        const custRes = await supabase.from("customers").select("id").eq("salon_id", salonId).eq("name", logData.clientName).single();
+        if(custRes.data){
+          await supabase.from("visit_history").insert({
+            salon_id: salonId,
+            customer_id: custRes.data.id,
+            date: logData.date,
+            services: [logData.service],
+            stylist: logData.staffId,
+            amount: logData.amount,
+            notes: "",
+            photos: []
+          });
+        }
         if(res){
           onSave({id:res.id,staffId:res.staff_id,clientName:res.client_name,service:res.service,amount:res.amount,date:res.date});
           onClose();return;
@@ -140,26 +120,21 @@ if(custRes.data){
     setSavingCustomer(true);
     try{
       if(salonId&&!skipDetails){
-        // Save customer to DB
-        const colors=["#22c55e","#3b82f6","#a855f7","#f59e0b","#14b8a6","#ec4899"];
         await supabase.from("customers").insert({
- salon_id:salonId,
-name:pendingLogData.clientName,
-phone:newCustPhone||"",
-birthday:newCustDob||null,
+          salon_id:salonId,
+          name:pendingLogData.clientName,
+          phone:newCustPhone||"",
+          birthday:newCustDob||null,
         });
       }
-      // Save log anyway
       await saveLog(pendingLogData);
     }catch(e){
       console.error(e);
-      // Save log even if customer save fails
       await saveLog(pendingLogData);
     }
     setSavingCustomer(false);
   }
 
-  // New Customer Popup
   if(showNewCustomer&&pendingLogData){
     return(
       <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
@@ -222,32 +197,6 @@ birthday:newCustDob||null,
             {saving?"Saving...":"✓ Save Karo"}
           </button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── WA Prompt ────────────────────────────────────────────────────────────────
-function WAPrompt({customer,visit,onDone}){
-  const [sent,setSent]=useState(false);
-  const msg=`🙏 Namaste ${customer.name}!\n\n✂️ Visit Summary\n💈 Salon\n\nServices: ${visit.services.join(", ")}\n💰 Amount: ₹${visit.amount}\n\nThank you! 💈`.trim();
-  const waUrl=`https://wa.me/${customer.phone}?text=${encodeURIComponent(msg)}`;
-  return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:400,display:"flex",alignItems:"flex-end"}}>
-      <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%"}}>
-        <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
-        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
-          <div style={{width:44,height:44,borderRadius:14,background:"#e7fce8",border:"2px solid #a7f3c0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>💬</div>
-          <div><div style={{fontWeight:900,fontSize:15}}>Send Visit Summary?</div><div style={{fontSize:12,color:T.ts}}>to {customer.name}</div></div>
-        </div>
-        {!sent?(
-          <div style={{display:"flex",gap:10}}>
-            <button onClick={onDone} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Skip</button>
-            <a href={waUrl} target="_blank" rel="noreferrer" onClick={()=>{setSent(true);setTimeout(onDone,1500);}} style={{flex:2,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>💬 Send on WhatsApp</a>
-          </div>
-        ):(
-          <div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.gd}}>✅ WhatsApp opened!</div>
-        )}
       </div>
     </div>
   );
@@ -349,124 +298,26 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
   );
 }
 
-// ─── Tab 2: Customer History ──────────────────────────────────────────────────
-function CustomerHistoryTab({staff, customers, showRevenue=false}){
-  const [selectedId,setSelectedId]=useState(null);
-  const [search,setSearch]=useState("");
-  const [filter,setFilter]=useState("All");
-
-  const selected=customers.find(c=>c.id===selectedId)||null;
-  const filtered=customers.filter(c=>{
-    const q=search.toLowerCase();
-    const ms=!q||c.name.toLowerCase().includes(q)||c.phone.includes(q);
-    const mf=filter==="All"?true:c.tag===filter;
-    return ms&&mf;
-  });
-
-  if(selected){
-    return(
-      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        <div style={{background:T.surface,borderBottom:`2px solid ${T.border}`,padding:"12px 16px",flexShrink:0}}>
-          <button onClick={()=>setSelectedId(null)} style={{background:"none",border:"none",color:T.green,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:10}}>← Back</button>
-          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-            <div style={{width:52,height:52,borderRadius:16,background:(selected.color||"#22c55e")+"22",border:`2px solid ${(selected.color||"#22c55e")}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:19,fontWeight:900,color:selected.color||"#22c55e",flexShrink:0}}>
-              {selected.avatar||(selected.name?.slice(0,2)||"??").toUpperCase()}
-            </div>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:900,fontSize:17,color:T.text}}>{selected.name}</div>
-              <div style={{fontSize:12,color:T.ts,marginTop:2}}>📱 +91 {selected.phone}</div>
-            </div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
-            {[{val:selected.visits||0,label:"Visits"},{val:selected.last_visit||"—",label:"Last Visit"},{val:selected.tag||"New",label:"Tag"}].map(s=>(
-              <div key={s.label} style={{background:T.sub,border:`2px solid ${T.border}`,borderRadius:11,padding:"10px",textAlign:"center"}}>
-                <div style={{fontWeight:900,fontSize:12,color:T.green}}>{s.val}</div>
-                <div style={{fontSize:10,color:T.tf,fontWeight:700,marginTop:2}}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{flex:1,overflowY:"auto",padding:"14px 16px 80px"}}>
-          <div style={{fontSize:12,fontWeight:800,color:T.ts,letterSpacing:1.2,textTransform:"uppercase",marginBottom:12}}>Visit History</div>
-          <div style={{background:T.surface,border:`2px dashed ${T.border}`,borderRadius:14,padding:"32px 20px",textAlign:"center"}}>
-            <div style={{fontSize:32,marginBottom:8}}>📋</div>
-            <div style={{fontWeight:800,fontSize:14,color:T.tm}}>History screen mein dekho</div>
-            <div style={{fontSize:12,color:T.ts,marginTop:4}}>Customer History tab mein full details hain</div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return(
-    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-      <div style={{background:T.surface,padding:"12px 16px",borderBottom:`2px solid ${T.border}`,flexShrink:0}}>
-        <div style={{position:"relative",marginBottom:10}}>
-          <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:13,color:T.tf}}>🔍</span>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search customers…" style={{...IS,padding:"10px 12px 10px 36px",fontSize:13}} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
-        </div>
-        <div style={{display:"flex",gap:6}}>
-          {["All","VIP","Regular","New"].map(f=>(<button key={f} onClick={()=>setFilter(f)} style={{padding:"5px 13px",borderRadius:20,border:`2px solid ${filter===f?T.green:T.border}`,background:filter===f?T.green:T.surface,color:filter===f?"#fff":T.ts,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{f}</button>))}
-        </div>
-      </div>
-      <div style={{flex:1,overflowY:"auto",padding:"12px 16px"}}>
-        {filtered.length===0?(<div style={{textAlign:"center",color:T.ts,fontSize:13,padding:"40px 0"}}>Koi customer nahi</div>)
-        :filtered.map(c=>{
-          const tag=TAG_STYLES[c.tag]||TAG_STYLES.Regular;
-          const bday=getBirthdayStatus(c.dob||c.birthday);
-          const avatar=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();
-          const color=c.color||"#22c55e";
-          return(
-            <div key={c.id} onClick={()=>setSelectedId(c.id)} style={{background:T.surface,border:`2px solid ${bday?T.yb:T.border}`,borderRadius:14,padding:14,cursor:"pointer",marginBottom:10}}>
-              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
-                <div style={{width:44,height:44,borderRadius:13,background:color+"22",border:`2px solid ${color}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:900,color,flexShrink:0}}>{avatar}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontWeight:800,fontSize:15,color:T.text,display:"flex",alignItems:"center",gap:6}}>{c.name}{bday&&<span style={{fontSize:14}}>🎂</span>}</div>
-                  <div style={{fontSize:11,color:T.ts,marginTop:2}}>📱 {c.phone}</div>
-                </div>
-                <div style={{background:tag.bg,color:tag.color,border:`1.5px solid ${tag.border}`,fontSize:10,fontWeight:800,padding:"3px 9px",borderRadius:20,flexShrink:0}}>{tag.label}</div>
-              </div>
-              {bday&&<div style={{background:bday.bg,border:`1.5px solid ${bday.border}`,borderRadius:8,padding:"6px 10px",marginBottom:10,fontSize:11,fontWeight:700,color:bday.color}}>{bday.label}</div>}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                {[{label:"Visits",val:c.visits||0},{label:"Last Visit",val:c.last_visit||"—"},{label:"Tag",val:c.tag||"New"}].map(s=>(
-                  <div key={s.label} style={{background:T.sub,borderRadius:9,padding:"8px 6px",textAlign:"center",border:`1.5px solid ${T.border}`}}>
-                    <div style={{fontWeight:900,fontSize:12,color:T.text}}>{s.val}</div>
-                    <div style={{fontSize:9,color:T.tf,fontWeight:700,marginTop:2}}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Staff Dashboard ─────────────────────────────────────────────────────
 export default function StaffDashboard({staff, showRevenue=false, onLogout}){
   const [tab,setTab]=useState("attendance");
   const [logs,setLogs]=useState([]);
   const [attendance,setAttendance]=useState({});
-  const [customers,setCustomers]=useState([]);
   const [absentNotes,setAbsentNotes]=useState({});
   const [loading,setLoading]=useState(true);
 
   const salonId = staff?.salon_id || null;
 
-  // ✅ Load real data from Supabase
   useEffect(()=>{
     async function loadData(){
       if(!salonId){setLoading(false);return;}
       setLoading(true);
 
-      // Work logs for this staff
       const {data:logsData}=await supabase.from("work_logs").select("*").eq("salon_id",salonId).eq("staff_id",staff.id);
       if(logsData){
         setLogs(logsData.map(l=>({id:l.id,staffId:l.staff_id,clientName:l.client_name,service:l.service,amount:l.amount,date:l.date})));
       }
 
-      // Attendance for this staff
       const {data:attData}=await supabase.from("attendance").select("*").eq("salon_id",salonId).eq("staff_id",staff.id);
       if(attData){
         const attMap={};
@@ -475,16 +326,6 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
           attMap[row.date][row.staff_id]=row.is_present;
         });
         setAttendance(attMap);
-      }
-
-      // Customers for this salon
-      const {data:custData}=await supabase.from("customers").select("*").eq("salon_id",salonId).order("created_at",{ascending:false});
-      if(custData){
-        setCustomers(custData.map(c=>({
-          ...c,
-          avatar:(c.name?.slice(0,2)||"??").toUpperCase(),
-          color:["#22c55e","#3b82f6","#a855f7","#f59e0b","#14b8a6","#ec4899"][Math.floor(Math.random()*6)],
-        })));
       }
 
       setLoading(false);
@@ -528,11 +369,30 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
         {tab==="attendance"&&(
           <div style={{flex:1,overflowY:"auto"}}>
-            <AttendanceTab staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance} showRevenue={showRevenue} absentNotes={absentNotes} setAbsentNotes={setAbsentNotes} salonId={salonId}/>
+            <AttendanceTab
+              staff={staff}
+              logs={logs}
+              setLogs={setLogs}
+              attendance={attendance}
+              setAttendance={setAttendance}
+              showRevenue={showRevenue}
+              absentNotes={absentNotes}
+              setAbsentNotes={setAbsentNotes}
+              salonId={salonId}
+            />
           </div>
         )}
+        {/* ✅ FIX: CustomerHistory same component as owner — photos + visits fully working */}
         {tab==="customers"&&(
-          <CustomerHistoryTab staff={staff} customers={customers} showRevenue={showRevenue}/>
+          <CustomerHistory
+            currentUser={{
+              ...staff,
+              id: salonId,
+              salon_id: salonId,
+              role: "staff",
+              name: staff?.name || "Staff",
+            }}
+          />
         )}
       </div>
     </div>
@@ -548,7 +408,6 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
   const [loading,setLoading]=useState(false);
   const [loadingStaff,setLoadingStaff]=useState(true);
 
-  // ✅ Load real staff from Supabase
   useEffect(()=>{
     async function loadStaff(){
       if(!salonId){setLoadingStaff(false);return;}
