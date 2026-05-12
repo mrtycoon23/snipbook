@@ -406,20 +406,18 @@ export default async function handler(req, res) {
       await sendButtons(from, successMsg, [{ id: "main_menu", title: "🏠 Main Menu" }]);
 
       // ✅ FIX 2: Owner ko WhatsApp notification bhejo
-      const ownerPhone = salon?.whatsapp_number || "";
-      if (ownerPhone) {
-        const ownerNotif =
-          `🔔 *Naya Appointment!*\n\n` +
-          `👤 *Customer:* ${data.name}\n` +
-          `📱 *Phone:* +${from}\n` +
-          `✂️ *Service:* ${data.service}\n` +
-          `📅 *Date:* ${formatDate(data.date)}\n` +
-          `🕐 *Time:* ${formatTime12(data.time)}\n` +
-          `💰 *Amount:* ${priceText}\n\n` +
-          `_SnipBook se auto-booked_ 💈`;
-        const cleanOwnerPhone = ownerPhone.replace(/[^0-9]/g, "");
-        await sendText(cleanOwnerPhone, ownerNotif);
-      }
+      const ownerPhone = (salon?.whatsapp_number || "").replace(/[^0-9]/g, "");
+      const notifTarget = ownerPhone || BOT_NUMBER; // fallback bot number pe
+      const ownerNotif =
+        `🔔 *Naya Appointment!*\n\n` +
+        `👤 *Customer:* ${data.name}\n` +
+        `📱 *Phone:* +${from}\n` +
+        `✂️ *Service:* ${data.service}\n` +
+        `📅 *Date:* ${formatDate(data.date)}\n` +
+        `🕐 *Time:* ${formatTime12(data.time)}\n` +
+        `💰 *Amount:* ${priceText}\n\n` +
+        `_SnipBook se auto-booked_ 💈`;
+      await sendText(notifTarget, ownerNotif);
 
       res.status(200).json({ status: "ok" });
       return;
