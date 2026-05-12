@@ -94,11 +94,29 @@ function AddPhotoBtn({visitId, onAdd}){
   );
 }
 
-function WAPrompt({customer,visit,onSend,onSkip}){
-  const [sent,setSent]=useState(false);
+function WAPrompt({customer,visit,onSend,onSkip,salonName}){
+  const [status,setStatus]=useState("idle");
   const photoCount=(visit.photos||[]).length;
-  const msg=[`🙏 Namaste ${customer.name}!`,``,`✂️ *Visit Summary — ${visit.date}*`,`💈 Salon`,``,`*Services:*`,...(visit.services||[]).map(s=>`• ${s}`),visit.notes?`\n📝 ${visit.notes}`:"",``,`💰 *Amount: ₹${visit.amount}*`,photoCount>0?`📸 ${photoCount} photo${photoCount>1?"s":""} saved`:"",``,`Thank you for visiting! 💈`,`_Powered by SnipBook_`].filter(Boolean).join("\n").trim();
-  const waUrl=`https://wa.me/${customer.phone}?text=${encodeURIComponent(msg)}`;
+
+  async function sendViaAPI(){
+    if(!customer.phone){
+      const msg=`🙏 Namaste ${customer.name}!\n\n✂️ Visit Summary — ${visit.date}\n\nServices: ${(visit.services||[]).join(", ")}\n💰 ₹${visit.amount}\n\nThank you! 💈`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,"_blank");
+      setTimeout(onSend,1500);
+      return;
+    }
+    setStatus("sending");
+    try{
+      const res = await fetch("/api/send-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerPhone: customer.phone, customerName: customer.name, salonName: salonName||"Our Salon", visit }),
+      });
+      if(res.ok){ setStatus("sent"); setTimeout(onSend,2000); }
+      else setStatus("error");
+    }catch(e){ setStatus("error"); }
+  }
+
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:800,display:"flex",alignItems:"flex-end"}}>
       <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",boxShadow:"0 -8px 40px rgba(0,0,0,0.15)"}}>
@@ -107,19 +125,26 @@ function WAPrompt({customer,visit,onSend,onSkip}){
           <div style={{width:44,height:44,borderRadius:14,background:"#e7fce8",border:"2px solid #a7f3c0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>💬</div>
           <div><div style={{fontWeight:900,fontSize:15,color:T.text}}>Send Visit Summary?</div><div style={{fontSize:12,color:T.ts,marginTop:2}}>to {customer.name}</div></div>
         </div>
-        <div style={{background:"#e5ddd5",borderRadius:12,padding:12,marginBottom:14}}>
-          <div style={{background:"#fff",borderRadius:"10px 10px 10px 3px",padding:"10px 12px",maxWidth:"85%"}}>
-            <pre style={{margin:0,fontFamily:"inherit",fontSize:11,lineHeight:1.6,color:T.text,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{msg}</pre>
-          </div>
+        <div style={{background:T.sub,border:`2px solid ${T.border}`,borderRadius:12,padding:12,marginBottom:14}}>
+          <div style={{fontSize:12,fontWeight:700,color:T.ts,marginBottom:6}}>📋 Summary includes:</div>
+          <div style={{fontSize:12,color:T.tm}}>✂️ {(visit.services||[]).join(", ")}</div>
+          <div style={{fontSize:12,color:T.tm}}>💰 ₹{visit.amount} · 📅 {visit.date}</div>
+          {visit.notes&&<div style={{fontSize:12,color:T.tm}}>📝 {visit.notes}</div>}
+          {photoCount>0&&<div style={{fontSize:12,color:T.green,fontWeight:700,marginTop:4}}>📸 {photoCount} photo{photoCount>1?"s":""} bhi jaayengi!</div>}
         </div>
-        {!sent?(
+        {status==="idle"&&<div style={{display:"flex",gap:10}}>
+          <button onClick={onSkip} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:T.tm}}>Skip</button>
+          <button onClick={sendViaAPI} style={{flex:2,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>💬 Send on WhatsApp</button>
+        </div>}
+        {status==="sending"&&<div style={{background:T.blue,border:`2px solid ${T.bb}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.bt}}>📤 Sending{photoCount>0?` + ${photoCount} photo${photoCount>1?"s":""}`:""} ...</div>}
+        {status==="sent"&&<div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.gd}}>✅ Summary sent! {photoCount>0?`${photoCount} photo${photoCount>1?"s":""} bhi!`:""}</div>}
+        {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <div style={{background:T.red,border:`2px solid ${T.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:T.rt,fontWeight:700}}>⚠️ Send nahi hua</div>
           <div style={{display:"flex",gap:10}}>
-            <button onClick={onSkip} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:T.tm}}>Skip</button>
-            <a href={waUrl} target="_blank" rel="noreferrer" onClick={()=>{setSent(true);setTimeout(onSend,1500);}} style={{flex:2,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>💬 Send on WhatsApp</a>
+            <button onClick={onSkip} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button>
+            <button onClick={sendViaAPI} style={{flex:1,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button>
           </div>
-        ):(
-          <div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.gd}}>✅ WhatsApp opened!</div>
-        )}
+        </div>}
       </div>
     </div>
   );
