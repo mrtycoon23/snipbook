@@ -735,7 +735,7 @@ const NAV=[
 function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [screen,setScreen]=useState("dashboard");
   const [bookings,setBookings]=useState(user?.id==="demo" ? seedBookings : {});
-  const today=new Date(2026,2,26);
+  const today=new Date(); // ✅ Real today
   const todayKey=dateKey(today);
   const dayData=bookings[todayKey]||{};
   const booked=Object.values(dayData).filter(b=>b.status!=="break").length;
@@ -826,7 +826,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
           <div style={{padding:"14px 16px",overflowY:"auto",flex:1}}>
             <div style={{marginBottom:14}}>
               <div style={{fontWeight:900,fontSize:19}}>Good Morning, {user.name.split(" ")[0]} 👋</div>
-              <div style={{fontSize:12,color:"#888",marginTop:2}}>26 March 2026 · {user.salon}</div>
+              <div style={{fontSize:12,color:"#888",marginTop:2}}>{new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})} · {user.salon}</div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
               {[{icon:"📅",val:booked,label:"Bookings",bg:"#e8fdf0",color:"#16a34a"},{icon:"💸",val:`₹${revenue.toLocaleString()}`,label:"Revenue",bg:"#e8fdf0",color:"#16a34a"},{icon:"⏳",val:pending,label:"Pending",bg:"#fff8e6",color:"#d97706"},{icon:"💬",val:Object.values(dayData).filter(b=>b.src==="wa").length,label:"Via WhatsApp",bg:"#eff6ff",color:"#2563eb"}].map(s=>(<div key={s.label} style={{background:s.bg,borderRadius:14,padding:"14px",border:`2px solid ${s.color}22`}}><div style={{fontSize:20,marginBottom:5}}>{s.icon}</div><div style={{fontWeight:900,fontSize:22,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:11,color:"#888",fontWeight:700,marginTop:3}}>{s.label}</div></div>))}
