@@ -412,7 +412,7 @@ export default async function handler(req, res) {
       const ownerNotif =
         `🔔 *Naya Appointment!*\n\n` +
         `👤 *Customer:* ${data.name}\n` +
-        `📱 *Phone:* +${from}\n` +
+        `📱 *Phone:* +${from.replace(/^\+/,"")}\n` +
         `✂️ *Service:* ${data.service}\n` +
         `📅 *Date:* ${formatDate(data.date)}\n` +
         `🕐 *Time:* ${formatTime12(data.time)}\n` +
