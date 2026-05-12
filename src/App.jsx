@@ -432,6 +432,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
           if(salon.services&&salon.services.length>0) setServices(salon.services);
           if(salon.working_days&&salon.working_days.length>0) setHours(h=>({...h,workDays:salon.working_days,openTime:salon.open_time||9,closeTime:salon.close_time||21}));
           if(salon.whatsapp_number) setWa(w=>({...w,number:salon.whatsapp_number}));
+          if(salon.notification_number) setProfile(p=>({...p,notifNumber:salon.notification_number}));
         }
       }catch(e){console.error("Load error:",e);}
       setLoading(false);
@@ -472,6 +473,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
         working_days: hours.workDays,
         open_time: hours.openTime,
         close_time: hours.closeTime,
+        notification_number: profile.notifNumber || "",
       }).eq("id", user.id);
       onSalonUpdate(profile.salonName, logoUrl);
     }catch(e){ console.error(e); }
@@ -534,6 +536,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             <F label="City"><input value={profile.city} onChange={e=>setProfile(p=>({...p,city:e.target.value}))} style={inputStyle}/></F>
             <F label="Address" hint="Customers ko WhatsApp pe yeh address dikhega"><input value={profile.address} onChange={e=>setProfile(p=>({...p,address:e.target.value}))} placeholder="e.g. Shop 12, MG Road, Delhi" style={inputStyle}/></F>
             <F label="Google Maps Link" hint="Paste karo apne salon ka Google Maps link"><input value={profile.mapsLink} onChange={e=>setProfile(p=>({...p,mapsLink:e.target.value}))} placeholder="https://maps.google.com/..." style={inputStyle}/></F>
+            <F label="Owner Notification Number" hint="Is number pe booking notification aayegi (apna personal number)"><input value={profile.notifNumber||""} onChange={e=>setProfile(p=>({...p,notifNumber:e.target.value}))} placeholder="e.g. 919991788626" style={inputStyle}/></F>
             <F label="Salon Type"><select value={profile.salonType} onChange={e=>setProfile(p=>({...p,salonType:e.target.value}))} style={selStyle}><option value="unisex">💇 Unisex</option><option value="mens">💈 Men's Salon</option><option value="ladies">💄 Ladies Parlour</option><option value="bridal">👰 Bridal Studio</option></select></F>
           </Card>
 

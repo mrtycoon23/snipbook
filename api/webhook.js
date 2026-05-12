@@ -406,8 +406,7 @@ export default async function handler(req, res) {
       await sendButtons(from, successMsg, [{ id: "main_menu", title: "🏠 Main Menu" }]);
 
       // ✅ FIX 2: Owner ko WhatsApp notification bhejo
-      const ownerPhone = (salon?.whatsapp_number || "").replace(/[^0-9]/g, "");
-      const notifTarget = ownerPhone || BOT_NUMBER; // fallback bot number pe
+      const notifTarget = (salon?.notification_number || "").replace(/[^0-9]/g, "");
       const ownerNotif =
         `🔔 *Naya Appointment!*\n\n` +
         `👤 *Customer:* ${data.name}\n` +
@@ -417,7 +416,7 @@ export default async function handler(req, res) {
         `🕐 *Time:* ${formatTime12(data.time)}\n` +
         `💰 *Amount:* ${priceText}\n\n` +
         `_SnipBook se auto-booked_ 💈`;
-      await sendText(notifTarget, ownerNotif);
+      if(notifTarget) await sendText(notifTarget, ownerNotif);
 
       res.status(200).json({ status: "ok" });
       return;
