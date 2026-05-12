@@ -536,7 +536,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             <F label="City"><input value={profile.city} onChange={e=>setProfile(p=>({...p,city:e.target.value}))} style={inputStyle}/></F>
             <F label="Address" hint="Customers ko WhatsApp pe yeh address dikhega"><input value={profile.address} onChange={e=>setProfile(p=>({...p,address:e.target.value}))} placeholder="e.g. Shop 12, MG Road, Delhi" style={inputStyle}/></F>
             <F label="Google Maps Link" hint="Paste karo apne salon ka Google Maps link"><input value={profile.mapsLink} onChange={e=>setProfile(p=>({...p,mapsLink:e.target.value}))} placeholder="https://maps.google.com/..." style={inputStyle}/></F>
-            <F label="Owner Notification Number" hint="Is number pe booking notification aayegi (apna personal number)"><input value={profile.notifNumber||""} onChange={e=>setProfile(p=>({...p,notifNumber:e.target.value}))} placeholder="e.g. 919991788626" style={inputStyle}/></F>
+            <F label="Owner Notification Number" hint="Is number pe booking notification aayegi (apna personal number)"><input value={profile.notifNumber||""} onChange={e=>setProfile(p=>({...p,notifNumber:e.target.value}))} placeholder="e.g. 919876543210" style={inputStyle}/></F>
             <F label="Salon Type"><select value={profile.salonType} onChange={e=>setProfile(p=>({...p,salonType:e.target.value}))} style={selStyle}><option value="unisex">💇 Unisex</option><option value="mens">💈 Men's Salon</option><option value="ladies">💄 Ladies Parlour</option><option value="bridal">👰 Bridal Studio</option></select></F>
           </Card>
 
