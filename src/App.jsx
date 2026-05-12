@@ -255,15 +255,7 @@ function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
                 <button onClick={onStaffLogin} style={{width:"100%",padding:"14px",background:"#1a1a2e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:"0 4px 14px rgba(0,0,0,0.2)"}}>
                   👨‍💼 Staff Login →
                 </button>
-                <div style={{marginTop:16,background:"#f8fafc",border:"2px solid #e8edf3",borderRadius:12,padding:"12px"}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"#888",marginBottom:8}}>Demo Staff accounts:</div>
-                  {DEMO_STAFF_LIST.map(s=>(
-                    <div key={s.id} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #f0f4f8",fontSize:12}}>
-                      <span style={{fontWeight:700,color:"#1a1a2e"}}>{s.name}</span>
-                      <span style={{color:"#888"}}>PIN: {s.pin}</span>
-                    </div>
-                  ))}
-                </div>
+
               </>
             )}
           </div>
