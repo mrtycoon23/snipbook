@@ -406,7 +406,9 @@ export default async function handler(req, res) {
       await sendButtons(from, successMsg, [{ id: "main_menu", title: "🏠 Main Menu" }]);
 
       // ✅ FIX 2: Owner ko WhatsApp notification bhejo
-      const notifTarget = (salon?.notification_number || "").replace(/[^0-9]/g, "");
+      const rawNotif = (salon?.notification_number || "").replace(/[^0-9]/g, "");
+      // ✅ 91 prefix add karo agar nahi hai
+      const notifTarget = rawNotif ? (rawNotif.startsWith("91") ? rawNotif : `91${rawNotif}`) : "";
       const ownerNotif =
         `🔔 *Naya Appointment!*\n\n` +
         `👤 *Customer:* ${data.name}\n` +
