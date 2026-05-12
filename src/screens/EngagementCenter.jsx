@@ -29,8 +29,12 @@ function getBirthdayInfo(dob){
 }
 
 const US={today:{bg:"#fff0f0",border:T.rb,color:T.rt,badge:"🔴 Aaj!"},soon:{bg:T.yellow,border:T.yb,color:T.yt,badge:"🟡 Jaldi!"},week:{bg:T.gl,border:T.gm,color:T.gd,badge:"🟢 Is Hafte"},month:{bg:T.sub,border:T.border,color:T.ts,badge:"📅 Is Mahine"},passed:{bg:T.sub,border:T.border,color:T.tf,badge:"✓ Gaya"}};
-
 const SL=({children,color})=><div style={{fontSize:10,fontWeight:800,color:color||T.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>{children}</div>;
+
+async function sendViaAPI(messages){
+  const res=await fetch("/api/send-engagement",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages})});
+  return await res.json();
+}
 
 function GenderFilter({value,onChange,counts}){
   return(<div style={{display:"flex",gap:6,marginBottom:10}}>{[{id:"all",label:"👥 All",count:counts.all},{id:"male",label:"👨 Male",count:counts.male},{id:"female",label:"👩 Female",count:counts.female}].map(o=>(<button key={o.id} onClick={()=>onChange(o.id)} style={{flex:1,padding:"8px 4px",borderRadius:20,border:`2px solid ${value===o.id?T.green:T.border}`,background:value===o.id?T.green:T.surface,color:value===o.id?"#fff":T.ts,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>{o.label}<br/><span style={{fontSize:10,opacity:0.85}}>({o.count})</span></button>))}</div>);
@@ -48,32 +52,48 @@ function LVFilter({value,onChange,total,match}){
 }
 
 function WAModal({title,message,phone,name,onClose}){
-  const [sent,setSent]=useState(false);
+  const [status,setStatus]=useState("idle");
   const [edit,setEdit]=useState(false);
   const [msg,setMsg]=useState(message.replace(/{name}/g,name));
+  async function sendDirect(){
+    setStatus("sending");
+    try{const result=await sendViaAPI([{phone,name,message:msg}]);if(result.sent>0)setStatus("sent");else setStatus("error");}
+    catch(e){setStatus("error");}
+  }
   return(<div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:800,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
     <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 18px"}}/>
-    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:42,height:42,borderRadius:12,background:"#e7fce8",border:"2px solid #a7f3c0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>💬</div><div style={{flex:1}}><div style={{fontWeight:900,fontSize:15}}>{title}</div><div style={{fontSize:12,color:T.ts}}>+91 {phone}</div></div>{!sent&&<button onClick={()=>setEdit(e=>!e)} style={{padding:"6px 12px",background:edit?T.green:T.sub,border:`1.5px solid ${edit?T.gm:T.border}`,borderRadius:20,fontSize:11,fontWeight:800,color:edit?"#fff":T.ts,cursor:"pointer",fontFamily:"inherit"}}>{edit?"✓ Done":"✏️ Edit"}</button>}</div>
+    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}><div style={{width:42,height:42,borderRadius:12,background:"#e7fce8",border:"2px solid #a7f3c0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>💬</div><div style={{flex:1}}><div style={{fontWeight:900,fontSize:15}}>{title}</div><div style={{fontSize:12,color:T.ts}}>+91 {phone}</div></div>{status==="idle"&&<button onClick={()=>setEdit(e=>!e)} style={{padding:"6px 12px",background:edit?T.green:T.sub,border:`1.5px solid ${edit?T.gm:T.border}`,borderRadius:20,fontSize:11,fontWeight:800,color:edit?"#fff":T.ts,cursor:"pointer",fontFamily:"inherit"}}>{edit?"✓ Done":"✏️ Edit"}</button>}</div>
     {edit?(<div style={{marginBottom:16}}><textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={10} autoFocus style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:13,padding:"12px",borderColor:T.green,marginBottom:8}}/><button onClick={()=>setEdit(false)} style={{padding:"6px 14px",background:T.green,border:"none",borderRadius:9,fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",fontFamily:"inherit"}}>✓ Done</button></div>):(<div style={{background:"#e5ddd5",borderRadius:14,padding:14,marginBottom:16}}><div style={{background:"#fff",borderRadius:"12px 12px 12px 3px",padding:"12px 14px",maxWidth:"90%"}}><pre style={{margin:0,fontFamily:"inherit",fontSize:12,lineHeight:1.7,color:T.text,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{msg}</pre></div></div>)}
-    {!sent?(<div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:13,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button><a href={`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer" onClick={()=>setSent(true)} style={{flex:2,padding:13,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>💬 Send on WhatsApp</a></div>):(<div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.gd}}>✅ WhatsApp opened!</div>)}
+    {status==="idle"&&<div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:13,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button><button onClick={sendDirect} style={{flex:2,padding:13,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>💬 Send Directly</button></div>}
+    {status==="sending"&&<div style={{background:T.blue,border:`2px solid ${T.bb}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.bt}}>📤 Sending...</div>}
+    {status==="sent"&&<div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.gd}}>✅ Message bhej diya!</div>}
+    {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:T.red,border:`2px solid ${T.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:T.rt,fontWeight:700}}>⚠️ Send nahi hua</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={sendDirect} style={{flex:1,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
   </div></div>);
 }
 
 function BulkSendModal({customers,template,title,onClose}){
   const [phase,setPhase]=useState("select");
   const [sel,setSel]=useState(customers.map(c=>c.id));
-  const [sent,setSent]=useState([]);
-  const [cur,setCur]=useState(0);
   const [tpl,setTpl]=useState(template);
   const [edit,setEdit]=useState(false);
+  const [status,setStatus]=useState("idle");
+  const [results,setResults]=useState(null);
   const sc=customers.filter(c=>sel.includes(c.id));
   const allSel=sel.length===customers.length;
-  const done=phase==="sending"&&sent.length===sc.length&&sc.length>0;
-  function sendNext(){if(cur>=sc.length)return;const c=sc[cur];window.open(`https://wa.me/${c.phone}?text=${encodeURIComponent(tpl.replace(/{name}/g,c.name))}`,"_blank");setSent(p=>[...p,c.id]);setCur(p=>p+1);}
+
+  async function sendAll(){
+    setPhase("sending");setStatus("sending");
+    try{
+      const messages=sc.map(c=>({phone:c.phone,name:c.name,message:tpl.replace(/{name}/g,c.name)}));
+      const result=await sendViaAPI(messages);
+      setResults(result);setStatus("done");
+    }catch(e){setStatus("error");}
+  }
+
   return(<div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:800,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"92vh",overflowY:"auto"}}>
     <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 18px"}}/>
     <div style={{fontWeight:900,fontSize:16,marginBottom:2}}>📤 {title}</div>
-    <div style={{fontSize:12,color:T.ts,marginBottom:16}}>{phase==="select"?`${customers.length} customers`:sc.length+" ko bhej rahe hain"}</div>
+    <div style={{fontSize:12,color:T.ts,marginBottom:16}}>{sc.length} customers ko bhejenge</div>
     {phase==="select"&&(<>
       <div style={{background:T.sub,border:`2px solid ${T.border}`,borderRadius:14,marginBottom:14,overflow:"hidden"}}>
         <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${T.border}`}}><div style={{fontSize:12,fontWeight:800}}>💬 Message</div><button onClick={()=>setEdit(e=>!e)} style={{padding:"4px 10px",background:edit?T.green:T.surface,border:`1.5px solid ${edit?T.gm:T.border}`,borderRadius:20,fontSize:11,fontWeight:700,color:edit?"#fff":T.ts,cursor:"pointer",fontFamily:"inherit"}}>{edit?"✓ Done":"✏️ Edit"}</button></div>
@@ -82,17 +102,13 @@ function BulkSendModal({customers,template,title,onClose}){
       </div>
       <div style={{background:T.sub,border:`2px solid ${T.border}`,borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{fontSize:13,fontWeight:800}}>{sel.length===0?"Koi select nahi":`${sel.length} selected`}</div><button onClick={()=>setSel(allSel?[]:customers.map(c=>c.id))} style={{padding:"6px 14px",background:allSel?T.red:T.green,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allSel?"✕ Deselect":"✓ Select All"}</button></div>
       <div style={{marginBottom:16,background:T.surface,border:`2px solid ${T.border}`,borderRadius:14,overflow:"hidden"}}>
-        {customers.map((c,i)=>{const isSel=sel.includes(c.id);const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||"#22c55e";return(<div key={c.id} onClick={()=>setSel(p=>p.includes(c.id)?p.filter(x=>x!==c.id):[...p,c.id])} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:i<customers.length-1?`1px solid ${T.border}`:"none",background:isSel?T.gl:T.surface,cursor:"pointer"}}><div style={{width:22,height:22,borderRadius:7,flexShrink:0,background:isSel?T.green:T.surface,border:`2px solid ${isSel?T.green:T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",fontWeight:900}}>{isSel?"✓":""}</div><div style={{width:38,height:38,borderRadius:11,background:col+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:col,flexShrink:0}}>{av}</div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:800}}>{c.name}</div><div style={{fontSize:11,color:T.ts}}>+91 {c.phone}</div></div><div style={{fontSize:10,fontWeight:700,color:T.ts,background:T.sub,padding:"2px 8px",borderRadius:20,border:`1px solid ${T.border}`,flexShrink:0}}>{c.tag}</div></div>);})}
+        {customers.map((c,i)=>{const isSel=sel.includes(c.id);const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||"#22c55e";return(<div key={c.id} onClick={()=>setSel(p=>p.includes(c.id)?p.filter(x=>x!==c.id):[...p,c.id])} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:i<customers.length-1?`1px solid ${T.border}`:"none",background:isSel?T.gl:T.surface,cursor:"pointer"}}><div style={{width:22,height:22,borderRadius:7,flexShrink:0,background:isSel?T.green:T.surface,border:`2px solid ${isSel?T.green:T.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",fontWeight:900}}>{isSel?"✓":""}</div><div style={{width:38,height:38,borderRadius:11,background:col+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:col,flexShrink:0}}>{av}</div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:800}}>{c.name}</div><div style={{fontSize:11,color:T.ts}}>📱 {c.phone}</div></div><div style={{fontSize:10,fontWeight:700,color:T.ts,background:T.sub,padding:"2px 8px",borderRadius:20,border:`1px solid ${T.border}`,flexShrink:0}}>{c.tag}</div></div>);})}
       </div>
-      <div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button><button onClick={()=>{if(sel.length>0)setPhase("sending");}} style={{flex:2,padding:12,background:sel.length>0?T.wa:"#d1d5db",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:sel.length>0?"pointer":"not-allowed"}}>💬 Send to {sel.length} →</button></div>
+      <div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button><button onClick={()=>{if(sel.length>0)sendAll();}} style={{flex:2,padding:12,background:sel.length>0?T.wa:"#d1d5db",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:sel.length>0?"pointer":"not-allowed"}}>💬 Send to {sel.length} →</button></div>
     </>)}
-    {phase==="sending"&&!done&&(<>
-      <div style={{background:T.sub,border:`2px solid ${T.border}`,borderRadius:12,padding:"12px 14px",marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}><span style={{fontSize:13,fontWeight:700,color:T.tm}}>Progress</span><span style={{fontSize:13,fontWeight:800,color:T.gd}}>{sent.length}/{sc.length}</span></div><div style={{height:8,borderRadius:20,background:T.border,overflow:"hidden"}}><div style={{width:`${sc.length>0?(sent.length/sc.length)*100:0}%`,height:"100%",background:T.green,borderRadius:20,transition:"width 0.3s"}}/></div></div>
-      <div style={{marginBottom:16,background:T.surface,border:`2px solid ${T.border}`,borderRadius:14,overflow:"hidden"}}>{sc.map((c,i)=>{const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||"#22c55e";return(<div key={c.id} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:i<sc.length-1?`1px solid ${T.border}`:"none",background:sent.includes(c.id)?T.gl:T.surface}}><div style={{width:38,height:38,borderRadius:11,background:col+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:col,flexShrink:0}}>{av}</div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:800}}>{c.name}</div></div>{sent.includes(c.id)?<div style={{fontSize:11,fontWeight:800,color:T.gd,background:T.gl,border:`1.5px solid ${T.gm}`,padding:"3px 10px",borderRadius:20}}>✓ Sent</div>:i===cur?<div style={{fontSize:11,fontWeight:800,color:T.yt,background:T.yellow,border:`1.5px solid ${T.yb}`,padding:"3px 10px",borderRadius:20}}>⏳ Next</div>:<div style={{fontSize:11,color:T.tf}}>Pending</div>}</div>);})}
-      </div>
-      <div style={{display:"flex",gap:10}}><button onClick={()=>setPhase("select")} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer"}}>← Back</button><button onClick={sendNext} style={{flex:2,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>💬 Send to {sc[cur]?.name}</button></div>
-    </>)}
-    {done&&(<div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:14,padding:24,textAlign:"center"}}><div style={{fontSize:42,marginBottom:10}}>🎉</div><div style={{fontWeight:900,fontSize:16,color:T.gd,marginBottom:4}}>Sab ko bhej diya!</div><button onClick={onClose} style={{padding:"11px 32px",background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Done ✓</button></div>)}
+    {phase==="sending"&&status==="sending"&&<div style={{background:T.blue,border:`2px solid ${T.bb}`,borderRadius:14,padding:24,textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>📤</div><div style={{fontWeight:900,fontSize:16,color:T.bt,marginBottom:4}}>Sending {sc.length} messages...</div><div style={{fontSize:12,color:T.ts}}>Thoda wait karo</div></div>}
+    {status==="done"&&results&&<div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:14,padding:24,textAlign:"center"}}><div style={{fontSize:42,marginBottom:10}}>🎉</div><div style={{fontWeight:900,fontSize:16,color:T.gd,marginBottom:4}}>Done!</div><div style={{fontSize:13,color:T.gd,marginBottom:4}}>✅ {results.sent} sent · ❌ {results.failed} failed</div><button onClick={onClose} style={{padding:"11px 32px",background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginTop:8}}>Done ✓</button></div>}
+    {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:T.red,border:`2px solid ${T.rb}`,borderRadius:12,padding:14,textAlign:"center",fontSize:13,color:T.rt,fontWeight:700}}>⚠️ Error hua</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>{setStatus("idle");setPhase("select");}} style={{flex:1,padding:12,background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
   </div></div>);
 }
 
@@ -124,7 +140,6 @@ function ReengagementTab({customers}){
 
   return(<div style={{padding:"16px 16px 80px"}}>
     <div style={{display:"flex",gap:8,marginBottom:16}}>{[{id:"inactive",label:"💤 Inactive",desc:"Jo nahi aaye"},{id:"all",label:"👥 All Clients",desc:"Broadcast karo"}].map(t=>(<div key={t.id} onClick={()=>setSub(t.id)} style={{flex:1,padding:"12px 10px",borderRadius:12,border:`2px solid ${sub===t.id?T.green:T.border}`,background:sub===t.id?T.gl:T.surface,cursor:"pointer",textAlign:"center"}}><div style={{fontSize:13,fontWeight:800,color:sub===t.id?T.gd:T.tm}}>{t.label}</div><div style={{fontSize:10,color:sub===t.id?T.gd:T.ts,marginTop:2}}>{t.desc}</div></div>))}</div>
-
     {sub==="inactive"&&(<>
       <GenderFilter value={gFilter} onChange={(g)=>{setGFilter(g);setSelInactive([]);}} counts={iGC}/>
       <LVFilter value={filter} onChange={(v)=>{setFilter(v);setSelInactive([]);}} total={customers.filter(c=>gFilter==="all"?true:c.gender===gFilter).length} match={customers.filter(c=>(gFilter==="all"?true:c.gender===gFilter)&&getLV(c)>=filter).length}/>
@@ -150,7 +165,6 @@ function ReengagementTab({customers}){
         </div>
       )}
     </>)}
-
     {sub==="all"&&(<>
       <div style={{background:T.surface,border:`2px solid ${editMsg?T.green:T.border}`,borderRadius:14,marginBottom:14,overflow:"hidden"}}>
         <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${T.border}`,background:T.sub}}><div style={{fontSize:12,fontWeight:800}}>📝 Broadcast Message</div><button onClick={()=>setEditMsg(e=>!e)} style={{padding:"5px 12px",background:editMsg?T.green:T.surface,border:`1.5px solid ${editMsg?T.gm:T.border}`,borderRadius:20,fontSize:11,fontWeight:800,color:editMsg?"#fff":T.ts,cursor:"pointer",fontFamily:"inherit"}}>{editMsg?"✓ Done":"✏️ Edit"}</button></div>
@@ -169,12 +183,11 @@ function ReengagementTab({customers}){
           <div style={{flex:1}}><div style={{fontSize:13,fontWeight:800}}>{c.name}</div><div style={{fontSize:11,color:T.ts}}>📅 {c.last_visit||c.lastVisit||"—"}</div></div>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
             <div style={{fontSize:10,fontWeight:700,color:T.ts,background:T.sub,padding:"2px 7px",borderRadius:20,border:`1px solid ${T.border}`,flexShrink:0}}>{c.tag}</div>
-            <div onClick={e=>{e.stopPropagation();setWaModal({customer:c,message:msg.replace(/{name}/g,c.name)});}} style={{width:32,height:32,background:T.wa,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,cursor:"pointer",flexShrink:0}}>💬</div>
+            <div onClick={e=>{e.stopPropagation();setWaModal({customer:c,message:msg});}} style={{width:32,height:32,background:T.wa,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,cursor:"pointer",flexShrink:0}}>💬</div>
           </div>
         </div>);})}
       </div>
     </>)}
-
     {waModal&&<WAModal title={waModal.customer.name} message={waModal.message} phone={waModal.customer.phone} name={waModal.customer.name} onClose={()=>{setSentIds(p=>[...p,waModal.customer.id]);setWaModal(null);}}/>}
     {bulkModal&&<BulkSendModal customers={lost.filter(c=>selInactive.includes(c.id))} template={bulkTpl} title="Re-engagement" onClose={()=>setBulkModal(null)}/>}
     {allBulk&&<BulkSendModal customers={filtAll.filter(c=>selAll.includes(c.id))} template={msg} title="Broadcast" onClose={()=>setAllBulk(false)}/>}
@@ -237,7 +250,7 @@ function CampaignsTab({customers}){
         {sel.id==="custom"&&<div style={{marginBottom:16}}><SL>Campaign Name</SL><input value={sel.name==="Custom Campaign"?"":sel.name} onChange={e=>setSel(s=>({...s,name:e.target.value||"Custom Campaign"}))} placeholder="e.g. Holi Offer…" style={IS} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/></div>}
         <div style={{marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><SL>Message</SL><div style={{fontSize:11,color:T.ts}}><span style={{color:T.bt,fontWeight:700}}>{"{name}"}</span> → replace</div></div><textarea value={cMsg||sel.template} onChange={e=>setCMsg(e.target.value)} rows={10} style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:13,padding:"12px"}} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/></div>
         <div style={{marginBottom:16}}><SL>Preview</SL><div style={{background:"#e5ddd5",borderRadius:14,padding:14}}><div style={{background:"#fff",borderRadius:"10px 10px 10px 3px",padding:"10px 12px",maxWidth:"90%"}}><pre style={{margin:0,fontFamily:"inherit",fontSize:11,lineHeight:1.7,color:T.text,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{(cMsg||sel.template).replace(/{name}/g,customers[0]?.name||"Customer")}</pre></div></div></div>
-        <div style={{background:T.surface,border:`2px solid ${T.border}`,borderRadius:14,padding:"14px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><div style={{fontWeight:800,fontSize:13}}>{filtered.length} customers</div><div style={{fontSize:11,color:T.ts}}>{tTag}</div></div><button onClick={()=>setBulk(true)} style={{width:"100%",padding:"13px",background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>💬 Send — {filtered.length} customers</button></div>
+        <div style={{background:T.surface,border:`2px solid ${T.border}`,borderRadius:14,padding:"14px"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}><div style={{fontWeight:800,fontSize:13}}>{filtered.length} customers milenge</div><div style={{fontSize:11,color:T.ts}}>{tTag}</div></div><button onClick={()=>setBulk(true)} style={{width:"100%",padding:"13px",background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>💬 Directly Send — {filtered.length} customers</button></div>
       </>
     )}
     {bulk&&<BulkSendModal customers={filtered} template={cMsg||sel?.template||""} title={sel?.name||"Campaign"} onClose={()=>setBulk(null)}/>}
