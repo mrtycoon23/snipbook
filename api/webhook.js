@@ -371,6 +371,7 @@ export default async function handler(req, res) {
 
     // confirm — yes
     if (step === "confirm" && interactiveId === "confirm_yes") {
+      // ✅ FIX 1: customer_name bhi save karo
       await fetch(`${SUPABASE_URL}/rest/v1/appointments`, {
         method: "POST",
         headers: {
@@ -380,12 +381,14 @@ export default async function handler(req, res) {
           Prefer: "return=minimal",
         },
         body: JSON.stringify({
-          salon_id: SALON_ID,
-          service:   data.service,
-          amount:    data.price || 0,
-          date:      data.date,
-          time_slot: data.time,
-          status:    "confirmed",
+          salon_id:      SALON_ID,
+          customer_name: data.name || "WhatsApp Customer",
+          customer_phone: from,
+          service:       data.service,
+          amount:        data.price || 0,
+          date:          data.date,
+          time_slot:     data.time,
+          status:        "confirmed",
         }),
       });
       await clearSession(from);
@@ -401,6 +404,23 @@ export default async function handler(req, res) {
         `📲 Aapko 1 ghante pehle reminder milega.\n\nSee you soon! 💈`;
 
       await sendButtons(from, successMsg, [{ id: "main_menu", title: "🏠 Main Menu" }]);
+
+      // ✅ FIX 2: Owner ko WhatsApp notification bhejo
+      const ownerPhone = salon?.whatsapp_number || "";
+      if (ownerPhone) {
+        const ownerNotif =
+          `🔔 *Naya Appointment!*\n\n` +
+          `👤 *Customer:* ${data.name}\n` +
+          `📱 *Phone:* +${from}\n` +
+          `✂️ *Service:* ${data.service}\n` +
+          `📅 *Date:* ${formatDate(data.date)}\n` +
+          `🕐 *Time:* ${formatTime12(data.time)}\n` +
+          `💰 *Amount:* ${priceText}\n\n` +
+          `_SnipBook se auto-booked_ 💈`;
+        const cleanOwnerPhone = ownerPhone.replace(/[^0-9]/g, "");
+        await sendText(cleanOwnerPhone, ownerNotif);
+      }
+
       res.status(200).json({ status: "ok" });
       return;
     }

@@ -768,7 +768,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       const {data}=await supabase.from("appointments").select("*").eq("salon_id",user.id);
       if(data&&data.length>0){
         const bk={};
-        data.forEach(a=>{if(!bk[a.date])bk[a.date]={};bk[a.date][a.time_slot]={name:"Client",service:a.service,price:a.amount,src:"wa",status:a.status,color:COLORS[Math.floor(Math.random()*COLORS.length)]};});
+        // ✅ FIX: customer_name use karo "Client" ki jagah
+        data.forEach(a=>{if(!bk[a.date])bk[a.date]={};bk[a.date][a.time_slot]={name:a.customer_name||"WhatsApp Customer",service:a.service,price:a.amount,src:"wa",status:a.status,color:COLORS[Math.floor(Math.random()*COLORS.length)]};});
         setBookings(prev=>({...prev,...bk}));
       }
     }
