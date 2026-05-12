@@ -765,13 +765,30 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
 
   useEffect(()=>{
     async function loadBookings(){
-      const {data}=await supabase.from("appointments").select("*").eq("salon_id",user.id);
-      if(data&&data.length>0){
-        const bk={};
-        // ✅ FIX: customer_name use karo "Client" ki jagah
-        data.forEach(a=>{if(!bk[a.date])bk[a.date]={};bk[a.date][a.time_slot]={name:a.customer_name||"WhatsApp Customer",service:a.service,price:a.amount,src:"wa",status:a.status,color:COLORS[Math.floor(Math.random()*COLORS.length)]};});
-        setBookings(prev=>({...prev,...bk}));
-      }
+      try{
+        const {data,error}=await supabase.from("appointments").select("*").eq("salon_id",user.id);
+        console.log("Bookings loaded:", data?.length, error);
+        if(data&&data.length>0){
+          const bk={};
+          data.forEach(a=>{
+            if(!bk[a.date])bk[a.date]={};
+            // ✅ time_slot format check — "12:30" ya "12:30 PM" dono handle karo
+            const slot = a.time_slot?.includes(" ") ? a.time_slot.split(" ")[0] : a.time_slot;
+            if(slot){
+              bk[a.date][slot]={
+                name:a.customer_name||a.customer_phone||"WhatsApp Customer",
+                service:a.service,
+                price:a.amount||0,
+                src:"wa",
+                status:a.status||"confirmed",
+                color:COLORS[Math.floor(Math.random()*COLORS.length)]
+              };
+            }
+          });
+          console.log("Bookings data:", JSON.stringify(bk).slice(0,200));
+          setBookings(bk); // ✅ prev spread nahi — fresh set karo
+        }
+      }catch(e){console.error("loadBookings error:",e);}
     }
     loadBookings();
   },[user.id]);
