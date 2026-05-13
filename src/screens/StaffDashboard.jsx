@@ -45,6 +45,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   const [showNewCustomer,setShowNewCustomer]=useState(false);
   const [newCustPhone,setNewCustPhone]=useState("");
   const [newCustDob,setNewCustDob]=useState("");
+  const [newCustGender,setNewCustGender]=useState("male");
   const [savingCustomer,setSavingCustomer]=useState(false);
   const [pendingLogData,setPendingLogData]=useState(null);
 
@@ -125,6 +126,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
           name:pendingLogData.clientName,
           phone:newCustPhone||"",
           birthday:newCustDob||null,
+          gender:newCustGender||"male",
         });
       }
       await saveLog(pendingLogData);
@@ -154,9 +156,13 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
             <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Phone Number *</div>
             <input style={IS} type="tel" placeholder="e.g. 9876543210" value={newCustPhone} onChange={e=>setNewCustPhone(e.target.value.replace(/\D/g,"").slice(0,10))} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border} autoFocus/>
           </div>
-          <div style={{marginBottom:20}}>
+          <div style={{marginBottom:12}}>
             <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Date of Birth (optional)</div>
             <input style={IS} type="date" value={newCustDob} onChange={e=>setNewCustDob(e.target.value)}/>
+          </div>
+          <div style={{marginBottom:16}}>
+            <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:8}}>Gender</div>
+            <div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewCustGender(g.id)} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustGender===g.id?T.green:T.border}`,background:newCustGender===g.id?T.gl:"#fff",color:newCustGender===g.id?T.gd:T.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div>
           </div>
           <button onClick={()=>saveNewCustomer(false)} disabled={savingCustomer||!newCustPhone||newCustPhone.length<10} style={{width:"100%",padding:13,background:savingCustomer||!newCustPhone||newCustPhone.length<10?"#d1d5db":T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:newCustPhone.length===10?"pointer":"not-allowed"}}>
             {savingCustomer?"Saving...":"✓ Customer + Log Save Karo"}

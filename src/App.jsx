@@ -842,7 +842,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [cSearch,setCSearch]=useState("");
   const [cFilter,setCFilter]=useState("All");
   const [showAddClient,setShowAddClient]=useState(false);
-  const [newClient,setNewClient]=useState({name:"",phone:"",city:"",dob:"",tag:"Regular"});
+  const [newClient,setNewClient]=useState({name:"",phone:"",city:"",dob:"",tag:"Regular",gender:"male"});
   const [editClient,setEditClient]=useState(null); // editing client data
   const [showEditClient,setShowEditClient]=useState(false);
 
@@ -937,6 +937,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                   <div style={{width:36,height:4,background:"#e8edf3",borderRadius:2,margin:"0 auto 14px"}}/>
                   <div style={{fontWeight:900,fontSize:16,marginBottom:16}}>✏️ Edit Customer</div>
                   {[{label:"Full Name *",key:"name",ph:"e.g. Priya Sharma",type:"text"},{label:"Phone Number",key:"phone",ph:"98765 43210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:4}}>{f.label}</div><input type={f.type} value={editClient[f.key]||""} onChange={e=>setEditClient(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{...is}} onFocus={e=>e.target.style.borderColor="#22c55e"} onBlur={e=>e.target.style.borderColor="#e8edf3"}/></div>))}
+                  <div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setEditClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${(editClient.gender||"male")===g.id?"#22c55e":"#e8edf3"}`,background:(editClient.gender||"male")===g.id?"#e8fdf0":"#fff",color:(editClient.gender||"male")===g.id?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div>
+                  <div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setEditClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.gender===g.id?"#22c55e":"#e8edf3"}`,background:editClient.gender===g.id?"#e8fdf0":"#fff",color:editClient.gender===g.id?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div>
                   <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setEditClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.tag===t?"#22c55e":"#e8edf3"}`,background:editClient.tag===t?"#e8fdf0":"#fff",color:editClient.tag===t?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t==="VIP"?"⭐ VIP":t}</button>))}</div></div>
                   <div style={{display:"flex",gap:10}}>
                     <button onClick={()=>setShowEditClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e8edf3",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button>
@@ -948,6 +950,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                         city:editClient.city||"",
                         birthday:editClient.dob||null,
                         tag:editClient.tag||"Regular",
+                        gender:editClient.gender||"male",
                       }).eq("id",editClient.id);
                       setClients(prev=>prev.map(c=>c.id===editClient.id?{...c,...editClient,name:editClient.name.trim()}:c));
                       setSelClient(prev=>prev?{...prev,...editClient,name:editClient.name.trim()}:null);
@@ -964,13 +967,15 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                   <div style={{width:36,height:4,background:"#e8edf3",borderRadius:2,margin:"0 auto 14px"}}/>
                   <div style={{fontWeight:900,fontSize:16,marginBottom:16}}>➕ Add New Customer</div>
                   {[{label:"Full Name *",key:"name",ph:"e.g. Priya Sharma",type:"text"},{label:"Phone Number *",key:"phone",ph:"98765 43210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:4}}>{f.label}</div><input type={f.type} value={newClient[f.key]} onChange={e=>setNewClient(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{...is}} onFocus={e=>e.target.style.borderColor="#22c55e"} onBlur={e=>e.target.style.borderColor="#e8edf3"}/></div>))}
+                  <div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.gender===g.id?"#22c55e":"#e8edf3"}`,background:newClient.gender===g.id?"#e8fdf0":"#fff",color:newClient.gender===g.id?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div>
                   <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setNewClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.tag===t?"#22c55e":"#e8edf3"}`,background:newClient.tag===t?"#e8fdf0":"#fff",color:newClient.tag===t?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t==="VIP"?"⭐ VIP":t}</button>))}</div></div>
+                  <div style={{marginBottom:14}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${(newClient.gender||"male")===g.id?"#22c55e":"#e8edf3"}`,background:(newClient.gender||"male")===g.id?"#e8fdf0":"#fff",color:(newClient.gender||"male")===g.id?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div>
                   <div style={{display:"flex",gap:10}}>
                     <button onClick={()=>setShowAddClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e8edf3",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button>
                     <button onClick={async()=>{
                       if(!newClient.name.trim()||!newClient.phone.trim()||!newClient.dob)return;
                       if(!/^\d{10}$/.test(newClient.phone.replace(/\s/g,"")))return;
-                      await supabase.from("customers").insert({salon_id:user.id,name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"",tag:newClient.tag,source:"walk",birthday:newClient.dob});
+                      await supabase.from("customers").insert({salon_id:user.id,name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"",tag:newClient.tag,source:"walk",birthday:newClient.dob,gender:newClient.gender||"male"});
                       const ini=newClient.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
                       const cols=["#22c55e","#3b82f6","#a855f7","#f59e0b","#14b8a6","#ec4899"];
                       const col=cols[Math.floor(Math.random()*cols.length)];
