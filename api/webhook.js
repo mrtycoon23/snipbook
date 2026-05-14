@@ -127,17 +127,6 @@ async function getSalonByPhone(phone) {
   } catch(e) { return null; }
 }
 
-async function getSalonById(id) {
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/salons?id=eq.${id}&limit=1`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const d = await r.json();
-    return d?.[0] || null;
-  } catch(e) { return null; }
-}
-
 function sessionKey(phone, salonId) { return `${salonId}_${phone}`; }
 
 async function getSession(key) {
@@ -259,14 +248,14 @@ async function sendDateList(to, data, workDays) {
 
 async function sendStepHint(to, step) {
   const hints = {
-    ask_name:            `Aapka naam type karein 👇`,
-    ask_gender:          `Upar se Male ya Female chunein 👆`,
-    ask_service:         `Service list mein se chunein 👆`,
-    ask_date:            `Date list mein se chunein 👆`,
-    ask_date_custom:     `Date likhein jaise: *25 May* ya *3 June* 📅`,
-    ask_time_part:       `Morning ya Evening chunein 👆`,
-    ask_time:            `Time slot chunein 👆`,
-    confirm:             `Confirm karne ke liye button dabayein 👆`,
+    ask_name:               `Aapka naam type karein 👇`,
+    ask_gender:             `Upar se Male ya Female chunein 👆`,
+    ask_service:            `Service list mein se chunein 👆`,
+    ask_date:               `Date list mein se chunein 👆`,
+    ask_date_custom:        `Date likhein jaise: *25 May* ya *3 June* 📅`,
+    ask_time_part:          `Morning ya Evening chunein 👆`,
+    ask_time:               `Time slot chunein 👆`,
+    confirm:                `Confirm karne ke liye button dabayein 👆`,
     browse_services_gender: `Male ya Female chunein 👆`,
     browse_services_list:   `Service chunein 👆`,
   };
@@ -315,11 +304,11 @@ export default async function handler(req, res) {
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    // ✅ SALON IDENTIFY — Clean priority order
+    // ✅ SALON IDENTIFY
     let salon = null;
     let sKey  = null;
 
-    // Step 1: Keyword se salon dhundho (text mein keyword aaya?)
+    // Step 1: Keyword se salon dhundho
     if (text) {
       const byKeyword = await getSalonByKeyword(text);
       if (byKeyword) {
@@ -328,25 +317,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // Step 2: Agar keyword nahi mila — existing sKey session check karo
-    // All possible salons ki sessions check karo
+    // Step 2: Active session kisi salon ke liye hai?
     if (!salon) {
-      // BOT_NUMBER se linked salon dhundho pehle
-      const fallbackSalon = await getSalonByPhone(BOT_NUMBER);
-      if (fallbackSalon) {
-        const possibleSKey = sessionKey(from, fallbackSalon.id);
-        const existingSession = await getSession(possibleSKey);
-        if (existingSession?.step && existingSession.step !== "menu") {
-          // Active session hai is salon ke liye
-          salon = fallbackSalon;
-          sKey  = possibleSKey;
-        }
-      }
-    }
-
-    // Step 3: Agar koi active session nahi — sabhi salons check karo
-    if (!salon) {
-      // Supabase se sabhi salons fetch karo aur check karo kiska active session hai
       try {
         const r = await fetch(
           `${SUPABASE_URL}/rest/v1/salons?select=id,salon_name,whatsapp_number,bot_keyword,services,working_days,open_time,close_time,address,maps_link,phone,notification_number`,
@@ -365,7 +337,7 @@ export default async function handler(req, res) {
       } catch(e) { console.error("All salons fetch error:", e.message); }
     }
 
-    // Step 4: Final fallback — BOT_NUMBER linked salon
+    // Step 3: Fallback — BOT_NUMBER linked salon
     if (!salon) {
       salon = await getSalonByPhone(BOT_NUMBER);
       if (salon) sKey = sessionKey(from, salon.id);
@@ -414,7 +386,8 @@ export default async function handler(req, res) {
     // ─── BOOKING FLOW ──────────────────────────────────────────────────────────
 
     if (step === "ask_name" && text && !interactiveId) {
-      await setSession(`name_${from}_${SALON_ID}`, "saved", { name: text });
+      // ✅ naam sirf phone se save karo — salon-specific nahi
+      await setSession(`name_${from}`, "saved", { name: text });
       if (data.pendingService) {
         await setSession(sKey, "ask_date", { ...data, name: text, service: data.pendingService, price: data.pendingPrice || 0 });
         await sendDateList(from, { name: text, service: data.pendingService, price: data.pendingPrice || 0 }, workDays);
@@ -667,7 +640,8 @@ export default async function handler(req, res) {
     }
 
     if (interactiveId === "appointment") {
-      const nameSession = await getSession(`name_${from}_${SALON_ID}`);
+      // ✅ naam sirf phone se lookup karo
+      const nameSession = await getSession(`name_${from}`);
       const savedName = nameSession?.data?.name || data.name;
       if (savedName) {
         await setSession(sKey, "ask_gender", { ...data, name: savedName });
@@ -786,7 +760,8 @@ export default async function handler(req, res) {
         serviceName  = sel?.name  || svcId;
         servicePrice = sel?.price || 0;
       }
-      const nameSession = await getSession(`name_${from}_${SALON_ID}`);
+      // ✅ naam sirf phone se lookup karo
+      const nameSession = await getSession(`name_${from}`);
       const savedName   = nameSession?.data?.name || data.name;
       if (savedName) {
         await setSession(sKey, "ask_date", { ...data, name: savedName, service: serviceName, price: servicePrice });
@@ -816,7 +791,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ✅ Default — step hint ya main menu
+    // ✅ Default
     if (step && step !== "menu") {
       await sendStepHint(from, step);
     } else {
