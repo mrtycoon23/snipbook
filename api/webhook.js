@@ -99,6 +99,99 @@ async function getBookedSlots(salonId, date) {
   } catch(e) { return []; }
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function pad(n) { return String(n).padStart(2, "0"); }
+
+function getISTNow() {
+  const now = new Date();
+  return new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+}
+
+function getTodayKeyIST() {
+  const ist = getISTNow();
+  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth()+1)}-${pad(ist.getUTCDate())}`;
+}
+
+function getNextDays(workDays, count) {
+  const DN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const result = [];
+  const istNow = getISTNow();
+  const today = new Date(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate());
+  for (let i = 0; result.length < count && i <= 60; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const dayName = DN[d.getDay()];
+    if (!workDays || workDays.includes(dayName)) {
+      const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      const label = i === 0
+        ? `Aaj (${d.getDate()} ${MN[d.getMonth()]})`
+        : i === 1
+        ? `Kal (${d.getDate()} ${MN[d.getMonth()]})`
+        : `${dayName}, ${d.getDate()} ${MN[d.getMonth()]}`;
+      result.push({ key, label, dayName });
+    }
+  }
+  return result;
+}
+
+function getTimeSlots(open, close, selectedDate = null) {
+  const slots = [];
+  const istNow = getISTNow();
+  const todayKey = getTodayKeyIST();
+  const isToday = selectedDate === todayKey;
+  const currentMinutes = istNow.getUTCHours() * 60 + istNow.getUTCMinutes();
+  for (let h = open; h < close; h++) {
+    const slot00 = h * 60;
+    const slot30 = h * 60 + 30;
+    if (!isToday || slot00 > currentMinutes + 30) {
+      slots.push({ key: `${pad(h)}:00`, label: formatTime12(`${pad(h)}:00`) });
+    }
+    if (!isToday || slot30 > currentMinutes + 30) {
+      slots.push({ key: `${pad(h)}:30`, label: formatTime12(`${pad(h)}:30`) });
+    }
+  }
+  return slots;
+}
+
+function parseCustomDate(text) {
+  const MN = {
+    jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
+    january:1,february:2,march:3,april:4,june:6,july:7,august:8,
+    september:9,october:10,november:11,december:12
+  };
+  const t = text.toLowerCase().trim();
+  const m = t.match(/(\d{1,2})\s+([a-z]+)(?:\s+(\d{4}))?/);
+  if (!m) return null;
+  const day = parseInt(m[1]);
+  const month = MN[m[2]];
+  if (!month || day < 1 || day > 31) return null;
+  const year = m[3] ? parseInt(m[3]) : new Date().getFullYear();
+  return `${year}-${pad(month)}-${pad(day)}`;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const [y, m, d] = dateStr.split("-");
+  return `${parseInt(d)} ${MN[parseInt(m)-1]} ${y}`;
+}
+
+function formatTime(hour) {
+  const h = parseInt(hour);
+  if (h === 0) return "12:00 AM";
+  if (h < 12)  return `${h}:00 AM`;
+  if (h === 12) return "12:00 PM";
+  return `${h - 12}:00 PM`;
+}
+
+function formatTime12(timeStr) {
+  if (!timeStr) return "";
+  const [h, m] = timeStr.split(":").map(Number);
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${h12}:${pad(m)} ${h < 12 ? "AM" : "PM"}`;
+}
+
 // ─── YCloud helpers ───────────────────────────────────────────────────────────
 async function sendText(to, body) {
   try {
@@ -162,15 +255,12 @@ async function sendMainMenu(to, salonName) {
   );
 }
 
-// ─── IST helper ───────────────────────────────────────────────────────────────
-function getISTNow() {
-  const now = new Date();
-  return new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
-}
-
-function getTodayKeyIST() {
-  const ist = getISTNow();
-  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth()+1)}-${pad(ist.getUTCDate())}`;
+async function sendDateList(to, data, workDays) {
+  const days = getNextDays(workDays, 9);
+  const rows = days.map(d => ({ id: `date_${d.key}`, title: d.label, description: d.dayName }));
+  rows.push({ id: "date_custom", title: "📅 Koi Aur Date", description: "Khud date likhein" });
+  const priceText = data.price > 0 ? ` — ₹${data.price}` : "";
+  await sendList(to, "📅 Date Chunein", `*${data.service}*${priceText}\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows);
 }
 
 // ─── Main Handler ─────────────────────────────────────────────────────────────
@@ -204,25 +294,21 @@ export default async function handler(req, res) {
   if (!from) { res.status(200).json({ status: "ok" }); return; }
 
   try {
-    // ✅ Duplicate check
     if (msgId) {
       const processed = await getSession(`dup_${msgId}`);
       if (processed) { res.status(200).json({ status: "ok" }); return; }
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    // ✅ SALON IDENTIFY — 3 step priority
     let salon = null;
     let sKey = from;
 
-    // Step 1: Existing session mein salonId
     const rawSession = await getSession(from);
     if (rawSession?.data?.salonId) {
       salon = await getSalonById(rawSession.data.salonId);
       if (salon) sKey = sessionKey(from, salon.id);
     }
 
-    // Step 2: Keyword se
     if (!salon && text) {
       const byKeyword = await getSalonByKeyword(text);
       if (byKeyword) {
@@ -231,7 +317,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Step 3: Fallback — BOT_NUMBER linked salon
     if (!salon) {
       salon = await getSalonByPhone(BOT_NUMBER);
       if (salon) sKey = sessionKey(from, salon.id);
@@ -260,7 +345,6 @@ export default async function handler(req, res) {
 
     console.log("Salon:", salonName, "SALON_ID:", SALON_ID, "sKey:", sKey, "Step:", step);
 
-    // ✅ Reset words
     const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
     if (text && resetWords.includes(text.toLowerCase())) {
       await clearSession(sKey);
@@ -269,7 +353,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ✅ Keyword aaya → fresh start
     if (text && (await getSalonByKeyword(text))) {
       await clearSession(sKey);
       await sendMainMenu(from, salonName);
@@ -277,11 +360,8 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ─── BOOKING FLOW ──────────────────────────────────────────────────────────
-
     if (step === "ask_name" && text && !interactiveId) {
       await setSession(`name_${from}_${SALON_ID}`, "saved", { name: text });
-
       if (data.pendingService) {
         await setSession(sKey, "ask_date", { ...data, name: text, service: data.pendingService, price: data.pendingPrice || 0 });
         await sendDateList(from, { name: text, service: data.pendingService, price: data.pendingPrice || 0 }, workDays);
@@ -302,19 +382,16 @@ export default async function handler(req, res) {
     if (step === "ask_gender" && (interactiveId === "gender_male" || interactiveId === "gender_female")) {
       const gender = interactiveId === "gender_male" ? "male" : "female";
       await setSession(sKey, "ask_service", { ...data, gender });
-
       const filtered = services.filter(s => {
         if (!s.gender || s.gender === "both") return true;
         return s.gender === gender;
       });
-
       const rows = filtered.slice(0, 9).map(s => ({
         id: `svc_${s.id}`,
         title: `${s.emoji || "✂️"} ${s.name}`.slice(0, 24),
         description: `₹${s.price} · ${s.duration} min`
       }));
       rows.push({ id: "svc_custom", title: "✏️ Koi Aur Service", description: "Apni service khud likhein" });
-
       const genderLabel = gender === "male" ? "👨 Male" : "👩 Female";
       await sendList(from, `✂️ ${genderLabel} Services`, `*${data.name}*, konsi service chahiye?`, "Service Chunein", rows);
       res.status(200).json({ status: "ok" });
@@ -353,7 +430,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ✅ Past date validation added
     if (step === "ask_date_custom" && text && !interactiveId) {
       const parsedDate = parseCustomDate(text);
       if (!parsedDate) {
@@ -361,14 +437,12 @@ export default async function handler(req, res) {
         res.status(200).json({ status: "ok" });
         return;
       }
-
       const todayKey = getTodayKeyIST();
       if (parsedDate < todayKey) {
         await sendText(from, `⚠️ *Yeh date nikal chuki hai!*\n\nKripya aaj ya aane wali date likhein 📅\n_(Jaise: ${formatDate(todayKey)} ya uske baad)_`);
         res.status(200).json({ status: "ok" });
         return;
       }
-
       await setSession(sKey, "ask_time_part", { ...data, date: parsedDate });
       await sendButtons(from,
         `📅 *${formatDate(parsedDate)}*\n\nKaunsa time prefer karenge?`,
@@ -399,11 +473,9 @@ export default async function handler(req, res) {
       const isMorning = interactiveId === "time_morning";
       const startH = isMorning ? openTime : 14;
       const endH   = isMorning ? 14 : closeTime;
-
       const booked = await getBookedSlots(SALON_ID, data.date);
       const allSlots = getTimeSlots(startH, endH, data.date);
       const available = allSlots.filter(s => !booked.includes(s.key));
-
       if (available.length === 0) {
         await sendButtons(from,
           `😔 Is time mein koi slot available nahi *${formatDate(data.date)}* ko!\n\nDusra time chunein:`,
@@ -415,14 +487,12 @@ export default async function handler(req, res) {
         res.status(200).json({ status: "ok" });
         return;
       }
-
       await setSession(sKey, "ask_time", { ...data });
       const rows = available.map(s => ({
         id: `time_${s.key}`,
         title: `🟢 ${s.label}`,
         description: "Available"
       }));
-
       const partLabel = isMorning ? "🌅 Morning" : "🌆 Evening";
       await sendList(from, `🕐 ${partLabel} Slots`, `📅 *${formatDate(data.date)}*\n\nKaunsa time slot chahiye?`, "Slot Chunein", rows);
       res.status(200).json({ status: "ok" });
@@ -432,7 +502,6 @@ export default async function handler(req, res) {
     if (step === "ask_time" && interactiveId?.startsWith("time_")) {
       const timeKey = interactiveId.replace("time_", "");
       await setSession(sKey, "confirm", { ...data, time: timeKey });
-
       const priceText = data.price > 0 ? `₹${data.price}` : "Price on visit";
       const confirmMsg =
         `📋 *Booking Details:*\n\n` +
@@ -442,7 +511,6 @@ export default async function handler(req, res) {
         `🕐 *Time:* ${formatTime12(timeKey)}\n` +
         `💰 *Price:* ${priceText}\n\n` +
         `Kya confirm karein? ✅`;
-
       await sendButtons(from, confirmMsg, [
         { id: "confirm_yes", title: "✅ Haan, Confirm!" },
         { id: "confirm_no",  title: "❌ Cancel" },
@@ -451,7 +519,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // confirm — yes
     if (step === "confirm" && interactiveId === "confirm_yes") {
       try {
         const custCheck = await fetch(
@@ -531,7 +598,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // confirm — no
     if (step === "confirm" && interactiveId === "confirm_no") {
       await clearSession(sKey);
       await sendText(from, "Koi baat nahi! 😊\nKabhi bhi book karne ke liye \"Hi\" type karein.");
@@ -547,12 +613,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ─── MAIN MENU OPTIONS ─────────────────────────────────────────────────────
-
     if (interactiveId === "appointment") {
       const nameSession = await getSession(`name_${from}_${SALON_ID}`);
       const savedName = nameSession?.data?.name || data.name;
-
       if (savedName) {
         await setSession(sKey, "ask_gender", { ...data, name: savedName });
         await sendButtons(from,
@@ -586,19 +649,16 @@ export default async function handler(req, res) {
     if (step === "browse_services_gender" && (interactiveId === "browse_male" || interactiveId === "browse_female")) {
       const gender = interactiveId === "browse_male" ? "male" : "female";
       await setSession(sKey, "browse_services_list", { ...data, gender });
-
       const filtered = services.filter(s => {
         if (!s.gender || s.gender === "both") return true;
         return s.gender === gender;
       });
-
       const rows = filtered.slice(0, 9).map(s => ({
         id: `browse_svc_${s.id}`,
         title: `${s.emoji || "✂️"} ${s.name}`.slice(0, 24),
         description: `₹${s.price} · ${s.duration} min`
       }));
       rows.push({ id: "browse_svc_custom", title: "✏️ Koi Aur Service", description: "Apni service khud likhein" });
-
       const genderLabel = gender === "male" ? "👨 Male" : "👩 Female";
       await sendList(from, `✂️ ${genderLabel} Services`, `Koi bhi service select karein ya book karein 👇`, "Services Dekho", rows);
       res.status(200).json({ status: "ok" });
@@ -607,22 +667,18 @@ export default async function handler(req, res) {
 
     if (step === "browse_services_list" && interactiveId?.startsWith("browse_svc_")) {
       const svcId = interactiveId.replace("browse_svc_", "");
-
       if (svcId === "custom") {
         await setSession(sKey, "browse_services_custom", { ...data });
         await sendText(from, `✏️ *Apni service likhein:*\n\nJo service chahiye woh type karein\n(e.g. Keratin, Smoothening, Bridal Package)\n\n_Wapas menu ke liye "Hi" type karein_`);
         res.status(200).json({ status: "ok" });
         return;
       }
-
       const selected = services.find(s => String(s.id) === svcId);
       const serviceName  = selected?.name  || svcId;
       const servicePrice = selected?.price || 0;
       const serviceDur   = selected?.duration || "";
-
       const priceText = servicePrice > 0 ? `₹${servicePrice}` : "Price on visit";
       const durText   = serviceDur ? ` · ${serviceDur} min` : "";
-
       await setSession(sKey, "browse_services_list", { ...data });
       await sendButtons(from,
         `✂️ *${serviceName}*\n💰 ${priceText}${durText}\n\nIs service ko book karna chahte hain?`,
@@ -668,7 +724,6 @@ export default async function handler(req, res) {
 
     if (interactiveId?.startsWith("book_svc_") || interactiveId?.startsWith("book_custom_")) {
       let serviceName, servicePrice;
-
       if (interactiveId.startsWith("book_custom_")) {
         serviceName  = data.pendingCustomService || "Custom Service";
         servicePrice = 0;
@@ -678,10 +733,8 @@ export default async function handler(req, res) {
         serviceName  = sel?.name  || svcId;
         servicePrice = sel?.price || 0;
       }
-
       const nameSession = await getSession(`name_${from}_${SALON_ID}`);
       const savedName   = nameSession?.data?.name || data.name;
-
       if (savedName) {
         await setSession(sKey, "ask_date", { ...data, name: savedName, service: serviceName, price: servicePrice });
         await sendDateList(from, { name: savedName, service: serviceName, price: servicePrice }, workDays);
@@ -710,7 +763,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Default — main menu
     await clearSession(sKey);
     await sendMainMenu(from, salonName);
     res.status(200).json({ status: "ok" });
@@ -720,108 +772,3 @@ export default async function handler(req, res) {
     res.status(200).json({ status: "ok" });
   }
 }
-
-// ─── Send date list helper ────────────────────────────────────────────────────
-async function sendDateList(to, data, workDays) {
-  const days = getNextDays(workDays, 9);
-  const rows = days.map(d => ({ id: `date_${d.key}`, title: d.label, description: d.dayName }));
-  rows.push({ id: "date_custom", title: "📅 Koi Aur Date", description: "Khud date likhein" });
-  const priceText = data.price > 0 ? ` — ₹${data.price}` : "";
-  await sendList(to, "📅 Date Chunein", `*${data.service}*${priceText}\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows);
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function getISTNow() {
-  const now = new Date();
-  return new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
-}
-
-function getTodayKeyIST() {
-  const ist = getISTNow();
-  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth()+1)}-${pad(ist.getUTCDate())}`;
-}
-
-function getNextDays(workDays, count) {
-  const DN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const result = [];
-  const istNow = getISTNow();
-  const today = new Date(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate());
-
-  for (let i = 0; result.length < count && i <= 60; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const dayName = DN[d.getDay()];
-    if (!workDays || workDays.includes(dayName)) {
-      const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-      const label = i === 0
-        ? `Aaj (${d.getDate()} ${MN[d.getMonth()]})`
-        : i === 1
-        ? `Kal (${d.getDate()} ${MN[d.getMonth()]})`
-        : `${dayName}, ${d.getDate()} ${MN[d.getMonth()]}`;
-      result.push({ key, label, dayName });
-    }
-  }
-  return result;
-}
-
-function getTimeSlots(open, close, selectedDate = null) {
-  const slots = [];
-  const istNow = getISTNow();
-  const todayKey = `${istNow.getUTCFullYear()}-${pad(istNow.getUTCMonth()+1)}-${pad(istNow.getUTCDate())}`;
-  const isToday = selectedDate === todayKey;
-  const currentMinutes = istNow.getUTCHours() * 60 + istNow.getUTCMinutes();
-
-  for (let h = open; h < close; h++) {
-    const slot00 = h * 60;
-    const slot30 = h * 60 + 30;
-
-    if (!isToday || slot00 > currentMinutes + 30) {
-      slots.push({ key: `${pad(h)}:00`, label: formatTime12(`${pad(h)}:00`) });
-    }
-    if (!isToday || slot30 > currentMinutes + 30) {
-      slots.push({ key: `${pad(h)}:30`, label: formatTime12(`${pad(h)}:30`) });
-    }
-  }
-  return slots;
-}
-
-function parseCustomDate(text) {
-  const MN = {
-    jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
-    january:1,february:2,march:3,april:4,june:6,july:7,august:8,
-    september:9,october:10,november:11,december:12
-  };
-  const t = text.toLowerCase().trim();
-  const m = t.match(/(\d{1,2})\s+([a-z]+)(?:\s+(\d{4}))?/);
-  if (!m) return null;
-  const day = parseInt(m[1]);
-  const month = MN[m[2]];
-  if (!month || day < 1 || day > 31) return null;
-  const year = m[3] ? parseInt(m[3]) : new Date().getFullYear();
-  return `${year}-${pad(month)}-${pad(day)}`;
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "";
-  const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const [y, m, d] = dateStr.split("-");
-  return `${parseInt(d)} ${MN[parseInt(m)-1]} ${y}`;
-}
-
-function formatTime(hour) {
-  const h = parseInt(hour);
-  if (h === 0) return "12:00 AM";
-  if (h < 12)  return `${h}:00 AM`;
-  if (h === 12) return "12:00 PM";
-  return `${h - 12}:00 PM`;
-}
-
-function formatTime12(timeStr) {
-  if (!timeStr) return "";
-  const [h, m] = timeStr.split(":").map(Number);
-  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${h12}:${pad(m)} ${h < 12 ? "AM" : "PM"}`;
-}
-
-function pad(n) { return String(n).padStart(2, "0"); }
