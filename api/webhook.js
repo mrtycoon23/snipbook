@@ -186,6 +186,30 @@ async function getBookedSlots(salonId, date) {
   } catch(e) { return []; }
 }
 
+// ─── Active salon finder ───────────────────────────────────────────────────────
+async function getActiveSalonForPhone(from) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/salons?select=id`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const allSalons = await r.json();
+    for (const s of (allSalons || [])) {
+      const sk = sessionKey(from, s.id);
+      const sess = await getSession(sk);
+      if (
+        sess?.step &&
+        sess.step !== "menu" &&
+        sess?.data?.salonId === s.id
+      ) {
+        const fullSalon = await getSalonById(s.id);
+        return { salon: fullSalon, sKey: sk, session: sess };
+      }
+    }
+  } catch(e) { console.error("getActiveSalon error:", e.message); }
+  return null;
+}
+
 // ─── YCloud helpers ───────────────────────────────────────────────────────────
 async function sendText(to, body) {
   try {
@@ -274,33 +298,6 @@ async function sendStepHint(to, step) {
   if (hint) await sendText(to, `_${hint}_\n\n_Wapas menu ke liye "Hi" type karein_`);
 }
 
-// ─── Get active salon for phone ───────────────────────────────────────────────
-// ✅ KEY FIX: Session data mein salonId stored hai
-// Har salon ki sKey check karo — jis mein salonId match kare aur step active ho
-async function getActiveSalonForPhone(from) {
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/salons?select=id`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const allSalons = await r.json();
-    for (const s of (allSalons || [])) {
-      const sk = sessionKey(from, s.id);
-      const sess = await getSession(sk);
-      // ✅ salonId session data se match karo — dono same hone chahiye
-      if (
-        sess?.step &&
-        sess.step !== "menu" &&
-        sess?.data?.salonId === s.id
-      ) {
-        const fullSalon = await getSalonById(s.id);
-        return { salon: fullSalon, sKey: sk, session: sess };
-      }
-    }
-  } catch(e) { console.error("getActiveSalon error:", e.message); }
-  return null;
-}
-
 // ─── Main Handler ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === "GET") {
@@ -342,23 +339,22 @@ export default async function handler(req, res) {
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    // ✅ SALON IDENTIFY — 3 step clean priority
+    // ✅ SALON IDENTIFY
     let salon = null;
     let sKey  = null;
     let session = null;
 
-    // Step 1: Keyword se salon dhundho (text mein keyword aaya?)
+    // Step 1: Keyword se salon dhundho
     if (text) {
       const byKeyword = await getSalonByKeyword(text);
       if (byKeyword) {
-        salon  = byKeyword;
-        sKey   = sessionKey(from, salon.id);
+        salon   = byKeyword;
+        sKey    = sessionKey(from, salon.id);
         session = await getSession(sKey);
       }
     }
 
     // Step 2: Active session dhundho — salonId match karke
-    // ✅ Yeh loop SIRF tab chalega jab keyword nahi mila
     if (!salon) {
       const active = await getActiveSalonForPhone(from);
       if (active) {
@@ -368,7 +364,19 @@ export default async function handler(req, res) {
       }
     }
 
-    // Step 3: Final fallback — BOT_NUMBER linked salon
+    // Step 3: last_salon session check — booking ke baad main_menu pe
+    if (!salon) {
+      const lastSalonSession = await getSession(`last_${from}`);
+      if (lastSalonSession?.data?.salonId) {
+        salon = await getSalonById(lastSalonSession.data.salonId);
+        if (salon) {
+          sKey    = sessionKey(from, salon.id);
+          session = await getSession(sKey);
+        }
+      }
+    }
+
+    // Step 4: Final fallback — BOT_NUMBER linked salon
     if (!salon) {
       salon = await getSalonByPhone(BOT_NUMBER);
       if (salon) {
@@ -384,7 +392,6 @@ export default async function handler(req, res) {
     }
 
     const SALON_ID = salon.id;
-    // Session already fetched above
     if (!session) session = await getSession(sKey);
 
     const salonName = salon?.salon_name   || "SnipBook Salon";
@@ -626,6 +633,8 @@ export default async function handler(req, res) {
         }),
       });
 
+      // ✅ last_salon save karo taaki main_menu pe sahi salon mile
+      await setSession(`last_${from}`, "salon", { salonId: SALON_ID });
       await clearSession(sKey);
 
       const priceText = data.price > 0 ? `₹${data.price}` : "Price on visit";
@@ -659,6 +668,7 @@ export default async function handler(req, res) {
     }
 
     if (step === "confirm" && interactiveId === "confirm_no") {
+      await setSession(`last_${from}`, "salon", { salonId: SALON_ID });
       await clearSession(sKey);
       await sendText(from, "Koi baat nahi! 😊\nKabhi bhi book karne ke liye \"Hi\" type karein.");
       await sendMainMenu(from, salonName);
