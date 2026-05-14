@@ -1,31 +1,54 @@
 export const config = { maxDuration: 30 };
 
-const SALON_ID     = "ba0e6447-c162-4bc7-b049-fe825121e092";
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const YCLOUD_KEY   = process.env.YCLOUD_API_KEY;
 const BOT_NUMBER   = process.env.WHATSAPP_PHONE_NUMBER;
 
 // ─── Supabase helpers ─────────────────────────────────────────────────────────
-async function getSalon() {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/salons?id=eq.${SALON_ID}&limit=1`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-  });
-  const d = await r.json();
-  return d?.[0] || null;
-}
 
-async function getSession(phone) {
+// Keyword se salon dhundho (wa.me link: ?text=KEYWORD)
+async function getSalonByKeyword(keyword) {
+  if (!keyword) return null;
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(phone)}&limit=1`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/salons?bot_keyword=eq.${encodeURIComponent(keyword.toLowerCase())}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
     const d = await r.json();
     return d?.[0] || null;
   } catch(e) { return null; }
 }
 
-async function setSession(phone, step, data = {}) {
+// Fallback — BOT_NUMBER se linked salon (single salon setup ke liye)
+async function getSalonByPhone(phone) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/salons?whatsapp_number=eq.${encodeURIComponent(phone)}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const d = await r.json();
+    return d?.[0] || null;
+  } catch(e) { return null; }
+}
+
+// Session key mein salon_id bhi include karo (multi-salon safe)
+function sessionKey(phone, salonId) {
+  return `${salonId}_${phone}`;
+}
+
+async function getSession(key) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(key)}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const d = await r.json();
+    return d?.[0] || null;
+  } catch(e) { return null; }
+}
+
+async function setSession(key, step, data = {}) {
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
       method: "POST",
@@ -35,25 +58,24 @@ async function setSession(phone, step, data = {}) {
         "Content-Type": "application/json",
         Prefer: "resolution=merge-duplicates",
       },
-      body: JSON.stringify({ phone, step, data, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({ phone: key, step, data, updated_at: new Date().toISOString() }),
     });
-    console.log("Session set:", step);
   } catch(e) { console.error("setSession error:", e.message); }
 }
 
-async function clearSession(phone) {
+async function clearSession(key) {
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(phone)}`, {
+    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(key)}`, {
       method: "DELETE",
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
     });
   } catch(e) {}
 }
 
-async function getBookedSlots(date) {
+async function getBookedSlots(salonId, date) {
   try {
     const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${SALON_ID}&date=eq.${date}&status=eq.confirmed`,
+      `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${salonId}&date=eq.${date}&status=eq.confirmed`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
     const d = await r.json();
@@ -107,7 +129,6 @@ async function sendList(to, headerText, bodyText, buttonLabel, rows, footerText 
         }
       }),
     });
-    console.log("sendList: accepted");
   } catch(e) { console.error("sendList error:", e.message); }
 }
 
@@ -167,7 +188,47 @@ export default async function handler(req, res) {
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    const [salon, session] = await Promise.all([getSalon(), getSession(from)]);
+    // ✅ MULTI-SALON: Keyword se salon identify karo
+    // First message text ko keyword maano (wa.me?text=snipsalon)
+    // Ya session mein already salonId saved hai
+    
+    // Pehle existing session check karo salon_id ke liye
+    const existingSession = await getSession(from);
+    let salon = null;
+    
+    // Session mein salonId hai toh directly fetch karo
+    if (existingSession?.data?.salonId) {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/salons?id=eq.${existingSession.data.salonId}&limit=1`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const d = await r.json();
+      salon = d?.[0] || null;
+    }
+    
+    // Session mein nahi — keyword se try karo
+    if (!salon && text) {
+      salon = await getSalonByKeyword(text);
+    }
+    
+    // Fallback — BOT_NUMBER se linked salon
+    if (!salon) {
+      salon = await getSalonByPhone(BOT_NUMBER);
+    }
+
+    if (!salon) {
+      await sendText(from, "Sorry, salon nahi mila. Sahi link se aayein. 🙏");
+      res.status(200).json({ status: "ok" });
+      return;
+    }
+
+    const SALON_ID  = salon.id;
+    const sKey      = sessionKey(from, SALON_ID); // salon-specific session key
+
+    // Ab session sKey se fetch karo
+    const session = existingSession?.data?.salonId === SALON_ID 
+      ? existingSession 
+      : await getSession(sKey);
 
     const salonName = salon?.salon_name   || "SnipBook Salon";
     const services  = (salon?.services    || []).filter(s => s.active !== false);
@@ -179,14 +240,16 @@ export default async function handler(req, res) {
     const phone     = salon?.phone        || "";
 
     const step = session?.step || "menu";
-    const data = session?.data || {};
+    const data = { ...(session?.data || {}), salonId: SALON_ID };
 
-    console.log("Step:", step, "Data:", JSON.stringify(data));
+    console.log("Salon:", salonName, "SALON_ID:", SALON_ID, "Step:", step);
 
-    // ✅ Hi/Hello — fresh start (naam persistent session delete NAHI hoga)
+    // ✅ Hi/Hello — fresh start
     const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
-    if (text && resetWords.includes(text.toLowerCase())) {
-      await clearSession(from);
+    const isKeyword = salon && (await getSalonByKeyword(text)) !== null;
+    
+    if (text && (resetWords.includes(text.toLowerCase()) || isKeyword)) {
+      await clearSession(sKey);
       await sendMainMenu(from, salonName);
       res.status(200).json({ status: "ok" });
       return;
@@ -194,17 +257,14 @@ export default async function handler(req, res) {
 
     // ─── BOOKING FLOW ──────────────────────────────────────────────────────────
 
-    // ask_name
     if (step === "ask_name" && text && !interactiveId) {
-      // ✅ Naam persistent key mein save karo
-      await setSession(`name_${from}`, "saved", { name: text });
+      await setSession(`name_${from}_${SALON_ID}`, "saved", { name: text });
 
-      // Agar browse flow se pending service thi toh seedha date pe jao
       if (data.pendingService) {
-        await setSession(from, "ask_date", { name: text, service: data.pendingService, price: data.pendingPrice || 0 });
+        await setSession(sKey, "ask_date", { ...data, name: text, service: data.pendingService, price: data.pendingPrice || 0 });
         await sendDateList(from, { name: text, service: data.pendingService, price: data.pendingPrice || 0 }, workDays);
       } else {
-        await setSession(from, "ask_gender", { name: text });
+        await setSession(sKey, "ask_gender", { ...data, name: text });
         await sendButtons(from,
           `Nice to meet you, *${text}!* 🙌\n\nAap kaunsi services chahte hain?`,
           [
@@ -217,10 +277,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ask_gender
     if (step === "ask_gender" && (interactiveId === "gender_male" || interactiveId === "gender_female")) {
       const gender = interactiveId === "gender_male" ? "male" : "female";
-      await setSession(from, "ask_service", { ...data, gender });
+      await setSession(sKey, "ask_service", { ...data, gender });
 
       const filtered = services.filter(s => {
         if (!s.gender || s.gender === "both") return true;
@@ -240,43 +299,38 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ask_service — custom
     if (step === "ask_service" && interactiveId === "svc_custom") {
-      await setSession(from, "ask_service_custom", { ...data });
+      await setSession(sKey, "ask_service_custom", { ...data });
       await sendText(from, `✏️ *Apni service likhein:*\n\nJo service chahiye woh type karein\n(e.g. Keratin, Smoothening, Bridal Package)\n\n_Wapas menu ke liye "Hi" type karein_`);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // ask_service_custom
     if (step === "ask_service_custom" && text && !interactiveId) {
-      await setSession(from, "ask_date", { ...data, service: text, price: 0 });
+      await setSession(sKey, "ask_date", { ...data, service: text, price: 0 });
       await sendDateList(from, data, workDays);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // ask_service — select kiya
     if (step === "ask_service" && interactiveId?.startsWith("svc_")) {
       const svcId = interactiveId.replace("svc_", "");
       const selected = services.find(s => String(s.id) === svcId);
       const serviceName  = selected?.name  || svcId;
       const servicePrice = selected?.price || 0;
-      await setSession(from, "ask_date", { ...data, service: serviceName, price: servicePrice });
+      await setSession(sKey, "ask_date", { ...data, service: serviceName, price: servicePrice });
       await sendDateList(from, { ...data, service: serviceName, price: servicePrice }, workDays);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // ask_date — custom date option
     if (step === "ask_date" && interactiveId === "date_custom") {
-      await setSession(from, "ask_date_custom", { ...data });
+      await setSession(sKey, "ask_date_custom", { ...data });
       await sendText(from, `📅 *Apni marzi ki date likhein*\n\nKoi bhi aane wali date type karein 👇\n_(Jaise: 25 May, 3 June, 15 Jul)_\n\n_Wapas menu ke liye "Hi" type karein_`);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // ask_date_custom — user ne type kiya
     if (step === "ask_date_custom" && text && !interactiveId) {
       const parsedDate = parseCustomDate(text);
       if (!parsedDate) {
@@ -284,7 +338,7 @@ export default async function handler(req, res) {
         res.status(200).json({ status: "ok" });
         return;
       }
-      await setSession(from, "ask_time_part", { ...data, date: parsedDate });
+      await setSession(sKey, "ask_time_part", { ...data, date: parsedDate });
       await sendButtons(from,
         `📅 *${formatDate(parsedDate)}*\n\nKaunsa time prefer karenge?`,
         [
@@ -296,10 +350,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ask_date — date select ki
     if (step === "ask_date" && interactiveId?.startsWith("date_")) {
       const dateKey = interactiveId.replace("date_", "");
-      await setSession(from, "ask_time_part", { ...data, date: dateKey });
+      await setSession(sKey, "ask_time_part", { ...data, date: dateKey });
       await sendButtons(from,
         `📅 *${formatDate(dateKey)}*\n\nKaunsa time prefer karenge?`,
         [
@@ -311,13 +364,12 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ask_time_part
     if (step === "ask_time_part" && (interactiveId === "time_morning" || interactiveId === "time_evening")) {
       const isMorning = interactiveId === "time_morning";
       const startH = isMorning ? openTime : 14;
       const endH   = isMorning ? 14 : closeTime;
 
-      const booked = await getBookedSlots(data.date);
+      const booked = await getBookedSlots(SALON_ID, data.date);
       const allSlots = getTimeSlots(startH, endH);
       const available = allSlots.filter(s => !booked.includes(s.key));
 
@@ -333,7 +385,7 @@ export default async function handler(req, res) {
         return;
       }
 
-      await setSession(from, "ask_time", { ...data });
+      await setSession(sKey, "ask_time", { ...data });
       const rows = available.map(s => ({
         id: `time_${s.key}`,
         title: `🟢 ${s.label}`,
@@ -346,10 +398,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ask_time
     if (step === "ask_time" && interactiveId?.startsWith("time_")) {
       const timeKey = interactiveId.replace("time_", "");
-      await setSession(from, "confirm", { ...data, time: timeKey });
+      await setSession(sKey, "confirm", { ...data, time: timeKey });
 
       const priceText = data.price > 0 ? `₹${data.price}` : "Price on visit";
       const confirmMsg =
@@ -371,7 +422,7 @@ export default async function handler(req, res) {
 
     // confirm — yes
     if (step === "confirm" && interactiveId === "confirm_yes") {
-      // ✅ Auto-save customer to customers table agar nahi hai
+      // Auto-save customer
       try {
         const custCheck = await fetch(
           `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&limit=1`,
@@ -379,7 +430,6 @@ export default async function handler(req, res) {
         );
         const custData = await custCheck.json();
         if (!custData || custData.length === 0) {
-          // Naya customer — save karo
           await fetch(`${SUPABASE_URL}/rest/v1/customers`, {
             method: "POST",
             headers: {
@@ -396,11 +446,10 @@ export default async function handler(req, res) {
               tag: "New",
             }),
           });
-          console.log("New customer saved:", data.name, from);
         }
       } catch(e) { console.error("Customer save error:", e.message); }
 
-      // ✅ FIX 1: customer_name bhi save karo
+      // Save appointment
       await fetch(`${SUPABASE_URL}/rest/v1/appointments`, {
         method: "POST",
         headers: {
@@ -410,17 +459,18 @@ export default async function handler(req, res) {
           Prefer: "return=minimal",
         },
         body: JSON.stringify({
-          salon_id:      SALON_ID,
-          customer_name: data.name || "WhatsApp Customer",
+          salon_id:       SALON_ID,
+          customer_name:  data.name || "WhatsApp Customer",
           customer_phone: from,
-          service:       data.service,
-          amount:        data.price || 0,
-          date:          data.date,
-          time_slot:     data.time,
-          status:        "confirmed",
+          service:        data.service,
+          amount:         data.price || 0,
+          date:           data.date,
+          time_slot:      data.time,
+          status:         "confirmed",
         }),
       });
-      await clearSession(from);
+
+      await clearSession(sKey);
 
       const priceText = data.price > 0 ? `₹${data.price}` : "Price on visit";
       const successMsg =
@@ -434,12 +484,12 @@ export default async function handler(req, res) {
 
       await sendButtons(from, successMsg, [{ id: "main_menu", title: "🏠 Main Menu" }]);
 
-      // ✅ FIX 2: Owner ko WhatsApp notification bhejo
+      // Owner notification
       const rawNotif = (salon?.notification_number || "").replace(/[^0-9]/g, "");
-      // ✅ 91 prefix add karo agar nahi hai
       const notifTarget = rawNotif ? (rawNotif.startsWith("91") ? rawNotif : `91${rawNotif}`) : "";
       const ownerNotif =
         `🔔 *Naya Appointment!*\n\n` +
+        `🏪 *Salon:* ${salonName}\n` +
         `👤 *Customer:* ${data.name}\n` +
         `📱 *Phone:* +${from.replace(/^\+/,"")}\n` +
         `✂️ *Service:* ${data.service}\n` +
@@ -447,7 +497,7 @@ export default async function handler(req, res) {
         `🕐 *Time:* ${formatTime12(data.time)}\n` +
         `💰 *Amount:* ${priceText}\n\n` +
         `_SnipBook se auto-booked_ 💈`;
-      if(notifTarget) await sendText(notifTarget, ownerNotif);
+      if (notifTarget) await sendText(notifTarget, ownerNotif);
 
       res.status(200).json({ status: "ok" });
       return;
@@ -455,7 +505,7 @@ export default async function handler(req, res) {
 
     // confirm — no
     if (step === "confirm" && interactiveId === "confirm_no") {
-      await clearSession(from);
+      await clearSession(sKey);
       await sendText(from, "Koi baat nahi! 😊\nKabhi bhi book karne ke liye \"Hi\" type karein.");
       await sendMainMenu(from, salonName);
       res.status(200).json({ status: "ok" });
@@ -463,7 +513,7 @@ export default async function handler(req, res) {
     }
 
     if (interactiveId === "main_menu") {
-      await clearSession(from);
+      await clearSession(sKey);
       await sendMainMenu(from, salonName);
       res.status(200).json({ status: "ok" });
       return;
@@ -472,12 +522,11 @@ export default async function handler(req, res) {
     // ─── MAIN MENU OPTIONS ─────────────────────────────────────────────────────
 
     if (interactiveId === "appointment") {
-      // ✅ FIX 2: Pehle persistent naam session check karo
-      const nameSession = await getSession(`name_${from}`);
+      const nameSession = await getSession(`name_${from}_${SALON_ID}`);
       const savedName = nameSession?.data?.name || data.name;
 
       if (savedName) {
-        await setSession(from, "ask_gender", { ...data, name: savedName });
+        await setSession(sKey, "ask_gender", { ...data, name: savedName });
         await sendButtons(from,
           `Welcome back, *${savedName}!* 🙌\n\nAap kaunsi services chahte hain?`,
           [
@@ -486,7 +535,7 @@ export default async function handler(req, res) {
           ]
         );
       } else {
-        await setSession(from, "ask_name", {});
+        await setSession(sKey, "ask_name", { ...data });
         await sendText(from, `📅 *Appointment Book Karein*\n\nGreat! Let's book your appointment. 😊\n\n*Aapka naam kya hai?*`);
       }
       res.status(200).json({ status: "ok" });
@@ -494,8 +543,7 @@ export default async function handler(req, res) {
     }
 
     if (interactiveId === "services") {
-      // ✅ Services Dekho → pehle gender chunein
-      await setSession(from, "browse_services_gender", { ...data });
+      await setSession(sKey, "browse_services_gender", { ...data });
       await sendButtons(from,
         `✂️ *Hamare Services*\n\nKaunsi services dekhna chahte hain?`,
         [
@@ -507,10 +555,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // browse_services_gender — Male ya Female select kiya
     if (step === "browse_services_gender" && (interactiveId === "browse_male" || interactiveId === "browse_female")) {
       const gender = interactiveId === "browse_male" ? "male" : "female";
-      await setSession(from, "browse_services_list", { ...data, gender });
+      await setSession(sKey, "browse_services_list", { ...data, gender });
 
       const filtered = services.filter(s => {
         if (!s.gender || s.gender === "both") return true;
@@ -530,12 +577,11 @@ export default async function handler(req, res) {
       return;
     }
 
-    // browse_services_list — service select ki → book karne ka option do
     if (step === "browse_services_list" && interactiveId?.startsWith("browse_svc_")) {
       const svcId = interactiveId.replace("browse_svc_", "");
 
       if (svcId === "custom") {
-        await setSession(from, "browse_services_custom", { ...data });
+        await setSession(sKey, "browse_services_custom", { ...data });
         await sendText(from, `✏️ *Apni service likhein:*\n\nJo service chahiye woh type karein\n(e.g. Keratin, Smoothening, Bridal Package)\n\n_Wapas menu ke liye "Hi" type karein_`);
         res.status(200).json({ status: "ok" });
         return;
@@ -549,7 +595,7 @@ export default async function handler(req, res) {
       const priceText = servicePrice > 0 ? `₹${servicePrice}` : "Price on visit";
       const durText   = serviceDur ? ` · ${serviceDur} min` : "";
 
-      await setSession(from, "browse_services_list", { ...data });
+      await setSession(sKey, "browse_services_list", { ...data });
       await sendButtons(from,
         `✂️ *${serviceName}*\n💰 ${priceText}${durText}\n\nIs service ko book karna chahte hain?`,
         [
@@ -561,7 +607,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // browse_services_custom — custom service type ki
     if (step === "browse_services_custom" && text && !interactiveId) {
       await sendButtons(from,
         `✂️ *${text}*\n\nIs service ko book karna chahte hain?`,
@@ -570,12 +615,11 @@ export default async function handler(req, res) {
           { id: "browse_back", title: "⬅️ Wapas Services" },
         ]
       );
-      await setSession(from, "browse_services_list", { ...data, pendingCustomService: text });
+      await setSession(sKey, "browse_services_list", { ...data, pendingCustomService: text });
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    // browse_back — wapas services list
     if (interactiveId === "browse_back") {
       const gender = data.gender || "male";
       const filtered = services.filter(s => {
@@ -594,7 +638,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // book_svc_* → appointment flow mein le jao (naam check karke)
     if (interactiveId?.startsWith("book_svc_") || interactiveId?.startsWith("book_custom_")) {
       let serviceName, servicePrice;
 
@@ -608,14 +651,14 @@ export default async function handler(req, res) {
         servicePrice = sel?.price || 0;
       }
 
-      const nameSession = await getSession(`name_${from}`);
+      const nameSession = await getSession(`name_${from}_${SALON_ID}`);
       const savedName   = nameSession?.data?.name || data.name;
 
       if (savedName) {
-        await setSession(from, "ask_date", { name: savedName, service: serviceName, price: servicePrice });
+        await setSession(sKey, "ask_date", { ...data, name: savedName, service: serviceName, price: servicePrice });
         await sendDateList(from, { name: savedName, service: serviceName, price: servicePrice }, workDays);
       } else {
-        await setSession(from, "ask_name", { pendingService: serviceName, pendingPrice: servicePrice });
+        await setSession(sKey, "ask_name", { ...data, pendingService: serviceName, pendingPrice: servicePrice });
         await sendText(from, `📅 *Appointment Book Karein*\n\nGreat! Let's book your appointment. 😊\n\n*Aapka naam kya hai?*`);
       }
       res.status(200).json({ status: "ok" });
@@ -639,8 +682,8 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Default
-    await clearSession(from);
+    // Default — main menu
+    await clearSession(sKey);
     await sendMainMenu(from, salonName);
     res.status(200).json({ status: "ok" });
 
@@ -691,9 +734,9 @@ function getTimeSlots(open, close) {
 
 function parseCustomDate(text) {
   const MN = {
-    jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12,
-    january:1, february:2, march:3, april:4, june:6, july:7, august:8,
-    september:9, october:10, november:11, december:12
+    jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,
+    january:1,february:2,march:3,april:4,june:6,july:7,august:8,
+    september:9,october:10,november:11,december:12
   };
   const t = text.toLowerCase().trim();
   const m = t.match(/(\d{1,2})\s+([a-z]+)(?:\s+(\d{4}))?/);
