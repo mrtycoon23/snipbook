@@ -200,29 +200,18 @@ export default async function handler(req, res) {
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    // ✅ SALON IDENTIFY — 3 step priority:
-    // 1. Existing session mein salonId saved hai → use karo
-    // 2. Text keyword se match karo
-    // 3. Fallback — BOT_NUMBER se linked salon (whatsapp_number column)
-
+    // ✅ SALON IDENTIFY — 3 step priority
     let salon = null;
     let sKey = from;
 
-    // Step 1: Pehle raw session check karo salonId ke liye
+    // Step 1: Existing session mein salonId
     const rawSession = await getSession(from);
     if (rawSession?.data?.salonId) {
       salon = await getSalonById(rawSession.data.salonId);
       if (salon) sKey = sessionKey(from, salon.id);
     }
 
-    // Step 1b: salonId wali sKey se bhi check karo
-    if (!salon) {
-      // Try karo known salonId sessions
-      // (naya session format: salonId_phone)
-      // Agar raw session nahi mila toh skip
-    }
-
-    // Step 2: Keyword se try karo
+    // Step 2: Keyword se
     if (!salon && text) {
       const byKeyword = await getSalonByKeyword(text);
       if (byKeyword) {
@@ -244,8 +233,6 @@ export default async function handler(req, res) {
     }
 
     const SALON_ID = salon.id;
-
-    // sKey wali session fetch karo
     const session = await getSession(sKey);
 
     const salonName = salon?.salon_name   || "SnipBook Salon";
@@ -394,7 +381,8 @@ export default async function handler(req, res) {
       const endH   = isMorning ? 14 : closeTime;
 
       const booked = await getBookedSlots(SALON_ID, data.date);
-      const allSlots = getTimeSlots(startH, endH);
+      // ✅ data.date pass karo taaki past slots filter ho
+      const allSlots = getTimeSlots(startH, endH, data.date);
       const available = allSlots.filter(s => !booked.includes(s.key));
 
       if (available.length === 0) {
@@ -729,14 +717,16 @@ function getNextDays(workDays, count) {
   const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const result = [];
   const today = new Date();
-  for (let i = 1; result.length < count && i <= 60; i++) {
+  for (let i = 0; result.length < count && i <= 60; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
     const dayName = DN[d.getDay()];
     if (!workDays || workDays.includes(dayName)) {
       const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-      const label = i === 1
-        ? `Tomorrow (${d.getDate()} ${MN[d.getMonth()]})`
+      const label = i === 0
+        ? `Aaj (${d.getDate()} ${MN[d.getMonth()]})`
+        : i === 1
+        ? `Kal (${d.getDate()} ${MN[d.getMonth()]})`
         : `${dayName}, ${d.getDate()} ${MN[d.getMonth()]}`;
       result.push({ key, label, dayName });
     }
@@ -744,11 +734,24 @@ function getNextDays(workDays, count) {
   return result;
 }
 
-function getTimeSlots(open, close) {
+// ✅ selectedDate pass karo — past slots filter hoge
+function getTimeSlots(open, close, selectedDate = null) {
   const slots = [];
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  const isToday = selectedDate === todayKey;
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
   for (let h = open; h < close; h++) {
-    slots.push({ key: `${pad(h)}:00`, label: formatTime12(`${pad(h)}:00`) });
-    slots.push({ key: `${pad(h)}:30`, label: formatTime12(`${pad(h)}:30`) });
+    const slot00 = h * 60;
+    const slot30 = h * 60 + 30;
+
+    if (!isToday || slot00 > currentMinutes + 30) {
+      slots.push({ key: `${pad(h)}:00`, label: formatTime12(`${pad(h)}:00`) });
+    }
+    if (!isToday || slot30 > currentMinutes + 30) {
+      slots.push({ key: `${pad(h)}:30`, label: formatTime12(`${pad(h)}:30`) });
+    }
   }
   return slots;
 }
