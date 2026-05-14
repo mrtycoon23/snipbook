@@ -257,21 +257,20 @@ async function sendDateList(to, data, workDays) {
   await sendList(to, "📅 Date Chunein", `*${data.service}*${priceText}\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows);
 }
 
-// ─── Step-based hint messages ─────────────────────────────────────────────────
-async function sendStepHint(to, step, data) {
+async function sendStepHint(to, step) {
   const hints = {
-    ask_name:     `Aapka naam type karein 👇`,
-    ask_gender:   `Upar se Male ya Female chunein 👆`,
-    ask_service:  `Service list mein se chunein 👆`,
-    ask_date:     `Date list mein se chunein 👆`,
-    ask_date_custom: `Date likhein jaise: *25 May* ya *3 June* 📅`,
-    ask_time_part: `Morning ya Evening chunein 👆`,
-    ask_time:     `Time slot chunein 👆`,
-    confirm:      `Confirm karne ke liye button dabayein 👆`,
+    ask_name:            `Aapka naam type karein 👇`,
+    ask_gender:          `Upar se Male ya Female chunein 👆`,
+    ask_service:         `Service list mein se chunein 👆`,
+    ask_date:            `Date list mein se chunein 👆`,
+    ask_date_custom:     `Date likhein jaise: *25 May* ya *3 June* 📅`,
+    ask_time_part:       `Morning ya Evening chunein 👆`,
+    ask_time:            `Time slot chunein 👆`,
+    confirm:             `Confirm karne ke liye button dabayein 👆`,
     browse_services_gender: `Male ya Female chunein 👆`,
     browse_services_list:   `Service chunein 👆`,
   };
-  const hint = hints[step] || null;
+  const hint = hints[step];
   if (hint) await sendText(to, `_${hint}_\n\n_Wapas menu ke liye "Hi" type karein_`);
 }
 
@@ -302,59 +301,71 @@ export default async function handler(req, res) {
     msg?.interactive?.buttonReply?.id ||
     msg?.interactive?.button_reply?.id;
 
-  console.log("From:", from, "Text:", text, "Interactive:", interactiveId, "MsgId:", msgId);
   if (!from) { res.status(200).json({ status: "ok" }); return; }
 
   try {
-    // ✅ Duplicate check — msgId based
+    // ✅ Duplicate check
     if (msgId) {
-      const dupKey = `dup_${msgId}`;
-      const processed = await getSession(dupKey);
+      const processed = await getSession(`dup_${msgId}`);
       if (processed) {
         console.log("Duplicate ignored:", msgId);
         res.status(200).json({ status: "ok" });
         return;
       }
-      await setSession(dupKey, "done", { ts: Date.now() });
+      await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    // ✅ SALON IDENTIFY
+    // ✅ SALON IDENTIFY — Clean priority order
     let salon = null;
-    let sKey  = from;
+    let sKey  = null;
 
-    // Step 1: salonId_phone format session check
-    // (naye sessions salonId_phone format mein hain)
-    // Pehle raw `from` se check karo — purani sessions ke liye
-    const rawSession = await getSession(from);
-    if (rawSession?.data?.salonId) {
-      salon = await getSalonById(rawSession.data.salonId);
-      if (salon) sKey = sessionKey(from, salon.id);
+    // Step 1: Keyword se salon dhundho (text mein keyword aaya?)
+    if (text) {
+      const byKeyword = await getSalonByKeyword(text);
+      if (byKeyword) {
+        salon = byKeyword;
+        sKey  = sessionKey(from, salon.id);
+      }
     }
 
-    // Step 2: salonId_phone wali session check karo
-    // (agar rawSession nahi mili ya salonId nahi tha)
+    // Step 2: Agar keyword nahi mila — existing sKey session check karo
+    // All possible salons ki sessions check karo
     if (!salon) {
-      // Keyword se salon dhundho pehle
-      if (text) {
-        const byKeyword = await getSalonByKeyword(text);
-        if (byKeyword) {
-          salon = byKeyword;
-          sKey  = sessionKey(from, salon.id);
-          // Is sKey ki session check karo
+      // BOT_NUMBER se linked salon dhundho pehle
+      const fallbackSalon = await getSalonByPhone(BOT_NUMBER);
+      if (fallbackSalon) {
+        const possibleSKey = sessionKey(from, fallbackSalon.id);
+        const existingSession = await getSession(possibleSKey);
+        if (existingSession?.step && existingSession.step !== "menu") {
+          // Active session hai is salon ke liye
+          salon = fallbackSalon;
+          sKey  = possibleSKey;
         }
       }
     }
 
-    // Step 3: sKey se session dhundho (keyword mila tha toh)
-    if (salon) {
-      const sKeySession = await getSession(sKey);
-      // Agar sKey session hai toh use karo
-      if (sKeySession?.data?.salonId) {
-        // Already correct
-      }
+    // Step 3: Agar koi active session nahi — sabhi salons check karo
+    if (!salon) {
+      // Supabase se sabhi salons fetch karo aur check karo kiska active session hai
+      try {
+        const r = await fetch(
+          `${SUPABASE_URL}/rest/v1/salons?select=id,salon_name,whatsapp_number,bot_keyword,services,working_days,open_time,close_time,address,maps_link,phone,notification_number`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
+        const allSalons = await r.json();
+        for (const s of (allSalons || [])) {
+          const possibleSKey = sessionKey(from, s.id);
+          const existingSession = await getSession(possibleSKey);
+          if (existingSession?.step && existingSession.step !== "menu") {
+            salon = s;
+            sKey  = possibleSKey;
+            break;
+          }
+        }
+      } catch(e) { console.error("All salons fetch error:", e.message); }
     }
 
-    // Step 4: Fallback — BOT_NUMBER linked salon
+    // Step 4: Final fallback — BOT_NUMBER linked salon
     if (!salon) {
       salon = await getSalonByPhone(BOT_NUMBER);
       if (salon) sKey = sessionKey(from, salon.id);
@@ -367,11 +378,7 @@ export default async function handler(req, res) {
     }
 
     const SALON_ID = salon.id;
-
-    // Correct sKey se session fetch karo
-    const correctSKey = sessionKey(from, SALON_ID);
-    const session = await getSession(correctSKey);
-    sKey = correctSKey;
+    const session  = await getSession(sKey);
 
     const salonName = salon?.salon_name   || "SnipBook Salon";
     const services  = (salon?.services    || []).filter(s => s.active !== false);
@@ -385,7 +392,7 @@ export default async function handler(req, res) {
     const step = session?.step || "menu";
     const data = { ...(session?.data || {}), salonId: SALON_ID };
 
-    console.log("Salon:", salonName, "sKey:", sKey, "Step:", step);
+    console.log("Salon:", salonName, "SALON_ID:", SALON_ID, "sKey:", sKey, "Step:", step);
 
     // ✅ Reset words
     const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
@@ -809,9 +816,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    // ✅ Default — step ke hisaab se hint do, main menu mat bhejo
+    // ✅ Default — step hint ya main menu
     if (step && step !== "menu") {
-      await sendStepHint(from, step, data);
+      await sendStepHint(from, step);
     } else {
       await clearSession(sKey);
       await sendMainMenu(from, salonName);
