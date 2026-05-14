@@ -5,100 +5,6 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const YCLOUD_KEY   = process.env.YCLOUD_API_KEY;
 const BOT_NUMBER   = process.env.WHATSAPP_PHONE_NUMBER;
 
-// ─── Supabase helpers ─────────────────────────────────────────────────────────
-
-async function getSalonByKeyword(keyword) {
-  if (!keyword) return null;
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/salons?bot_keyword=eq.${encodeURIComponent(keyword.toLowerCase().trim())}&limit=1`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const d = await r.json();
-    return d?.[0] || null;
-  } catch(e) { return null; }
-}
-
-async function getSalonByPhone(phone) {
-  const clean = phone.replace(/[^0-9]/g, "");
-  const variants = [
-    clean,
-    clean.startsWith("91") ? clean.slice(2) : `91${clean}`,
-  ];
-  try {
-    for (const v of variants) {
-      const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/salons?whatsapp_number=eq.${v}&limit=1`,
-        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-      );
-      const d = await r.json();
-      if (d?.[0]) return d[0];
-    }
-    return null;
-  } catch(e) { return null; }
-}
-
-async function getSalonById(id) {
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/salons?id=eq.${id}&limit=1`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const d = await r.json();
-    return d?.[0] || null;
-  } catch(e) { return null; }
-}
-
-function sessionKey(phone, salonId) {
-  return `${salonId}_${phone}`;
-}
-
-async function getSession(key) {
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(key)}&limit=1`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const d = await r.json();
-    return d?.[0] || null;
-  } catch(e) { return null; }
-}
-
-async function setSession(key, step, data = {}) {
-  try {
-    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates",
-      },
-      body: JSON.stringify({ phone: key, step, data, updated_at: new Date().toISOString() }),
-    });
-  } catch(e) { console.error("setSession error:", e.message); }
-}
-
-async function clearSession(key) {
-  try {
-    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(key)}`, {
-      method: "DELETE",
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-    });
-  } catch(e) {}
-}
-
-async function getBookedSlots(salonId, date) {
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${salonId}&date=eq.${date}&status=eq.confirmed`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const d = await r.json();
-    return (d || []).map(a => a.time_slot);
-  } catch(e) { return []; }
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function pad(n) { return String(n).padStart(2, "0"); }
 
@@ -192,6 +98,94 @@ function formatTime12(timeStr) {
   return `${h12}:${pad(m)} ${h < 12 ? "AM" : "PM"}`;
 }
 
+// ─── Supabase helpers ─────────────────────────────────────────────────────────
+async function getSalonByKeyword(keyword) {
+  if (!keyword) return null;
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/salons?bot_keyword=eq.${encodeURIComponent(keyword.toLowerCase().trim())}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const d = await r.json();
+    return d?.[0] || null;
+  } catch(e) { return null; }
+}
+
+async function getSalonByPhone(phone) {
+  const clean = phone.replace(/[^0-9]/g, "");
+  const variants = [clean, clean.startsWith("91") ? clean.slice(2) : `91${clean}`];
+  try {
+    for (const v of variants) {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/salons?whatsapp_number=eq.${v}&limit=1`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const d = await r.json();
+      if (d?.[0]) return d[0];
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
+async function getSalonById(id) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/salons?id=eq.${id}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const d = await r.json();
+    return d?.[0] || null;
+  } catch(e) { return null; }
+}
+
+function sessionKey(phone, salonId) { return `${salonId}_${phone}`; }
+
+async function getSession(key) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(key)}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const d = await r.json();
+    return d?.[0] || null;
+  } catch(e) { return null; }
+}
+
+async function setSession(key, step, data = {}) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates",
+      },
+      body: JSON.stringify({ phone: key, step, data, updated_at: new Date().toISOString() }),
+    });
+  } catch(e) { console.error("setSession error:", e.message); }
+}
+
+async function clearSession(key) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.${encodeURIComponent(key)}`, {
+      method: "DELETE",
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+    });
+  } catch(e) {}
+}
+
+async function getBookedSlots(salonId, date) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${salonId}&date=eq.${date}&status=eq.confirmed`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const d = await r.json();
+    return (d || []).map(a => a.time_slot);
+  } catch(e) { return []; }
+}
+
 // ─── YCloud helpers ───────────────────────────────────────────────────────────
 async function sendText(to, body) {
   try {
@@ -263,6 +257,24 @@ async function sendDateList(to, data, workDays) {
   await sendList(to, "📅 Date Chunein", `*${data.service}*${priceText}\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows);
 }
 
+// ─── Step-based hint messages ─────────────────────────────────────────────────
+async function sendStepHint(to, step, data) {
+  const hints = {
+    ask_name:     `Aapka naam type karein 👇`,
+    ask_gender:   `Upar se Male ya Female chunein 👆`,
+    ask_service:  `Service list mein se chunein 👆`,
+    ask_date:     `Date list mein se chunein 👆`,
+    ask_date_custom: `Date likhein jaise: *25 May* ya *3 June* 📅`,
+    ask_time_part: `Morning ya Evening chunein 👆`,
+    ask_time:     `Time slot chunein 👆`,
+    confirm:      `Confirm karne ke liye button dabayein 👆`,
+    browse_services_gender: `Male ya Female chunein 👆`,
+    browse_services_list:   `Service chunein 👆`,
+  };
+  const hint = hints[step] || null;
+  if (hint) await sendText(to, `_${hint}_\n\n_Wapas menu ke liye "Hi" type karein_`);
+}
+
 // ─── Main Handler ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === "GET") {
@@ -280,10 +292,10 @@ export default async function handler(req, res) {
   const body = req.body;
   if (body.type !== "whatsapp.inbound_message.received") { res.status(200).json({ status: "ok" }); return; }
 
-  const msg  = body.whatsappInboundMessage;
-  const from = msg?.from;
+  const msg   = body.whatsappInboundMessage;
+  const from  = msg?.from;
   const msgId = msg?.id || "";
-  const text = msg?.text?.body?.trim();
+  const text  = msg?.text?.body?.trim();
   const interactiveId =
     msg?.interactive?.listReply?.id ||
     msg?.interactive?.list_reply?.id ||
@@ -294,29 +306,55 @@ export default async function handler(req, res) {
   if (!from) { res.status(200).json({ status: "ok" }); return; }
 
   try {
+    // ✅ Duplicate check — msgId based
     if (msgId) {
-      const processed = await getSession(`dup_${msgId}`);
-      if (processed) { res.status(200).json({ status: "ok" }); return; }
-      await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
+      const dupKey = `dup_${msgId}`;
+      const processed = await getSession(dupKey);
+      if (processed) {
+        console.log("Duplicate ignored:", msgId);
+        res.status(200).json({ status: "ok" });
+        return;
+      }
+      await setSession(dupKey, "done", { ts: Date.now() });
     }
 
+    // ✅ SALON IDENTIFY
     let salon = null;
-    let sKey = from;
+    let sKey  = from;
 
+    // Step 1: salonId_phone format session check
+    // (naye sessions salonId_phone format mein hain)
+    // Pehle raw `from` se check karo — purani sessions ke liye
     const rawSession = await getSession(from);
     if (rawSession?.data?.salonId) {
       salon = await getSalonById(rawSession.data.salonId);
       if (salon) sKey = sessionKey(from, salon.id);
     }
 
-    if (!salon && text) {
-      const byKeyword = await getSalonByKeyword(text);
-      if (byKeyword) {
-        salon = byKeyword;
-        sKey = sessionKey(from, salon.id);
+    // Step 2: salonId_phone wali session check karo
+    // (agar rawSession nahi mili ya salonId nahi tha)
+    if (!salon) {
+      // Keyword se salon dhundho pehle
+      if (text) {
+        const byKeyword = await getSalonByKeyword(text);
+        if (byKeyword) {
+          salon = byKeyword;
+          sKey  = sessionKey(from, salon.id);
+          // Is sKey ki session check karo
+        }
       }
     }
 
+    // Step 3: sKey se session dhundho (keyword mila tha toh)
+    if (salon) {
+      const sKeySession = await getSession(sKey);
+      // Agar sKey session hai toh use karo
+      if (sKeySession?.data?.salonId) {
+        // Already correct
+      }
+    }
+
+    // Step 4: Fallback — BOT_NUMBER linked salon
     if (!salon) {
       salon = await getSalonByPhone(BOT_NUMBER);
       if (salon) sKey = sessionKey(from, salon.id);
@@ -329,7 +367,11 @@ export default async function handler(req, res) {
     }
 
     const SALON_ID = salon.id;
-    const session = await getSession(sKey);
+
+    // Correct sKey se session fetch karo
+    const correctSKey = sessionKey(from, SALON_ID);
+    const session = await getSession(correctSKey);
+    sKey = correctSKey;
 
     const salonName = salon?.salon_name   || "SnipBook Salon";
     const services  = (salon?.services    || []).filter(s => s.active !== false);
@@ -343,8 +385,9 @@ export default async function handler(req, res) {
     const step = session?.step || "menu";
     const data = { ...(session?.data || {}), salonId: SALON_ID };
 
-    console.log("Salon:", salonName, "SALON_ID:", SALON_ID, "sKey:", sKey, "Step:", step);
+    console.log("Salon:", salonName, "sKey:", sKey, "Step:", step);
 
+    // ✅ Reset words
     const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
     if (text && resetWords.includes(text.toLowerCase())) {
       await clearSession(sKey);
@@ -353,12 +396,15 @@ export default async function handler(req, res) {
       return;
     }
 
+    // ✅ Keyword → fresh start
     if (text && (await getSalonByKeyword(text))) {
       await clearSession(sKey);
       await sendMainMenu(from, salonName);
       res.status(200).json({ status: "ok" });
       return;
     }
+
+    // ─── BOOKING FLOW ──────────────────────────────────────────────────────────
 
     if (step === "ask_name" && text && !interactiveId) {
       await setSession(`name_${from}_${SALON_ID}`, "saved", { name: text });
@@ -763,8 +809,13 @@ export default async function handler(req, res) {
       return;
     }
 
-    await clearSession(sKey);
-    await sendMainMenu(from, salonName);
+    // ✅ Default — step ke hisaab se hint do, main menu mat bhejo
+    if (step && step !== "menu") {
+      await sendStepHint(from, step, data);
+    } else {
+      await clearSession(sKey);
+      await sendMainMenu(from, salonName);
+    }
     res.status(200).json({ status: "ok" });
 
   } catch (err) {
