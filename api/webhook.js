@@ -795,3 +795,52 @@ function formatTime12(timeStr) {
 }
 
 function pad(n) { return String(n).padStart(2, "0"); }
+function getTimeSlots(open, close, selectedDate = null) {
+  const slots = [];
+  // ✅ IST = UTC + 5:30
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istNow = new Date(now.getTime() + istOffset);
+  
+  const todayKey = `${istNow.getUTCFullYear()}-${pad(istNow.getUTCMonth()+1)}-${pad(istNow.getUTCDate())}`;
+  const isToday = selectedDate === todayKey;
+  const currentMinutes = istNow.getUTCHours() * 60 + istNow.getUTCMinutes();
+
+  for (let h = open; h < close; h++) {
+    const slot00 = h * 60;
+    const slot30 = h * 60 + 30;
+
+    if (!isToday || slot00 > currentMinutes + 30) {
+      slots.push({ key: `${pad(h)}:00`, label: formatTime12(`${pad(h)}:00`) });
+    }
+    if (!isToday || slot30 > currentMinutes + 30) {
+      slots.push({ key: `${pad(h)}:30`, label: formatTime12(`${pad(h)}:30`) });
+    }
+  }
+  return slots;
+}
+function getNextDays(workDays, count) {
+  const DN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const result = [];
+  // ✅ IST today
+  const now = new Date();
+  const istNow = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+  const today = new Date(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate());
+
+  for (let i = 0; result.length < count && i <= 60; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const dayName = DN[d.getDay()];
+    if (!workDays || workDays.includes(dayName)) {
+      const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      const label = i === 0
+        ? `Aaj (${d.getDate()} ${MN[d.getMonth()]})`
+        : i === 1
+        ? `Kal (${d.getDate()} ${MN[d.getMonth()]})`
+        : `${dayName}, ${d.getDate()} ${MN[d.getMonth()]}`;
+      result.push({ key, label, dayName });
+    }
+  }
+  return result;
+}
