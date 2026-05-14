@@ -127,6 +127,17 @@ async function getSalonByPhone(phone) {
   } catch(e) { return null; }
 }
 
+async function getSalonById(id) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/salons?id=eq.${id}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const d = await r.json();
+    return d?.[0] || null;
+  } catch(e) { return null; }
+}
+
 function sessionKey(phone, salonId) { return `${salonId}_${phone}`; }
 
 async function getSession(key) {
@@ -263,6 +274,33 @@ async function sendStepHint(to, step) {
   if (hint) await sendText(to, `_${hint}_\n\n_Wapas menu ke liye "Hi" type karein_`);
 }
 
+// ─── Get active salon for phone ───────────────────────────────────────────────
+// ✅ KEY FIX: Session data mein salonId stored hai
+// Har salon ki sKey check karo — jis mein salonId match kare aur step active ho
+async function getActiveSalonForPhone(from) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/salons?select=id`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const allSalons = await r.json();
+    for (const s of (allSalons || [])) {
+      const sk = sessionKey(from, s.id);
+      const sess = await getSession(sk);
+      // ✅ salonId session data se match karo — dono same hone chahiye
+      if (
+        sess?.step &&
+        sess.step !== "menu" &&
+        sess?.data?.salonId === s.id
+      ) {
+        const fullSalon = await getSalonById(s.id);
+        return { salon: fullSalon, sKey: sk, session: sess };
+      }
+    }
+  } catch(e) { console.error("getActiveSalon error:", e.message); }
+  return null;
+}
+
 // ─── Main Handler ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === "GET") {
@@ -304,43 +342,39 @@ export default async function handler(req, res) {
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    // ✅ SALON IDENTIFY
+    // ✅ SALON IDENTIFY — 3 step clean priority
     let salon = null;
     let sKey  = null;
+    let session = null;
 
-    // Step 1: Keyword se salon dhundho
+    // Step 1: Keyword se salon dhundho (text mein keyword aaya?)
     if (text) {
       const byKeyword = await getSalonByKeyword(text);
       if (byKeyword) {
-        salon = byKeyword;
-        sKey  = sessionKey(from, salon.id);
+        salon  = byKeyword;
+        sKey   = sessionKey(from, salon.id);
+        session = await getSession(sKey);
       }
     }
 
-    // Step 2: Active session kisi salon ke liye hai?
+    // Step 2: Active session dhundho — salonId match karke
+    // ✅ Yeh loop SIRF tab chalega jab keyword nahi mila
     if (!salon) {
-      try {
-        const r = await fetch(
-          `${SUPABASE_URL}/rest/v1/salons?select=id,salon_name,whatsapp_number,bot_keyword,services,working_days,open_time,close_time,address,maps_link,phone,notification_number`,
-          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-        );
-        const allSalons = await r.json();
-        for (const s of (allSalons || [])) {
-          const possibleSKey = sessionKey(from, s.id);
-          const existingSession = await getSession(possibleSKey);
-          if (existingSession?.step && existingSession.step !== "menu") {
-            salon = s;
-            sKey  = possibleSKey;
-            break;
-          }
-        }
-      } catch(e) { console.error("All salons fetch error:", e.message); }
+      const active = await getActiveSalonForPhone(from);
+      if (active) {
+        salon   = active.salon;
+        sKey    = active.sKey;
+        session = active.session;
+      }
     }
 
-    // Step 3: Fallback — BOT_NUMBER linked salon
+    // Step 3: Final fallback — BOT_NUMBER linked salon
     if (!salon) {
       salon = await getSalonByPhone(BOT_NUMBER);
-      if (salon) sKey = sessionKey(from, salon.id);
+      if (salon) {
+        sKey    = sessionKey(from, salon.id);
+        session = await getSession(sKey);
+      }
     }
 
     if (!salon) {
@@ -350,7 +384,8 @@ export default async function handler(req, res) {
     }
 
     const SALON_ID = salon.id;
-    const session  = await getSession(sKey);
+    // Session already fetched above
+    if (!session) session = await getSession(sKey);
 
     const salonName = salon?.salon_name   || "SnipBook Salon";
     const services  = (salon?.services    || []).filter(s => s.active !== false);
@@ -386,7 +421,6 @@ export default async function handler(req, res) {
     // ─── BOOKING FLOW ──────────────────────────────────────────────────────────
 
     if (step === "ask_name" && text && !interactiveId) {
-      // ✅ naam sirf phone se save karo — salon-specific nahi
       await setSession(`name_${from}`, "saved", { name: text });
       if (data.pendingService) {
         await setSession(sKey, "ask_date", { ...data, name: text, service: data.pendingService, price: data.pendingPrice || 0 });
@@ -640,7 +674,6 @@ export default async function handler(req, res) {
     }
 
     if (interactiveId === "appointment") {
-      // ✅ naam sirf phone se lookup karo
       const nameSession = await getSession(`name_${from}`);
       const savedName = nameSession?.data?.name || data.name;
       if (savedName) {
@@ -760,7 +793,6 @@ export default async function handler(req, res) {
         serviceName  = sel?.name  || svcId;
         servicePrice = sel?.price || 0;
       }
-      // ✅ naam sirf phone se lookup karo
       const nameSession = await getSession(`name_${from}`);
       const savedName   = nameSession?.data?.name || data.name;
       if (savedName) {
