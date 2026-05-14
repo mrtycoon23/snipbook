@@ -162,6 +162,17 @@ async function sendMainMenu(to, salonName) {
   );
 }
 
+// ─── IST helper ───────────────────────────────────────────────────────────────
+function getISTNow() {
+  const now = new Date();
+  return new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+}
+
+function getTodayKeyIST() {
+  const ist = getISTNow();
+  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth()+1)}-${pad(ist.getUTCDate())}`;
+}
+
 // ─── Main Handler ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === "GET") {
@@ -342,6 +353,7 @@ export default async function handler(req, res) {
       return;
     }
 
+    // ✅ Past date validation added
     if (step === "ask_date_custom" && text && !interactiveId) {
       const parsedDate = parseCustomDate(text);
       if (!parsedDate) {
@@ -349,6 +361,14 @@ export default async function handler(req, res) {
         res.status(200).json({ status: "ok" });
         return;
       }
+
+      const todayKey = getTodayKeyIST();
+      if (parsedDate < todayKey) {
+        await sendText(from, `⚠️ *Yeh date nikal chuki hai!*\n\nKripya aaj ya aane wali date likhein 📅\n_(Jaise: ${formatDate(todayKey)} ya uske baad)_`);
+        res.status(200).json({ status: "ok" });
+        return;
+      }
+
       await setSession(sKey, "ask_time_part", { ...data, date: parsedDate });
       await sendButtons(from,
         `📅 *${formatDate(parsedDate)}*\n\nKaunsa time prefer karenge?`,
@@ -381,7 +401,6 @@ export default async function handler(req, res) {
       const endH   = isMorning ? 14 : closeTime;
 
       const booked = await getBookedSlots(SALON_ID, data.date);
-      // ✅ data.date pass karo taaki past slots filter ho
       const allSlots = getTimeSlots(startH, endH, data.date);
       const available = allSlots.filter(s => !booked.includes(s.key));
 
@@ -712,11 +731,23 @@ async function sendDateList(to, data, workDays) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+function getISTNow() {
+  const now = new Date();
+  return new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+}
+
+function getTodayKeyIST() {
+  const ist = getISTNow();
+  return `${ist.getUTCFullYear()}-${pad(ist.getUTCMonth()+1)}-${pad(ist.getUTCDate())}`;
+}
+
 function getNextDays(workDays, count) {
   const DN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const result = [];
-  const today = new Date();
+  const istNow = getISTNow();
+  const today = new Date(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate());
+
   for (let i = 0; result.length < count && i <= 60; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
@@ -734,13 +765,12 @@ function getNextDays(workDays, count) {
   return result;
 }
 
-// ✅ selectedDate pass karo — past slots filter hoge
 function getTimeSlots(open, close, selectedDate = null) {
   const slots = [];
-  const now = new Date();
-  const todayKey = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  const istNow = getISTNow();
+  const todayKey = `${istNow.getUTCFullYear()}-${pad(istNow.getUTCMonth()+1)}-${pad(istNow.getUTCDate())}`;
   const isToday = selectedDate === todayKey;
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentMinutes = istNow.getUTCHours() * 60 + istNow.getUTCMinutes();
 
   for (let h = open; h < close; h++) {
     const slot00 = h * 60;
@@ -795,52 +825,3 @@ function formatTime12(timeStr) {
 }
 
 function pad(n) { return String(n).padStart(2, "0"); }
-function getTimeSlots(open, close, selectedDate = null) {
-  const slots = [];
-  // ✅ IST = UTC + 5:30
-  const now = new Date();
-  const istOffset = 5.5 * 60 * 60 * 1000;
-  const istNow = new Date(now.getTime() + istOffset);
-  
-  const todayKey = `${istNow.getUTCFullYear()}-${pad(istNow.getUTCMonth()+1)}-${pad(istNow.getUTCDate())}`;
-  const isToday = selectedDate === todayKey;
-  const currentMinutes = istNow.getUTCHours() * 60 + istNow.getUTCMinutes();
-
-  for (let h = open; h < close; h++) {
-    const slot00 = h * 60;
-    const slot30 = h * 60 + 30;
-
-    if (!isToday || slot00 > currentMinutes + 30) {
-      slots.push({ key: `${pad(h)}:00`, label: formatTime12(`${pad(h)}:00`) });
-    }
-    if (!isToday || slot30 > currentMinutes + 30) {
-      slots.push({ key: `${pad(h)}:30`, label: formatTime12(`${pad(h)}:30`) });
-    }
-  }
-  return slots;
-}
-function getNextDays(workDays, count) {
-  const DN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-  const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const result = [];
-  // ✅ IST today
-  const now = new Date();
-  const istNow = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
-  const today = new Date(istNow.getUTCFullYear(), istNow.getUTCMonth(), istNow.getUTCDate());
-
-  for (let i = 0; result.length < count && i <= 60; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i);
-    const dayName = DN[d.getDay()];
-    if (!workDays || workDays.includes(dayName)) {
-      const key = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-      const label = i === 0
-        ? `Aaj (${d.getDate()} ${MN[d.getMonth()]})`
-        : i === 1
-        ? `Kal (${d.getDate()} ${MN[d.getMonth()]})`
-        : `${dayName}, ${d.getDate()} ${MN[d.getMonth()]}`;
-      result.push({ key, label, dayName });
-    }
-  }
-  return result;
-}
