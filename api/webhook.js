@@ -322,7 +322,8 @@ export default async function handler(req, res) {
         if (salon) {
           sKey = sessionKey(from, salon.id);
           session = await getSession(sKey);
-          console.log("curr_session identify:", salon.salon_name);
+          console.log("curr_session identify:", salon.salon_name); 
+          console.log("Services from curr_session:", (salon?.services || []).length, JSON.stringify(salon?.services?.slice(0,2)));
         }
       }
     }
