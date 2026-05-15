@@ -84,7 +84,11 @@ function formatTime12(timeStr) {
   return `${h12}:${pad(m)} ${h < 12 ? "AM" : "PM"}`;
 }
 
+// ✅ Session key format: salonId_phone
 function sessionKey(phone, salonId) { return `${salonId}_${phone}`; }
+
+// ✅ Current salon session key — phone se dhundho
+function currentSessionKey(phone, salonId) { return `curr_${phone}`; }
 
 async function getSession(key) {
   try {
@@ -131,6 +135,17 @@ async function getSalonByKeyword(keyword) {
   } catch(e) { return null; }
 }
 
+async function getSalonById(id) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/salons?id=eq.${id}&limit=1`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const d = await r.json();
+    return d?.[0] || null;
+  } catch(e) { return null; }
+}
+
 async function getSalonByPhone(phone) {
   const clean = phone.replace(/[^0-9]/g, "");
   const variants = [clean, clean.startsWith("91") ? clean.slice(2) : `91${clean}`];
@@ -144,17 +159,6 @@ async function getSalonByPhone(phone) {
       if (d?.[0]) return d[0];
     }
     return null;
-  } catch(e) { return null; }
-}
-
-async function getSalonById(id) {
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/salons?id=eq.${id}&limit=1`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const d = await r.json();
-    return d?.[0] || null;
   } catch(e) { return null; }
 }
 
@@ -286,66 +290,62 @@ export default async function handler(req, res) {
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    // ✅ SALON IDENTIFY — NO LOOP
-    // Priority:
-    // 1. Keyword (text mein)
-    // 2. Session data mein salonId (fallback sKey se)
-    // 3. BOT_NUMBER fallback
+    // ✅ SALON IDENTIFY — New approach
+    // curr_${from} mein current salonId store karo
+    // Keyword aaye → update curr session
+    // Interactive aaye → curr session se salonId lo
 
     let salon = null;
     let sKey = null;
     let session = null;
 
-    // Step 1: Keyword
-    if (text) {
-      const byKeyword = await getSalonByKeyword(text);
-      if (byKeyword) {
-        salon = byKeyword;
-        sKey = sessionKey(from, salon.id);
-        session = await getSession(sKey);
-        console.log("Identified by keyword:", salon.salon_name);
-      }
+    const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
+    const isResetWord = text && resetWords.includes(text.toLowerCase());
+    const isKeyword = text && !isResetWord ? await getSalonByKeyword(text) : null;
+
+    // Step 1: Keyword aaya
+    if (isKeyword) {
+      salon = isKeyword;
+      // curr session update karo
+      await setSession(`curr_${from}`, "active", { salonId: salon.id });
+      sKey = sessionKey(from, salon.id);
+      session = await getSession(sKey);
+      console.log("Keyword identify:", salon.salon_name);
     }
 
-    // Step 2: Fallback salon fetch karo — phir uski sKey se session lo
-    // Session data mein salonId check karo
+    // Step 2: curr session se salonId lo
     if (!salon) {
-      const fallbackSalon = await getSalonByPhone(BOT_NUMBER);
-      if (fallbackSalon) {
-        const fallbackSKey = sessionKey(from, fallbackSalon.id);
-        const fallbackSession = await getSession(fallbackSKey);
-
-        // Agar fallback salon ki session mein salonId hai aur woh match karta hai
-        if (fallbackSession?.data?.salonId) {
-          const sessionSalonId = fallbackSession.data.salonId;
-          // Session ka salonId use karo
-          if (sessionSalonId === fallbackSalon.id) {
-            salon = fallbackSalon;
-            sKey = fallbackSKey;
-            session = fallbackSession;
-            console.log("Identified by fallback session:", salon.salon_name);
-          } else {
-            // Session mein alag salon ka ID hai — use karo
-            const sessionSalon = await getSalonById(sessionSalonId);
-            if (sessionSalon) {
-              salon = sessionSalon;
-              sKey = sessionKey(from, sessionSalonId);
-              session = await getSession(sKey);
-              console.log("Identified by session salonId:", salon.salon_name);
-            }
-          }
-        } else {
-          // Koi session nahi — fallback use karo
-          salon = fallbackSalon;
-          sKey = fallbackSKey;
-          session = fallbackSession;
-          console.log("Identified by fallback BOT_NUMBER:", salon.salon_name);
+      const currSession = await getSession(`curr_${from}`);
+      if (currSession?.data?.salonId) {
+        salon = await getSalonById(currSession.data.salonId);
+        if (salon) {
+          sKey = sessionKey(from, salon.id);
+          session = await getSession(sKey);
+          console.log("curr_session identify:", salon.salon_name);
         }
       }
     }
 
+    // Step 3: Reset word aaya — curr session se salon lo phir clear karo
+    if (!salon && isResetWord) {
+      const currSession = await getSession(`curr_${from}`);
+      if (currSession?.data?.salonId) {
+        salon = await getSalonById(currSession.data.salonId);
+        if (salon) sKey = sessionKey(from, salon.id);
+      }
+    }
+
+    // Step 4: Final fallback
     if (!salon) {
-      await sendText(from, "Salon nahi mila. Salon owner se correct link maangein. 🙏");
+      salon = await getSalonByPhone(BOT_NUMBER);
+      if (salon) {
+        sKey = sessionKey(from, salon.id);
+        session = await getSession(sKey);
+      }
+    }
+
+    if (!salon) {
+      await sendText(from, "Salon nahi mila. Sahi link se aayein. 🙏");
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -367,15 +367,16 @@ export default async function handler(req, res) {
 
     console.log("Salon:", salonName, "SALON_ID:", SALON_ID, "sKey:", sKey, "Step:", step);
 
-    const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
-    if (text && resetWords.includes(text.toLowerCase())) {
+    // Reset
+    if (isResetWord) {
       await clearSession(sKey);
       await sendMainMenu(from, salonName);
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    if (text && (await getSalonByKeyword(text))) {
+    // Keyword → fresh start
+    if (isKeyword) {
       await clearSession(sKey);
       await sendMainMenu(from, salonName);
       res.status(200).json({ status: "ok" });
@@ -445,12 +446,12 @@ export default async function handler(req, res) {
     if (step === "ask_date_custom" && text && !interactiveId) {
       const parsedDate = parseCustomDate(text);
       if (!parsedDate) {
-        await sendText(from, `⚠️ Date samajh nahi aai!\n\nKripya is format mein likhein:\n*25 May* ya *2 June*`);
+        await sendText(from, `⚠️ Date samajh nahi aai!\n\n*25 May* ya *2 June* format mein likhein`);
         res.status(200).json({ status: "ok" });
         return;
       }
       if (parsedDate < getTodayKeyIST()) {
-        await sendText(from, `⚠️ *Yeh date nikal chuki hai!*\n\nKripya aaj ya aane wali date likhein 📅`);
+        await sendText(from, `⚠️ *Yeh date nikal chuki hai!*\n\nAaj ya aane wali date likhein 📅`);
         res.status(200).json({ status: "ok" });
         return;
       }
