@@ -251,49 +251,6 @@ async function sendStepHint(to, step) {
   if (hint) await sendText(to, `_${hint}_\n\n_Wapas menu ke liye "Hi" type karein_`);
 }
 
-// ✅ SALON IDENTIFY — Simple, no loops, no last_ session
-// Priority: 1) Keyword  2) Active sKey session  3) Fallback BOT_NUMBER
-async function identifySalon(from, text) {
-  // Step 1: Keyword
-  if (text) {
-    const byKeyword = await getSalonByKeyword(text);
-    if (byKeyword) {
-      const sKey = sessionKey(from, byKeyword.id);
-      const session = await getSession(sKey);
-      return { salon: byKeyword, sKey, session };
-    }
-  }
-
-  // Step 2: Active session — check salonId stored in session data
-  // Fetch all salon IDs only
-  try {
-    const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/salons?select=id`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const allSalons = await r.json();
-    for (const s of (allSalons || [])) {
-      const sk = sessionKey(from, s.id);
-      const sess = await getSession(sk);
-      // ✅ STRICT CHECK: salonId in data MUST match salon id AND step must be active
-      if (sess?.data?.salonId === s.id && sess?.step && sess.step !== "menu") {
-        const fullSalon = await getSalonById(s.id);
-        if (fullSalon) return { salon: fullSalon, sKey: sk, session: sess };
-      }
-    }
-  } catch(e) { console.error("identifySalon loop error:", e.message); }
-
-  // Step 3: Fallback
-  const fallback = await getSalonByPhone(BOT_NUMBER);
-  if (fallback) {
-    const sKey = sessionKey(from, fallback.id);
-    const session = await getSession(sKey);
-    return { salon: fallback, sKey, session };
-  }
-
-  return null;
-}
-
 export default async function handler(req, res) {
   if (req.method === "GET") {
     const { "hub.mode": mode, "hub.verify_token": token, "hub.challenge": challenge } = req.query;
@@ -329,15 +286,72 @@ export default async function handler(req, res) {
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    const identified = await identifySalon(from, text);
-    if (!identified) {
+    // ✅ SALON IDENTIFY — NO LOOP
+    // Priority:
+    // 1. Keyword (text mein)
+    // 2. Session data mein salonId (fallback sKey se)
+    // 3. BOT_NUMBER fallback
+
+    let salon = null;
+    let sKey = null;
+    let session = null;
+
+    // Step 1: Keyword
+    if (text) {
+      const byKeyword = await getSalonByKeyword(text);
+      if (byKeyword) {
+        salon = byKeyword;
+        sKey = sessionKey(from, salon.id);
+        session = await getSession(sKey);
+        console.log("Identified by keyword:", salon.salon_name);
+      }
+    }
+
+    // Step 2: Fallback salon fetch karo — phir uski sKey se session lo
+    // Session data mein salonId check karo
+    if (!salon) {
+      const fallbackSalon = await getSalonByPhone(BOT_NUMBER);
+      if (fallbackSalon) {
+        const fallbackSKey = sessionKey(from, fallbackSalon.id);
+        const fallbackSession = await getSession(fallbackSKey);
+
+        // Agar fallback salon ki session mein salonId hai aur woh match karta hai
+        if (fallbackSession?.data?.salonId) {
+          const sessionSalonId = fallbackSession.data.salonId;
+          // Session ka salonId use karo
+          if (sessionSalonId === fallbackSalon.id) {
+            salon = fallbackSalon;
+            sKey = fallbackSKey;
+            session = fallbackSession;
+            console.log("Identified by fallback session:", salon.salon_name);
+          } else {
+            // Session mein alag salon ka ID hai — use karo
+            const sessionSalon = await getSalonById(sessionSalonId);
+            if (sessionSalon) {
+              salon = sessionSalon;
+              sKey = sessionKey(from, sessionSalonId);
+              session = await getSession(sKey);
+              console.log("Identified by session salonId:", salon.salon_name);
+            }
+          }
+        } else {
+          // Koi session nahi — fallback use karo
+          salon = fallbackSalon;
+          sKey = fallbackSKey;
+          session = fallbackSession;
+          console.log("Identified by fallback BOT_NUMBER:", salon.salon_name);
+        }
+      }
+    }
+
+    if (!salon) {
       await sendText(from, "Salon nahi mila. Salon owner se correct link maangein. 🙏");
       res.status(200).json({ status: "ok" });
       return;
     }
 
-    let { salon, sKey, session } = identified;
     const SALON_ID = salon.id;
+    if (!session) session = await getSession(sKey);
 
     const salonName = salon?.salon_name || "SnipBook Salon";
     const services = (salon?.services || []).filter(s => s.active !== false);
@@ -400,7 +414,7 @@ export default async function handler(req, res) {
 
     if (step === "ask_service" && interactiveId === "svc_custom") {
       await setSession(sKey, "ask_service_custom", { ...data });
-      await sendText(from, `✏️ *Apni service likhein:*\n\nJo service chahiye woh type karein\n\n_Wapas menu ke liye "Hi" type karein_`);
+      await sendText(from, `✏️ *Apni service likhein:*\n\n_Wapas menu ke liye "Hi" type karein_`);
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -415,17 +429,15 @@ export default async function handler(req, res) {
     if (step === "ask_service" && interactiveId?.startsWith("svc_")) {
       const svcId = interactiveId.replace("svc_", "");
       const selected = services.find(s => String(s.id) === svcId);
-      const serviceName = selected?.name || svcId;
-      const servicePrice = selected?.price || 0;
-      await setSession(sKey, "ask_date", { ...data, service: serviceName, price: servicePrice });
-      await sendDateList(from, { ...data, service: serviceName, price: servicePrice }, workDays);
+      await setSession(sKey, "ask_date", { ...data, service: selected?.name || svcId, price: selected?.price || 0 });
+      await sendDateList(from, { ...data, service: selected?.name || svcId, price: selected?.price || 0 }, workDays);
       res.status(200).json({ status: "ok" });
       return;
     }
 
     if (step === "ask_date" && interactiveId === "date_custom") {
       await setSession(sKey, "ask_date_custom", { ...data });
-      await sendText(from, `📅 *Apni marzi ki date likhein*\n\n_(Jaise: 25 May, 3 June, 15 Jul)_\n\n_Wapas menu ke liye "Hi" type karein_`);
+      await sendText(from, `📅 *Apni marzi ki date likhein*\n\n_(Jaise: 25 May, 3 June)_\n\n_Wapas menu ke liye "Hi" type karein_`);
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -437,8 +449,7 @@ export default async function handler(req, res) {
         res.status(200).json({ status: "ok" });
         return;
       }
-      const todayKey = getTodayKeyIST();
-      if (parsedDate < todayKey) {
+      if (parsedDate < getTodayKeyIST()) {
         await sendText(from, `⚠️ *Yeh date nikal chuki hai!*\n\nKripya aaj ya aane wali date likhein 📅`);
         res.status(200).json({ status: "ok" });
         return;
@@ -463,21 +474,20 @@ export default async function handler(req, res) {
 
     if (step === "ask_time_part" && (interactiveId === "time_morning" || interactiveId === "time_evening")) {
       const isMorning = interactiveId === "time_morning";
-      const startH = isMorning ? openTime : 14;
-      const endH = isMorning ? 14 : closeTime;
       const booked = await getBookedSlots(SALON_ID, data.date);
-      const available = getTimeSlots(startH, endH, data.date).filter(s => !booked.includes(s.key));
+      const available = getTimeSlots(isMorning ? openTime : 14, isMorning ? 14 : closeTime, data.date).filter(s => !booked.includes(s.key));
       if (available.length === 0) {
-        await sendButtons(from,
-          `😔 Is time mein koi slot available nahi!\n\nDusra time chunein:`,
+        await sendButtons(from, `😔 Koi slot available nahi!\n\nDusra time chunein:`,
           [{ id: "time_morning", title: "🌅 Morning (9AM-2PM)" }, { id: "time_evening", title: "🌆 Evening (2PM-9PM)" }]
         );
         res.status(200).json({ status: "ok" });
         return;
       }
       await setSession(sKey, "ask_time", { ...data });
-      const rows = available.map(s => ({ id: `time_${s.key}`, title: `🟢 ${s.label}`, description: "Available" }));
-      await sendList(from, `🕐 ${isMorning ? "🌅 Morning" : "🌆 Evening"} Slots`, `📅 *${formatDate(data.date)}*\n\nKaunsa time slot chahiye?`, "Slot Chunein", rows);
+      await sendList(from, `🕐 ${isMorning ? "🌅 Morning" : "🌆 Evening"} Slots`,
+        `📅 *${formatDate(data.date)}*\n\nKaunsa time slot chahiye?`, "Slot Chunein",
+        available.map(s => ({ id: `time_${s.key}`, title: `🟢 ${s.label}`, description: "Available" }))
+      );
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -569,7 +579,7 @@ export default async function handler(req, res) {
         );
       } else {
         await setSession(sKey, "ask_name", { ...data });
-        await sendText(from, `📅 *Appointment Book Karein*\n\nGreat! Let's book your appointment. 😊\n\n*Aapka naam kya hai?*`);
+        await sendText(from, `📅 *Appointment Book Karein*\n\n*Aapka naam kya hai?*`);
       }
       res.status(200).json({ status: "ok" });
       return;
@@ -594,7 +604,7 @@ export default async function handler(req, res) {
         description: `₹${s.price} · ${s.duration} min`
       }));
       rows.push({ id: "browse_svc_custom", title: "✏️ Koi Aur Service", description: "Apni service khud likhein" });
-      await sendList(from, `✂️ ${gender === "male" ? "👨 Male" : "👩 Female"} Services`, `Koi bhi service select karein ya book karein 👇`, "Services Dekho", rows);
+      await sendList(from, `✂️ ${gender === "male" ? "👨 Male" : "👩 Female"} Services`, `Koi bhi service select karein 👇`, "Services Dekho", rows);
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -608,14 +618,11 @@ export default async function handler(req, res) {
         return;
       }
       const selected = services.find(s => String(s.id) === svcId);
-      const serviceName = selected?.name || svcId;
-      const servicePrice = selected?.price || 0;
-      const serviceDur = selected?.duration || "";
-      const priceText = servicePrice > 0 ? `₹${servicePrice}` : "Price on visit";
-      const durText = serviceDur ? ` · ${serviceDur} min` : "";
+      const priceText = (selected?.price || 0) > 0 ? `₹${selected.price}` : "Price on visit";
+      const durText = selected?.duration ? ` · ${selected.duration} min` : "";
       await setSession(sKey, "browse_services_list", { ...data });
       await sendButtons(from,
-        `✂️ *${serviceName}*\n💰 ${priceText}${durText}\n\nIs service ko book karna chahte hain?`,
+        `✂️ *${selected?.name || svcId}*\n💰 ${priceText}${durText}\n\nIs service ko book karna chahte hain?`,
         [{ id: `book_svc_${svcId}`, title: "📅 Appointment Book Karo" }, { id: "browse_back", title: "⬅️ Wapas Services" }]
       );
       res.status(200).json({ status: "ok" });
@@ -640,7 +647,7 @@ export default async function handler(req, res) {
         description: `₹${s.price} · ${s.duration} min`
       }));
       rows.push({ id: "browse_svc_custom", title: "✏️ Koi Aur Service", description: "Apni service khud likhein" });
-      await sendList(from, `✂️ ${gender === "male" ? "👨 Male" : "👩 Female"} Services`, `Koi bhi service select karein ya book karein 👇`, "Services Dekho", rows);
+      await sendList(from, `✂️ ${gender === "male" ? "👨 Male" : "👩 Female"} Services`, `Koi bhi service select karein 👇`, "Services Dekho", rows);
       res.status(200).json({ status: "ok" });
       return;
     }
