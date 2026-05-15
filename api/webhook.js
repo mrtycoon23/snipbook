@@ -311,6 +311,7 @@ export default async function handler(req, res) {
       sKey = sessionKey(from, salon.id);
       session = await getSession(sKey);
       console.log("Keyword identify:", salon.salon_name);
+      console.log("Services count:", services.length, "First service:", services[0]?.name);
     }
 
     // Step 2: curr session se salonId lo
