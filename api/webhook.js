@@ -84,11 +84,7 @@ function formatTime12(timeStr) {
   return `${h12}:${pad(m)} ${h < 12 ? "AM" : "PM"}`;
 }
 
-// ✅ Session key format: salonId_phone
 function sessionKey(phone, salonId) { return `${salonId}_${phone}`; }
-
-// ✅ Current salon session key — phone se dhundho
-function currentSessionKey(phone, salonId) { return `curr_${phone}`; }
 
 async function getSession(key) {
   try {
@@ -290,11 +286,6 @@ export default async function handler(req, res) {
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
 
-    // ✅ SALON IDENTIFY — New approach
-    // curr_${from} mein current salonId store karo
-    // Keyword aaye → update curr session
-    // Interactive aaye → curr session se salonId lo
-
     let salon = null;
     let sKey = null;
     let session = null;
@@ -306,12 +297,9 @@ export default async function handler(req, res) {
     // Step 1: Keyword aaya
     if (isKeyword) {
       salon = isKeyword;
-      // curr session update karo
       await setSession(`curr_${from}`, "active", { salonId: salon.id });
       sKey = sessionKey(from, salon.id);
       session = await getSession(sKey);
-      console.log("Keyword identify:", salon.salon_name);
-      console.log("Services count:", services.length, "First service:", services[0]?.name);
     }
 
     // Step 2: curr session se salonId lo
@@ -322,13 +310,11 @@ export default async function handler(req, res) {
         if (salon) {
           sKey = sessionKey(from, salon.id);
           session = await getSession(sKey);
-          console.log("curr_session identify:", salon.salon_name); 
-          console.log("Services from curr_session:", (salon?.services || []).length, JSON.stringify(salon?.services?.slice(0,2)));
         }
       }
     }
 
-    // Step 3: Reset word aaya — curr session se salon lo phir clear karo
+    // Step 3: Reset word — curr session se salon lo
     if (!salon && isResetWord) {
       const currSession = await getSession(`curr_${from}`);
       if (currSession?.data?.salonId) {
@@ -337,7 +323,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Step 4: Final fallback
+    // Step 4: Final fallback — BOT_NUMBER linked salon
     if (!salon) {
       salon = await getSalonByPhone(BOT_NUMBER);
       if (salon) {
@@ -346,8 +332,11 @@ export default async function handler(req, res) {
       }
     }
 
+    // ✅ Salon nahi mila — better message
     if (!salon) {
-      await sendText(from, "Salon nahi mila. Sahi link se aayein. 🙏");
+      await sendText(from,
+        `Namaste! 🙏\n\nApne salon ka booking link use karein.\n\n_Salon owner se WhatsApp booking link maangein aur us link se message karein_ 😊`
+      );
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -404,6 +393,11 @@ export default async function handler(req, res) {
       const gender = interactiveId === "gender_male" ? "male" : "female";
       await setSession(sKey, "ask_service", { ...data, gender });
       const filtered = services.filter(s => !s.gender || s.gender === "both" || s.gender === gender);
+      if (filtered.length === 0) {
+        await sendText(from, `😔 Is category mein abhi koi service available nahi.\n\nDusri category try karein ya "Hi" type karein.`);
+        res.status(200).json({ status: "ok" });
+        return;
+      }
       const rows = filtered.slice(0, 9).map(s => ({
         id: `svc_${s.id}`,
         title: `${s.emoji || "✂️"} ${s.name}`.slice(0, 24),
@@ -601,6 +595,11 @@ export default async function handler(req, res) {
       const gender = interactiveId === "browse_male" ? "male" : "female";
       await setSession(sKey, "browse_services_list", { ...data, gender });
       const filtered = services.filter(s => !s.gender || s.gender === "both" || s.gender === gender);
+      if (filtered.length === 0) {
+        await sendText(from, `😔 Is category mein abhi koi service available nahi.\n\nDusri category try karein ya "Hi" type karein.`);
+        res.status(200).json({ status: "ok" });
+        return;
+      }
       const rows = filtered.slice(0, 9).map(s => ({
         id: `browse_svc_${s.id}`,
         title: `${s.emoji || "✂️"} ${s.name}`.slice(0, 24),
