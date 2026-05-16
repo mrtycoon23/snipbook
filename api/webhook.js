@@ -251,6 +251,13 @@ async function sendStepHint(to, step) {
   if (hint) await sendText(to, `_${hint}_\n\n_Wapas menu ke liye "Hi" type karein_`);
 }
 
+// ✅ No link message — jab koi seedha message kare bina keyword ke
+async function sendNoLinkMessage(to) {
+  await sendText(to,
+    `Namaste! 🙏\n\nAppoint book karne ke liye apne salon ka *booking link* use karein.\n\n_Salon owner se WhatsApp booking link maangein aur us link se message karein_ 😊`
+  );
+}
+
 export default async function handler(req, res) {
   if (req.method === "GET") {
     const { "hub.mode": mode, "hub.verify_token": token, "hub.challenge": challenge } = req.query;
@@ -294,7 +301,7 @@ export default async function handler(req, res) {
     const isResetWord = text && resetWords.includes(text.toLowerCase());
     const isKeyword = text && !isResetWord ? await getSalonByKeyword(text) : null;
 
-    // Step 1: Keyword aaya
+    // ✅ Step 1: Keyword aaya — curr_ session update karo
     if (isKeyword) {
       salon = isKeyword;
       await setSession(`curr_${from}`, "active", { salonId: salon.id });
@@ -302,7 +309,7 @@ export default async function handler(req, res) {
       session = await getSession(sKey);
     }
 
-    // Step 2: curr session se salonId lo
+    // ✅ Step 2: curr_ session se salonId lo — PERMANENT
     if (!salon) {
       const currSession = await getSession(`curr_${from}`);
       if (currSession?.data?.salonId) {
@@ -314,29 +321,10 @@ export default async function handler(req, res) {
       }
     }
 
-    // Step 3: Reset word — curr session se salon lo
-    if (!salon && isResetWord) {
-      const currSession = await getSession(`curr_${from}`);
-      if (currSession?.data?.salonId) {
-        salon = await getSalonById(currSession.data.salonId);
-        if (salon) sKey = sessionKey(from, salon.id);
-      }
-    }
-
-    // Step 4: Final fallback — BOT_NUMBER linked salon
+    // ✅ Step 3: Salon nahi mila — NO FALLBACK to Style Adda
+    // Sirf no-link message bhejo
     if (!salon) {
-      salon = await getSalonByPhone(BOT_NUMBER);
-      if (salon) {
-        sKey = sessionKey(from, salon.id);
-        session = await getSession(sKey);
-      }
-    }
-
-    // ✅ Salon nahi mila — better message
-    if (!salon) {
-      await sendText(from,
-        `Namaste! 🙏\n\nApne salon ka booking link use karein.\n\n_Salon owner se WhatsApp booking link maangein aur us link se message karein_ 😊`
-      );
+      await sendNoLinkMessage(from);
       res.status(200).json({ status: "ok" });
       return;
     }
@@ -356,9 +344,9 @@ export default async function handler(req, res) {
     const step = session?.step || "menu";
     const data = { ...(session?.data || {}), salonId: SALON_ID };
 
-    console.log("Salon:", salonName, "SALON_ID:", SALON_ID, "sKey:", sKey, "Step:", step);
+    console.log("Salon:", salonName, "SALON_ID:", SALON_ID, "Step:", step);
 
-    // Reset
+    // Reset word
     if (isResetWord) {
       await clearSession(sKey);
       await sendMainMenu(from, salonName);
@@ -553,8 +541,7 @@ export default async function handler(req, res) {
 
     if (step === "confirm" && interactiveId === "confirm_no") {
       await clearSession(sKey);
-      await sendText(from, `Koi baat nahi! 😊\nKabhi bhi book karne ke liye "Hi" type karein.`);
-      await sendMainMenu(from, salonName);
+      await sendText(from, `Koi baat nahi! 😊\nKabhi bhi book karne ke liye salon ka link use karein.`);
       res.status(200).json({ status: "ok" });
       return;
     }
