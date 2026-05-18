@@ -957,7 +957,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                 <button onClick={()=>{setScreen("calendar");setSelClient(null);}} style={{flex:1,padding:"11px",background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📅 Book Now</button>
                 {/* ✅ Welcome Message Button */}
                 <button onClick={async()=>{
-                  if(!selClient?.phone)return;
+                  if(!selClient?.phone)return; const confirmSend = window.confirm(`Welcome message bhejein ${selClient.name} ko?\n📞 ${selClient.phone}`);
+if(!confirmSend) return;
                   setWelcomeSending(true);
                   try{
                     const res=await fetch("/api/send-welcome",{
