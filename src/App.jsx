@@ -397,8 +397,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const [showAdd,setShowAdd]=useState(false);
   const [openSection,setOpenSection]=useState(null);
   const [newSvc,setNewSvc]=useState({emoji:"✂️",name:"",price:"",duration:30,gender:"both"});
-  // ✅ Welcome message sending state
-  const [sendingWelcome,setSendingWelcome]=useState(false);
 
   const SETTING_TABS=[{id:"profile",icon:"🏪",label:"Salon"},{id:"services",icon:"💇",label:"Services"},{id:"hours",icon:"🕐",label:"Hours"},{id:"whatsapp",icon:"💬",label:"WhatsApp"},{id:"account",icon:"👤",label:"Account"}];
 
@@ -419,7 +417,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
           if(salon.services&&salon.services.length>0) setServices(salon.services);
           if(salon.working_days&&salon.working_days.length>0) setHours(h=>({...h,workDays:salon.working_days,openTime:salon.open_time||9,closeTime:salon.close_time||21}));
           if(salon.whatsapp_number) setWa(w=>({...w,number:salon.whatsapp_number}));
-          // ✅ bot_keyword load karo
           if(salon.bot_keyword) setWa(w=>({...w,botKeyword:salon.bot_keyword}));
         }
       }catch(e){console.error("Load error:",e);}
@@ -484,9 +481,9 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const Card=SCard;
   const Toggle=SToggle;
 
-  // ✅ Booking link generate
-const rawNum = (wa.number||"").replace(/[^0-9]/g,"");
-const bookingLink = `https://wa.me/${rawNum.startsWith("91") ? rawNum : "91"+rawNum}?text=${wa.botKeyword||"snipsalon"}`;
+  const rawNum = (wa.number||"").replace(/[^0-9]/g,"");
+  const bookingLink = `https://wa.me/${rawNum.startsWith("91") ? rawNum : "91"+rawNum}?text=${wa.botKeyword||"snipsalon"}`;
+
   if(loading) return <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#888"}}>Loading...</div>;
 
   return(
@@ -632,7 +629,6 @@ const bookingLink = `https://wa.me/${rawNum.startsWith("91") ? rawNum : "91"+raw
             </button>
           </Card>
 
-          {/* ✅ Booking Link + QR Code Card */}
           <Card title="Booking Link & QR Code" icon="🔗">
             <div style={{marginBottom:12}}>
               <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:4}}>Bot Keyword</div>
@@ -647,7 +643,6 @@ const bookingLink = `https://wa.me/${rawNum.startsWith("91") ? rawNum : "91"+raw
               <div style={{display:"flex",gap:8}}>
                 <button onClick={()=>{
                   navigator.clipboard.writeText(bookingLink);
-                  alert("✅ Link copy ho gaya!");
                 }} style={{flex:1,padding:"10px",background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:10,color:"#16a34a",fontFamily:"inherit",fontSize:12,fontWeight:800,cursor:"pointer"}}>
                   📋 Copy Link
                 </button>
@@ -865,8 +860,11 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [newClient,setNewClient]=useState({name:"",phone:"",city:"",dob:"",tag:"Regular",gender:"male"});
   const [editClient,setEditClient]=useState(null);
   const [showEditClient,setShowEditClient]=useState(false);
-  // ✅ Welcome message sending state
+
+  // ✅ Welcome modal states — browser popup ki jagah custom modal
   const [welcomeSending,setWelcomeSending]=useState(false);
+  const [welcomeModal,setWelcomeModal]=useState(null); // null | 'confirm' | 'success' | 'error'
+  const [welcomeModalMsg,setWelcomeModalMsg]=useState("");
 
   useEffect(()=>{
     async function loadClients(){
@@ -887,6 +885,36 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
 
   const TAG={VIP:{bg:"#fef9c3",color:"#a16207",border:"#fde68a"},Regular:{bg:"#e8fdf0",color:"#16a34a",border:"#86efac"},New:{bg:"#eff6ff",color:"#2563eb",border:"#93c5fd"}};
   const filtC=clients.filter(c=>{const q=cSearch.toLowerCase();const ms=!q||c.name.toLowerCase().includes(q)||c.phone.includes(q);const mf=cFilter==="All"?true:cFilter==="VIP"?c.tag==="VIP":cFilter==="Regular"?c.tag==="Regular":cFilter==="New"?c.tag==="New":cFilter==="WhatsApp"?c.src==="wa":c.src==="walk";return ms&&mf;});
+
+  // ✅ Welcome message send function
+  async function sendWelcomeMessage(){
+    if(!selClient?.phone) return;
+    setWelcomeSending(true);
+    setWelcomeModal(null);
+    try{
+      const res = await fetch("/api/send-welcome",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          customerPhone: selClient.phone,
+          customerName: selClient.name,
+          salonId: user.id,
+          salonName: user.salon,
+        })
+      });
+      if(res.ok){
+        setWelcomeModalMsg(`${user.salon} ka bot ab ${selClient.name} ke liye ready hai. Woh "Hi" type karenge toh seedha bot khulega! 🚀`);
+        setWelcomeModal('success');
+      } else {
+        setWelcomeModalMsg("Phone number check karo — message send nahi hua.");
+        setWelcomeModal('error');
+      }
+    }catch(e){
+      setWelcomeModalMsg("Network error: " + e.message);
+      setWelcomeModal('error');
+    }
+    setWelcomeSending(false);
+  }
 
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:"#1a1a2e",background:"#f0f4f8",overflow:"hidden"}}>
@@ -955,27 +983,11 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             {selClient&&(<div onClick={()=>setSelClient(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"80vh",overflowY:"auto"}}><div style={{width:36,height:4,background:"#e8edf3",borderRadius:2,margin:"0 auto 14px"}}/><div style={{display:"flex",gap:12,alignItems:"center",marginBottom:14}}><div style={{width:48,height:48,borderRadius:14,background:selClient.color+"22",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:17,color:selClient.color}}>{selClient.avatar}</div><div><div style={{fontWeight:900,fontSize:16}}>{selClient.name}</div><div style={{fontSize:12,color:"#888"}}>📱 {selClient.phone} · {selClient.city||"—"}</div></div></div><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>{[{icon:"🔁",val:selClient.visits||0,label:"Visits"},{icon:"💸",val:`₹${(selClient.totalSpent||0).toLocaleString()}`,label:"Total"},{icon:"📅",val:selClient.lastVisit||"—",label:"Last Visit"}].map(s=>(<div key={s.label} style={{background:"#f8fafc",borderRadius:11,padding:"10px",textAlign:"center"}}><div style={{fontSize:16,marginBottom:3}}>{s.icon}</div><div style={{fontWeight:900,fontSize:13}}>{s.val}</div><div style={{fontSize:10,color:"#aaa",fontWeight:700}}>{s.label}</div></div>))}</div>
               <div style={{display:"flex",gap:8,marginBottom:12}}>
                 <button onClick={()=>{setScreen("calendar");setSelClient(null);}} style={{flex:1,padding:"11px",background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📅 Book Now</button>
-                {/* ✅ Welcome Message Button */}
-                <button onClick={async()=>{
-                  if(!selClient?.phone)return; const confirmSend = window.confirm(`Welcome message bhejein ${selClient.name} ko?\n📞 ${selClient.phone}`);
-if(!confirmSend) return;
-                  setWelcomeSending(true);
-                  try{
-                    const res=await fetch("/api/send-welcome",{
-                      method:"POST",
-                      headers:{"Content-Type":"application/json"},
-                      body:JSON.stringify({
-                        customerPhone:selClient.phone,
-                        customerName:selClient.name,
-                        salonId:user.id,
-                        salonName:user.salon,
-                      })
-                    });
-                    if(res.ok)alert(`✅ Welcome message bhej diya ${selClient.name} ko!\n\nAb woh seedha "Hi" type karenge toh ${user.salon} ka bot khulega.`);
-                    else alert("❌ Message send nahi hua. Phone number check karo.");
-                  }catch(e){alert("Error: "+e.message);}
-                  setWelcomeSending(false);
-                }} style={{flex:1,padding:"11px",background:welcomeSending?"#f0f4f8":"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:welcomeSending?"not-allowed":"pointer"}}>
+                {/* ✅ Welcome Message Button — custom modal trigger */}
+                <button
+                  onClick={()=>{ if(!selClient?.phone) return; setWelcomeModal('confirm'); }}
+                  style={{flex:1,padding:"11px",background:welcomeSending?"#f0f4f8":"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:welcomeSending?"not-allowed":"pointer"}}
+                >
                   {welcomeSending?"Sending...":"💬 Welcome Msg"}
                 </button>
               </div>
@@ -983,6 +995,68 @@ if(!confirmSend) return;
               <div style={{fontWeight:800,fontSize:13,color:"#555",marginBottom:9}}>📋 Visit History</div>
               {(selClient.history||[]).map((h,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 11px",background:"#f8fafc",borderRadius:10,marginBottom:6,border:"2px solid #f0f4f8"}}><div style={{width:7,height:7,borderRadius:"50%",background:selClient.color,flexShrink:0}}/><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13}}>{h.service}</div><div style={{fontSize:11,color:"#aaa"}}>{h.date}</div></div><div style={{fontWeight:800,fontSize:13,color:"#16a34a"}}>₹{h.price}</div></div>))}
             </div></div>)}
+
+            {/* ✅ Custom Welcome Modal — browser popup GONE */}
+            {welcomeModal&&selClient&&(
+              <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}>
+                <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:340,boxShadow:"0 24px 60px rgba(0,0,0,0.25)"}}>
+
+                  {welcomeModal==="confirm"&&(<>
+                    <div style={{textAlign:"center",marginBottom:20}}>
+                      <div style={{width:64,height:64,borderRadius:20,background:"#e8fdf0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 12px"}}>💬</div>
+                      <div style={{fontWeight:900,fontSize:17,color:"#1a1a2e",marginBottom:6}}>Welcome Message Bhejna Hai?</div>
+                      <div style={{fontSize:13,color:"#666",lineHeight:1.6,marginBottom:10}}>
+                        <span style={{fontWeight:800,color:"#1a1a2e"}}>{selClient.name}</span> ko WhatsApp pe ek welcome message jayega
+                      </div>
+                      <div style={{background:"#f8fafc",border:"2px solid #e8edf3",borderRadius:11,padding:"9px 14px",fontSize:13,color:"#555",fontWeight:700,display:"inline-flex",alignItems:"center",gap:6}}>
+                        📱 {selClient.phone}
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:10}}>
+                      <button
+                        onClick={()=>setWelcomeModal(null)}
+                        style={{flex:1,padding:"12px",border:"2px solid #e8edf3",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={sendWelcomeMessage}
+                        style={{flex:2,padding:"12px",background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",boxShadow:"0 4px 14px rgba(34,197,94,0.3)"}}
+                      >
+                        ✓ Bhejo
+                      </button>
+                    </div>
+                  </>)}
+
+                  {welcomeModal==="success"&&(<>
+                    <div style={{textAlign:"center",marginBottom:20}}>
+                      <div style={{width:64,height:64,borderRadius:20,background:"#e8fdf0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 12px"}}>✅</div>
+                      <div style={{fontWeight:900,fontSize:17,color:"#16a34a",marginBottom:8}}>Message Bhej Diya!</div>
+                      <div style={{fontSize:13,color:"#555",lineHeight:1.7}}>{welcomeModalMsg}</div>
+                    </div>
+                    <button
+                      onClick={()=>setWelcomeModal(null)}
+                      style={{width:"100%",padding:"13px",background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}
+                    >
+                      Done ✓
+                    </button>
+                  </>)}
+
+                  {welcomeModal==="error"&&(<>
+                    <div style={{textAlign:"center",marginBottom:20}}>
+                      <div style={{width:64,height:64,borderRadius:20,background:"#fff0f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 12px"}}>❌</div>
+                      <div style={{fontWeight:900,fontSize:17,color:"#dc2626",marginBottom:8}}>Message Nahi Gaya</div>
+                      <div style={{fontSize:13,color:"#555",lineHeight:1.7}}>{welcomeModalMsg}</div>
+                    </div>
+                    <div style={{display:"flex",gap:10}}>
+                      <button onClick={()=>setWelcomeModal(null)} style={{flex:1,padding:"12px",border:"2px solid #e8edf3",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}>Close</button>
+                      <button onClick={()=>setWelcomeModal('confirm')} style={{flex:1,padding:"12px",background:"#ef4444",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button>
+                    </div>
+                  </>)}
+
+                </div>
+              </div>
+            )}
 
             {/* Edit Client Modal */}
             {showEditClient&&editClient&&(
