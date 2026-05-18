@@ -13,8 +13,10 @@ export default async function handler(req, res) {
     const cleanPhone = customerPhone.replace(/[^0-9]/g, "");
     const phoneWithCode = cleanPhone.startsWith("91") ? cleanPhone : `91${cleanPhone}`;
 
+    console.log("send-welcome called:", { phoneWithCode, salonId, salonName });
+
     // ✅ curr_ session set karo
-    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
+    const sessionRes = await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
       method: "POST",
       headers: {
         apikey: SUPABASE_KEY,
@@ -23,15 +25,17 @@ export default async function handler(req, res) {
         Prefer: "resolution=merge-duplicates",
       },
       body: JSON.stringify({
-        phone: `curr_+${phoneWithCode}`,
+        phone: `curr_${phoneWithCode}`,
         step: "active",
         data: { salonId },
         updated_at: new Date().toISOString(),
       }),
     });
+    const sessionText = await sessionRes.text();
+    console.log("Supabase session result:", sessionRes.status, sessionText);
 
     // ✅ Welcome message bhejo
-    await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+    const msgRes = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
       method: "POST",
       headers: { "X-API-Key": YCLOUD_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -41,6 +45,12 @@ export default async function handler(req, res) {
         text: { body: `Namaste ${customerName || ""}! 🙏\n\n*${salonName}* mein aapka swagat hai! ✨\n\nApni next appointment book karne ke liye bas *"Hi"* type karein 👇\n\n_Powered by SnipBook_ 💈` },
       }),
     });
+    const msgText = await msgRes.text();
+    console.log("YCloud result:", msgRes.status, msgText);
+
+    if (!msgRes.ok) {
+      return res.status(500).json({ error: "YCloud send failed", detail: msgText });
+    }
 
     return res.status(200).json({ success: true });
   } catch (err) {
