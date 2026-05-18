@@ -485,8 +485,8 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const Toggle=SToggle;
 
   // ✅ Booking link generate
-  const bookingLink = `https://wa.me/${(wa.number||"").replace(/[^0-9]/g,"")}?text=${wa.botKeyword||"snipsalon"}`;
-
+const rawNum = (wa.number||"").replace(/[^0-9]/g,"");
+const bookingLink = `https://wa.me/${rawNum.startsWith("91") ? rawNum : "91"+rawNum}?text=${wa.botKeyword||"snipsalon"}`;
   if(loading) return <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#888"}}>Loading...</div>;
 
   return(
