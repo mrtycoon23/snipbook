@@ -158,6 +158,22 @@ async function getSalonByPhone(phone) {
   } catch(e) { return null; }
 }
 
+// ✅ Salon name se match karo — booking link ke long text ke liye
+async function getSalonByName(text) {
+  if (!text) return null;
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/salons?select=*`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const allSalons = await r.json();
+    const textLower = text.toLowerCase();
+    return allSalons?.find(s =>
+      s.salon_name && textLower.includes(s.salon_name.toLowerCase())
+    ) || null;
+  } catch(e) { return null; }
+}
+
 async function getBookedSlots(salonId, date) {
   try {
     const r = await fetch(
@@ -251,7 +267,6 @@ async function sendStepHint(to, step) {
   if (hint) await sendText(to, `_${hint}_\n\n_Wapas menu ke liye "Hi" type karein_`);
 }
 
-// ✅ No link message — jab koi seedha message kare bina keyword ke
 async function sendNoLinkMessage(to) {
   await sendText(to,
     `Namaste! 🙏\n\nAppoint book karne ke liye apne salon ka *booking link* use karein.\n\n_Salon owner se WhatsApp booking link maangein aur us link se message karein_ 😊`
@@ -299,11 +314,21 @@ export default async function handler(req, res) {
 
     const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
     const isResetWord = text && resetWords.includes(text.toLowerCase());
+
+    // ✅ Step 1a: Exact keyword match
     const isKeyword = text && !isResetWord ? await getSalonByKeyword(text) : null;
 
-    // ✅ Step 1: Keyword aaya — curr_ session update karo
-    if (isKeyword) {
-      salon = isKeyword;
+    // ✅ Step 1b: Salon name match — booking link ke long text ke liye
+    // e.g. "Namaste! Main Groom It mein appointment book karna chahta hoon 🙏"
+    const isSalonName = (!isKeyword && text && !isResetWord)
+      ? await getSalonByName(text)
+      : null;
+
+    const effectiveMatch = isKeyword || isSalonName;
+
+    // ✅ Step 1: Keyword ya salon name aaya — curr_ session update karo
+    if (effectiveMatch) {
+      salon = effectiveMatch;
       await setSession(`curr_${from}`, "active", { salonId: salon.id });
       sKey = sessionKey(from, salon.id);
       session = await getSession(sKey);
@@ -321,8 +346,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ✅ Step 3: Salon nahi mila — NO FALLBACK to Style Adda
-    // Sirf no-link message bhejo
+    // ✅ Step 3: Salon nahi mila — no-link message
     if (!salon) {
       await sendNoLinkMessage(from);
       res.status(200).json({ status: "ok" });
@@ -354,8 +378,8 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Keyword → fresh start
-    if (isKeyword) {
+    // Keyword / salon name match → fresh start
+    if (effectiveMatch) {
       await clearSession(sKey);
       await sendMainMenu(from, salonName);
       res.status(200).json({ status: "ok" });
