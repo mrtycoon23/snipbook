@@ -15,17 +15,32 @@ export default async function handler(req, res) {
 
     console.log("send-welcome called:", { phoneWithCode, salonId, salonName });
 
-    // ✅ curr_ session set karo
+    // ✅ Pehle purani entry delete karo (both formats — with and without +)
+    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.curr_%2B${phoneWithCode}`, {
+      method: "DELETE",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+    });
+    await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions?phone=eq.curr_${phoneWithCode}`, {
+      method: "DELETE",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+    });
+
+    // ✅ Fresh insert — +91 format (webhook bhi isi format se read karta hai)
     const sessionRes = await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
       method: "POST",
       headers: {
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${SUPABASE_KEY}`,
         "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates",
       },
       body: JSON.stringify({
-        phone: `curr_${phoneWithCode}`,
+        phone: `curr_+${phoneWithCode}`,
         step: "active",
         data: { salonId },
         updated_at: new Date().toISOString(),
