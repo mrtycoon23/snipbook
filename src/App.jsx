@@ -482,7 +482,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const Toggle=SToggle;
 
   const rawNum = (wa.number||"").replace(/[^0-9]/g,"");
-  const bookingLink = `https://wa.me/${rawNum.startsWith("91") ? rawNum : "91"+rawNum}?text=${wa.botKeyword||"snipsalon"}`;
+  const bookingLink = `https://wa.me/${rawNum.startsWith("91") ? rawNum : "91"+rawNum}?text=${encodeURIComponent(`Namaste! Main ${profile.salonName} mein appointment book karna chahta hoon 🙏`)}`;
 
   if(loading) return <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#888"}}>Loading...</div>;
 
