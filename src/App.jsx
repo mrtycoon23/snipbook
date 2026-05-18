@@ -104,7 +104,6 @@ function SalonHeader({user, screen, onSettings, unreadCount=0, onBell}){
         <div style={{display:"flex",alignItems:"center",gap:5,background:"#e8fdf0",border:"1.5px solid #bbf7d0",borderRadius:20,padding:"4px 9px",fontSize:11,fontWeight:700,color:"#16a34a"}}>
           <div style={{width:6,height:6,borderRadius:"50%",background:"#22c55e"}}/>Bot ON
         </div>
-        {/* ✅ Bell notification icon */}
         <div onClick={onBell} style={{position:"relative",width:32,height:32,borderRadius:"50%",background:unreadCount>0?"#fff8e6":"#f8fafc",border:`2px solid ${unreadCount>0?"#fcd34d":"#e8edf3"}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
           <span style={{fontSize:15}}>🔔</span>
           {unreadCount>0&&<div style={{position:"absolute",top:-3,right:-3,width:16,height:16,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
@@ -117,7 +116,6 @@ function SalonHeader({user, screen, onSettings, unreadCount=0, onBell}){
   );
 }
 
-// ─── LANDING ──────────────────────────────────────────────────────────────────
 function Landing({onStart,onLogin}){
   const [email,setEmail]=useState(""); const [done,setDone]=useState(false);
   return(
@@ -174,7 +172,6 @@ function Landing({onStart,onLogin}){
   );
 }
 
-// ─── LOGIN PAGE ───────────────────────────────────────────────────────────────
 function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
   const [tab,setTab]=useState("owner");
   const [email,setEmail]=useState("");
@@ -188,10 +185,6 @@ function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
     try{
       let loginEmail = email.trim();
       if(!loginEmail.includes("@")){
-        const {data:salon}=await supabase.from("salons").select("id,owner_name,salon_name,city,plan,logo_url").eq("phone",loginEmail).single();
-        if(!salon){setError("Is number se koi account nahi mila!");setLoading(false);return;}
-        const {data:authData}=await supabase.from("salons").select("id").eq("id",salon.id).single();
-        if(!authData){setError("Account nahi mila!");setLoading(false);return;}
         setError("Phone login ke liye apna registered email use karo abhi.");
         setLoading(false);return;
       }
@@ -233,7 +226,7 @@ function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
                 {error&&<div style={{background:"#fff0f0",border:"2px solid #fca5a5",borderRadius:10,padding:"9px 12px",fontSize:12,color:"#dc2626",fontWeight:700,marginBottom:14}}>{error}</div>}
                 <div style={{marginBottom:14}}>
                   <label style={{fontSize:13,fontWeight:800,color:"#555"}}>Email</label>
-                  <input value={email} onChange={e=>setEmail(e.target.value)} type="text" style={obIs} placeholder="email@gmail.com ya phone number"/>
+                  <input value={email} onChange={e=>setEmail(e.target.value)} type="text" style={obIs} placeholder="email@gmail.com"/>
                 </div>
                 <div style={{marginBottom:18}}>
                   <label style={{fontSize:13,fontWeight:800,color:"#555"}}>Password</label>
@@ -255,7 +248,6 @@ function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
                 <button onClick={onStaffLogin} style={{width:"100%",padding:"14px",background:"#1a1a2e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer",boxShadow:"0 4px 14px rgba(0,0,0,0.2)"}}>
                   👨‍💼 Staff Login →
                 </button>
-
               </>
             )}
           </div>
@@ -268,10 +260,8 @@ function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
   );
 }
 
-// ─── ONBOARDING ───────────────────────────────────────────────────────────────
 const OB_STEPS=[{id:1,title:"Create Account",icon:"👤"},{id:2,title:"Salon Info",icon:"✂️"},{id:3,title:"Working Hours",icon:"🕐"},{id:4,title:"Services",icon:"💇"},{id:5,title:"WhatsApp",icon:"💬"},{id:6,title:"All Set!",icon:"🎉"}];
 
-// ✅ FIX: gender field added to DEF_SVCS
 const DEF_SVCS=[
   {id:1,emoji:"✂️",name:"Haircut",price:250,duration:30,active:true,gender:"male"},
   {id:2,emoji:"✂️",name:"Haircut + Beard",price:450,duration:45,active:true,gender:"male"},
@@ -368,12 +358,10 @@ function Onboarding({onComplete,onBack}){
   );
 }
 
-// ─── SETTINGS FIELD COMPONENT ─────────────────────────────────────────────────
 const SF=({label,hint,children})=>(<div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#444",marginBottom:hint?3:5}}>{label}</div>{hint&&<div style={{fontSize:11,color:"#aaa",marginBottom:5}}>{hint}</div>}{children}</div>);
 const SCard=({title,icon,children,np})=>(<div style={{background:"#fff",border:"2px solid #e8edf3",borderRadius:16,overflow:"hidden",marginBottom:12}}><div style={{padding:"12px 16px",borderBottom:"2px solid #f0f4f8",display:"flex",alignItems:"center",gap:9}}><div style={{width:32,height:32,borderRadius:10,background:"#e8fdf0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{icon}</div><div style={{fontWeight:900,fontSize:14}}>{title}</div></div><div style={np?{}:{padding:"14px 16px"}}>{children}</div></div>);
 const SToggle=({val,onChange})=>(<div onClick={onChange} style={{width:44,height:24,borderRadius:12,cursor:"pointer",background:val?"#22c55e":"#e8edf3",position:"relative",transition:"background 0.2s",flexShrink:0}}><div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:3,transition:"left 0.2s",left:val?"23px":"3px",boxShadow:"0 1px 4px rgba(0,0,0,0.15)"}}/></div>);
 
-// ─── SETTINGS ─────────────────────────────────────────────────────────────────
 function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const [tab,setTab]=useState("profile");
   const [saved,setSaved]=useState(false);
@@ -388,13 +376,13 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
     salonType:"unisex",
     address:"",
     mapsLink:"",
+    notifNumber:"",
   });
 
   const [logoUrl,setLogoUrl]=useState(user.logo_url||null);
   const [logoUploading,setLogoUploading]=useState(false);
   const logoFileRef=useRef(null);
 
-  // ✅ FIX: gender field in default services
   const [services,setServices]=useState([
     {id:1,emoji:"✂️",name:"Haircut",price:250,duration:30,active:true,gender:"male"},
     {id:2,emoji:"✂️",name:"Haircut + Beard",price:450,duration:45,active:true,gender:"male"},
@@ -404,12 +392,13 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   ]);
 
   const [hours,setHours]=useState({workDays:["Mon","Tue","Wed","Thu","Fri","Sat"],openTime:9,closeTime:21,slotDuration:30});
-  const [wa,setWa]=useState({number:"+91 98765 43210",autoReply:true,greeting:`🙏 Namaste! ${user.salon} mein aapka swagat hai!\n\n1️⃣ Appointment Book\n2️⃣ Services & Prices`,confirmMsg:"✅ Booking confirmed!\n\n👤 {name}\n💇 {service}\n📅 {date} at {time}\n\nSee you soon! 💈"});
+  const [wa,setWa]=useState({number:"+91 98765 43210",botKeyword:"snipsalon",autoReply:true,greeting:`🙏 Namaste! ${user.salon} mein aapka swagat hai!\n\n1️⃣ Appointment Book\n2️⃣ Services & Prices`,confirmMsg:"✅ Booking confirmed!\n\n👤 {name}\n💇 {service}\n📅 {date} at {time}\n\nSee you soon! 💈"});
   const [editId,setEditId]=useState(null);
   const [showAdd,setShowAdd]=useState(false);
-  const [openSection,setOpenSection]=useState(null); // null = dono band
-  // ✅ FIX: gender added to newSvc default state
+  const [openSection,setOpenSection]=useState(null);
   const [newSvc,setNewSvc]=useState({emoji:"✂️",name:"",price:"",duration:30,gender:"both"});
+  // ✅ Welcome message sending state
+  const [sendingWelcome,setSendingWelcome]=useState(false);
 
   const SETTING_TABS=[{id:"profile",icon:"🏪",label:"Salon"},{id:"services",icon:"💇",label:"Services"},{id:"hours",icon:"🕐",label:"Hours"},{id:"whatsapp",icon:"💬",label:"WhatsApp"},{id:"account",icon:"👤",label:"Account"}];
 
@@ -425,11 +414,13 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             city:salon.city||p.city,
             address:salon.address||"",
             mapsLink:salon.maps_link||"",
+            notifNumber:salon.notification_number||"",
           }));
           if(salon.services&&salon.services.length>0) setServices(salon.services);
           if(salon.working_days&&salon.working_days.length>0) setHours(h=>({...h,workDays:salon.working_days,openTime:salon.open_time||9,closeTime:salon.close_time||21}));
           if(salon.whatsapp_number) setWa(w=>({...w,number:salon.whatsapp_number}));
-          if(salon.notification_number) setProfile(p=>({...p,notifNumber:salon.notification_number}));
+          // ✅ bot_keyword load karo
+          if(salon.bot_keyword) setWa(w=>({...w,botKeyword:salon.bot_keyword}));
         }
       }catch(e){console.error("Load error:",e);}
       setLoading(false);
@@ -485,12 +476,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   function toggleSvc(id){setServices(p=>p.map(s=>s.id===id?{...s,active:!s.active}:s));}
   function updSvc(id,f,v){setServices(p=>p.map(s=>s.id===id?{...s,[f]:v}:s));}
   function delSvc(id){setServices(p=>p.filter(s=>s.id!==id));setEditId(null);}
-  function addSvc(){
-    if(!newSvc.name.trim())return;
-    setServices(p=>[...p,{id:Date.now(),emoji:newSvc.emoji,name:newSvc.name.trim(),price:parseInt(newSvc.price)||0,duration:newSvc.duration,active:true,gender:newSvc.gender||"both"}]);
-    setNewSvc({emoji:"✂️",name:"",price:"",duration:30,gender:"both"});
-    setShowAdd(false);
-  }
   function toggleDay(d){setHours(p=>({...p,workDays:p.workDays.includes(d)?p.workDays.filter(x=>x!==d):[...p.workDays,d]}));}
 
   const inputStyle={...is,marginTop:5};
@@ -499,8 +484,8 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const Card=SCard;
   const Toggle=SToggle;
 
-  // Gender label helper
-  const genderLabel=(g)=>g==="male"?"👨 Male":g==="female"?"👩 Female":"👥 Both";
+  // ✅ Booking link generate
+  const bookingLink = `https://wa.me/${(wa.number||"").replace(/[^0-9]/g,"")}?text=${wa.botKeyword||"snipsalon"}`;
 
   if(loading) return <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:"#888"}}>Loading...</div>;
 
@@ -533,7 +518,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             <F label="City"><input value={profile.city} onChange={e=>setProfile(p=>({...p,city:e.target.value}))} style={inputStyle}/></F>
             <F label="Address" hint="Customers ko WhatsApp pe yeh address dikhega"><input value={profile.address} onChange={e=>setProfile(p=>({...p,address:e.target.value}))} placeholder="e.g. Shop 12, MG Road, Delhi" style={inputStyle}/></F>
             <F label="Google Maps Link" hint="Paste karo apne salon ka Google Maps link"><input value={profile.mapsLink} onChange={e=>setProfile(p=>({...p,mapsLink:e.target.value}))} placeholder="https://maps.google.com/..." style={inputStyle}/></F>
-            <F label="Owner Notification Number" hint="Is number pe booking notification aayegi (apna personal number)"><input value={profile.notifNumber||""} onChange={e=>setProfile(p=>({...p,notifNumber:e.target.value}))} placeholder="e.g. 919876543210" style={inputStyle}/></F>
+            <F label="Owner Notification Number" hint="Is number pe booking notification aayegi"><input value={profile.notifNumber||""} onChange={e=>setProfile(p=>({...p,notifNumber:e.target.value}))} placeholder="e.g. 919876543210" style={inputStyle}/></F>
             <F label="Salon Type"><select value={profile.salonType} onChange={e=>setProfile(p=>({...p,salonType:e.target.value}))} style={selStyle}><option value="unisex">💇 Unisex</option><option value="mens">💈 Men's Salon</option><option value="ladies">💄 Ladies Parlour</option><option value="bridal">👰 Bridal Studio</option></select></F>
           </Card>
 
@@ -556,7 +541,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             const isOpen       = openSection === genderSection;
             return(
               <div key={genderSection} style={{background:"#fff",border:`2px solid ${isOpen?sectionColor:sectionBorder}`,borderRadius:16,overflow:"hidden",marginBottom:12,transition:"all 0.2s"}}>
-                {/* ✅ Clickable header — click se open/close */}
                 <div onClick={()=>{setOpenSection(isOpen?null:genderSection);setShowAdd(false);setEditId(null);}} style={{padding:"14px 16px",background:isOpen?sectionBg:"#fff",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",transition:"background 0.2s"}}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <div style={{fontWeight:900,fontSize:14,color:isOpen?sectionColor:"#1a1a2e"}}>{sectionLabel}</div>
@@ -564,7 +548,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
                   </div>
                   <div style={{fontSize:16,color:isOpen?sectionColor:"#aaa",transition:"transform 0.2s",transform:isOpen?"rotate(180deg)":"rotate(0deg)"}}>⌄</div>
                 </div>
-                {/* ✅ Content — sirf tab dikhao jab open ho */}
                 {isOpen&&<>
                 {sectionSvcs.map(s=>(<div key={s.id}>{editId===s.id?(
                   <div style={{padding:"13px 14px",borderBottom:"2px solid #f0f4f8",background:"#f8fafc"}}>
@@ -640,8 +623,55 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
         </>)}
 
         {tab==="whatsapp"&&(<>
-          <Card title="WhatsApp Number" icon="📱"><F label="WhatsApp Business Number"><input value={wa.number} onChange={e=>setWa(p=>({...p,number:e.target.value}))} style={inputStyle}/></F><button style={{width:"100%",padding:"11px",background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:11,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📲 Send Test Message</button></Card>
-          <Card title="Bot Messages" icon="💬"><F label="Greeting Message"><textarea value={wa.greeting} onChange={e=>setWa(p=>({...p,greeting:e.target.value}))} rows={4} style={{...is,marginTop:5,resize:"vertical",lineHeight:1.6}}/></F><F label="Confirmation Message"><textarea value={wa.confirmMsg} onChange={e=>setWa(p=>({...p,confirmMsg:e.target.value}))} rows={5} style={{...is,marginTop:5,resize:"vertical",lineHeight:1.6}}/></F></Card>
+          <Card title="WhatsApp Number" icon="📱">
+            <F label="WhatsApp Business Number">
+              <input value={wa.number} onChange={e=>setWa(p=>({...p,number:e.target.value}))} style={inputStyle}/>
+            </F>
+            <button style={{width:"100%",padding:"11px",background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:11,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>
+              📲 Send Test Message
+            </button>
+          </Card>
+
+          {/* ✅ Booking Link + QR Code Card */}
+          <Card title="Booking Link & QR Code" icon="🔗">
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:4}}>Bot Keyword</div>
+              <input value={wa.botKeyword||""} onChange={e=>setWa(p=>({...p,botKeyword:e.target.value}))} placeholder="e.g. snipsalon" style={inputStyle}/>
+              <div style={{fontSize:11,color:"#aaa",marginTop:4}}>Customers yeh word type karke aapke salon ka bot open karenge</div>
+            </div>
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:6}}>Customer Booking Link</div>
+              <div style={{background:"#f8fafc",border:"2px solid #e8edf3",borderRadius:11,padding:"10px 12px",fontSize:11,color:"#1a1a2e",fontWeight:700,wordBreak:"break-all",marginBottom:8,lineHeight:1.5}}>
+                {bookingLink}
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>{
+                  navigator.clipboard.writeText(bookingLink);
+                  alert("✅ Link copy ho gaya!");
+                }} style={{flex:1,padding:"10px",background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:10,color:"#16a34a",fontFamily:"inherit",fontSize:12,fontWeight:800,cursor:"pointer"}}>
+                  📋 Copy Link
+                </button>
+                <button onClick={()=>{
+                  const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(bookingLink)}`;
+                  window.open(qrUrl,"_blank");
+                }} style={{flex:1,padding:"10px",background:"#eff6ff",border:"2px solid #93c5fd",borderRadius:10,color:"#2563eb",fontFamily:"inherit",fontSize:12,fontWeight:800,cursor:"pointer"}}>
+                  📷 Download QR
+                </button>
+              </div>
+            </div>
+            <div style={{background:"#fef9c3",border:"2px solid #fde68a",borderRadius:10,padding:"10px 12px",fontSize:11,color:"#92400e",fontWeight:700,lineHeight:1.5}}>
+              💡 Yeh link customers ko bhejo ya QR code print karke salon mein lagao. Customer ek click mein booking kar payega!
+            </div>
+          </Card>
+
+          <Card title="Bot Messages" icon="💬">
+            <F label="Greeting Message">
+              <textarea value={wa.greeting} onChange={e=>setWa(p=>({...p,greeting:e.target.value}))} rows={4} style={{...is,marginTop:5,resize:"vertical",lineHeight:1.6}}/>
+            </F>
+            <F label="Confirmation Message">
+              <textarea value={wa.confirmMsg} onChange={e=>setWa(p=>({...p,confirmMsg:e.target.value}))} rows={5} style={{...is,marginTop:5,resize:"vertical",lineHeight:1.6}}/>
+            </F>
+          </Card>
         </>)}
 
         {tab==="account"&&(<>
@@ -671,7 +701,6 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   );
 }
 
-// ─── STAFF SALON ENTRY ────────────────────────────────────────────────────────
 function StaffSalonEntry({onFound,onBack}){
   const [phone,setPhone]=useState("");
   const [pin,setPin]=useState("");
@@ -684,8 +713,8 @@ function StaffSalonEntry({onFound,onBack}){
     setLoading(true);setError("");
     try{
       const {data:staffData}=await supabase.from("staff").select("*").eq("phone",phone.trim()).single();
-      if(!staffData){setError("Is number se koi staff nahi mila! Owner se check karo.");setLoading(false);return;}
-      if(staffData.pin!==pin){setError("PIN galat hai! Dobara try karo.");setPin("");setLoading(false);return;}
+      if(!staffData){setError("Is number se koi staff nahi mila!");setLoading(false);return;}
+      if(staffData.pin!==pin){setError("PIN galat hai!");setPin("");setLoading(false);return;}
       onFound(staffData);
     }catch(e){
       setError("Koi staff nahi mila is number se!");
@@ -704,11 +733,11 @@ function StaffSalonEntry({onFound,onBack}){
         <div style={{fontSize:13,color:"#888",marginBottom:20}}>Apna phone number aur PIN daalo</div>
         <div style={{marginBottom:14}}>
           <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:6}}>Apna Phone Number</div>
-          <input style={IS2} placeholder="e.g. 9876543210" value={phone} onChange={e=>setPhone(e.target.value.replace(/\D/g,"").slice(0,10))} onKeyDown={e=>e.key==="Enter"&&handleLogin()} onFocus={e=>e.target.style.borderColor="#22c55e"} onBlur={e=>e.target.style.borderColor="#e8edf3"} autoFocus/>
+          <input style={IS2} placeholder="e.g. 9876543210" value={phone} onChange={e=>setPhone(e.target.value.replace(/\D/g,"").slice(0,10))} onKeyDown={e=>e.key==="Enter"&&handleLogin()} autoFocus/>
         </div>
         <div style={{marginBottom:18}}>
           <div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:6}}>4-digit PIN</div>
-          <input style={IS2} type="password" placeholder="••••" maxLength={4} value={pin} onChange={e=>{setPin(e.target.value);setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()} onFocus={e=>e.target.style.borderColor="#22c55e"} onBlur={e=>e.target.style.borderColor="#e8edf3"}/>
+          <input style={IS2} type="password" placeholder="••••" maxLength={4} value={pin} onChange={e=>{setPin(e.target.value);setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
         </div>
         {error&&<div style={{background:"#fff0f0",border:"1.5px solid #fca5a5",borderRadius:9,padding:"9px 12px",marginBottom:14,fontSize:12,color:"#dc2626",fontWeight:600}}>⚠️ {error}</div>}
         <button onClick={handleLogin} style={{width:"100%",padding:"13px",background:loading?"#86efac":"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer",marginBottom:12}}>
@@ -720,7 +749,6 @@ function StaffSalonEntry({onFound,onBack}){
   );
 }
 
-// ─── NAV ─────────────────────────────────────────────────────────────────────
 const NAV=[
   {id:"dashboard", icon:"🏠", label:"Home"},
   {id:"calendar",  icon:"📅", label:"Calendar"},
@@ -731,11 +759,10 @@ const NAV=[
   {id:"settings",  icon:"⚙️", label:"Settings"},
 ];
 
-// ─── MAIN OWNER APP ───────────────────────────────────────────────────────────
 function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [screen,setScreen]=useState("dashboard");
   const [bookings,setBookings]=useState(user?.id==="demo" ? seedBookings : {});
-  const today=new Date(); // ✅ Real today
+  const today=new Date();
   const todayKey=dateKey(today);
   const dayData=bookings[todayKey]||{};
   const booked=Object.values(dayData).filter(b=>b.status!=="break").length;
@@ -747,14 +774,12 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [notifications,setNotifications]=useState([]);
   const [unreadCount,setUnreadCount]=useState(0);
 
-  // ✅ Load recent bookings as notifications
   useEffect(()=>{
     async function loadNotifications(){
       try{
         const {data}=await supabase.from("appointments").select("*").eq("salon_id",user.id).eq("status","confirmed").order("created_at",{ascending:false}).limit(10);
         if(data&&data.length>0){
           setNotifications(data);
-          // Last seen time se compare karo
           const lastSeen = localStorage.getItem(`notif_seen_${user.id}`) || "0";
           const unseen = data.filter(a=>new Date(a.created_at)>new Date(lastSeen));
           setUnreadCount(unseen.length);
@@ -762,14 +787,12 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       }catch(e){console.error("notif error",e);}
     }
     loadNotifications();
-    // Har 30 sec mein refresh
     const interval = setInterval(loadNotifications, 30000);
     return ()=>clearInterval(interval);
   },[user.id]);
 
   function handleBell(){
     setShowNotifs(v=>!v);
-    // Mark as seen
     localStorage.setItem(`notif_seen_${user.id}`, new Date().toISOString());
     setUnreadCount(0);
   }
@@ -796,13 +819,11 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   useEffect(()=>{
     async function loadBookings(){
       try{
-        const {data,error}=await supabase.from("appointments").select("*").eq("salon_id",user.id);
-        console.log("Bookings loaded:", data?.length, error);
+        const {data}=await supabase.from("appointments").select("*").eq("salon_id",user.id);
         if(data&&data.length>0){
           const bk={};
           data.forEach(a=>{
             if(!bk[a.date])bk[a.date]={};
-            // ✅ time_slot format check — "12:30" ya "12:30 PM" dono handle karo
             const slot = a.time_slot?.includes(" ") ? a.time_slot.split(" ")[0] : a.time_slot;
             if(slot){
               bk[a.date][slot]={
@@ -815,8 +836,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
               };
             }
           });
-          console.log("Bookings data:", JSON.stringify(bk).slice(0,200));
-          setBookings(bk); // ✅ prev spread nahi — fresh set karo
+          setBookings(bk);
         }
       }catch(e){console.error("loadBookings error:",e);}
     }
@@ -843,8 +863,10 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [cFilter,setCFilter]=useState("All");
   const [showAddClient,setShowAddClient]=useState(false);
   const [newClient,setNewClient]=useState({name:"",phone:"",city:"",dob:"",tag:"Regular",gender:"male"});
-  const [editClient,setEditClient]=useState(null); // editing client data
+  const [editClient,setEditClient]=useState(null);
   const [showEditClient,setShowEditClient]=useState(false);
+  // ✅ Welcome message sending state
+  const [welcomeSending,setWelcomeSending]=useState(false);
 
   useEffect(()=>{
     async function loadClients(){
@@ -928,9 +950,40 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             <div style={{flex:1,overflowY:"auto",padding:"12px 14px"}}>
               {filtC.map(c=>{const tag=TAG[c.tag]||TAG.New;return(<div key={c.id} onClick={()=>setSelClient(c)} style={{background:"#fff",border:"2px solid #e8edf3",borderRadius:14,padding:"13px",cursor:"pointer",marginBottom:9}} onMouseOver={e=>e.currentTarget.style.borderColor="#22c55e"} onMouseOut={e=>e.currentTarget.style.borderColor="#e8edf3"}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}><div style={{width:40,height:40,borderRadius:12,background:c.color+"22",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:14,color:c.color,flexShrink:0}}>{c.avatar}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14}}>{c.name}</div><div style={{fontSize:11,color:"#888",marginTop:2}}>📍 {c.city||"—"} · {c.src==="wa"?"💬 WA":"🚶 Walk-in"}</div></div><div style={{background:tag.bg,color:tag.color,border:`1.5px solid ${tag.border}`,fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:20}}>{c.tag==="VIP"?"⭐ VIP":c.tag}</div></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>{[{label:"Visits",val:c.visits||0},{label:"Spent",val:`₹${(c.totalSpent||0).toLocaleString()}`},{label:"Last Visit",val:c.lastVisit||"—"}].map(s=>(<div key={s.label} style={{background:"#f8fafc",borderRadius:9,padding:"7px",textAlign:"center"}}><div style={{fontWeight:900,fontSize:13}}>{s.val}</div><div style={{fontSize:9,color:"#aaa",fontWeight:700,marginTop:1}}>{s.label}</div></div>))}</div></div>);})}
             </div>
-            {selClient&&(<div onClick={()=>setSelClient(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"80vh",overflowY:"auto"}}><div style={{width:36,height:4,background:"#e8edf3",borderRadius:2,margin:"0 auto 14px"}}/><div style={{display:"flex",gap:12,alignItems:"center",marginBottom:14}}><div style={{width:48,height:48,borderRadius:14,background:selClient.color+"22",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:17,color:selClient.color}}>{selClient.avatar}</div><div><div style={{fontWeight:900,fontSize:16}}>{selClient.name}</div><div style={{fontSize:12,color:"#888"}}>📱 {selClient.phone} · {selClient.city||"—"}</div></div></div><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>{[{icon:"🔁",val:selClient.visits||0,label:"Visits"},{icon:"💸",val:`₹${(selClient.totalSpent||0).toLocaleString()}`,label:"Total"},{icon:"📅",val:selClient.lastVisit||"—",label:"Last Visit"}].map(s=>(<div key={s.label} style={{background:"#f8fafc",borderRadius:11,padding:"10px",textAlign:"center"}}><div style={{fontSize:16,marginBottom:3}}>{s.icon}</div><div style={{fontWeight:900,fontSize:13}}>{s.val}</div><div style={{fontSize:10,color:"#aaa",fontWeight:700}}>{s.label}</div></div>))}</div><div style={{display:"flex",gap:8,marginBottom:12}}><button onClick={()=>{setScreen("calendar");setSelClient(null);}} style={{flex:1,padding:"11px",background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📅 Book Now</button><button style={{flex:1,padding:"11px",background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>💬 WhatsApp</button></div>
-                  <button onClick={()=>{setEditClient({...selClient});setShowEditClient(true);}} style={{width:"100%",padding:"11px",background:"#fff",border:"2px solid #e8edf3",borderRadius:12,color:"#555",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8}}>✏️ Edit Profile</button><div style={{fontWeight:800,fontSize:13,color:"#555",marginBottom:9}}>📋 Visit History</div>{(selClient.history||[]).map((h,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 11px",background:"#f8fafc",borderRadius:10,marginBottom:6,border:"2px solid #f0f4f8"}}><div style={{width:7,height:7,borderRadius:"50%",background:selClient.color,flexShrink:0}}/><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13}}>{h.service}</div><div style={{fontSize:11,color:"#aaa"}}>{h.date}</div></div><div style={{fontWeight:800,fontSize:13,color:"#16a34a"}}>₹{h.price}</div></div>))}</div></div>)}
-            {/* ✅ Edit Client Modal */}
+
+            {/* ✅ Client Detail Modal */}
+            {selClient&&(<div onClick={()=>setSelClient(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"80vh",overflowY:"auto"}}><div style={{width:36,height:4,background:"#e8edf3",borderRadius:2,margin:"0 auto 14px"}}/><div style={{display:"flex",gap:12,alignItems:"center",marginBottom:14}}><div style={{width:48,height:48,borderRadius:14,background:selClient.color+"22",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:17,color:selClient.color}}>{selClient.avatar}</div><div><div style={{fontWeight:900,fontSize:16}}>{selClient.name}</div><div style={{fontSize:12,color:"#888"}}>📱 {selClient.phone} · {selClient.city||"—"}</div></div></div><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>{[{icon:"🔁",val:selClient.visits||0,label:"Visits"},{icon:"💸",val:`₹${(selClient.totalSpent||0).toLocaleString()}`,label:"Total"},{icon:"📅",val:selClient.lastVisit||"—",label:"Last Visit"}].map(s=>(<div key={s.label} style={{background:"#f8fafc",borderRadius:11,padding:"10px",textAlign:"center"}}><div style={{fontSize:16,marginBottom:3}}>{s.icon}</div><div style={{fontWeight:900,fontSize:13}}>{s.val}</div><div style={{fontSize:10,color:"#aaa",fontWeight:700}}>{s.label}</div></div>))}</div>
+              <div style={{display:"flex",gap:8,marginBottom:12}}>
+                <button onClick={()=>{setScreen("calendar");setSelClient(null);}} style={{flex:1,padding:"11px",background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📅 Book Now</button>
+                {/* ✅ Welcome Message Button */}
+                <button onClick={async()=>{
+                  if(!selClient?.phone)return;
+                  setWelcomeSending(true);
+                  try{
+                    const res=await fetch("/api/send-welcome",{
+                      method:"POST",
+                      headers:{"Content-Type":"application/json"},
+                      body:JSON.stringify({
+                        customerPhone:selClient.phone,
+                        customerName:selClient.name,
+                        salonId:user.id,
+                        salonName:user.salon,
+                      })
+                    });
+                    if(res.ok)alert(`✅ Welcome message bhej diya ${selClient.name} ko!\n\nAb woh seedha "Hi" type karenge toh ${user.salon} ka bot khulega.`);
+                    else alert("❌ Message send nahi hua. Phone number check karo.");
+                  }catch(e){alert("Error: "+e.message);}
+                  setWelcomeSending(false);
+                }} style={{flex:1,padding:"11px",background:welcomeSending?"#f0f4f8":"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:welcomeSending?"not-allowed":"pointer"}}>
+                  {welcomeSending?"Sending...":"💬 Welcome Msg"}
+                </button>
+              </div>
+              <button onClick={()=>{setEditClient({...selClient});setShowEditClient(true);}} style={{width:"100%",padding:"11px",background:"#fff",border:"2px solid #e8edf3",borderRadius:12,color:"#555",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8}}>✏️ Edit Profile</button>
+              <div style={{fontWeight:800,fontSize:13,color:"#555",marginBottom:9}}>📋 Visit History</div>
+              {(selClient.history||[]).map((h,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 11px",background:"#f8fafc",borderRadius:10,marginBottom:6,border:"2px solid #f0f4f8"}}><div style={{width:7,height:7,borderRadius:"50%",background:selClient.color,flexShrink:0}}/><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13}}>{h.service}</div><div style={{fontSize:11,color:"#aaa"}}>{h.date}</div></div><div style={{fontWeight:800,fontSize:13,color:"#16a34a"}}>₹{h.price}</div></div>))}
+            </div></div>)}
+
+            {/* Edit Client Modal */}
             {showEditClient&&editClient&&(
               <div onClick={()=>setShowEditClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}>
                 <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
@@ -943,14 +996,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                     <button onClick={()=>setShowEditClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e8edf3",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button>
                     <button onClick={async()=>{
                       if(!editClient.name.trim())return;
-                      await supabase.from("customers").update({
-                        name:editClient.name.trim(),
-                        phone:editClient.phone||"",
-                        city:editClient.city||"",
-                        birthday:editClient.dob||null,
-                        tag:editClient.tag||"Regular",
-                        gender:editClient.gender||"male",
-                      }).eq("id",editClient.id);
+                      await supabase.from("customers").update({name:editClient.name.trim(),phone:editClient.phone||"",city:editClient.city||"",birthday:editClient.dob||null,tag:editClient.tag||"Regular",gender:editClient.gender||"male"}).eq("id",editClient.id);
                       setClients(prev=>prev.map(c=>c.id===editClient.id?{...c,...editClient,name:editClient.name.trim()}:c));
                       setSelClient(prev=>prev?{...prev,...editClient,name:editClient.name.trim()}:null);
                       setShowEditClient(false);
@@ -960,6 +1006,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
               </div>
             )}
 
+            {/* Add Client Modal */}
             {showAddClient&&(
               <div onClick={()=>setShowAddClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}>
                 <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
@@ -968,20 +1015,18 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                   {[{label:"Full Name *",key:"name",ph:"e.g. Priya Sharma",type:"text"},{label:"Phone Number *",key:"phone",ph:"98765 43210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:4}}>{f.label}</div><input type={f.type} value={newClient[f.key]} onChange={e=>setNewClient(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={{...is}} onFocus={e=>e.target.style.borderColor="#22c55e"} onBlur={e=>e.target.style.borderColor="#e8edf3"}/></div>))}
                   <div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.gender===g.id?"#22c55e":"#e8edf3"}`,background:newClient.gender===g.id?"#e8fdf0":"#fff",color:newClient.gender===g.id?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div>
                   <div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setNewClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.tag===t?"#22c55e":"#e8edf3"}`,background:newClient.tag===t?"#e8fdf0":"#fff",color:newClient.tag===t?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t==="VIP"?"⭐ VIP":t}</button>))}</div></div>
-                  <div style={{marginBottom:14}}><div style={{fontSize:13,fontWeight:800,color:"#555",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${(newClient.gender||"male")===g.id?"#22c55e":"#e8edf3"}`,background:(newClient.gender||"male")===g.id?"#e8fdf0":"#fff",color:(newClient.gender||"male")===g.id?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div>
                   <div style={{display:"flex",gap:10}}>
                     <button onClick={()=>setShowAddClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e8edf3",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button>
                     <button onClick={async()=>{
-                      if(!newClient.name.trim()||!newClient.phone.trim()||!newClient.dob)return;
-                      if(!/^\d{10}$/.test(newClient.phone.replace(/\s/g,"")))return;
-                      await supabase.from("customers").insert({salon_id:user.id,name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"",tag:newClient.tag,source:"walk",birthday:newClient.dob,gender:newClient.gender||"male"});
+                      if(!newClient.name.trim()||!newClient.phone.trim())return;
+                      await supabase.from("customers").insert({salon_id:user.id,name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"",tag:newClient.tag,source:"walk",birthday:newClient.dob||null,gender:newClient.gender||"male"});
                       const ini=newClient.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
                       const cols=["#22c55e","#3b82f6","#a855f7","#f59e0b","#14b8a6","#ec4899"];
                       const col=cols[Math.floor(Math.random()*cols.length)];
                       setClients(prev=>[{id:Date.now(),name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"—",src:"walk",avatar:ini,color:col,joined:new Date().toLocaleDateString("en-IN",{month:"short",year:"numeric"}),visits:0,totalSpent:0,lastVisit:"—",tag:newClient.tag,dob:newClient.dob||"",history:[]},...prev]);
-                      setNewClient({name:"",phone:"",city:"",dob:"",tag:"Regular"});
+                      setNewClient({name:"",phone:"",city:"",dob:"",tag:"Regular",gender:"male"});
                       setShowAddClient(false);
-                    }} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:newClient.name.trim()&&/^\d{10}$/.test(newClient.phone.replace(/\s/g,""))&&newClient.dob?"#22c55e":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>✓ Save Customer</button>
+                    }} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:newClient.name.trim()&&newClient.phone.trim()?"#22c55e":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>✓ Save Customer</button>
                   </div>
                 </div>
               </div>
@@ -1028,7 +1073,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
           </div>
         );})}
       </div>
-      {/* ✅ Notification Drawer */}
+
+      {/* Notification Drawer */}
       {showNotifs&&(
         <div onClick={()=>setShowNotifs(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-start",justifyContent:"flex-end"}}>
           <div onClick={e=>e.stopPropagation()} style={{background:"#fff",width:"90%",maxWidth:360,height:"100vh",overflowY:"auto",boxShadow:"-4px 0 20px rgba(0,0,0,0.15)"}}>
@@ -1061,7 +1107,6 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   );
 }
 
-// ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function SnipBook(){
   const [page,setPage]=useState("loading");
   const [user,setUser]=useState(null);
@@ -1069,7 +1114,6 @@ export default function SnipBook(){
   const [showRevenue,setShowRevenue]=useState(DEFAULT_SHOW_REVENUE);
 
   useEffect(()=>{
-    // ✅ Check staff session first
     const savedStaff = localStorage.getItem("snipbook_staff");
     if(savedStaff){
       try{
@@ -1116,7 +1160,6 @@ export default function SnipBook(){
       <div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#f0fdf4,#f0f4f8)",fontFamily:"system-ui,sans-serif"}}>
         <Logo size={20} iconSize={48}/>
         <div style={{marginTop:20,fontSize:13,color:"#888",fontWeight:700}}>Loading...</div>
-        <style>{`@keyframes load{0%{width:0%}100%{width:100%}}`}</style>
       </div>
     );
   }
@@ -1124,9 +1167,7 @@ export default function SnipBook(){
   return(
     <>
       {page==="landing"&&<Landing onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}
-      {page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{
-        setPage("staffSalonEntry");
-      }} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}
+      {page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{ setPage("staffSalonEntry"); }} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}
       {page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{
         const sd = {...staffData,salon_id:staffData.salon_id};
         setStaffUser(sd);
