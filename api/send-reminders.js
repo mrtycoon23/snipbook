@@ -45,7 +45,7 @@ export default async function handler(req, res) {
       let phone = apt.customer_phone.replace(/\D/g, '');
       if (phone.length === 10) phone = '91' + phone;
 
-      const salonName = apt.salons?.name || 'Salon';
+      const salonName = apt.salons?.salon_name || 'Salon';
       const message = `🔔 *Reminder!*\n\nAapka appointment *${salonName}* mein aaj *${apt.time_slot}* baje hai.\n\nService: ${apt.service}\n\nTime pe aa jaana! 😊`;
 
       try {
