@@ -1,5 +1,8 @@
 {
-  "rewrites": [
-    { "source": "/privacy", "destination": "/api/privacy" }
+  "crons": [
+    {
+      "path": "/api/send-reminders",
+      "schedule": "*/30 * * * *"
+    }
   ]
 }
