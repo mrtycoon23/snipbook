@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     // Appointments fetch karo
     const { data: appointments, error } = await supabase
       .from('appointments')
-      .select('*, salons(name)')
+      .select('*, salons(salon_name)')
       .eq('date', todayDate)
       .eq('status', 'confirmed')
       .gte('time_slot', fromTime)
