@@ -8,19 +8,23 @@ const supabase = createClient(
 export default async function handler(req, res) {
   try {
     const now = new Date();
-    
+
     // 1 hour window: 55 min se 65 min ke beech
     const from = new Date(now.getTime() + 55 * 60 * 1000);
     const to = new Date(now.getTime() + 65 * 60 * 1000);
 
-    const todayDate = now.toISOString().split('T')[0]; // "2026-05-19"
+    // IST = UTC + 5:30 (330 minutes)
+    const fromIST = new Date(from.getTime() + 330 * 60 * 1000);
+    const toIST = new Date(to.getTime() + 330 * 60 * 1000);
 
-    // Time strings banana
     const pad = (n) => String(n).padStart(2, '0');
-    const fromTime = `${pad(from.getHours())}:${pad(from.getMinutes())}`;
-    const toTime = `${pad(to.getHours())}:${pad(to.getMinutes())}`;
+    const fromTime = `${pad(fromIST.getHours())}:${pad(fromIST.getMinutes())}`;
+    const toTime = `${pad(toIST.getHours())}:${pad(toIST.getMinutes())}`;
 
-    // Appointments fetch karo
+    // IST date
+    const nowIST = new Date(now.getTime() + 330 * 60 * 1000);
+    const todayDate = nowIST.toISOString().split('T')[0];
+
     const { data: appointments, error } = await supabase
       .from('appointments')
       .select('*, salons(salon_name)')
@@ -41,7 +45,6 @@ export default async function handler(req, res) {
     for (const apt of appointments) {
       if (!apt.customer_phone) continue;
 
-      // Phone format fix
       let phone = apt.customer_phone.replace(/\D/g, '');
       if (phone.length === 10) phone = '91' + phone;
 
@@ -72,15 +75,14 @@ export default async function handler(req, res) {
         failed++;
       }
 
-      // Rate limit avoid karo
       await new Promise(r => setTimeout(r, 300));
     }
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       message: 'Reminders processed',
-      sent, 
+      sent,
       failed,
-      total: appointments.length 
+      total: appointments.length
     });
 
   } catch (err) {
