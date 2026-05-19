@@ -502,21 +502,29 @@ export default async function handler(req, res) {
 
     if (step === "confirm" && interactiveId === "confirm_yes") {
 
-      // ✅ Double booking check
-      const dupCheck = await fetch(
-        `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${SALON_ID}&customer_phone=eq.%2B${from}&date=eq.${data.date}&status=eq.confirmed`,
-        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-      );
-      const dupData = await dupCheck.json();
-      if (dupData && dupData.length > 0) {
-        await clearSession(sKey);
-        await sendButtons(from,
-          `⚠️ *Aapki is din pehle se appointment hai!*\n\n📅 ${formatDate(data.date)} ko *${formatTime12(dupData[0].time_slot)}* baje\n✂️ ${dupData[0].service}\n\nEk din mein ek hi appointment ho sakti hai.`,
-          [{ id: "main_menu", title: "🏠 Main Menu" }]
+      // ✅ Double booking check — fetch all appointments for that day and filter in JS
+      try {
+        const dupR = await fetch(
+          `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${SALON_ID}&date=eq.${data.date}&status=eq.confirmed`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
         );
-        res.status(200).json({ status: "ok" });
-        return;
-      }
+        const dupAll = await dupR.json();
+        const fromClean = from.replace(/^\+/, "");
+        const dupFound = (dupAll || []).find(a => {
+          const phone = (a.customer_phone || "").replace(/^\+/, "");
+          return phone === fromClean;
+        });
+
+        if (dupFound) {
+          await clearSession(sKey);
+          await sendButtons(from,
+            `⚠️ *Aapki is din pehle se appointment hai!*\n\n📅 ${formatDate(data.date)} ko *${formatTime12(dupFound.time_slot)}* baje\n✂️ ${dupFound.service}\n\nEk din mein ek hi appointment ho sakti hai.`,
+            [{ id: "main_menu", title: "🏠 Main Menu" }]
+          );
+          res.status(200).json({ status: "ok" });
+          return;
+        }
+      } catch(e) { console.error("Dup check error:", e.message); }
 
       try {
         const custCheck = await fetch(
