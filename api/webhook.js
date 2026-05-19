@@ -158,7 +158,6 @@ async function getSalonByPhone(phone) {
   } catch(e) { return null; }
 }
 
-// ✅ Salon name se match karo — booking link ke long text ke liye
 async function getSalonByName(text) {
   if (!text) return null;
   try {
@@ -315,18 +314,10 @@ export default async function handler(req, res) {
     const resetWords = ["hi","hello","hii","hey","namaste","menu","start","wapas","back","helo","namaskar"];
     const isResetWord = text && resetWords.includes(text.toLowerCase());
 
-    // ✅ Step 1a: Exact keyword match
     const isKeyword = text && !isResetWord ? await getSalonByKeyword(text) : null;
-
-    // ✅ Step 1b: Salon name match — booking link ke long text ke liye
-    // e.g. "Namaste! Main Groom It mein appointment book karna chahta hoon 🙏"
-    const isSalonName = (!isKeyword && text && !isResetWord)
-      ? await getSalonByName(text)
-      : null;
-
+    const isSalonName = (!isKeyword && text && !isResetWord) ? await getSalonByName(text) : null;
     const effectiveMatch = isKeyword || isSalonName;
 
-    // ✅ Step 1: Keyword ya salon name aaya — curr_ session update karo
     if (effectiveMatch) {
       salon = effectiveMatch;
       await setSession(`curr_${from}`, "active", { salonId: salon.id });
@@ -334,7 +325,6 @@ export default async function handler(req, res) {
       session = await getSession(sKey);
     }
 
-    // ✅ Step 2: curr_ session se salonId lo — PERMANENT
     if (!salon) {
       const currSession = await getSession(`curr_${from}`);
       if (currSession?.data?.salonId) {
@@ -346,7 +336,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // ✅ Step 3: Salon nahi mila — no-link message
     if (!salon) {
       await sendNoLinkMessage(from);
       res.status(200).json({ status: "ok" });
@@ -370,7 +359,6 @@ export default async function handler(req, res) {
 
     console.log("Salon:", salonName, "SALON_ID:", SALON_ID, "Step:", step);
 
-    // Reset word
     if (isResetWord) {
       await clearSession(sKey);
       await sendMainMenu(from, salonName);
@@ -378,7 +366,6 @@ export default async function handler(req, res) {
       return;
     }
 
-    // Keyword / salon name match → fresh start
     if (effectiveMatch) {
       await clearSession(sKey);
       await sendMainMenu(from, salonName);
@@ -514,6 +501,23 @@ export default async function handler(req, res) {
     }
 
     if (step === "confirm" && interactiveId === "confirm_yes") {
+
+      // ✅ Double booking check
+      const dupCheck = await fetch(
+        `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${SALON_ID}&customer_phone=eq.${from}&date=eq.${data.date}&status=eq.confirmed`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const dupData = await dupCheck.json();
+      if (dupData && dupData.length > 0) {
+        await clearSession(sKey);
+        await sendButtons(from,
+          `⚠️ *Aapki is din pehle se appointment hai!*\n\n📅 ${formatDate(data.date)} ko *${formatTime12(dupData[0].time_slot)}* baje\n✂️ ${dupData[0].service}\n\nEk din mein ek hi appointment ho sakti hai.`,
+          [{ id: "main_menu", title: "🏠 Main Menu" }]
+        );
+        res.status(200).json({ status: "ok" });
+        return;
+      }
+
       try {
         const custCheck = await fetch(
           `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&limit=1`,
