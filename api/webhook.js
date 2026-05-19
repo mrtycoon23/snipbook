@@ -504,7 +504,7 @@ export default async function handler(req, res) {
 
       // ✅ Double booking check
       const dupCheck = await fetch(
-        `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${SALON_ID}&customer_phone=eq.${from}&date=eq.${data.date}&status=eq.confirmed`,
+        `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${SALON_ID}&customer_phone=eq.%2B${from}&date=eq.${data.date}&status=eq.confirmed`,
         { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
       );
       const dupData = await dupCheck.json();
