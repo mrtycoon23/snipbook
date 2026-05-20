@@ -30,6 +30,7 @@ export default async function handler(req, res) {
       .select('*, salons(salon_name)')
       .eq('date', todayDate)
       .eq('status', 'confirmed')
+      .eq('reminder_sent', false)          // ✅ ADDED — already sent wale skip
       .gte('time_slot', fromTime)
       .lte('time_slot', toTime);
 
@@ -68,6 +69,11 @@ export default async function handler(req, res) {
 
         if (response.ok) {
           sent++;
+          // ✅ ADDED — flag set karo taaki dobara na jaaye
+          await supabase
+            .from('appointments')
+            .update({ reminder_sent: true })
+            .eq('id', apt.id);
         } else {
           failed++;
         }
