@@ -447,7 +447,6 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
               <div style={{background:tag.bg,color:tag.color,border:`1.5px solid ${tag.border}`,fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:20}}>{tag.label}</div>
               {bday&&<div style={{background:bday.bg,color:bday.color,fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:20}}>🎂</div>}
             </div>
-            {/* ✅ FIX: Phone sirf owner ko dikhega, staff ko nahi */}
             {!isStaff && <div style={{fontSize:12,color:T.ts}}>📱 +91 {customer.phone} · 📍 {customer.city}</div>}
             {isStaff && <div style={{fontSize:12,color:T.ts}}>📍 {customer.city}</div>}
           </div>
@@ -535,12 +534,12 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
   );
 }
 
-function CustomerList({customers,isStaff,onSelect}){
+// ✅ onAddCustomer prop added for staff
+function CustomerList({customers, isStaff, onSelect, onAddCustomer}){
   const [search,setSearch]=useState("");
   const [filter,setFilter]=useState("All");
   const filtered=customers.filter(c=>{
     const q=search.toLowerCase();
-    // ✅ Search by name OR phone (even if staff can't see phone)
     const ms=!q||c.name.toLowerCase().includes(q)||(c.phone||"").includes(q);
     const mf=filter==="All"?true:filter==="VIP"?c.tag==="VIP":filter==="Regular"?c.tag==="Regular":filter==="New"?c.tag==="New":filter==="WhatsApp"?c.src==="wa"||c.source==="wa":c.src==="walk"||c.source==="walk";
     return ms&&mf;
@@ -548,6 +547,15 @@ function CustomerList({customers,isStaff,onSelect}){
   return(
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <div style={{background:T.surface,padding:"12px 16px",borderBottom:`2px solid ${T.border}`,flexShrink:0}}>
+        {/* ✅ Add New Customer button — staff ke liye */}
+        {isStaff && onAddCustomer && (
+          <button
+            onClick={onAddCustomer}
+            style={{width:"100%",padding:"11px",background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:10,boxShadow:"0 3px 10px rgba(34,197,94,0.3)"}}
+          >
+            ➕ Add New Customer
+          </button>
+        )}
         <div style={{position:"relative",marginBottom:10}}>
           <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:14,color:T.tf}}>🔍</span>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or number…" style={{width:"100%",padding:"10px 12px 10px 36px",border:`2px solid ${T.border}`,borderRadius:11,fontSize:13,fontFamily:"inherit",outline:"none",background:T.inp,boxSizing:"border-box"}}/>
@@ -568,7 +576,6 @@ function CustomerList({customers,isStaff,onSelect}){
                   <div style={{width:44,height:44,borderRadius:14,flexShrink:0,background:(c.color||"#22c55e")+"22",border:`2px solid ${(c.color||"#22c55e")}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:900,color:c.color||"#22c55e"}}>{c.avatar||(c.name?.slice(0,2)||"??").toUpperCase()}</div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontWeight:800,fontSize:15,color:T.text,display:"flex",alignItems:"center",gap:6}}>{c.name}{bday&&<span style={{fontSize:14}}>🎂</span>}</div>
-                    {/* ✅ FIX: Phone sirf owner ko dikhega */}
                     {!isStaff && <div style={{fontSize:11,color:T.ts,marginTop:2}}>📱 {c.phone} · 📍 {c.city} · {c.src==="wa"||c.source==="wa"?"💬 WhatsApp":"🚶 Walk-in"}</div>}
                     {isStaff && <div style={{fontSize:11,color:T.ts,marginTop:2}}>📍 {c.city} · {c.src==="wa"||c.source==="wa"?"💬 WhatsApp":"🚶 Walk-in"}</div>}
                   </div>
@@ -595,6 +602,12 @@ export default function CustomerHistory({ currentUser }){
   const [selectedId, setSelectedId] = useState(null);
   const [ownerTab, setOwnerTab] = useState("customers");
   const [loading, setLoading] = useState(true);
+
+  // ✅ Staff Add Customer states
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({name:"",phone:"",dob:"",gender:"male"});
+  const [savingCustomer, setSavingCustomer] = useState(false);
+
   const isStaff = currentUser?.role === "staff";
   const isOwner = currentUser?.role === "owner";
 
@@ -637,6 +650,42 @@ export default function CustomerHistory({ currentUser }){
     setCustomers(prev => prev.map(c => c.id === cId ? {...c, ...changes} : c));
   }
 
+  // ✅ Staff Add Customer handler
+  async function handleAddCustomer() {
+    if(!newCustomer.name.trim() || newCustomer.phone.length < 10) return;
+    setSavingCustomer(true);
+    try {
+      const salonId = currentUser?.salon_id || currentUser?.id;
+      const { data: res } = await supabase.from("customers").insert({
+        salon_id: salonId,
+        name: newCustomer.name.trim(),
+        phone: newCustomer.phone.trim(),
+        birthday: newCustomer.dob || null,
+        gender: newCustomer.gender || "male",
+        tag: "New",
+        source: "walk",
+      }).select().single();
+      if(res) {
+        setCustomers(prev => [{
+          ...res,
+          avatar: (res.name?.slice(0,2)||"??").toUpperCase(),
+          color: "#22c55e",
+          visitHistory: [],
+          totalSpent: 0,
+          lastVisit: "-",
+          favServices: [],
+          tag: "New",
+          src: "walk",
+        }, ...prev]);
+      }
+      setNewCustomer({name:"",phone:"",dob:"",gender:"male"});
+      setShowAddCustomer(false);
+    } catch(e) {
+      console.error("Add customer error:", e);
+    }
+    setSavingCustomer(false);
+  }
+
   const selected = customers.find(c => c.id === selectedId) || null;
 
   if (loading) {
@@ -659,12 +708,101 @@ export default function CustomerHistory({ currentUser }){
           ))}
         </div>
       )}
+
       {selected
         ?<CustomerDetail customer={selected} isStaff={isStaff} currentUser={currentUser} onBack={()=>setSelectedId(null)} onUpdate={handleUpdate}/>
         :isOwner&&ownerTab==="dashboard"
           ?<OwnerDashboard customers={customers}/>
-          :<CustomerList customers={customers} isStaff={isStaff} onSelect={c=>setSelectedId(c.id)}/>
+          :<CustomerList
+              customers={customers}
+              isStaff={isStaff}
+              onSelect={c=>setSelectedId(c.id)}
+              onAddCustomer={isStaff ? ()=>setShowAddCustomer(true) : null}
+            />
       }
+
+      {/* ✅ Staff Add New Customer Modal */}
+      {showAddCustomer && isStaff && (
+        <div onClick={()=>setShowAddCustomer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
+            <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 14px"}}/>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+              <div style={{width:44,height:44,borderRadius:14,background:T.gl,border:`2px solid ${T.gm}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🆕</div>
+              <div>
+                <div style={{fontWeight:900,fontSize:16,color:T.text}}>Naya Customer Add Karo</div>
+                <div style={{fontSize:12,color:T.ts,marginTop:2}}>Owner ke dashboard mein bhi dikh jaayega</div>
+              </div>
+            </div>
+
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Full Name *</div>
+              <input
+                style={IS}
+                placeholder="e.g. Priya Sharma"
+                value={newCustomer.name}
+                onChange={e=>setNewCustomer(p=>({...p,name:e.target.value}))}
+                onFocus={e=>e.target.style.borderColor=T.green}
+                onBlur={e=>e.target.style.borderColor=T.border}
+                autoFocus
+              />
+            </div>
+
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Phone Number *</div>
+              <input
+                style={IS}
+                type="tel"
+                placeholder="9876543210"
+                value={newCustomer.phone}
+                onChange={e=>setNewCustomer(p=>({...p,phone:e.target.value.replace(/\D/g,"").slice(0,10)}))}
+                onFocus={e=>e.target.style.borderColor=T.green}
+                onBlur={e=>e.target.style.borderColor=T.border}
+              />
+            </div>
+
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Date of Birth (optional)</div>
+              <input
+                style={IS}
+                type="date"
+                value={newCustomer.dob}
+                onChange={e=>setNewCustomer(p=>({...p,dob:e.target.value}))}
+              />
+            </div>
+
+            <div style={{marginBottom:20}}>
+              <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:8}}>Gender</div>
+              <div style={{display:"flex",gap:8}}>
+                {[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(
+                  <button
+                    key={g.id}
+                    onClick={()=>setNewCustomer(p=>({...p,gender:g.id}))}
+                    style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustomer.gender===g.id?T.green:T.border}`,background:newCustomer.gender===g.id?T.gl:"#fff",color:newCustomer.gender===g.id?T.gd:T.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{display:"flex",gap:10}}>
+              <button
+                onClick={()=>{setShowAddCustomer(false);setNewCustomer({name:"",phone:"",dob:"",gender:"male"});}}
+                style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddCustomer}
+                disabled={savingCustomer || !newCustomer.name.trim() || newCustomer.phone.length < 10}
+                style={{flex:2,padding:12,border:"none",borderRadius:12,background:savingCustomer||!newCustomer.name.trim()||newCustomer.phone.length<10?"#d1d5db":T.green,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:newCustomer.name.trim()&&newCustomer.phone.length===10?"pointer":"not-allowed"}}
+              >
+                {savingCustomer ? "Saving..." : "✓ Save Customer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
