@@ -79,7 +79,7 @@ function Logo({size=15,iconSize=32}){
   );
 }
 
-function SalonHeader({user, screen, onSettings, unreadCount=0, onBell}){
+function SalonHeader({user, screen, onSettings, unreadCount=0, onBell, onBack}){
   const salonName = user?.salon || "My Salon";
   const logoUrl = user?.logo_url || null;
   const initials = user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2) || "??";
@@ -90,8 +90,8 @@ function SalonHeader({user, screen, onSettings, unreadCount=0, onBell}){
   }[screen] || screen;
 
   return(
-    <div style={{background:"#fff",borderBottom:"2px solid #e8edf3",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
+    <div style={{background:"#fff",borderBottom:"2px solid #e8edf3",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,boxShadow:"0 2px 8px rgba(0,0,0,0.05)",position:"relative"}}>{screen!=="dashboard"&&(<button onClick={onBack} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",background:"#f0f4f8",border:"none",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,cursor:"pointer",color:"#1a1a2e",zIndex:10,fontFamily:"inherit"}}>←</button>)}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:screen!=="dashboard"?36:0}}>
         {logoUrl ? (
           <img src={logoUrl} alt="salon logo" style={{width:32,height:32,borderRadius:10,objectFit:"cover",border:"2px solid #e8edf3"}}/>
         ) : (
@@ -918,7 +918,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
 
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:"#1a1a2e",background:"#f0f4f8",overflow:"hidden"}}>
-      <SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell}/>
+      <SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
 
         {screen==="dashboard"&&(
@@ -928,7 +928,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
               <div style={{fontSize:12,color:"#888",marginTop:2}}>{new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})} · {user.salon}</div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-              {[{icon:"📅",val:booked,label:"Bookings",bg:"#e8fdf0",color:"#16a34a",click:true},{icon:"💸",val:`₹${revenue.toLocaleString()}`,label:"Revenue",bg:"#e8fdf0",color:"#16a34a"},{icon:"⏳",val:pending,label:"Pending",bg:"#fff8e6",color:"#d97706"},{icon:"💬",val:Object.values(dayData).filter(b=>b.src==="wa").length,label:"Via WhatsApp",bg:"#eff6ff",color:"#2563eb"}].map(s=>(<div key={s.label} onClick={s.click?()=>setScreen("calendar"):undefined} style={{background:s.bg,borderRadius:14,padding:"14px",border:`2px solid ${s.color}22`,cursor:s.click?"pointer":"default"}}><div style={{fontSize:20,marginBottom:5}}>{s.icon}</div><div style={{fontWeight:900,fontSize:22,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:11,color:"#888",fontWeight:700,marginTop:3}}>{s.label}</div></div>))}
+              {[{icon:"📅",val:booked,label:"Bookings",bg:"#e8fdf0",color:"#16a34a"},{icon:"💸",val:`₹${revenue.toLocaleString()}`,label:"Revenue",bg:"#e8fdf0",color:"#16a34a"},{icon:"⏳",val:pending,label:"Pending",bg:"#fff8e6",color:"#d97706"},{icon:"💬",val:Object.values(dayData).filter(b=>b.src==="wa").length,label:"Via WhatsApp",bg:"#eff6ff",color:"#2563eb"}].map(s=>(<div key={s.label} style={{background:s.bg,borderRadius:14,padding:"14px",border:`2px solid ${s.color}22`}}><div style={{fontSize:20,marginBottom:5}}>{s.icon}</div><div style={{fontWeight:900,fontSize:22,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:11,color:"#888",fontWeight:700,marginTop:3}}>{s.label}</div></div>))}
             </div>
             <div style={{marginBottom:14}}>
               <div style={{fontWeight:800,fontSize:13,marginBottom:8}}>⚡ Quick Actions</div>
