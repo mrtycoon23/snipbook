@@ -83,32 +83,41 @@ function SalonHeader({user, screen, onSettings, unreadCount=0, onBell, onBack}){
   const salonName = user?.salon || "My Salon";
   const logoUrl = user?.logo_url || null;
   const initials = user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2) || "??";
-
   const screenLabel = {
     dashboard:"Home", calendar:"Calendar", clients:"Clients",
     staff:"Staff", history:"Customer History", engage:"Engagement", settings:"Settings"
   }[screen] || screen;
+  const isDashboard = screen === "dashboard";
 
   return(
-    <div style={{background:"#fff",borderBottom:"2px solid #e8edf3",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,boxShadow:"0 2px 8px rgba(0,0,0,0.05)",position:"relative"}}>{screen!=="dashboard"&&(<button onClick={onBack} style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",background:"#f0f4f8",border:"none",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,cursor:"pointer",color:"#1a1a2e",zIndex:10,fontFamily:"inherit"}}>←</button>)}
-      <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:screen!=="dashboard"?36:0}}>
-        {logoUrl ? (
-          <img src={logoUrl} alt="salon logo" style={{width:32,height:32,borderRadius:10,objectFit:"cover",border:"2px solid #e8edf3"}}/>
+    <div style={{background:"#fff",borderBottom:"2px solid #e8edf3",padding:"0 16px",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,boxShadow:"0 2px 8px rgba(0,0,0,0.06)"}}>
+      {/* LEFT — back button ya logo */}
+      <div style={{width:40,display:"flex",alignItems:"center",justifyContent:"flex-start"}}>
+        {isDashboard ? (
+          logoUrl
+            ? <img src={logoUrl} alt="logo" style={{width:34,height:34,borderRadius:10,objectFit:"cover",border:"2px solid #e8edf3"}}/>
+            : <div style={{width:34,height:34,background:"#22c55e",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>✂️</div>
         ) : (
-          <div style={{width:32,height:32,background:"#22c55e",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>✂️</div>
+          <button onClick={onBack} style={{width:34,height:34,background:"#f0f4f8",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,cursor:"pointer",color:"#1a1a2e",fontFamily:"inherit"}}>←</button>
         )}
-        <span style={{fontWeight:900,fontSize:13,color:"#1a1a2e",maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{salonName}</span>
       </div>
-      <div style={{fontSize:11,fontWeight:800,color:"#888",textTransform:"capitalize"}}>{screenLabel}</div>
-      <div style={{display:"flex",alignItems:"center",gap:8}}>
-        <div style={{display:"flex",alignItems:"center",gap:5,background:"#e8fdf0",border:"1.5px solid #bbf7d0",borderRadius:20,padding:"4px 9px",fontSize:11,fontWeight:700,color:"#16a34a"}}>
-          <div style={{width:6,height:6,borderRadius:"50%",background:"#22c55e"}}/>Bot ON
+
+      {/* CENTER — salon naam ya page title */}
+      <div style={{flex:1,textAlign:"center",padding:"0 8px"}}>
+        {isDashboard ? (
+          <div style={{fontWeight:900,fontSize:15,color:"#1a1a2e",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{salonName}</div>
+        ) : (
+          <div style={{fontWeight:800,fontSize:14,color:"#1a1a2e"}}>{screenLabel}</div>
+        )}
+      </div>
+
+      {/* RIGHT — bell + avatar */}
+      <div style={{width:72,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:8}}>
+        <div onClick={onBell} style={{position:"relative",width:34,height:34,borderRadius:10,background:unreadCount>0?"#fff8e6":"#f8fafc",border:`2px solid ${unreadCount>0?"#fcd34d":"#e8edf3"}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+          <span style={{fontSize:16}}>🔔</span>
+          {unreadCount>0&&<div style={{position:"absolute",top:-4,right:-4,width:16,height:16,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
         </div>
-        <div onClick={onBell} style={{position:"relative",width:32,height:32,borderRadius:"50%",background:unreadCount>0?"#fff8e6":"#f8fafc",border:`2px solid ${unreadCount>0?"#fcd34d":"#e8edf3"}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-          <span style={{fontSize:15}}>🔔</span>
-          {unreadCount>0&&<div style={{position:"absolute",top:-3,right:-3,width:16,height:16,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
-        </div>
-        <div onClick={onSettings} style={{width:30,height:30,borderRadius:"50%",background:"#22c55e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",border:screen==="settings"?"2px solid #1a1a2e":"2px solid transparent"}}>
+        <div onClick={onSettings} style={{width:34,height:34,borderRadius:10,background:screen==="settings"?"#1a1a2e":"#22c55e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",cursor:"pointer"}}>
           {initials}
         </div>
       </div>
