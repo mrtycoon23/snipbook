@@ -66,9 +66,9 @@ const CLIENTS_DATA=[
   {id:5,name:"Sneha Reddy",phone:"66554 43322",city:"Delhi",src:"wa",avatar:"SR",color:"#14b8a6",joined:"Jan 2026",visits:7,totalSpent:5600,lastVisit:"22 Mar",tag:"VIP",history:[{date:"22 Mar",service:"Hair Spa",price:700,status:"done"},{date:"08 Mar",service:"Bridal Makeup",price:2000,status:"done"}]},
 ];
 
-const is={width:"100%",padding:"11px 13px",border:"2px solid #e8edf3",borderRadius:11,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fafbfc",boxSizing:"border-box"};
+const is={width:"100%",padding:"11px 13px",border:"2px solid #e8edf3",borderRadius:11,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fafbfc",boxSizing:"border-box",color:"#1a1a2e"};
 const nb={width:30,height:30,borderRadius:8,border:"2px solid #e8edf3",background:"#fff",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"};
-const obIs={width:"100%",padding:"11px 13px",border:"2px solid #e8edf3",borderRadius:11,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fafbfc",boxSizing:"border-box"};
+const obIs={width:"100%",padding:"11px 13px",border:"2px solid #e8edf3",borderRadius:11,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fafbfc",boxSizing:"border-box",color:"#1a1a2e"};
 
 function Logo({size=15,iconSize=32}){
   return(
@@ -131,7 +131,7 @@ function Landing({onStart,onLogin}){
         <div style={{position:"absolute",inset:0,backgroundImage:"radial-gradient(#22c55e18 1px,transparent 1px)",backgroundSize:"26px 26px",pointerEvents:"none"}}/>
         <div style={{position:"relative",maxWidth:540,margin:"0 auto"}}>
           <div style={{display:"inline-block",background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:20,padding:"4px 14px",fontSize:12,fontWeight:800,color:"#16a34a",marginBottom:14}}>🇮🇳 Made for Indian Salons</div>
-          <h1 style={{fontSize:"clamp(26px,6vw,44px)",fontWeight:900,lineHeight:1.15,marginBottom:14,letterSpacing:"-0.5px"}}>Apne Salon ki Bookings<br/><span style={{color:"#22c55e"}}>WhatsApp se Automate Karo</span></h1>
+          <h1 style={{fontSize:"clamp(26px,6vw,44px)",fontWeight:900,lineHeight:1.15,marginBottom:14,letterSpacing:"-0.5px",color:"#1a1a2e"}}>Apne Salon ki Bookings<br/><span style={{color:"#22c55e"}}>WhatsApp se Automate Karo</span></h1>
           <p style={{fontSize:15,color:"#555",lineHeight:1.7,marginBottom:28,maxWidth:420,margin:"0 auto 28px"}}>Client WhatsApp karta hai → Bot book kar leta hai → Dashboard pe notification. <strong>Zero missed calls.</strong></p>
           {!done?(
             <div style={{display:"flex",gap:8,maxWidth:400,margin:"0 auto 14px",flexWrap:"wrap",justifyContent:"center"}}>
