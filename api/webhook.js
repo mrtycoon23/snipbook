@@ -4,6 +4,8 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const YCLOUD_KEY   = process.env.YCLOUD_API_KEY;
 const BOT_NUMBER   = process.env.WHATSAPP_PHONE_NUMBER;
+const RESEND_KEY   = process.env.RESEND_API_KEY;
+const OWNER_EMAIL  = process.env.OWNER_EMAIL;
 
 function pad(n) { return String(n).padStart(2, "0"); }
 
@@ -272,6 +274,66 @@ async function sendNoLinkMessage(to) {
   );
 }
 
+async function sendBookingEmail({ ownerEmail, customerEmail, salonName, customerName, service, date, time, price, customerPhone }) {
+  if (!RESEND_KEY) return;
+  const priceText = price > 0 ? `₹${price}` : "Price on visit";
+  const timeText = formatTime12(time);
+  const dateText = formatDate(date);
+
+  const ownerHtml = `
+    <div style="font-family:sans-serif;max-width:500px;margin:auto;border:1px solid #eee;border-radius:12px;overflow:hidden">
+      <div style="background:#1a1a2e;padding:20px;text-align:center">
+        <h2 style="color:#fff;margin:0">✂️ SnipBook</h2>
+        <p style="color:#aaa;margin:4px 0">${salonName}</p>
+      </div>
+      <div style="padding:24px">
+        <h3 style="color:#1a1a2e">🔔 Naya Appointment!</h3>
+        <table style="width:100%;border-collapse:collapse">
+          <tr><td style="padding:8px 0;color:#666;width:40%">👤 Customer</td><td style="padding:8px 0;font-weight:bold">${customerName}</td></tr>
+          <tr><td style="padding:8px 0;color:#666">📱 Phone</td><td style="padding:8px 0">${customerPhone}</td></tr>
+          <tr><td style="padding:8px 0;color:#666">✂️ Service</td><td style="padding:8px 0;font-weight:bold">${service}</td></tr>
+          <tr><td style="padding:8px 0;color:#666">📅 Date</td><td style="padding:8px 0">${dateText}</td></tr>
+          <tr><td style="padding:8px 0;color:#666">🕐 Time</td><td style="padding:8px 0">${timeText}</td></tr>
+          <tr><td style="padding:8px 0;color:#666">💰 Amount</td><td style="padding:8px 0;color:#27ae60;font-weight:bold">${priceText}</td></tr>
+        </table>
+        <p style="color:#888;font-size:12px;margin-top:20px">SnipBook se auto-booked 💈</p>
+      </div>
+    </div>`;
+
+  const customerHtml = `
+    <div style="font-family:sans-serif;max-width:500px;margin:auto;border:1px solid #eee;border-radius:12px;overflow:hidden">
+      <div style="background:#1a1a2e;padding:20px;text-align:center">
+        <h2 style="color:#fff;margin:0">✂️ SnipBook</h2>
+        <p style="color:#aaa;margin:4px 0">${salonName}</p>
+      </div>
+      <div style="padding:24px">
+        <h3 style="color:#1a1a2e">🎉 Booking Confirmed, ${customerName}!</h3>
+        <table style="width:100%;border-collapse:collapse">
+          <tr><td style="padding:8px 0;color:#666;width:40%">✂️ Service</td><td style="padding:8px 0;font-weight:bold">${service}</td></tr>
+          <tr><td style="padding:8px 0;color:#666">📅 Date</td><td style="padding:8px 0">${dateText}</td></tr>
+          <tr><td style="padding:8px 0;color:#666">🕐 Time</td><td style="padding:8px 0">${timeText}</td></tr>
+          <tr><td style="padding:8px 0;color:#666">💰 Amount</td><td style="padding:8px 0;color:#27ae60;font-weight:bold">${priceText}</td></tr>
+        </table>
+        <p style="margin-top:20px">Aapko 1 ghante pehle WhatsApp reminder bhi milega! 📲</p>
+        <p style="color:#888;font-size:12px">See you soon! 💈</p>
+      </div>
+    </div>`;
+
+  const emails = [];
+  if (ownerEmail) emails.push({ to: ownerEmail, subject: `🔔 Naya Appointment — ${customerName} (${salonName})`, html: ownerHtml });
+  if (customerEmail) emails.push({ to: customerEmail, subject: `✅ Booking Confirmed — ${salonName}`, html: customerHtml });
+
+  for (const e of emails) {
+    try {
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from: "SnipBook <onboarding@resend.dev>", ...e }),
+      });
+    } catch(err) { console.error("Email send error:", err.message); }
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method === "GET") {
     const { "hub.mode": mode, "hub.verify_token": token, "hub.challenge": challenge } = req.query;
@@ -502,7 +564,7 @@ export default async function handler(req, res) {
 
     if (step === "confirm" && interactiveId === "confirm_yes") {
 
-      // ✅ Double booking check — fetch all appointments for that day and filter in JS
+      // ✅ Double booking check
       try {
         const dupR = await fetch(
           `${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${SALON_ID}&date=eq.${data.date}&status=eq.confirmed`,
@@ -526,6 +588,7 @@ export default async function handler(req, res) {
         }
       } catch(e) { console.error("Dup check error:", e.message); }
 
+      // ✅ Auto-save customer
       try {
         const custCheck = await fetch(
           `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&limit=1`,
@@ -541,6 +604,7 @@ export default async function handler(req, res) {
         }
       } catch(e) { console.error("Customer save error:", e.message); }
 
+      // ✅ Save appointment
       await fetch(`${SUPABASE_URL}/rest/v1/appointments`, {
         method: "POST",
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
@@ -559,11 +623,14 @@ export default async function handler(req, res) {
       await clearSession(sKey);
 
       const priceText = data.price > 0 ? `₹${data.price}` : "Price on visit";
+
+      // ✅ Confirmation message to customer
       await sendButtons(from,
         `🎉 *Booking Confirmed!*\n\n✅ Aapka appointment set ho gaya!\n\n👤 ${data.name}\n✂️ ${data.service}\n📅 ${formatDate(data.date)} at ${formatTime12(data.time)}\n💰 ${priceText}\n\n📲 Aapko 1 ghante pehle reminder milega.\n\nSee you soon! 💈`,
         [{ id: "main_menu", title: "🏠 Main Menu" }]
       );
 
+      // ✅ WhatsApp notification to owner
       const rawNotif = (salon?.notification_number || "").replace(/[^0-9]/g, "");
       const notifTarget = rawNotif ? (rawNotif.startsWith("91") ? rawNotif : `91${rawNotif}`) : "";
       if (notifTarget) {
@@ -571,6 +638,28 @@ export default async function handler(req, res) {
           `🔔 *Naya Appointment!*\n\n🏪 *Salon:* ${salonName}\n👤 *Customer:* ${data.name}\n📱 *Phone:* +${from.replace(/^\+/,"")}\n✂️ *Service:* ${data.service}\n📅 *Date:* ${formatDate(data.date)}\n🕐 *Time:* ${formatTime12(data.time)}\n💰 *Amount:* ${priceText}\n\n_SnipBook se auto-booked_ 💈`
         );
       }
+
+      // ✅ Email notifications (owner + customer if email available)
+      try {
+        const custEmailR = await fetch(
+          `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&select=email&limit=1`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
+        const custEmailData = await custEmailR.json();
+        const customerEmail = custEmailData?.[0]?.email || "";
+        await sendBookingEmail({
+          ownerEmail: OWNER_EMAIL || "",
+          customerEmail,
+          salonName,
+          customerName: data.name,
+          service: data.service,
+          date: data.date,
+          time: data.time,
+          price: data.price || 0,
+          customerPhone: from,
+        });
+      } catch(e) { console.error("Email trigger error:", e.message); }
+
       res.status(200).json({ status: "ok" });
       return;
     }
