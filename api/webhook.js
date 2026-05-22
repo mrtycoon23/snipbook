@@ -643,7 +643,7 @@ export default async function handler(req, res) {
       try {
         const custEmailR = await fetch(
           `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&select=email&limit=1`,
-          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+         { headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` } }
         );
         const custEmailData = await custEmailR.json();
         const customerEmail = custEmailData?.[0]?.email || "";
