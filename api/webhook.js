@@ -640,8 +640,9 @@ export default async function handler(req, res) {
 
       // ✅ Email notifications — service role key se customer email fetch (RLS bypass)
       try {
+        const fromWithPlus = from.startsWith("+") ? from : `+${from}`;
         const custEmailR = await fetch(
-          `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&select=email&limit=1`,
+          `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${encodeURIComponent(fromWithPlus)}&select=email&order=email.desc.nullslast&limit=1`,
           { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } }
         );
         const custEmailData = await custEmailR.json();
