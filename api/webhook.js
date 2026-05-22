@@ -2,6 +2,7 @@ export const config = { maxDuration: 30 };
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const YCLOUD_KEY   = process.env.YCLOUD_API_KEY;
 const BOT_NUMBER   = process.env.WHATSAPP_PHONE_NUMBER;
 const RESEND_KEY   = process.env.RESEND_API_KEY;
@@ -639,16 +640,16 @@ export default async function handler(req, res) {
         );
       }
 
-      // ✅ Email notifications (owner + customer if email available)
+      // ✅ Email notifications — service role key se customer email fetch (RLS bypass)
       try {
         const custEmailR = await fetch(
           `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&select=email&limit=1`,
-         { headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` } }
+          { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } }
         );
         const custEmailData = await custEmailR.json();
         const customerEmail = custEmailData?.[0]?.email || "";
         await sendBookingEmail({
-          ownerEmail: OWNER_EMAIL || "",
+          ownerEmail: salon?.notification_email || OWNER_EMAIL || "",
           customerEmail,
           salonName,
           customerName: data.name,
