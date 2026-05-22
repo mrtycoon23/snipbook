@@ -404,12 +404,23 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
   const [showFull,setShowFull]=useState(false);
   const [bookModal,setBookModal]=useState(false);
   const [bookDone,setBookDone]=useState(null);
+
+  // ✅ Email edit state
+  const [editEmail,setEditEmail]=useState(false);
+  const [emailVal,setEmailVal]=useState(customer.email||"");
+
   const avg=(customer.visitHistory||[]).length?Math.round((customer.totalSpent||0)/(customer.visitHistory||[]).length):0;
   const tag=TAG[customer.tag]||TAG.Regular;
   const bday=getBirthdayStatus(customer.dob);
 
   function hvUpdate(visitId,changes){
     onUpdate(customer.id,{visitHistory:(customer.visitHistory||[]).map(v=>v.id===visitId?{...v,...changes}:v)});
+  }
+
+  async function saveEmail(){
+    onUpdate(customer.id,{email:emailVal});
+    setEditEmail(false);
+    await supabase.from("customers").update({email:emailVal}).eq("id",customer.id);
   }
 
   async function addVisit(nv){
@@ -467,6 +478,32 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
             {!isStaff&&<StatBox icon="📊" val={`₹${avg}`} label="Avg / Visit"/>}
             <StatBox icon="🔥" val={`${Math.min(customer.visits||0,6)}×`} label="Streak"/>
           </div></div>
+
+          {/* ✅ Email field — optional, owner + staff dono dekh sakte hain */}
+          <div style={{background:T.surface,border:`2px solid ${editEmail?T.green:T.border}`,borderRadius:14,padding:14,marginBottom:14}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+              <SL>📧 Email Address</SL>
+              {!editEmail
+                ?<EditBtn onEdit={()=>{setEmailVal(customer.email||"");setEditEmail(true);}}/>
+                :<SCBar onSave={saveEmail} onCancel={()=>{setEmailVal(customer.email||"");setEditEmail(false);}}/>
+              }
+            </div>
+            {editEmail
+              ?<input
+                  type="email"
+                  value={emailVal}
+                  onChange={e=>setEmailVal(e.target.value)}
+                  placeholder="customer@gmail.com (optional)"
+                  style={IS}
+                  autoFocus
+                />
+              :<div style={{fontSize:13,color:customer.email?T.tm:T.tg,fontStyle:customer.email?"normal":"italic"}}>
+                  {customer.email||"No email added — tap Edit to add"}
+                </div>
+            }
+            {!editEmail&&!customer.email&&<div style={{fontSize:11,color:T.tf,marginTop:6}}>💡 Email add karo → booking confirmation milegi customer ko</div>}
+          </div>
+
           <div style={{background:T.surface,border:`2px solid ${T.border}`,borderRadius:14,padding:14,marginBottom:14}}>
             <SL>⭐ Favourite Services</SL>
             <div style={{display:"flex",flexWrap:"wrap",gap:7}}>{(customer.fav_services||customer.favServices||[]).map((s,i)=><Chip key={s} style={i===0?{background:T.green,color:"#fff",border:`1.5px solid ${T.green}`}:{}}>{i===0?"🏆 ":""}{s}</Chip>)}</div>
@@ -534,7 +571,6 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
   );
 }
 
-// ✅ onAddCustomer prop added for staff
 function CustomerList({customers, isStaff, onSelect, onAddCustomer}){
   const [search,setSearch]=useState("");
   const [filter,setFilter]=useState("All");
@@ -547,12 +583,8 @@ function CustomerList({customers, isStaff, onSelect, onAddCustomer}){
   return(
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <div style={{background:T.surface,padding:"12px 16px",borderBottom:`2px solid ${T.border}`,flexShrink:0}}>
-        {/* ✅ Add New Customer button — staff ke liye */}
         {isStaff && onAddCustomer && (
-          <button
-            onClick={onAddCustomer}
-            style={{width:"100%",padding:"11px",background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:10,boxShadow:"0 3px 10px rgba(34,197,94,0.3)"}}
-          >
+          <button onClick={onAddCustomer} style={{width:"100%",padding:"11px",background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:10,boxShadow:"0 3px 10px rgba(34,197,94,0.3)"}}>
             ➕ Add New Customer
           </button>
         )}
@@ -603,9 +635,8 @@ export default function CustomerHistory({ currentUser }){
   const [ownerTab, setOwnerTab] = useState("customers");
   const [loading, setLoading] = useState(true);
 
-  // ✅ Staff Add Customer states
   const [showAddCustomer, setShowAddCustomer] = useState(false);
-  const [newCustomer, setNewCustomer] = useState({name:"",phone:"",dob:"",gender:"male"});
+  const [newCustomer, setNewCustomer] = useState({name:"",phone:"",dob:"",gender:"male",email:""});
   const [savingCustomer, setSavingCustomer] = useState(false);
 
   const isStaff = currentUser?.role === "staff";
@@ -639,6 +670,7 @@ export default function CustomerHistory({ currentUser }){
           favServices: c.fav_services || [],
           tag: c.tag || "New",
           src: c.source || "wa",
+          email: c.email || "",
         })));
       }
       setLoading(false);
@@ -650,7 +682,6 @@ export default function CustomerHistory({ currentUser }){
     setCustomers(prev => prev.map(c => c.id === cId ? {...c, ...changes} : c));
   }
 
-  // ✅ Staff Add Customer handler
   async function handleAddCustomer() {
     if(!newCustomer.name.trim() || newCustomer.phone.length < 10) return;
     setSavingCustomer(true);
@@ -662,6 +693,7 @@ export default function CustomerHistory({ currentUser }){
         phone: newCustomer.phone.trim(),
         birthday: newCustomer.dob || null,
         gender: newCustomer.gender || "male",
+        email: newCustomer.email.trim() || null,
         tag: "New",
         source: "walk",
       }).select().single();
@@ -676,9 +708,10 @@ export default function CustomerHistory({ currentUser }){
           favServices: [],
           tag: "New",
           src: "walk",
+          email: res.email || "",
         }, ...prev]);
       }
-      setNewCustomer({name:"",phone:"",dob:"",gender:"male"});
+      setNewCustomer({name:"",phone:"",dob:"",gender:"male",email:""});
       setShowAddCustomer(false);
     } catch(e) {
       console.error("Add customer error:", e);
@@ -721,7 +754,7 @@ export default function CustomerHistory({ currentUser }){
             />
       }
 
-      {/* ✅ Staff Add New Customer Modal */}
+      {/* ✅ Staff Add New Customer Modal — email field added */}
       {showAddCustomer && isStaff && (
         <div onClick={()=>setShowAddCustomer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
           <div onClick={e=>e.stopPropagation()} style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
@@ -736,69 +769,38 @@ export default function CustomerHistory({ currentUser }){
 
             <div style={{marginBottom:12}}>
               <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Full Name *</div>
-              <input
-                style={IS}
-                placeholder="e.g. Priya Sharma"
-                value={newCustomer.name}
-                onChange={e=>setNewCustomer(p=>({...p,name:e.target.value}))}
-                onFocus={e=>e.target.style.borderColor=T.green}
-                onBlur={e=>e.target.style.borderColor=T.border}
-                autoFocus
-              />
+              <input style={IS} placeholder="e.g. Priya Sharma" value={newCustomer.name} onChange={e=>setNewCustomer(p=>({...p,name:e.target.value}))} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border} autoFocus/>
             </div>
 
             <div style={{marginBottom:12}}>
               <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Phone Number *</div>
-              <input
-                style={IS}
-                type="tel"
-                placeholder="9876543210"
-                value={newCustomer.phone}
-                onChange={e=>setNewCustomer(p=>({...p,phone:e.target.value.replace(/\D/g,"").slice(0,10)}))}
-                onFocus={e=>e.target.style.borderColor=T.green}
-                onBlur={e=>e.target.style.borderColor=T.border}
-              />
+              <input style={IS} type="tel" placeholder="9876543210" value={newCustomer.phone} onChange={e=>setNewCustomer(p=>({...p,phone:e.target.value.replace(/\D/g,"").slice(0,10)}))} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
             </div>
 
             <div style={{marginBottom:12}}>
-              <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Date of Birth (optional)</div>
-              <input
-                style={IS}
-                type="date"
-                value={newCustomer.dob}
-                onChange={e=>setNewCustomer(p=>({...p,dob:e.target.value}))}
-              />
+              <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Date of Birth <span style={{fontWeight:400,color:T.tf}}>(optional)</span></div>
+              <input style={IS} type="date" value={newCustomer.dob} onChange={e=>setNewCustomer(p=>({...p,dob:e.target.value}))}/>
+            </div>
+
+            {/* ✅ Email field — optional */}
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Email Address <span style={{fontWeight:400,color:T.tf}}>(optional)</span></div>
+              <input style={IS} type="email" placeholder="customer@gmail.com" value={newCustomer.email} onChange={e=>setNewCustomer(p=>({...p,email:e.target.value}))} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
+              <div style={{fontSize:11,color:T.tf,marginTop:4}}>💡 Email dene par booking confirmation milegi</div>
             </div>
 
             <div style={{marginBottom:20}}>
               <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:8}}>Gender</div>
               <div style={{display:"flex",gap:8}}>
                 {[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(
-                  <button
-                    key={g.id}
-                    onClick={()=>setNewCustomer(p=>({...p,gender:g.id}))}
-                    style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustomer.gender===g.id?T.green:T.border}`,background:newCustomer.gender===g.id?T.gl:"#fff",color:newCustomer.gender===g.id?T.gd:T.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}
-                  >
-                    {g.label}
-                  </button>
+                  <button key={g.id} onClick={()=>setNewCustomer(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustomer.gender===g.id?T.green:T.border}`,background:newCustomer.gender===g.id?T.gl:"#fff",color:newCustomer.gender===g.id?T.gd:T.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>
                 ))}
               </div>
             </div>
 
             <div style={{display:"flex",gap:10}}>
-              <button
-                onClick={()=>{setShowAddCustomer(false);setNewCustomer({name:"",phone:"",dob:"",gender:"male"});}}
-                style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddCustomer}
-                disabled={savingCustomer || !newCustomer.name.trim() || newCustomer.phone.length < 10}
-                style={{flex:2,padding:12,border:"none",borderRadius:12,background:savingCustomer||!newCustomer.name.trim()||newCustomer.phone.length<10?"#d1d5db":T.green,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:newCustomer.name.trim()&&newCustomer.phone.length===10?"pointer":"not-allowed"}}
-              >
-                {savingCustomer ? "Saving..." : "✓ Save Customer"}
-              </button>
+              <button onClick={()=>{setShowAddCustomer(false);setNewCustomer({name:"",phone:"",dob:"",gender:"male",email:""});}} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button>
+              <button onClick={handleAddCustomer} disabled={savingCustomer||!newCustomer.name.trim()||newCustomer.phone.length<10} style={{flex:2,padding:12,border:"none",borderRadius:12,background:savingCustomer||!newCustomer.name.trim()||newCustomer.phone.length<10?"#d1d5db":T.green,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:newCustomer.name.trim()&&newCustomer.phone.length===10?"pointer":"not-allowed"}}>{savingCustomer?"Saving...":"✓ Save Customer"}</button>
             </div>
           </div>
         </div>
