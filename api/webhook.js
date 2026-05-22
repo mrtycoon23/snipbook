@@ -593,13 +593,13 @@ export default async function handler(req, res) {
       try {
         const custCheck = await fetch(
           `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&limit=1`,
-          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+          { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } }
         );
         const custData = await custCheck.json();
         if (!custData || custData.length === 0) {
           await fetch(`${SUPABASE_URL}/rest/v1/customers`, {
             method: "POST",
-            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+            headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
             body: JSON.stringify({ salon_id: SALON_ID, name: data.name || "WhatsApp Customer", phone: from, source: "wa", tag: "New" }),
           });
         }
