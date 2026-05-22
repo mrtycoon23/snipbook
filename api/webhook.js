@@ -328,7 +328,7 @@ async function sendBookingEmail({ ownerEmail, customerEmail, salonName, customer
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: "SnipBook <onboarding@resend.dev>", ...e }),
+        body: JSON.stringify({ from: "SnipBook <noreply@snipbook.in>", ...e }),
       });
     } catch(err) { console.error("Email send error:", err.message); }
   }
