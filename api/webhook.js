@@ -589,20 +589,18 @@ export default async function handler(req, res) {
         }
       } catch(e) { console.error("Dup check error:", e.message); }
 
-      // ✅ Auto-save customer
+      // ✅ Auto-save customer (ignore-duplicates — existing customer ko touch nahi karega)
       try {
-        const custCheck = await fetch(
-          `${SUPABASE_URL}/rest/v1/customers?salon_id=eq.${SALON_ID}&phone=eq.${from}&limit=1`,
-          { headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}` } }
-        );
-        const custData = await custCheck.json();
-        if (!custData || custData.length === 0) {
-          await fetch(`${SUPABASE_URL}/rest/v1/customers`, {
-            method: "POST",
-            headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
-            body: JSON.stringify({ salon_id: SALON_ID, name: data.name || "WhatsApp Customer", phone: from, source: "wa", tag: "New" }),
-          });
-        }
+        await fetch(`${SUPABASE_URL}/rest/v1/customers`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_SERVICE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+            "Content-Type": "application/json",
+            Prefer: "resolution=ignore-duplicates,return=minimal"
+          },
+          body: JSON.stringify({ salon_id: SALON_ID, name: data.name || "WhatsApp Customer", phone: from, source: "wa", tag: "New" }),
+        });
       } catch(e) { console.error("Customer save error:", e.message); }
 
       // ✅ Save appointment
