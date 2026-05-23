@@ -808,20 +808,37 @@ function StaffSalonEntry({onFound,onBack}){
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState("");
 
-  async function handleLogin(){
-    if(!phone.trim()){setError("Apna phone number daalo!");return;}
-    if(!pin||pin.length!==4){setError("4-digit PIN daalo!");return;}
-    setLoading(true);setError("");
-    try{
-      const {data:staffData}=await supabase.from("staff").select("*").eq("phone",phone.trim()).single();
-      if(!staffData){setError("Is number se koi staff nahi mila!");setLoading(false);return;}
-      if(staffData.pin!==pin){setError("PIN galat hai!");setPin("");setLoading(false);return;}
-      onFound(staffData);
-    }catch(e){
-      setError("Koi staff nahi mila is number se!");
+ async function handleLogin(){
+  if(!phone.trim()){setError("Apna phone number daalo!");return;}
+  if(!pin||pin.length!==4){setError("4-digit PIN daalo!");return;}
+  setLoading(true);setError("");
+  try{
+    const {data:staffData}=await supabase.from("staff").select("*").eq("phone",phone.trim()).single();
+    if(!staffData){setError("Is number se koi staff nahi mila!");setLoading(false);return;}
+    if(staffData.locked_until&&new Date(staffData.locked_until)>new Date()){
+      const mins=Math.ceil((new Date(staffData.locked_until)-new Date())/60000);
+      setError(`Account locked hai. ${mins} minute baad try karo.`);
+      setLoading(false);return;
     }
-    setLoading(false);
+    if(staffData.pin!==pin){
+      const attempts=(staffData.pin_attempts||0)+1;
+      if(attempts>=3){
+        const lockUntil=new Date(Date.now()+15*60*1000).toISOString();
+        await supabase.from("staff").update({pin_attempts:0,locked_until:lockUntil}).eq("id",staffData.id);
+        setError("3 baar galat PIN! 15 minute ke liye locked.");
+      }else{
+        await supabase.from("staff").update({pin_attempts:attempts}).eq("id",staffData.id);
+        setError(`PIN galat hai! ${3-attempts} aur chance.`);
+      }
+      setPin("");setLoading(false);return;
+    }
+    await supabase.from("staff").update({pin_attempts:0,locked_until:null}).eq("id",staffData.id);
+    onFound(staffData);
+  }catch(e){
+    setError("Koi staff nahi mila is number se!");
   }
+  setLoading(false);
+}
 
   const IS2={width:"100%",padding:"11px 13px",border:"2px solid #e8edf3",borderRadius:11,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fafbfc",boxSizing:"border-box",color:"#1a1a2e"};
 
