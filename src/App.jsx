@@ -938,7 +938,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   useEffect(()=>{
     async function loadBookings(){
       try{
-        const {data}=await supabase.from("appointments").select("*").eq("salon_id",user.id);
+        const {data}=await supabase.from("appointments").select("*").eq("salon_id",user.id).eq("status","confirmed");
         if(data&&data.length>0){
           const bk={};
           data.forEach(a=>{
