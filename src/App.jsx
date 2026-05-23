@@ -85,7 +85,7 @@ function SalonHeader({user, screen, onSettings, unreadCount=0, onBell, onBack}){
   const initials = user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2) || "??";
   const screenLabel = {
     dashboard:"Home", calendar:"Calendar", clients:"Clients",
-    staff:"Staff", history:"Customer History", engage:"Engagement", settings:"Settings"
+    staff:"Staff", history:"Customer History", engage:"Engagement", settings:"Settings", chats:"Bot Chats"
   }[screen] || screen;
   const isDashboard = screen === "dashboard";
 
@@ -370,7 +370,100 @@ function Onboarding({onComplete,onBack}){
 const SF=({label,hint,children})=>(<div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#444",marginBottom:hint?3:5}}>{label}</div>{hint&&<div style={{fontSize:11,color:"#aaa",marginBottom:5}}>{hint}</div>}{children}</div>);
 const SCard=({title,icon,children,np})=>(<div style={{background:"#fff",border:"2px solid #e8edf3",borderRadius:16,overflow:"hidden",marginBottom:12}}><div style={{padding:"12px 16px",borderBottom:"2px solid #f0f4f8",display:"flex",alignItems:"center",gap:9}}><div style={{width:32,height:32,borderRadius:10,background:"#e8fdf0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{icon}</div><div style={{fontWeight:900,fontSize:14}}>{title}</div></div><div style={np?{}:{padding:"14px 16px"}}>{children}</div></div>);
 const SToggle=({val,onChange})=>(<div onClick={onChange} style={{width:44,height:24,borderRadius:12,cursor:"pointer",background:val?"#22c55e":"#e8edf3",position:"relative",transition:"background 0.2s",flexShrink:0}}><div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:3,transition:"left 0.2s",left:val?"23px":"3px",boxShadow:"0 1px 4px rgba(0,0,0,0.15)"}}/></div>);
+function ChatHistory({salonId}){
+  const [conversations,setConversations]=useState([]);
+  const [selPhone,setSelPhone]=useState(null);
+  const [messages,setMessages]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [msgLoading,setMsgLoading]=useState(false);
+  const bottomRef=useRef(null);
 
+  useEffect(()=>{
+    async function loadConvos(){
+      setLoading(true);
+      const {data}=await supabase.from("message_logs").select("phone,customer_name,direction,message,created_at").eq("salon_id",salonId).order("created_at",{ascending:false});
+      if(data){
+        const map={};
+        data.forEach(m=>{
+          if(!map[m.phone]){ map[m.phone]={phone:m.phone,name:m.customer_name||m.phone,lastMsg:m.message,lastTime:m.created_at,direction:m.direction}; }
+        });
+        setConversations(Object.values(map));
+      }
+      setLoading(false);
+    }
+    loadConvos();
+  },[salonId]);
+
+  async function loadMessages(phone){
+    setMsgLoading(true); setSelPhone(phone);
+    const {data}=await supabase.from("message_logs").select("*").eq("salon_id",salonId).eq("phone",phone).order("created_at",{ascending:true});
+    setMessages(data||[]);
+    setMsgLoading(false);
+    setTimeout(()=>bottomRef.current?.scrollIntoView({behavior:"smooth"}),100);
+  }
+
+  function fmtTime(ts){ const d=new Date(ts); return d.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true}); }
+  function fmtDate(ts){ return new Date(ts).toLocaleDateString("en-IN",{day:"numeric",month:"short"}); }
+
+  if(selPhone){
+    const convo=conversations.find(c=>c.phone===selPhone);
+    return(
+      <div style={{flex:1,display:"flex",flexDirection:"column",height:"100%",overflow:"hidden"}}>
+        <div style={{background:"#fff",borderBottom:"2px solid #e8edf3",padding:"12px 14px",display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
+          <button onClick={()=>setSelPhone(null)} style={{width:34,height:34,borderRadius:10,background:"#f0f4f8",border:"none",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#1a1a2e"}}>←</button>
+          <div style={{width:38,height:38,borderRadius:12,background:"#e8fdf0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:900,color:"#16a34a",flexShrink:0}}>{(convo?.name||"?")[0].toUpperCase()}</div>
+          <div><div style={{fontWeight:900,fontSize:14}}>{convo?.name||selPhone}</div><div style={{fontSize:11,color:"#aaa"}}>📱 {selPhone}</div></div>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"12px 14px",background:"#f0f4f8",display:"flex",flexDirection:"column",gap:8}}>
+          {msgLoading?<div style={{textAlign:"center",color:"#aaa",padding:32}}>Loading...</div>:messages.map((m,i)=>{
+            const isBot=m.direction==="outbound";
+            return(<div key={i} style={{display:"flex",justifyContent:isBot?"flex-start":"flex-end"}}>
+              <div style={{maxWidth:"80%",background:isBot?"#fff":"#dcfce7",border:`2px solid ${isBot?"#e8edf3":"#86efac"}`,borderRadius:isBot?"4px 14px 14px 14px":"14px 4px 14px 14px",padding:"9px 12px"}}>
+                {isBot&&<div style={{fontSize:9,fontWeight:800,color:"#22c55e",marginBottom:3}}>🤖 BOT</div>}
+                <div style={{fontSize:13,color:"#1a1a2e",lineHeight:1.5,whiteSpace:"pre-wrap"}}>{m.message}</div>
+                <div style={{fontSize:10,color:"#aaa",marginTop:4,textAlign:"right"}}>{fmtTime(m.created_at)}</div>
+              </div>
+            </div>);
+          })}
+          <div ref={bottomRef}/>
+        </div>
+        <div style={{background:"#fff",borderTop:"2px solid #e8edf3",padding:"10px 14px",flexShrink:0}}>
+          <div style={{background:"#f8fafc",borderRadius:10,padding:"9px 12px",fontSize:12,color:"#aaa",fontWeight:700,textAlign:"center"}}>👁️ Read-only view</div>
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <div style={{background:"#fff",padding:"12px 14px",borderBottom:"2px solid #e8edf3",flexShrink:0}}>
+        <div style={{fontWeight:900,fontSize:15}}>💬 Bot Conversations</div>
+        <div style={{fontSize:12,color:"#aaa",marginTop:2}}>{conversations.length} customers ne bot se baat ki</div>
+      </div>
+      <div style={{flex:1,overflowY:"auto"}}>
+        {loading?<div style={{padding:32,textAlign:"center",color:"#aaa"}}>Loading...</div>:conversations.length===0?(
+          <div style={{padding:32,textAlign:"center",color:"#aaa"}}>
+            <div style={{fontSize:40,marginBottom:12}}>💬</div>
+            <div style={{fontWeight:800,fontSize:14,color:"#555"}}>Koi chat nahi abhi</div>
+            <div style={{fontSize:12,marginTop:6}}>Jab customers bot se baat karenge yahan dikhega</div>
+          </div>
+        ):conversations.map((c,i)=>(
+          <div key={i} onClick={()=>loadMessages(c.phone)} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",borderBottom:"2px solid #f0f4f8",background:"#fff",cursor:"pointer"}} onMouseOver={e=>e.currentTarget.style.background="#f8fafc"} onMouseOut={e=>e.currentTarget.style.background="#fff"}>
+            <div style={{width:44,height:44,borderRadius:14,background:"#e8fdf0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:900,color:"#16a34a",flexShrink:0}}>{(c.name||"?")[0].toUpperCase()}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontWeight:800,fontSize:14,marginBottom:2}}>{c.name||c.phone}</div>
+              <div style={{fontSize:12,color:"#888",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.direction==="inbound"?"👤":"🤖"} {c.lastMsg}</div>
+            </div>
+            <div style={{fontSize:10,color:"#aaa",fontWeight:700,flexShrink:0,textAlign:"right"}}>
+              <div>{fmtDate(c.lastTime)}</div>
+              <div style={{marginTop:4,fontSize:14,color:"#ccc"}}>›</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const [tab,setTab]=useState("profile");
   const [saved,setSaved]=useState(false);
@@ -761,6 +854,7 @@ const NAV=[
   {id:"dashboard", icon:"🏠", label:"Home"},
   {id:"calendar",  icon:"📅", label:"Calendar"},
   {id:"clients",   icon:"👥", label:"Clients"},
+  {id:"chats",     icon:"💬", label:"Chats"},
   {id:"staff",     icon:"👨‍💼", label:"Staff"},
   {id:"history",   icon:"📋", label:"History"},
   {id:"engage",    icon:"💫", label:"Engage"},
@@ -1134,6 +1228,11 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
           </div>
         )}
 
+        {screen==="chats"&&(
+  <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+    <ChatHistory salonId={user.id}/>
+  </div>
+)}
         {screen==="engage"&&(
           <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
             <EngagementCenter currentUser={user}/>
