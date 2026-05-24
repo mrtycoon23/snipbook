@@ -404,8 +404,6 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
   const [showFull,setShowFull]=useState(false);
   const [bookModal,setBookModal]=useState(false);
   const [bookDone,setBookDone]=useState(null);
-
-  // ✅ Email edit state
   const [editEmail,setEditEmail]=useState(false);
   const [emailVal,setEmailVal]=useState(customer.email||"");
 
@@ -479,7 +477,6 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
             <StatBox icon="🔥" val={`${Math.min(customer.visits||0,6)}×`} label="Streak"/>
           </div></div>
 
-          {/* ✅ Email field — optional, owner + staff dono dekh sakte hain */}
           <div style={{background:T.surface,border:`2px solid ${editEmail?T.green:T.border}`,borderRadius:14,padding:14,marginBottom:14}}>
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
               <SL>📧 Email Address</SL>
@@ -489,17 +486,8 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
               }
             </div>
             {editEmail
-              ?<input
-                  type="email"
-                  value={emailVal}
-                  onChange={e=>setEmailVal(e.target.value)}
-                  placeholder="customer@gmail.com (optional)"
-                  style={IS}
-                  autoFocus
-                />
-              :<div style={{fontSize:13,color:customer.email?T.tm:T.tg,fontStyle:customer.email?"normal":"italic"}}>
-                  {customer.email||"No email added — tap Edit to add"}
-                </div>
+              ?<input type="email" value={emailVal} onChange={e=>setEmailVal(e.target.value)} placeholder="customer@gmail.com (optional)" style={IS} autoFocus/>
+              :<div style={{fontSize:13,color:customer.email?T.tm:T.tg,fontStyle:customer.email?"normal":"italic"}}>{customer.email||"No email added — tap Edit to add"}</div>
             }
             {!editEmail&&!customer.email&&<div style={{fontSize:11,color:T.tf,marginTop:6}}>💡 Email add karo → booking confirmation milegi customer ko</div>}
           </div>
@@ -508,16 +496,33 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
             <SL>⭐ Favourite Services</SL>
             <div style={{display:"flex",flexWrap:"wrap",gap:7}}>{(customer.fav_services||customer.favServices||[]).map((s,i)=><Chip key={s} style={i===0?{background:T.green,color:"#fff",border:`1.5px solid ${T.green}`}:{}}>{i===0?"🏆 ":""}{s}</Chip>)}</div>
           </div>
-          {(customer.visitHistory||[]).length>0&&(()=>{const l=customer.visitHistory[0];return(
-            <div style={{background:T.surface,border:`2px solid ${T.border}`,borderRadius:14,padding:14,marginBottom:14}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><SL>🕐 Last Visit</SL><span style={{fontSize:11,color:T.ts,fontWeight:700}}>{l.date}</span></div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>{(l.services||[]).map(s=><Chip key={s}>{s}</Chip>)}{!isStaff&&<Chip>₹{l.amount}</Chip>}</div>
-              {l.notes&&<div style={{background:T.yellow,border:`1.5px solid ${T.yb}`,borderRadius:9,padding:"8px 11px",fontSize:12,color:T.yt,lineHeight:1.6}}>📝 {l.notes}</div>}
+
+          {/* FIX: Visit History section — tab="visits" pe jaane ka button */}
+          <div style={{background:T.surface,border:`2px solid ${T.border}`,borderRadius:14,padding:14,marginBottom:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <SL>📅 Visit History ({(customer.visitHistory||[]).length})</SL>
+              <button
+                onClick={()=>setTab("visits")}
+                style={{background:T.gl,border:`1.5px solid ${T.gm}`,borderRadius:20,padding:"5px 12px",color:T.gd,fontFamily:"inherit",fontSize:11,fontWeight:800,cursor:"pointer"}}
+              >
+                View All →
+              </button>
             </div>
-          );})()}
+            {(customer.visitHistory||[]).length===0
+              ?<div style={{fontSize:13,color:T.tg,fontStyle:"italic"}}>Abhi tak koi visit nahi</div>
+              :(()=>{const l=customer.visitHistory[0];return(
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><span style={{fontSize:11,color:T.ts,fontWeight:700}}>Last Visit: {l.date}</span></div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}>{(l.services||[]).map(s=><Chip key={s}>{s}</Chip>)}{!isStaff&&<Chip>₹{l.amount}</Chip>}</div>
+                  {l.notes&&<div style={{background:T.yellow,border:`1.5px solid ${T.yb}`,borderRadius:9,padding:"8px 11px",fontSize:12,color:T.yt,lineHeight:1.6}}>📝 {l.notes}</div>}
+                </div>
+              );})()
+            }
+          </div>
+
           <div style={{display:"flex",gap:10}}>
             <button onClick={()=>setBookModal(true)} style={{flex:1,padding:12,background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📅 Book Appointment</button>
-            <button onClick={()=>(customer.visitHistory||[]).length&&setWaVisit(customer.visitHistory[0])} style={{flex:1,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>💬 WhatsApp</button>
+            <button onClick={()=>customer.phone&&window.open(`https://wa.me/91${customer.phone}`,"_blank")} style={{flex:1,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>💬 WhatsApp</button>
           </div>
         </>}
 
@@ -583,7 +588,8 @@ function CustomerList({customers, isStaff, onSelect, onAddCustomer}){
   return(
     <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <div style={{background:T.surface,padding:"12px 16px",borderBottom:`2px solid ${T.border}`,flexShrink:0}}>
-        {isStaff && onAddCustomer && (
+        {/* FIX: onAddCustomer button — dono staff + owner ke liye show karo */}
+        {onAddCustomer && (
           <button onClick={onAddCustomer} style={{width:"100%",padding:"11px",background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:10,boxShadow:"0 3px 10px rgba(34,197,94,0.3)"}}>
             ➕ Add New Customer
           </button>
@@ -642,39 +648,43 @@ export default function CustomerHistory({ currentUser }){
   const isStaff = currentUser?.role === "staff";
   const isOwner = currentUser?.role === "owner";
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      const salonId = currentUser?.salon_id || currentUser?.id;
-      const { data: cData } = await supabase.from("customers").select("*").eq("salon_id", salonId);
-      const { data: vData } = await supabase.from("visit_history").select("*").eq("salon_id", salonId);
-      if (cData && cData.length > 0) {
-        const grouped = {};
-        if (vData) {
-          vData.forEach(v => {
-            if (!grouped[v.customer_id]) grouped[v.customer_id] = [];
-            grouped[v.customer_id].push({
-              id: v.id, date: v.date, services: v.services||[],
-              stylist: v.stylist, amount: v.amount, notes: v.notes||"",
-              photos: Array.isArray(v.photos) ? v.photos : []
-            });
+  // FIX: loadData function extracted — reusable after add
+  async function loadData() {
+    setLoading(true);
+    const salonId = currentUser?.salon_id || currentUser?.id;
+    const { data: cData } = await supabase.from("customers").select("*").eq("salon_id", salonId);
+    const { data: vData } = await supabase.from("visit_history").select("*").eq("salon_id", salonId);
+    if (cData && cData.length > 0) {
+      const grouped = {};
+      if (vData) {
+        vData.forEach(v => {
+          if (!grouped[v.customer_id]) grouped[v.customer_id] = [];
+          grouped[v.customer_id].push({
+            id: v.id, date: v.date, services: v.services||[],
+            stylist: v.stylist, amount: v.amount, notes: v.notes||"",
+            photos: Array.isArray(v.photos) ? v.photos : []
           });
-        }
-        setCustomers(cData.map(c => ({
-          ...c,
-          avatar: c.avatar || (c.name?.slice(0,2)||"??").toUpperCase(),
-          color: c.color || "#22c55e",
-          visitHistory: grouped[c.id] || [],
-          totalSpent: c.total_spent || 0,
-          lastVisit: c.last_visit || "-",
-          favServices: c.fav_services || [],
-          tag: c.tag || "New",
-          src: c.source || "wa",
-          email: c.email || "",
-        })));
+        });
       }
-      setLoading(false);
+      setCustomers(cData.map(c => ({
+        ...c,
+        avatar: c.avatar || (c.name?.slice(0,2)||"??").toUpperCase(),
+        color: c.color || "#22c55e",
+        visitHistory: grouped[c.id] || [],
+        totalSpent: c.total_spent || 0,
+        lastVisit: c.last_visit || "-",
+        favServices: c.fav_services || [],
+        tag: c.tag || "New",
+        src: c.source || "wa",
+        email: c.email || "",
+      })));
+    } else {
+      setCustomers([]);
     }
+    setLoading(false);
+  }
+
+  useEffect(() => {
     if (currentUser?.id) loadData();
   }, [currentUser?.id]);
 
@@ -698,6 +708,7 @@ export default function CustomerHistory({ currentUser }){
         source: "walk",
       }).select().single();
       if(res) {
+        // FIX: fresh DB se customer add karo state mein — proper format ke saath
         setCustomers(prev => [{
           ...res,
           avatar: (res.name?.slice(0,2)||"??").toUpperCase(),
@@ -709,6 +720,7 @@ export default function CustomerHistory({ currentUser }){
           tag: "New",
           src: "walk",
           email: res.email || "",
+          visits: 0,
         }, ...prev]);
       }
       setNewCustomer({name:"",phone:"",dob:"",gender:"male",email:""});
@@ -750,12 +762,12 @@ export default function CustomerHistory({ currentUser }){
               customers={customers}
               isStaff={isStaff}
               onSelect={c=>setSelectedId(c.id)}
-              onAddCustomer={isStaff ? ()=>setShowAddCustomer(true) : null}
+              // FIX: dono staff + owner ke liye Add Customer button show karo
+              onAddCustomer={()=>setShowAddCustomer(true)}
             />
       }
 
-      {/* ✅ Staff Add New Customer Modal — email field added */}
-      {showAddCustomer && isStaff && (
+      {showAddCustomer && (
         <div onClick={()=>setShowAddCustomer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
           <div onClick={e=>e.stopPropagation()} style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
             <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 14px"}}/>
@@ -782,7 +794,6 @@ export default function CustomerHistory({ currentUser }){
               <input style={IS} type="date" value={newCustomer.dob} onChange={e=>setNewCustomer(p=>({...p,dob:e.target.value}))}/>
             </div>
 
-            {/* ✅ Email field — optional */}
             <div style={{marginBottom:12}}>
               <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Email Address <span style={{fontWeight:400,color:T.tf}}>(optional)</span></div>
               <input style={IS} type="email" placeholder="customer@gmail.com" value={newCustomer.email} onChange={e=>setNewCustomer(p=>({...p,email:e.target.value}))} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
