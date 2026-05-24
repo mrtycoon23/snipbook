@@ -244,7 +244,8 @@ function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
                 <button onClick={handleOwnerLogin} disabled={loading} style={{width:"100%",padding:"13px",background:loading?"#86efac":"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:loading?"not-allowed":"pointer",boxShadow:"0 4px 14px rgba(34,197,94,0.3)",marginBottom:12}}>
                   {loading?"Logging in...":"👑 Owner Login →"}
                 </button>
-                <div style={{textAlign:"center",fontSize:13,color:"#888"}}>New ho? <span onClick={onSignup} style={{color:"#22c55e",fontWeight:800,cursor:"pointer"}}>Free trial shuru karo</span></div>
+                <div style={{textAlign:"center",fontSize:13,color:"#888",marginBottom:8}}>New ho? <span onClick={onSignup} style={{color:"#22c55e",fontWeight:800,cursor:"pointer"}}>Free trial shuru karo</span></div>
+<div style={{textAlign:"center"}}><span onClick={async()=>{if(!email){alert("Pehle email daalo!");return;}const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:"https://snipbook.vercel.app"});if(error)alert("Error: "+error.message);else alert("✅ Reset link bhej diya! Email check karo.");}} style={{fontSize:12,color:"#aaa",cursor:"pointer",textDecoration:"underline"}}>🔑 Forgot Password?</span></div>
               </>
             )}
             {tab==="staff"&&(
@@ -908,7 +909,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       }catch(e){console.error("notif error",e);}
     }
     loadNotifications();
-    const interval = setInterval(loadNotifications, 30000);
+    const interval = setInterval(loadNotifications, 10000);
     return ()=>clearInterval(interval);
   },[user.id]);
 
