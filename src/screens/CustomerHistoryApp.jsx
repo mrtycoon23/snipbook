@@ -598,9 +598,7 @@ function CustomerList({customers, isStaff, onSelect, onAddCustomer}){
           <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:14,color:T.tf}}>🔍</span>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or number…" style={{width:"100%",padding:"10px 12px 10px 36px",border:`2px solid ${T.border}`,borderRadius:11,fontSize:13,fontFamily:"inherit",outline:"none",background:T.inp,boxSizing:"border-box"}}/>
         </div>
-        <div style={{display:"flex",gap:6,overflowX:"auto"}}>
-          {["All","VIP","Regular","New","WhatsApp","Walk-in"].map(f=><button key={f} onClick={()=>setFilter(f)} style={{padding:"5px 13px",borderRadius:20,border:`2px solid ${filter===f?T.green:T.border}`,background:filter===f?T.green:T.surface,color:filter===f?"#fff":T.ts,fontSize:11,fontWeight:800,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"inherit",flexShrink:0}}>{f}</button>)}
-        </div>
+        
       </div>
       <div style={{padding:"8px 16px",background:T.sub,borderBottom:`2px solid ${T.border}`,fontSize:12,color:T.ts,fontWeight:700,flexShrink:0}}>{filtered.length} customer{filtered.length!==1?"s":""}</div>
       <div style={{flex:1,overflowY:"auto",padding:"12px 16px"}}>
