@@ -180,7 +180,37 @@ function Landing({onStart,onLogin}){
     </div>
   );
 }
-
+function ResetPasswordPage({onDone}){
+  const [pass,setPass]=useState("");
+  const [done,setDone]=useState(false);
+  const [loading,setLoading]=useState(false);
+  return(
+    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#f0fdf4,#f0f4f8)",display:"flex",alignItems:"center",justifyContent:"center",padding:"24px",fontFamily:"system-ui,sans-serif"}}>
+      <div style={{background:"#fff",borderRadius:20,padding:"28px 24px",width:"100%",maxWidth:380,boxShadow:"0 8px 28px rgba(0,0,0,0.08)"}}>
+        <div style={{textAlign:"center",marginBottom:24}}>
+          <div style={{fontSize:40,marginBottom:8}}>🔑</div>
+          <div style={{fontWeight:900,fontSize:18}}>Naya Password Set Karo</div>
+        </div>
+        {done
+          ?<div style={{textAlign:"center"}}><div style={{fontSize:40,marginBottom:12}}>✅</div><div style={{fontWeight:800,color:"#16a34a",marginBottom:16}}>Password update ho gaya!</div><button onClick={onDone} style={{width:"100%",padding:13,background:"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer"}}>Login Karo →</button></div>
+          :<>
+            <input value={pass} onChange={e=>setPass(e.target.value)} type="password" placeholder="Naya password (min 6 chars)" style={{width:"100%",padding:"12px",border:"2px solid #e8edf3",borderRadius:12,fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box",marginBottom:16}}/>
+            <button onClick={async()=>{
+              if(pass.length<6){alert("Min 6 characters!");return;}
+              setLoading(true);
+              const {error}=await supabase.auth.updateUser({password:pass});
+              if(error)alert("Error: "+error.message);
+              else setDone(true);
+              setLoading(false);
+            }} style={{width:"100%",padding:13,background:loading?"#86efac":"#22c55e",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer"}}>
+              {loading?"Saving...":"✓ Save Password"}
+            </button>
+          </>
+        }
+      </div>
+    </div>
+  );
+}
 function LoginPage({onOwnerLogin, onStaffLogin, onSignup, onBack}){
   const [tab,setTab]=useState("owner");
   const [email,setEmail]=useState("");
@@ -1319,6 +1349,12 @@ export default function SnipBook(){
   const [showRevenue,setShowRevenue]=useState(DEFAULT_SHOW_REVENUE);
 
   useEffect(()=>{
+    // Recovery link handle karo
+    if(window.location.hash.includes("type=recovery")){
+      setPage("resetPassword");
+      return;
+    }
+
     const savedStaff = localStorage.getItem("snipbook_staff");
     if(savedStaff){
       try{
@@ -1381,6 +1417,7 @@ export default function SnipBook(){
       }} onBack={()=>setPage("login")}/>}
       {page==="staffApp"&&staffUser&&<StaffDashboard staff={staffUser} showRevenue={showRevenue} onLogout={staffLogout}/>}
       {page==="onboarding"&&<Onboarding onComplete={u=>{setUser(u);setPage("app");}} onBack={()=>setPage("landing")}/>}
+      {page==="resetPassword"&&<ResetPasswordPage onDone={()=>setPage("login")}/>}
       {page==="app"&&user&&<MainApp user={user} setUser={setUser} onLogout={ownerLogout} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/>}
     </>
   );
