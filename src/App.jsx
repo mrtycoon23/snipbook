@@ -4,6 +4,7 @@ import StaffManagement from "./screens/StaffManagement";
 import CustomerHistory from "./screens/CustomerHistoryApp";
 import EngagementCenter from "./screens/EngagementCenter";
 import StaffDashboard, { StaffLoginPage } from "./screens/StaffDashboard";
+import SuperAdmin from "./screens/SuperAdmin";
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function pad(n){ return String(n).padStart(2,"0"); }
@@ -1396,7 +1397,8 @@ export default function SnipBook(){
     setPage("login");
   }
 
-  if(page==="loading"){
+  if(window.location.pathname==="/admin") return <SuperAdmin/>;
+if(page==="loading"){
     return(
       <div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#f0fdf4,#f0f4f8)",fontFamily:"system-ui,sans-serif"}}>
         <Logo size={20} iconSize={48}/>
