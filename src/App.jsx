@@ -518,7 +518,7 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
             notifNumber:salon.notification_number||"",
             notifEmail:salon.notification_email||"",
           }));
-          if(salon.services&&salon.services.length>0) setServices(salon.services);
+          if(salon.services&&salon.services.length>0) setServices(salon.services.map(s=>({...s,emoji:s.emoji||"✂️"})));
           if(salon.working_days&&salon.working_days.length>0) setHours(h=>({...h,workDays:salon.working_days,openTime:salon.open_time||9,closeTime:salon.close_time||21}));
           if(salon.whatsapp_number) setWa(w=>({...w,number:salon.whatsapp_number}));
           if(salon.bot_keyword) setWa(w=>({...w,botKeyword:salon.bot_keyword}));
@@ -635,12 +635,14 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
 
         {tab==="services"&&(<>
           {["male","female"].map(genderSection=>{
-            const sectionSvcs = services.filter(s=>(s.gender||"male")===genderSection);
+            const sectionSvcs = services.filter(s=>(s.gender||"both")===genderSection||(s.gender||"both")==="both");
             const sectionColor = genderSection==="male" ? "#3b82f6" : "#ec4899";
             const sectionBg    = genderSection==="male" ? "#eff6ff" : "#fff0f6";
             const sectionBorder= genderSection==="male" ? "#93c5fd" : "#f9a8d4";
             const sectionLabel = genderSection==="male" ? "👨 Male Services" : "👩 Female Services";
             const isAdding     = showAdd === genderSection;
+if(profile.salonType==="mens"&&genderSection==="female") return null;
+if(profile.salonType==="ladies"&&genderSection==="male") return null;
             const isOpen       = openSection === genderSection;
             return(
               <div key={genderSection} style={{background:"#fff",border:`2px solid ${isOpen?sectionColor:sectionBorder}`,borderRadius:16,overflow:"hidden",marginBottom:12,transition:"all 0.2s"}}>
