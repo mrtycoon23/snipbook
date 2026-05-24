@@ -478,8 +478,13 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
                 <div style={{ fontSize: 12, color: "#888", marginTop: 1 }}>{s.role}</div>
                 {isPresent
                   ? <div style={{ fontSize: 11, color: "#2563eb", marginTop: 3 }}>{staffLogs.length} clients . {formatCurrency(staffLogs.reduce((a, l) => a + l.amount, 0))} . Detail</div>
-                  : <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>Absent today</div>
-                }
+                  : <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>
+    Absent today
+    {attendance[ownerSelectedDate]?.[s.id+"_reason"] && 
+      <span style={{color:"#ef4444",marginLeft:4}}>· {attendance[ownerSelectedDate][s.id+"_reason"]}</span>
+    }
+  </div>
+                } 
               </div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flexShrink: 0 }}>
                 <div style={{ width: 52, height: 26, borderRadius: 13, background: isPresent ? "#16a34a" : "#d1d5db", position: "relative", cursor: "pointer" }} onClick={() => toggleAttendance(s.id)}>
@@ -596,12 +601,13 @@ export default function StaffManagement({ role = "owner", currentUser, showReven
         data.forEach(row => {
           if (!attMap[row.date]) attMap[row.date] = {};
           attMap[row.date][row.staff_id] = row.is_present;
+if(row.absent_reason) attMap[row.date][row.staff_id+"_reason"] = row.absent_reason;
         });
         setAttendance(attMap);
       } else {
-        setAttendance({});
+        setAttendance({}); 
       }
-    }
+    } 
     if (currentUser?.id) loadAttendance();
   }, [currentUser?.id]);
 

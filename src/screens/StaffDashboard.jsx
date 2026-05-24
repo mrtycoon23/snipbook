@@ -220,7 +220,8 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
     setAttendance(prev=>{const dm={...(prev[today]||{})};dm[staff.id]=newVal;return{...prev,[today]:dm};});
     if(salonId){
       await supabase.from("attendance").upsert({
-        salon_id:salonId, staff_id:staff.id, date:today, is_present:newVal
+        salon_id:salonId, staff_id:staff.id, date:today, is_present:newVal,
+        absent_reason: newVal ? null : ((absentNotes||{})[today]||null)
       },{onConflict:"salon_id,staff_id,date"});
     }
   }
@@ -264,7 +265,12 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
         {!isPresent&&(
           <div style={{marginTop:12}}>
             <div style={{fontSize:12,fontWeight:800,color:T.ts,marginBottom:6}}>🔒 Aaj ki absence ka reason (sirf aap dekhoge):</div>
-            <input style={{...IS,fontSize:13,background:T.blue,borderColor:T.bb}} placeholder="Reason likho — owner ko nahi dikhega..." value={(absentNotes||{})[today]||""} onChange={e=>setAbsentNotes(prev=>({...prev,[today]:e.target.value}))} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.bb}/>
+            <input style={{...IS,fontSize:13,background:T.blue,borderColor:T.bb}} placeholder="Reason likho — owner ko nahi dikhega..." value={(absentNotes||{})[today]||""} onChange={async e=>{
+  setAbsentNotes(prev=>({...prev,[today]:e.target.value}));
+  if(salonId) await supabase.from("attendance").upsert({
+    salon_id:salonId,staff_id:staff.id,date:today,is_present:false,absent_reason:e.target.value
+  },{onConflict:"salon_id,staff_id,date"});
+}} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.bb}/>
           </div>
         )}
       </div>
