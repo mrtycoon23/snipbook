@@ -1116,8 +1116,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                 </button>
               </div>
               <button onClick={()=>{setEditClient({...selClient});setShowEditClient(true);}} style={{width:"100%",padding:"11px",background:"#fff",border:"2px solid #e8edf3",borderRadius:12,color:"#555",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8}}>✏️ Edit Profile</button>
-              <div style={{fontWeight:800,fontSize:13,color:"#555",marginBottom:9}}>📋 Visit History</div>
-              {(selClient.history||[]).map((h,i)=>(<div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 11px",background:"#f8fafc",borderRadius:10,marginBottom:6,border:"2px solid #f0f4f8"}}><div style={{width:7,height:7,borderRadius:"50%",background:selClient.color,flexShrink:0}}/><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13}}>{h.service}</div><div style={{fontSize:11,color:"#aaa"}}>{h.date}</div></div><div style={{fontWeight:800,fontSize:13,color:"#16a34a"}}>₹{h.price}</div></div>))}
+              <button onClick={()=>{setScreen("history");setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📋 Visit History →</button>
             </div></div>)}
 
             {/* ✅ Custom Welcome Modal — browser popup GONE */}
