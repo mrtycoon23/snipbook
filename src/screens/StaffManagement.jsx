@@ -2,23 +2,10 @@ import { useState, useMemo, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 const SERVICES = ["Haircut", "Hair Color", "Facial", "Waxing", "Bridal Makeup", "Manicure", "Pedicure", "Head Massage", "Threading", "Blowdry", "Keratin", "Hair Spa"];
-const INITIAL_STAFF = [
-  { id: 1, name: "Priya Sharma", role: "Hairstylist", phone: "9876543210", salary: 14000, pin: "1111" },
-  { id: 2, name: "Ritu Gupta", role: "Makeup Artist", phone: "8765432109", salary: 16000, pin: "2222" },
-  { id: 3, name: "Suresh Kumar", role: "Nail Artist", phone: "7654321098", salary: 11000, pin: "3333" },
-  { id: 4, name: "Neha Singh", role: "Receptionist", phone: "6543210987", salary: 10000, pin: "4444" },
-];
 const today = new Date().toISOString().slice(0, 10);
 const thisWeekStart = (() => { const d = new Date(); d.setDate(d.getDate() - d.getDay()); return d.toISOString().slice(0, 10); })();
 const thisMonthStart = new Date().toISOString().slice(0, 8) + "01";
 function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
-const INITIAL_LOGS = [
-  { id: 1, staffId: 1, clientName: "Anjali Mehta", service: "Hair Color", amount: 1200, date: today },
-  { id: 2, staffId: 1, clientName: "Sunita Rao", service: "Haircut", amount: 400, date: today },
-  { id: 3, staffId: 2, clientName: "Meera Joshi", service: "Facial", amount: 800, date: today },
-  { id: 4, staffId: 1, clientName: "Rina Das", service: "Haircut", amount: 350, date: daysAgo(1) },
-];
-const INITIAL_ATTENDANCE = { [today]: { 1: true, 2: true, 3: false, 4: true } };
 const AVATAR_COLORS = [
   { bg: "#fce7f3", text: "#9d174d" },
   { bg: "#dbeafe", text: "#1e40af" },
@@ -180,20 +167,6 @@ function EditLogModal({ log, onSave, onDelete, onClose }) {
   );
 }
 
-function DetailDrawer({ title, onClose, children }) {
-  return (
-    <div style={styles.modalBg} onClick={e => e.target === e.currentTarget && onClose()}>
-      <div style={{ ...styles.modal, maxHeight: "80vh", overflowY: "auto", paddingBottom: 28 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#1a1a2e" }}>{title}</div>
-          <button onClick={onClose} style={{ border: "none", background: "#f1f5f9", borderRadius: 8, padding: "4px 10px", fontSize: 13, cursor: "pointer", color: "#555", fontWeight: 700 }}>X</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 function SalarySlipScreen({ staff, logs, attendance, onBack }) {
   const [slipMonth, setSlipMonth] = useState(new Date().toISOString().slice(0, 7));
   const monthStart = slipMonth + "-01";
@@ -254,6 +227,160 @@ function SalarySlipScreen({ staff, logs, attendance, onBack }) {
   );
 }
 
+function StaffSummaryScreen({ staffList, logs, attendance, onBack }) {
+  const [selDate, setSelDate] = useState(today);
+  const [viewMode, setViewMode] = useState("day"); // day | month
+  const [selMonth, setSelMonth] = useState(new Date().toISOString().slice(0, 7));
+
+  const viewAtt = attendance[selDate] || {};
+  const dayLogs = logs.filter(l => l.date === selDate);
+  const totalRevenue = dayLogs.reduce((s, l) => s + l.amount, 0);
+  const presentCount = staffList.filter(s => viewAtt[s.id]).length;
+
+  const monthStart = selMonth + "-01";
+  const monthEnd = (() => { const [y, m] = selMonth.split("-").map(Number); return new Date(y, m, 0).toISOString().slice(0, 10); })();
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.header}>
+        <button onClick={onBack} style={styles.backBtn}>← Back</button>
+        <div style={{ textAlign: "center" }}>
+          <div style={styles.headerTitle}>📊 Staff Summary</div>
+          <div style={styles.headerSub}>Attendance + Work Logs</div>
+        </div>
+        <div style={{ width: 60 }} />
+      </div>
+
+      {/* View Mode Toggle */}
+      <div style={{ background: "white", padding: "10px 14px", borderBottom: "0.5px solid #e8e8e0", display: "flex", gap: 8 }}>
+        {[{ key: "day", label: "📅 Din Wise" }, { key: "month", label: "📆 Mahine Wise" }].map(m => (
+          <button key={m.key} onClick={() => setViewMode(m.key)} style={{ flex: 1, padding: "8px", border: `2px solid ${viewMode === m.key ? "#22c55e" : "#e8edf3"}`, borderRadius: 10, background: viewMode === m.key ? "#e8fdf0" : "white", color: viewMode === m.key ? "#16a34a" : "#888", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {viewMode === "day" && <>
+        {/* Date Picker */}
+        <div style={{ background: "white", padding: "12px 14px", borderBottom: "0.5px solid #e8e8e0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a2e" }}>Date</div>
+          <input type="date" value={selDate} onChange={e => setSelDate(e.target.value)}
+            style={{ border: "2px solid #22c55e", borderRadius: 8, padding: "6px 10px", fontSize: 13, fontWeight: 700, color: "#16a34a", outline: "none", cursor: "pointer" }} />
+        </div>
+
+        {/* Day Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, padding: "12px 14px 0" }}>
+          {[
+            { label: "Present", val: presentCount, color: "#16a34a" },
+            { label: "Absent", val: staffList.length - presentCount, color: "#dc2626" },
+            { label: "Services", val: dayLogs.length, color: "#1a1a2e" },
+            { label: "Revenue", val: "₹" + totalRevenue.toLocaleString("en-IN"), color: "#2563eb", small: true },
+          ].map(s => (
+            <div key={s.label} style={styles.statCard}>
+              <div style={{ ...styles.statNum, color: s.color, fontSize: s.small ? 12 : 20 }}>{s.val}</div>
+              <div style={styles.statLabel}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Per Staff Day View */}
+        <div style={{ padding: "14px" }}>
+          {staffList.length === 0 && <div style={styles.emptyState}>Koi staff nahi</div>}
+          {staffList.map(s => {
+            const c = avatarColor(s.id);
+            const isPresent = !!viewAtt[s.id];
+            const staffLogs = dayLogs.filter(l => l.staffId === s.id);
+            const staffRevenue = staffLogs.reduce((sum, l) => sum + l.amount, 0);
+            const reason = attendance[selDate]?.[s.id + "_reason"];
+            return (
+              <div key={s.id} style={{ background: "white", borderRadius: 14, border: `2px solid ${isPresent ? "#bbf7d0" : "#fecaca"}`, padding: 14, marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: (isPresent && staffLogs.length > 0) ? 10 : 0 }}>
+                  <div style={{ ...styles.avatar, background: c.bg, color: c.text, width: 38, height: 38, fontSize: 12 }}>{initials(s.name)}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a2e" }}>{s.name}</div>
+                    <div style={{ fontSize: 11, color: "#888" }}>{s.role}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ background: isPresent ? "#dcfce7" : "#fee2e2", color: isPresent ? "#16a34a" : "#dc2626", fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 20 }}>
+                      {isPresent ? "✅ Present" : "❌ Absent"}
+                    </div>
+                    {isPresent && <div style={{ fontSize: 11, fontWeight: 700, color: "#16a34a", marginTop: 4 }}>₹{staffRevenue.toLocaleString("en-IN")} · {staffLogs.length} clients</div>}
+                  </div>
+                </div>
+                {!isPresent && reason && (
+                  <div style={{ background: "#fef2f2", borderRadius: 8, padding: "6px 10px", marginTop: 8, fontSize: 11, color: "#dc2626", fontWeight: 600 }}>
+                    📝 Reason: {reason}
+                  </div>
+                )}
+                {isPresent && staffLogs.length > 0 && (
+                  <div style={{ borderTop: "1px solid #f0f4f8", paddingTop: 10 }}>
+                    {staffLogs.map((log, i) => (
+                      <div key={log.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: i < staffLogs.length - 1 ? "0.5px solid #f0f4f8" : "none" }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a2e" }}>{log.clientName}</div>
+                          <div style={{ fontSize: 11, color: "#888" }}>{log.service}</div>
+                        </div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#16a34a" }}>₹{log.amount.toLocaleString("en-IN")}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {isPresent && staffLogs.length === 0 && (
+                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 8, fontStyle: "italic" }}>Koi work log nahi is din ka</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </>}
+
+      {viewMode === "month" && <>
+        {/* Month Picker */}
+        <div style={{ background: "white", padding: "12px 14px", borderBottom: "0.5px solid #e8e8e0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a2e" }}>Month</div>
+          <input type="month" value={selMonth} onChange={e => setSelMonth(e.target.value)}
+            style={{ border: "2px solid #22c55e", borderRadius: 8, padding: "6px 10px", fontSize: 13, fontWeight: 700, color: "#16a34a", outline: "none", cursor: "pointer" }} />
+        </div>
+
+        {/* Per Staff Month Summary */}
+        <div style={{ padding: "14px" }}>
+          {staffList.map(s => {
+            const c = avatarColor(s.id);
+            const monthLogs = logs.filter(l => l.staffId === s.id && l.date >= monthStart && l.date <= monthEnd);
+            const monthRevenue = monthLogs.reduce((sum, l) => sum + l.amount, 0);
+            const presentDays = Object.entries(attendance).filter(([d, map]) => d >= monthStart && d <= monthEnd && map[s.id]).length;
+            const totalDays = (() => { const [y, m] = selMonth.split("-").map(Number); return new Date(y, m, 0).getDate(); })();
+            return (
+              <div key={s.id} style={{ background: "white", borderRadius: 14, border: "1.5px solid #e8edf3", padding: 14, marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <div style={{ ...styles.avatar, background: c.bg, color: c.text, width: 38, height: 38, fontSize: 12 }}>{initials(s.name)}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a2e" }}>{s.name}</div>
+                    <div style={{ fontSize: 11, color: "#888" }}>{s.role} · {formatCurrency(s.salary)}/mo</div>
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
+                  {[
+                    { label: "Present", val: presentDays, color: "#16a34a", bg: "#f0fdf4" },
+                    { label: "Absent", val: totalDays - presentDays, color: "#dc2626", bg: "#fef2f2" },
+                    { label: "Clients", val: monthLogs.length, color: "#1a1a2e", bg: "#f8fafc" },
+                    { label: "Revenue", val: "₹" + (monthRevenue/1000).toFixed(1) + "k", color: "#2563eb", bg: "#eff6ff" },
+                  ].map(st => (
+                    <div key={st.label} style={{ background: st.bg, borderRadius: 8, padding: "8px 4px", textAlign: "center" }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: st.color }}>{st.val}</div>
+                      <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>{st.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </>}
+    </div>
+  );
+}
+
 function StaffDetailScreen({ staff, logs, setLogs, attendance, onBack, onAddLog, onEditStaff, onDeleteStaff, currentUser }) {
   const [tab, setTab] = useState("month");
   const [editingLog, setEditingLog] = useState(null);
@@ -300,7 +427,7 @@ function StaffDetailScreen({ staff, logs, setLogs, attendance, onBack, onAddLog,
       </div>
       <div style={{ padding: "14px 14px 0", display: "flex", gap: 14, alignItems: "center" }}>
         <div style={{ ...styles.avatar, width: 56, height: 56, fontSize: 18, background: c.bg, color: c.text }}>{initials(staff.name)}</div>
-        <div style={{ flex: 1 }}><div style={{ fontSize: 13, color: "#888" }}>{staff.phone} . {formatCurrency(staff.salary)}/mo</div></div>
+        <div style={{ flex: 1 }}><div style={{ fontSize: 13, color: "#888" }}>{staff.phone} · {formatCurrency(staff.salary)}/mo</div></div>
         <button onClick={() => setShowSalarySlip(true)} style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "8px 12px", fontSize: 11, fontWeight: 700, color: "#166534", cursor: "pointer" }}>Salary Slip</button>
       </div>
       <div style={{ padding: "14px 14px 0" }}>
@@ -325,7 +452,7 @@ function StaffDetailScreen({ staff, logs, setLogs, attendance, onBack, onAddLog,
             <div key={log.id} onClick={() => setEditingLog(log)} style={{ ...styles.logCard, cursor: "pointer" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a2e" }}>{log.clientName}</div>
-                <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{log.service} . {formatDate(log.date)}</div>
+                <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{log.service} · {formatDate(log.date)}</div>
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#16a34a" }}>{formatCurrency(log.amount)}</div>
             </div>
@@ -345,26 +472,20 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
   const [logForStaff, setLogForStaff] = useState(null);
   const [nextLogId, setNextLogId] = useState(100);
   const [ownerSelectedDate, setOwnerSelectedDate] = useState(today);
+  const [showSummary, setShowSummary] = useState(false);
 
-  // ✅ FIXED: Attendance toggle — Supabase mein save hoga
   async function toggleAttendance(staffId) {
     const currentVal = !!(attendance[ownerSelectedDate] || {})[staffId];
     const newVal = !currentVal;
-
-    // UI turant update karo
     setAttendance(prev => {
       const dm = { ...(prev[ownerSelectedDate] || {}) };
       dm[staffId] = newVal;
       return { ...prev, [ownerSelectedDate]: dm };
     });
-
-    // Supabase mein save karo
     if (currentUser?.id) {
       await supabase.from("attendance").upsert({
-        salon_id: currentUser.id,
-        staff_id: staffId,
-        date: ownerSelectedDate,
-        is_present: newVal
+        salon_id: currentUser.id, staff_id: staffId,
+        date: ownerSelectedDate, is_present: newVal
       }, { onConflict: "salon_id,staff_id,date" });
     }
   }
@@ -401,12 +522,9 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
   async function addLog(data) {
     if (currentUser?.id) {
       const { data: res } = await supabase.from("work_logs").insert({
-        salon_id: currentUser.id,
-        staff_id: data.staffId,
-        client_name: data.clientName,
-        service: data.service,
-        amount: data.amount,
-        date: data.date
+        salon_id: currentUser.id, staff_id: data.staffId,
+        client_name: data.clientName, service: data.service,
+        amount: data.amount, date: data.date
       }).select().single();
       if (res) {
         setLogs(prev => [...prev, {
@@ -428,6 +546,10 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
   const isViewingToday = ownerSelectedDate === today;
   const viewLabel = isViewingToday ? "Aaj" : formatDate(ownerSelectedDate);
 
+  if (showSummary) {
+    return <StaffSummaryScreen staffList={staffList} logs={logs} attendance={attendance} onBack={() => setShowSummary(false)} />;
+  }
+
   if (view === "detail" && selectedStaff) {
     return (
       <>
@@ -447,20 +569,36 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
     <div style={styles.page}>
       <div style={styles.header}>
         <div><div style={styles.headerTitle}>Staff Management</div><div style={styles.headerSub}>Owner View</div></div>
-        <button style={styles.addBtn} onClick={() => { setLogForStaff(null); setShowAddLog(true); }}>+ Log Entry</button>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button style={{ ...styles.addBtn, background: "#22c55e" }} onClick={() => setShowSummary(true)}>📊 Summary</button>
+          <button style={styles.addBtn} onClick={() => { setLogForStaff(null); setShowAddLog(true); }}>+ Log</button>
+        </div>
       </div>
+
+      {/* Revenue Toggle */}
       <div style={{ background: showRevenueToStaff ? "#f0fdf4" : "#fef2f2", borderBottom: "0.5px solid #e8e8e0", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div><div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a2e" }}>Staff ko Sales dikhao?</div><div style={{ fontSize: 11, color: "#888", marginTop: 1 }}>{showRevenueToStaff ? "ON" : "OFF"}</div></div>
         <div style={{ width: 52, height: 26, borderRadius: 13, background: showRevenueToStaff ? "#16a34a" : "#d1d5db", position: "relative", cursor: "pointer" }} onClick={() => setShowRevenueToStaff(v => !v)}>
           <div style={{ width: 20, height: 20, borderRadius: "50%", background: "white", position: "absolute", top: 3, left: showRevenueToStaff ? 29 : 3, transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, padding: "14px 14px 0" }}>
+
+      {/* Date Picker */}
+      <div style={{ background: "white", padding: "10px 14px", borderBottom: "0.5px solid #e8e8e0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a2e" }}>📅 {viewLabel}</div>
+        <input type="date" value={ownerSelectedDate} onChange={e => setOwnerSelectedDate(e.target.value)}
+          style={{ border: "2px solid #22c55e", borderRadius: 8, padding: "5px 10px", fontSize: 12, fontWeight: 700, color: "#16a34a", outline: "none", cursor: "pointer" }} />
+      </div>
+
+      {/* Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, padding: "12px 14px 0" }}>
         <div style={styles.statCard}><div style={{ ...styles.statNum, color: "#16a34a" }}>{presentCount}</div><div style={styles.statLabel}>Present</div></div>
         <div style={styles.statCard}><div style={{ ...styles.statNum, color: "#dc2626" }}>{absentCount}</div><div style={styles.statLabel}>Absent</div></div>
         <div style={styles.statCard}><div style={{ ...styles.statNum, color: "#1a1a2e" }}>{viewServices}</div><div style={styles.statLabel}>Services</div></div>
-        <div style={styles.statCard}><div style={{ ...styles.statNum, color: "#2563eb", fontSize: 14 }}>{formatCurrency(viewRevenue)}</div><div style={styles.statLabel}>Revenue</div></div>
+        <div style={styles.statCard}><div style={{ ...styles.statNum, color: "#2563eb", fontSize: 13 }}>{formatCurrency(viewRevenue)}</div><div style={styles.statLabel}>Revenue</div></div>
       </div>
+
+      {/* Staff List */}
       <div style={{ padding: "14px" }}>
         <div style={styles.sectionHeader}>
           <div style={styles.sectionTitle}>{viewLabel} ka Staff</div>
@@ -477,14 +615,14 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
                 <div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a2e" }}>{s.name}</div>
                 <div style={{ fontSize: 12, color: "#888", marginTop: 1 }}>{s.role}</div>
                 {isPresent
-                  ? <div style={{ fontSize: 11, color: "#2563eb", marginTop: 3 }}>{staffLogs.length} clients . {formatCurrency(staffLogs.reduce((a, l) => a + l.amount, 0))} . Detail</div>
+                  ? <div style={{ fontSize: 11, color: "#2563eb", marginTop: 3 }}>{staffLogs.length} clients · {formatCurrency(staffLogs.reduce((a, l) => a + l.amount, 0))} · Detail →</div>
                   : <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>
-    Absent today
-    {attendance[ownerSelectedDate]?.[s.id+"_reason"] && 
-      <span style={{color:"#ef4444",marginLeft:4}}>· {attendance[ownerSelectedDate][s.id+"_reason"]}</span>
-    }
-  </div>
-                } 
+                      Absent
+                      {attendance[ownerSelectedDate]?.[s.id + "_reason"] &&
+                        <span style={{ color: "#ef4444", marginLeft: 4 }}>· {attendance[ownerSelectedDate][s.id + "_reason"]}</span>
+                      }
+                    </div>
+                }
               </div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, flexShrink: 0 }}>
                 <div style={{ width: 52, height: 26, borderRadius: 13, background: isPresent ? "#16a34a" : "#d1d5db", position: "relative", cursor: "pointer" }} onClick={() => toggleAttendance(s.id)}>
@@ -545,7 +683,7 @@ function StaffSelfView({ staff, logs, setLogs, attendance, setAttendance, nextLo
         {filtered.length === 0 ? <div style={styles.emptyState}>Koi entry nahi!</div>
           : filtered.map(log => (
             <div key={log.id} style={styles.logCard}>
-              <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a2e" }}>{log.clientName}</div><div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{log.service} . {formatDate(log.date)}</div></div>
+              <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 600, color: "#1a1a2e" }}>{log.clientName}</div><div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>{log.service} · {formatDate(log.date)}</div></div>
               {showRevenue && <div style={{ fontSize: 14, fontWeight: 700, color: "#16a34a" }}>{formatCurrency(log.amount)}</div>}
             </div>
           ))}
@@ -561,7 +699,6 @@ export default function StaffManagement({ role = "owner", currentUser, showReven
   const [attendance, setAttendance] = useState({});
   const [nextLogId, setNextLogId] = useState(100);
 
-  // ✅ Staff load karo
   useEffect(() => {
     async function loadStaff() {
       const { data } = await supabase.from("staff").select("*").eq("salon_id", currentUser?.id);
@@ -571,7 +708,6 @@ export default function StaffManagement({ role = "owner", currentUser, showReven
     if (currentUser?.id) loadStaff();
   }, [currentUser?.id]);
 
-  // ✅ Work logs load karo
   useEffect(() => {
     async function loadLogs() {
       const { data } = await supabase.from("work_logs").select("*").eq("salon_id", currentUser?.id);
@@ -580,34 +716,24 @@ export default function StaffManagement({ role = "owner", currentUser, showReven
           id: l.id, staffId: l.staff_id, clientName: l.client_name,
           service: l.service, amount: l.amount, date: l.date
         })));
-      } else {
-        setLogs([]);
-      }
+      } else setLogs([]);
     }
     if (currentUser?.id) loadLogs();
   }, [currentUser?.id]);
 
-  // ✅ NEW: Attendance load karo Supabase se
   useEffect(() => {
     async function loadAttendance() {
-      const { data } = await supabase
-        .from("attendance")
-        .select("*")
-        .eq("salon_id", currentUser?.id);
-
+      const { data } = await supabase.from("attendance").select("*").eq("salon_id", currentUser?.id);
       if (data && data.length > 0) {
-        // Convert flat rows → { date: { staffId: isPresent } } format
         const attMap = {};
         data.forEach(row => {
           if (!attMap[row.date]) attMap[row.date] = {};
           attMap[row.date][row.staff_id] = row.is_present;
-if(row.absent_reason) attMap[row.date][row.staff_id+"_reason"] = row.absent_reason;
+          if (row.absent_reason) attMap[row.date][row.staff_id + "_reason"] = row.absent_reason;
         });
         setAttendance(attMap);
-      } else {
-        setAttendance({}); 
-      }
-    } 
+      } else setAttendance({});
+    }
     if (currentUser?.id) loadAttendance();
   }, [currentUser?.id]);
 
