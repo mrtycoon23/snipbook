@@ -5,7 +5,7 @@ const SERVICES = ["Haircut", "Hair Color", "Facial", "Waxing", "Bridal Makeup", 
 const today = new Date().toISOString().slice(0, 10);
 const thisWeekStart = (() => { const d = new Date(); d.setDate(d.getDate() - d.getDay()); return d.toISOString().slice(0, 10); })();
 const thisMonthStart = new Date().toISOString().slice(0, 8) + "01";
-function daysAgo(n) { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); }
+
 const AVATAR_COLORS = [
   { bg: "#fce7f3", text: "#9d174d" },
   { bg: "#dbeafe", text: "#1e40af" },
@@ -13,11 +13,14 @@ const AVATAR_COLORS = [
   { bg: "#fef3c7", text: "#92400e" },
   { bg: "#ede9fe", text: "#4c1d95" },
 ];
+
 function initials(name) { return name.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase(); }
 function avatarColor(id) { const num = typeof id === "string" ? id.charCodeAt(0) : (id || 1); return AVATAR_COLORS[Math.abs(num - 1) % AVATAR_COLORS.length]; }
 function formatCurrency(n) { return "₹" + Number(n).toLocaleString("en-IN"); }
 function formatDate(d) { return new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }); }
+function formatDateFull(d) { return new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }); }
 
+// ─── Work Log Modal ────────────────────────────────────────────────────────────
 function WorkLogModal({ staffList, preselectedStaffId, onSave, onClose }) {
   const [staffId, setStaffId] = useState(preselectedStaffId || staffList[0]?.id || "");
   const [clientName, setClientName] = useState("");
@@ -27,7 +30,7 @@ function WorkLogModal({ staffList, preselectedStaffId, onSave, onClose }) {
   function handleSave() {
     if (!clientName.trim()) { alert("Client ka naam daalo!"); return; }
     if (!amount || isNaN(amount)) { alert("Amount daalo!"); return; }
-    onSave({ staffId: staffId, clientName: clientName.trim(), service, amount: Number(amount), date });
+    onSave({ staffId, clientName: clientName.trim(), service, amount: Number(amount), date });
     onClose();
   }
   return (
@@ -48,7 +51,7 @@ function WorkLogModal({ staffList, preselectedStaffId, onSave, onClose }) {
         </div>
         <div style={styles.formRow}>
           <div style={styles.formGroup}><label style={styles.label}>Service</label><select style={styles.input} value={service} onChange={e => setService(e.target.value)}>{SERVICES.map(s => <option key={s}>{s}</option>)}</select></div>
-          <div style={styles.formGroup}><label style={styles.label}>Amount (Rs)</label><input style={styles.input} type="number" placeholder="500" value={amount} onChange={e => setAmount(e.target.value)} /></div>
+          <div style={styles.formGroup}><label style={styles.label}>Amount (₹)</label><input style={styles.input} type="number" placeholder="500" value={amount} onChange={e => setAmount(e.target.value)} /></div>
         </div>
         <div style={styles.modalActions}>
           <button style={styles.btnCancel} onClick={onClose}>Cancel</button>
@@ -59,6 +62,7 @@ function WorkLogModal({ staffList, preselectedStaffId, onSave, onClose }) {
   );
 }
 
+// ─── Add Staff Modal ───────────────────────────────────────────────────────────
 function AddStaffModal({ onSave, onClose }) {
   const [name, setName] = useState(""); const [role, setRole] = useState("Hairstylist");
   const [phone, setPhone] = useState(""); const [salary, setSalary] = useState(""); const [pin, setPin] = useState(""); const [error, setError] = useState("");
@@ -80,8 +84,8 @@ function AddStaffModal({ onSave, onClose }) {
           <div style={styles.formGroup}><label style={styles.label}>Role</label><select style={styles.input} value={role} onChange={e => setRole(e.target.value)}>{["Hairstylist","Makeup Artist","Nail Artist","Receptionist","Manager"].map(r => <option key={r}>{r}</option>)}</select></div>
         </div>
         <div style={styles.formRow}>
-          <div style={styles.formGroup}><label style={styles.label}>Phone (10 digits)</label><input style={styles.input} placeholder="9876543210" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g,"").slice(0,10))} /></div>
-          <div style={styles.formGroup}><label style={styles.label}>Salary (Rs/month)</label><input style={styles.input} type="number" placeholder="12000" value={salary} onChange={e => setSalary(e.target.value)} /></div>
+          <div style={styles.formGroup}><label style={styles.label}>Phone</label><input style={styles.input} placeholder="9876543210" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g,"").slice(0,10))} /></div>
+          <div style={styles.formGroup}><label style={styles.label}>Salary (₹/month)</label><input style={styles.input} type="number" placeholder="12000" value={salary} onChange={e => setSalary(e.target.value)} /></div>
         </div>
         <div style={styles.formGroup}><label style={styles.label}>Staff PIN (4 digit) *</label><input style={styles.input} type="number" placeholder="1234" value={pin} onChange={e => setPin(e.target.value.slice(0,4))} /></div>
         <div style={styles.modalActions}><button style={styles.btnCancel} onClick={onClose}>Cancel</button><button style={styles.btnSave} onClick={handleSave}>Add Karo</button></div>
@@ -90,6 +94,7 @@ function AddStaffModal({ onSave, onClose }) {
   );
 }
 
+// ─── Edit Staff Modal ──────────────────────────────────────────────────────────
 function EditStaffModal({ staff, onSave, onDelete, onClose }) {
   const [name, setName] = useState(staff.name); const [role, setRole] = useState(staff.role);
   const [phone, setPhone] = useState(staff.phone || ""); const [salary, setSalary] = useState(staff.salary);
@@ -111,8 +116,8 @@ function EditStaffModal({ staff, onSave, onDelete, onClose }) {
           <div style={styles.formGroup}><label style={styles.label}>Role</label><select style={styles.input} value={role} onChange={e => setRole(e.target.value)}>{["Hairstylist","Makeup Artist","Nail Artist","Receptionist","Manager"].map(r => <option key={r}>{r}</option>)}</select></div>
         </div>
         <div style={styles.formRow}>
-          <div style={styles.formGroup}><label style={styles.label}>Phone (10 digits)</label><input style={styles.input} value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g,"").slice(0,10))} /></div>
-          <div style={styles.formGroup}><label style={styles.label}>Salary (Rs/month)</label><input style={styles.input} type="number" value={salary} onChange={e => setSalary(e.target.value)} /></div>
+          <div style={styles.formGroup}><label style={styles.label}>Phone</label><input style={styles.input} value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g,"").slice(0,10))} /></div>
+          <div style={styles.formGroup}><label style={styles.label}>Salary (₹/month)</label><input style={styles.input} type="number" value={salary} onChange={e => setSalary(e.target.value)} /></div>
         </div>
         <div style={styles.formGroup}><label style={styles.label}>PIN (4 digit)</label><input style={styles.input} type="number" value={pin} onChange={e => setPin(e.target.value.slice(0,4))} /></div>
         <div style={styles.modalActions}><button style={styles.btnCancel} onClick={onClose}>Cancel</button><button style={styles.btnSave} onClick={handleSave}>Save</button></div>
@@ -131,9 +136,13 @@ function EditStaffModal({ staff, onSave, onDelete, onClose }) {
   );
 }
 
+// ─── Edit Log Modal ────────────────────────────────────────────────────────────
 function EditLogModal({ log, onSave, onDelete, onClose }) {
-  const [clientName, setClientName] = useState(log.clientName); const [service, setService] = useState(log.service);
-  const [amount, setAmount] = useState(log.amount); const [date, setDate] = useState(log.date); const [confirmDelete, setConfirmDelete] = useState(false);
+  const [clientName, setClientName] = useState(log.clientName);
+  const [service, setService] = useState(log.service);
+  const [amount, setAmount] = useState(log.amount);
+  const [date, setDate] = useState(log.date);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   function handleSave() {
     if (!clientName.trim()) { alert("Client naam daalo!"); return; }
     onSave({ ...log, clientName: clientName.trim(), service, amount: Number(amount), date });
@@ -167,6 +176,7 @@ function EditLogModal({ log, onSave, onDelete, onClose }) {
   );
 }
 
+// ─── Salary Slip ───────────────────────────────────────────────────────────────
 function SalarySlipScreen({ staff, logs, attendance, onBack }) {
   const [slipMonth, setSlipMonth] = useState(new Date().toISOString().slice(0, 7));
   const monthStart = slipMonth + "-01";
@@ -176,15 +186,14 @@ function SalarySlipScreen({ staff, logs, attendance, onBack }) {
   const absentDays = totalDaysInMonth - presentDays;
   const monthLogs = logs.filter(l => l.staffId === staff.id && l.date >= monthStart && l.date <= monthEnd);
   const totalRevenue = monthLogs.reduce((s, l) => s + l.amount, 0);
-  const perDaySalary = staff.salary / totalDaysInMonth;
-  const earnedSalary = Math.round(perDaySalary * presentDays);
+  const earnedSalary = Math.round((staff.salary / totalDaysInMonth) * presentDays);
   const deduction = staff.salary - earnedSalary;
   const c = avatarColor(staff.id);
   const monthLabel = new Date(slipMonth + "-01").toLocaleDateString("en-IN", { month: "long", year: "numeric" });
   return (
     <div style={styles.page}>
       <div style={styles.header}>
-        <button onClick={onBack} style={styles.backBtn}>Back</button>
+        <button onClick={onBack} style={styles.backBtn}>← Back</button>
         <div style={{ textAlign: "center" }}><div style={styles.headerTitle}>Salary Slip</div><div style={styles.headerSub}>{staff.name}</div></div>
         <div style={{ width: 60 }} />
       </div>
@@ -202,11 +211,7 @@ function SalarySlipScreen({ staff, logs, attendance, onBack }) {
             <div style={{ background: "#f8fafc", borderRadius: 10, padding: "10px", textAlign: "center" }}><div style={{ fontSize: 22, fontWeight: 800 }}>{totalDaysInMonth}</div><div style={{ fontSize: 10, color: "#555" }}>Total Din</div></div>
           </div>
           <div style={{ background: "#f8fafc", borderRadius: 10, padding: "12px", marginBottom: 12 }}>
-            {[
-              { label: "Fixed Salary", value: formatCurrency(staff.salary), color: "#1a1a2e" },
-              { label: "Earned", value: formatCurrency(earnedSalary), color: "#16a34a" },
-              { label: "Deduction", value: "- " + formatCurrency(deduction), color: "#dc2626" },
-            ].map(row => (
+            {[{ label: "Fixed Salary", value: formatCurrency(staff.salary), color: "#1a1a2e" }, { label: "Earned", value: formatCurrency(earnedSalary), color: "#16a34a" }, { label: "Deduction", value: "- " + formatCurrency(deduction), color: "#dc2626" }].map(row => (
               <div key={row.label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "0.5px solid #e8e8e0" }}>
                 <div style={{ fontSize: 12, color: "#555" }}>{row.label}</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: row.color }}>{row.value}</div>
@@ -227,160 +232,326 @@ function SalarySlipScreen({ staff, logs, attendance, onBack }) {
   );
 }
 
-function StaffSummaryScreen({ staffList, logs, attendance, onBack }) {
-  const [selDate, setSelDate] = useState(today);
-  const [viewMode, setViewMode] = useState("day"); // day | month
-  const [selMonth, setSelMonth] = useState(new Date().toISOString().slice(0, 7));
-
-  const viewAtt = attendance[selDate] || {};
-  const dayLogs = logs.filter(l => l.date === selDate);
-  const totalRevenue = dayLogs.reduce((s, l) => s + l.amount, 0);
-  const presentCount = staffList.filter(s => viewAtt[s.id]).length;
-
-  const monthStart = selMonth + "-01";
-  const monthEnd = (() => { const [y, m] = selMonth.split("-").map(Number); return new Date(y, m, 0).toISOString().slice(0, 10); })();
-
+// ─── Staff Detail Modal (Revenue breakdown) ────────────────────────────────────
+function StaffRevenueModal({ staff, logs, fromDate, toDate, onClose }) {
+  const rangeLogs = logs.filter(l => l.staffId === staff.id && l.date >= fromDate && l.date <= toDate)
+    .sort((a, b) => b.date.localeCompare(a.date));
+  const total = rangeLogs.reduce((s, l) => s + l.amount, 0);
+  const svcCount = {};
+  rangeLogs.forEach(l => { svcCount[l.service] = (svcCount[l.service] || 0) + 1; });
+  const topSvc = Object.entries(svcCount).sort((a, b) => b[1] - a[1])[0];
+  const c = avatarColor(staff.id);
   return (
-    <div style={styles.page}>
-      <div style={styles.header}>
-        <button onClick={onBack} style={styles.backBtn}>← Back</button>
-        <div style={{ textAlign: "center" }}>
-          <div style={styles.headerTitle}>📊 Staff Summary</div>
-          <div style={styles.headerSub}>Attendance + Work Logs</div>
+    <div style={styles.modalBg} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ ...styles.modal, maxHeight: "85vh", overflowY: "auto", paddingBottom: 32 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <div style={{ ...styles.avatar, background: c.bg, color: c.text, width: 40, height: 40 }}>{initials(staff.name)}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#1a1a2e" }}>{staff.name}</div>
+            <div style={{ fontSize: 11, color: "#888" }}>Revenue Details · {formatDate(fromDate)} → {formatDate(toDate)}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 13, cursor: "pointer", color: "#555", fontWeight: 700 }}>✕</button>
         </div>
-        <div style={{ width: 60 }} />
-      </div>
-
-      {/* View Mode Toggle */}
-      <div style={{ background: "white", padding: "10px 14px", borderBottom: "0.5px solid #e8e8e0", display: "flex", gap: 8 }}>
-        {[{ key: "day", label: "📅 Din Wise" }, { key: "month", label: "📆 Mahine Wise" }].map(m => (
-          <button key={m.key} onClick={() => setViewMode(m.key)} style={{ flex: 1, padding: "8px", border: `2px solid ${viewMode === m.key ? "#22c55e" : "#e8edf3"}`, borderRadius: 10, background: viewMode === m.key ? "#e8fdf0" : "white", color: viewMode === m.key ? "#16a34a" : "#888", fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      {viewMode === "day" && <>
-        {/* Date Picker */}
-        <div style={{ background: "white", padding: "12px 14px", borderBottom: "0.5px solid #e8e8e0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a2e" }}>Date</div>
-          <input type="date" value={selDate} onChange={e => setSelDate(e.target.value)}
-            style={{ border: "2px solid #22c55e", borderRadius: 8, padding: "6px 10px", fontSize: 13, fontWeight: 700, color: "#16a34a", outline: "none", cursor: "pointer" }} />
+        {/* Summary */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+          <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "10px", textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#16a34a" }}>{formatCurrency(total)}</div>
+            <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>Total Revenue</div>
+          </div>
+          <div style={{ background: "#eff6ff", borderRadius: 10, padding: "10px", textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#2563eb" }}>{rangeLogs.length}</div>
+            <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>Clients</div>
+          </div>
+          <div style={{ background: "#fef9c3", borderRadius: 10, padding: "10px", textAlign: "center" }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#a16207" }}>{topSvc ? topSvc[0].split(" ")[0] : "—"}</div>
+            <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>Top Service</div>
+          </div>
         </div>
-
-        {/* Day Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, padding: "12px 14px 0" }}>
-          {[
-            { label: "Present", val: presentCount, color: "#16a34a" },
-            { label: "Absent", val: staffList.length - presentCount, color: "#dc2626" },
-            { label: "Services", val: dayLogs.length, color: "#1a1a2e" },
-            { label: "Revenue", val: "₹" + totalRevenue.toLocaleString("en-IN"), color: "#2563eb", small: true },
-          ].map(s => (
-            <div key={s.label} style={styles.statCard}>
-              <div style={{ ...styles.statNum, color: s.color, fontSize: s.small ? 12 : 20 }}>{s.val}</div>
-              <div style={styles.statLabel}>{s.label}</div>
+        {/* Work Log List */}
+        {rangeLogs.length === 0
+          ? <div style={{ textAlign: "center", color: "#aaa", padding: "24px 0", fontSize: 13 }}>Is period mein koi entry nahi</div>
+          : rangeLogs.map((log, i) => (
+            <div key={log.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0", borderBottom: i < rangeLogs.length - 1 ? "1px solid #f0f4f8" : "none" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#16a34a", flexShrink: 0 }}>✂️</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a2e" }}>{log.clientName}</div>
+                <div style={{ fontSize: 11, color: "#888", marginTop: 1 }}>{log.service} · {formatDateFull(log.date)}</div>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#16a34a" }}>{formatCurrency(log.amount)}</div>
             </div>
-          ))}
-        </div>
-
-        {/* Per Staff Day View */}
-        <div style={{ padding: "14px" }}>
-          {staffList.length === 0 && <div style={styles.emptyState}>Koi staff nahi</div>}
-          {staffList.map(s => {
-            const c = avatarColor(s.id);
-            const isPresent = !!viewAtt[s.id];
-            const staffLogs = dayLogs.filter(l => l.staffId === s.id);
-            const staffRevenue = staffLogs.reduce((sum, l) => sum + l.amount, 0);
-            const reason = attendance[selDate]?.[s.id + "_reason"];
-            return (
-              <div key={s.id} style={{ background: "white", borderRadius: 14, border: `2px solid ${isPresent ? "#bbf7d0" : "#fecaca"}`, padding: 14, marginBottom: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: (isPresent && staffLogs.length > 0) ? 10 : 0 }}>
-                  <div style={{ ...styles.avatar, background: c.bg, color: c.text, width: 38, height: 38, fontSize: 12 }}>{initials(s.name)}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a2e" }}>{s.name}</div>
-                    <div style={{ fontSize: 11, color: "#888" }}>{s.role}</div>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ background: isPresent ? "#dcfce7" : "#fee2e2", color: isPresent ? "#16a34a" : "#dc2626", fontSize: 10, fontWeight: 800, padding: "3px 10px", borderRadius: 20 }}>
-                      {isPresent ? "✅ Present" : "❌ Absent"}
-                    </div>
-                    {isPresent && <div style={{ fontSize: 11, fontWeight: 700, color: "#16a34a", marginTop: 4 }}>₹{staffRevenue.toLocaleString("en-IN")} · {staffLogs.length} clients</div>}
-                  </div>
-                </div>
-                {!isPresent && reason && (
-                  <div style={{ background: "#fef2f2", borderRadius: 8, padding: "6px 10px", marginTop: 8, fontSize: 11, color: "#dc2626", fontWeight: 600 }}>
-                    📝 Reason: {reason}
-                  </div>
-                )}
-                {isPresent && staffLogs.length > 0 && (
-                  <div style={{ borderTop: "1px solid #f0f4f8", paddingTop: 10 }}>
-                    {staffLogs.map((log, i) => (
-                      <div key={log.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "5px 0", borderBottom: i < staffLogs.length - 1 ? "0.5px solid #f0f4f8" : "none" }}>
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 600, color: "#1a1a2e" }}>{log.clientName}</div>
-                          <div style={{ fontSize: 11, color: "#888" }}>{log.service}</div>
-                        </div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: "#16a34a" }}>₹{log.amount.toLocaleString("en-IN")}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {isPresent && staffLogs.length === 0 && (
-                  <div style={{ fontSize: 11, color: "#aaa", marginTop: 8, fontStyle: "italic" }}>Koi work log nahi is din ka</div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </>}
-
-      {viewMode === "month" && <>
-        {/* Month Picker */}
-        <div style={{ background: "white", padding: "12px 14px", borderBottom: "0.5px solid #e8e8e0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a2e" }}>Month</div>
-          <input type="month" value={selMonth} onChange={e => setSelMonth(e.target.value)}
-            style={{ border: "2px solid #22c55e", borderRadius: 8, padding: "6px 10px", fontSize: 13, fontWeight: 700, color: "#16a34a", outline: "none", cursor: "pointer" }} />
-        </div>
-
-        {/* Per Staff Month Summary */}
-        <div style={{ padding: "14px" }}>
-          {staffList.map(s => {
-            const c = avatarColor(s.id);
-            const monthLogs = logs.filter(l => l.staffId === s.id && l.date >= monthStart && l.date <= monthEnd);
-            const monthRevenue = monthLogs.reduce((sum, l) => sum + l.amount, 0);
-            const presentDays = Object.entries(attendance).filter(([d, map]) => d >= monthStart && d <= monthEnd && map[s.id]).length;
-            const totalDays = (() => { const [y, m] = selMonth.split("-").map(Number); return new Date(y, m, 0).getDate(); })();
-            return (
-              <div key={s.id} style={{ background: "white", borderRadius: 14, border: "1.5px solid #e8edf3", padding: 14, marginBottom: 10 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                  <div style={{ ...styles.avatar, background: c.bg, color: c.text, width: 38, height: 38, fontSize: 12 }}>{initials(s.name)}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a2e" }}>{s.name}</div>
-                    <div style={{ fontSize: 11, color: "#888" }}>{s.role} · {formatCurrency(s.salary)}/mo</div>
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
-                  {[
-                    { label: "Present", val: presentDays, color: "#16a34a", bg: "#f0fdf4" },
-                    { label: "Absent", val: totalDays - presentDays, color: "#dc2626", bg: "#fef2f2" },
-                    { label: "Clients", val: monthLogs.length, color: "#1a1a2e", bg: "#f8fafc" },
-                    { label: "Revenue", val: "₹" + (monthRevenue/1000).toFixed(1) + "k", color: "#2563eb", bg: "#eff6ff" },
-                  ].map(st => (
-                    <div key={st.label} style={{ background: st.bg, borderRadius: 8, padding: "8px 4px", textAlign: "center" }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: st.color }}>{st.val}</div>
-                      <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>{st.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </>}
+          ))
+        }
+      </div>
     </div>
   );
 }
 
+// ─── Staff Attendance Modal ────────────────────────────────────────────────────
+function StaffAttendanceModal({ staff, attendance, fromDate, toDate, onClose }) {
+  const c = avatarColor(staff.id);
+  // Get all dates in range
+  const dates = [];
+  let cur = new Date(fromDate + "T00:00:00");
+  const end = new Date(toDate + "T00:00:00");
+  while (cur <= end) {
+    dates.push(cur.toISOString().slice(0, 10));
+    cur.setDate(cur.getDate() + 1);
+  }
+  const presentDays = dates.filter(d => (attendance[d] || {})[staff.id]).length;
+  const absentDays = dates.length - presentDays;
+  const attPct = dates.length > 0 ? Math.round((presentDays / dates.length) * 100) : 0;
+
+  return (
+    <div style={styles.modalBg} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{ ...styles.modal, maxHeight: "85vh", overflowY: "auto", paddingBottom: 32 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <div style={{ ...styles.avatar, background: c.bg, color: c.text, width: 40, height: 40 }}>{initials(staff.name)}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: "#1a1a2e" }}>{staff.name}</div>
+            <div style={{ fontSize: 11, color: "#888" }}>Attendance · {formatDate(fromDate)} → {formatDate(toDate)}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "#f1f5f9", border: "none", borderRadius: 8, padding: "4px 10px", fontSize: 13, cursor: "pointer", color: "#555", fontWeight: 700 }}>✕</button>
+        </div>
+        {/* Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+          <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "10px", textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#16a34a" }}>{presentDays}</div>
+            <div style={{ fontSize: 9, color: "#166534" }}>Present</div>
+          </div>
+          <div style={{ background: "#fef2f2", borderRadius: 10, padding: "10px", textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "#dc2626" }}>{absentDays}</div>
+            <div style={{ fontSize: 9, color: "#991b1b" }}>Absent</div>
+          </div>
+          <div style={{ background: attPct >= 80 ? "#f0fdf4" : attPct >= 60 ? "#fef9c3" : "#fef2f2", borderRadius: 10, padding: "10px", textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: attPct >= 80 ? "#16a34a" : attPct >= 60 ? "#a16207" : "#dc2626" }}>{attPct}%</div>
+            <div style={{ fontSize: 9, color: "#888" }}>Attendance</div>
+          </div>
+        </div>
+        {/* Attendance Progress Bar */}
+        <div style={{ background: "#f0f4f8", borderRadius: 20, height: 8, overflow: "hidden", marginBottom: 16 }}>
+          <div style={{ width: `${attPct}%`, height: "100%", background: attPct >= 80 ? "#22c55e" : attPct >= 60 ? "#f59e0b" : "#ef4444", borderRadius: 20, transition: "width 0.5s" }} />
+        </div>
+        {/* Calendar View */}
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#888", marginBottom: 10 }}>📅 Din-wise Record</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {dates.map(d => {
+            const isPresent = !!(attendance[d] || {})[staff.id];
+            const reason = (attendance[d] || {})[staff.id + "_reason"];
+            const isToday = d === today;
+            return (
+              <div key={d} title={reason ? `Reason: ${reason}` : ""}
+                style={{ background: isPresent ? "#dcfce7" : "#fee2e2", border: `1.5px solid ${isPresent ? "#86efac" : "#fca5a5"}`, borderRadius: 8, padding: "5px 8px", textAlign: "center", minWidth: 44, outline: isToday ? "2px solid #1a1a2e" : "none" }}>
+                <div style={{ fontSize: 11, fontWeight: 800, color: isPresent ? "#16a34a" : "#dc2626" }}>{new Date(d + "T00:00:00").getDate()}</div>
+                <div style={{ fontSize: 9, color: isPresent ? "#16a34a" : "#dc2626" }}>{isPresent ? "✓" : "✗"}</div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Absent Reasons */}
+        {dates.some(d => !(attendance[d] || {})[staff.id] && (attendance[d] || {})[staff.id + "_reason"]) && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#888", marginBottom: 8 }}>📝 Absent Reasons</div>
+            {dates.filter(d => !(attendance[d] || {})[staff.id] && (attendance[d] || {})[staff.id + "_reason"]).map(d => (
+              <div key={d} style={{ background: "#fef2f2", borderRadius: 8, padding: "8px 10px", marginBottom: 6, display: "flex", gap: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", flexShrink: 0 }}>{formatDate(d)}</div>
+                <div style={{ fontSize: 11, color: "#555" }}>{(attendance[d] || {})[staff.id + "_reason"]}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── NEW: Staff Summary Screen ─────────────────────────────────────────────────
+function StaffSummaryScreen({ staffList, logs, attendance, onBack }) {
+  const [fromDate, setFromDate] = useState(thisMonthStart);
+  const [toDate, setToDate] = useState(today);
+  const [sortBy, setSortBy] = useState("revenue"); // revenue | attendance | clients
+  const [revenueModal, setRevenueModal] = useState(null);
+  const [attendanceModal, setAttendanceModal] = useState(null);
+
+  // Quick range presets
+  const PRESETS = [
+    { label: "Aaj", from: today, to: today },
+    { label: "Is Hafte", from: thisWeekStart, to: today },
+    { label: "Is Mahine", from: thisMonthStart, to: today },
+  ];
+
+  // Compute stats for each staff
+  const staffStats = staffList.map(s => {
+    const rangeLogs = logs.filter(l => l.staffId === s.id && l.date >= fromDate && l.date <= toDate);
+    const revenue = rangeLogs.reduce((sum, l) => sum + l.amount, 0);
+    const clients = rangeLogs.length;
+
+    // Count days in range
+    const dates = [];
+    let cur = new Date(fromDate + "T00:00:00");
+    const end = new Date(toDate + "T00:00:00");
+    while (cur <= end) { dates.push(cur.toISOString().slice(0, 10)); cur.setDate(cur.getDate() + 1); }
+    const totalDays = dates.length;
+    const presentDays = dates.filter(d => (attendance[d] || {})[s.id]).length;
+    const attPct = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+
+    return { ...s, revenue, clients, presentDays, absentDays: totalDays - presentDays, attPct, totalDays };
+  });
+
+  // Sort
+  const sorted = [...staffStats].sort((a, b) => {
+    if (sortBy === "revenue") return b.revenue - a.revenue;
+    if (sortBy === "attendance") return b.attPct - a.attPct;
+    if (sortBy === "clients") return b.clients - a.clients;
+    return 0;
+  });
+
+  const totalRevenue = sorted.reduce((s, st) => s + st.revenue, 0);
+  const totalClients = sorted.reduce((s, st) => s + st.clients, 0);
+  const avgAtt = sorted.length > 0 ? Math.round(sorted.reduce((s, st) => s + st.attPct, 0) / sorted.length) : 0;
+
+  const rankColors = ["#f59e0b", "#9ca3af", "#cd7c2f"]; // Gold, Silver, Bronze
+
+  return (
+    <div style={styles.page}>
+      {/* Header */}
+      <div style={{ background: "#1a1a2e", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+        <button onClick={onBack} style={styles.backBtn}>← Back</button>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#fff" }}>📊 Staff Summary</div>
+          <div style={{ fontSize: 11, color: "#a0a0c0", marginTop: 1 }}>Performance Overview</div>
+        </div>
+      </div>
+
+      {/* Date Range */}
+      <div style={{ background: "white", padding: "12px 14px", borderBottom: "1px solid #f0f4f8" }}>
+        {/* Presets */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+          {PRESETS.map(p => (
+            <button key={p.label} onClick={() => { setFromDate(p.from); setToDate(p.to); }}
+              style={{ padding: "5px 12px", borderRadius: 20, border: `1.5px solid ${fromDate === p.from && toDate === p.to ? "#22c55e" : "#e8edf3"}`, background: fromDate === p.from && toDate === p.to ? "#e8fdf0" : "white", color: fromDate === p.from && toDate === p.to ? "#16a34a" : "#888", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              {p.label}
+            </button>
+          ))}
+          <div style={{ flex: 1 }} />
+        </div>
+        {/* Custom Range */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)}
+            style={{ flex: 1, border: "1.5px solid #e8edf3", borderRadius: 8, padding: "7px 10px", fontSize: 12, outline: "none", color: "#1a1a2e" }} />
+          <div style={{ color: "#888", fontWeight: 700, fontSize: 12 }}>→</div>
+          <input type="date" value={toDate} onChange={e => setToDate(e.target.value)}
+            style={{ flex: 1, border: "1.5px solid #e8edf3", borderRadius: 8, padding: "7px 10px", fontSize: 12, outline: "none", color: "#1a1a2e" }} />
+        </div>
+      </div>
+
+      {/* Overall Stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, padding: "12px 14px 0" }}>
+        {[
+          { label: "Total Revenue", val: formatCurrency(totalRevenue), color: "#16a34a", bg: "#f0fdf4", icon: "💰" },
+          { label: "Total Clients", val: totalClients, color: "#2563eb", bg: "#eff6ff", icon: "👥" },
+          { label: "Avg Attendance", val: `${avgAtt}%`, color: avgAtt >= 80 ? "#16a34a" : avgAtt >= 60 ? "#a16207" : "#dc2626", bg: "#f8fafc", icon: "📅" },
+        ].map(s => (
+          <div key={s.label} style={{ background: s.bg, borderRadius: 12, padding: "12px 8px", textAlign: "center", border: "1.5px solid #e8edf3" }}>
+            <div style={{ fontSize: 16, marginBottom: 4 }}>{s.icon}</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: s.color }}>{s.val}</div>
+            <div style={{ fontSize: 9, color: "#888", marginTop: 2, fontWeight: 700 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Sort Tabs */}
+      <div style={{ padding: "12px 14px 0" }}>
+        <div style={{ display: "flex", background: "#f0f4f8", borderRadius: 10, padding: 3, gap: 3 }}>
+          {[{ key: "revenue", label: "💰 Revenue" }, { key: "clients", label: "👥 Clients" }, { key: "attendance", label: "📅 Attendance" }].map(t => (
+            <button key={t.key} onClick={() => setSortBy(t.key)}
+              style={{ flex: 1, padding: "7px 4px", border: "none", borderRadius: 8, background: sortBy === t.key ? "#1a1a2e" : "transparent", color: sortBy === t.key ? "white" : "#888", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Staff Ranking Cards */}
+      <div style={{ padding: "12px 14px 80px" }}>
+        {sorted.length === 0 && <div style={styles.emptyState}>Koi staff nahi</div>}
+        {sorted.map((s, idx) => {
+          const c = avatarColor(s.id);
+          const rankColor = idx < 3 ? rankColors[idx] : "#e8edf3";
+          const revenueShare = totalRevenue > 0 ? Math.round((s.revenue / totalRevenue) * 100) : 0;
+          return (
+            <div key={s.id} style={{ background: "white", borderRadius: 16, border: `2px solid ${idx === 0 ? "#fde68a" : "#e8edf3"}`, padding: "14px", marginBottom: 10, boxShadow: idx === 0 ? "0 2px 12px rgba(251,191,36,0.15)" : "none" }}>
+              {/* Top Row */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                {/* Rank Badge */}
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: rankColor + "22", border: `2px solid ${rankColor}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 900, color: rankColor, flexShrink: 0 }}>
+                  {idx < 3 ? ["🥇","🥈","🥉"][idx] : idx + 1}
+                </div>
+                <div style={{ ...styles.avatar, background: c.bg, color: c.text, width: 38, height: 38, fontSize: 12, flexShrink: 0 }}>{initials(s.name)}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: "#1a1a2e" }}>{s.name}</div>
+                  <div style={{ fontSize: 11, color: "#888", marginTop: 1 }}>{s.role}</div>
+                </div>
+                {/* Attendance Badge */}
+                <div style={{ background: s.attPct >= 80 ? "#dcfce7" : s.attPct >= 60 ? "#fef9c3" : "#fee2e2", color: s.attPct >= 80 ? "#16a34a" : s.attPct >= 60 ? "#a16207" : "#dc2626", fontSize: 10, fontWeight: 800, padding: "3px 8px", borderRadius: 20, flexShrink: 0 }}>
+                  {s.attPct}% att.
+                </div>
+              </div>
+
+              {/* Clickable Stats Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
+                {/* Revenue — clickable */}
+                <div onClick={() => setRevenueModal(s)} style={{ background: "#f0fdf4", borderRadius: 10, padding: "10px 6px", textAlign: "center", cursor: "pointer", border: "1.5px solid #bbf7d0", transition: "transform 0.1s" }}
+                  onMouseOver={e => e.currentTarget.style.transform = "scale(1.03)"}
+                  onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}>
+                  <div style={{ fontSize: 13, fontWeight: 900, color: "#16a34a" }}>{s.revenue >= 1000 ? `₹${(s.revenue/1000).toFixed(1)}k` : formatCurrency(s.revenue)}</div>
+                  <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>Revenue 💰</div>
+                </div>
+                {/* Clients — clickable */}
+                <div onClick={() => setRevenueModal(s)} style={{ background: "#eff6ff", borderRadius: 10, padding: "10px 6px", textAlign: "center", cursor: "pointer", border: "1.5px solid #93c5fd" }}
+                  onMouseOver={e => e.currentTarget.style.transform = "scale(1.03)"}
+                  onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}>
+                  <div style={{ fontSize: 13, fontWeight: 900, color: "#2563eb" }}>{s.clients}</div>
+                  <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>Clients 👥</div>
+                </div>
+                {/* Present — clickable */}
+                <div onClick={() => setAttendanceModal(s)} style={{ background: "#f0fdf4", borderRadius: 10, padding: "10px 6px", textAlign: "center", cursor: "pointer", border: "1.5px solid #86efac" }}
+                  onMouseOver={e => e.currentTarget.style.transform = "scale(1.03)"}
+                  onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}>
+                  <div style={{ fontSize: 13, fontWeight: 900, color: "#16a34a" }}>{s.presentDays}</div>
+                  <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>Present ✅</div>
+                </div>
+                {/* Absent — clickable */}
+                <div onClick={() => setAttendanceModal(s)} style={{ background: "#fef2f2", borderRadius: 10, padding: "10px 6px", textAlign: "center", cursor: "pointer", border: "1.5px solid #fca5a5" }}
+                  onMouseOver={e => e.currentTarget.style.transform = "scale(1.03)"}
+                  onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}>
+                  <div style={{ fontSize: 13, fontWeight: 900, color: "#dc2626" }}>{s.absentDays}</div>
+                  <div style={{ fontSize: 9, color: "#888", marginTop: 2 }}>Absent ❌</div>
+                </div>
+              </div>
+
+              {/* Revenue Share Bar */}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                  <div style={{ fontSize: 10, color: "#888", fontWeight: 700 }}>Revenue share</div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: "#16a34a" }}>{revenueShare}%</div>
+                </div>
+                <div style={{ background: "#f0f4f8", borderRadius: 20, height: 6, overflow: "hidden" }}>
+                  <div style={{ width: `${revenueShare}%`, height: "100%", background: "linear-gradient(90deg, #22c55e, #86efac)", borderRadius: 20 }} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Modals */}
+      {revenueModal && <StaffRevenueModal staff={revenueModal} logs={logs} fromDate={fromDate} toDate={toDate} onClose={() => setRevenueModal(null)} />}
+      {attendanceModal && <StaffAttendanceModal staff={attendanceModal} attendance={attendance} fromDate={fromDate} toDate={toDate} onClose={() => setAttendanceModal(null)} />}
+    </div>
+  );
+}
+
+// ─── Staff Detail Screen ───────────────────────────────────────────────────────
 function StaffDetailScreen({ staff, logs, setLogs, attendance, onBack, onAddLog, onEditStaff, onDeleteStaff, currentUser }) {
   const [tab, setTab] = useState("month");
   const [editingLog, setEditingLog] = useState(null);
@@ -401,18 +572,13 @@ function StaffDetailScreen({ staff, logs, setLogs, attendance, onBack, onAddLog,
 
   async function handleEditLog(updated) {
     if (currentUser?.id) {
-      await supabase.from("work_logs").update({
-        client_name: updated.clientName, service: updated.service,
-        amount: updated.amount, date: updated.date
-      }).eq("id", updated.id);
+      await supabase.from("work_logs").update({ client_name: updated.clientName, service: updated.service, amount: updated.amount, date: updated.date }).eq("id", updated.id);
     }
     setLogs(prev => prev.map(l => l.id === updated.id ? updated : l));
   }
 
   async function handleDeleteLog(id) {
-    if (currentUser?.id) {
-      await supabase.from("work_logs").delete().eq("id", id);
-    }
+    if (currentUser?.id) { await supabase.from("work_logs").delete().eq("id", id); }
     setLogs(prev => prev.filter(l => l.id !== id));
   }
 
@@ -421,12 +587,12 @@ function StaffDetailScreen({ staff, logs, setLogs, attendance, onBack, onAddLog,
   return (
     <div style={styles.page}>
       <div style={styles.header}>
-        <button onClick={onBack} style={styles.backBtn}>Back</button>
+        <button onClick={onBack} style={styles.backBtn}>← Back</button>
         <div style={{ textAlign: "center" }}><div style={styles.headerTitle}>{staff.name}</div><div style={styles.headerSub}>{staff.role}</div></div>
         <button onClick={() => setShowEditStaff(true)} style={{ ...styles.backBtn, fontSize: 11 }}>Edit</button>
       </div>
       <div style={{ padding: "14px 14px 0", display: "flex", gap: 14, alignItems: "center" }}>
-        <div style={{ ...styles.avatar, width: 56, height: 56, fontSize: 18, background: c.bg, color: c.text }}>{initials(staff.name)}</div>
+        <div style={{ ...styles.avatar, width: 52, height: 52, fontSize: 18, background: c.bg, color: c.text }}>{initials(staff.name)}</div>
         <div style={{ flex: 1 }}><div style={{ fontSize: 13, color: "#888" }}>{staff.phone} · {formatCurrency(staff.salary)}/mo</div></div>
         <button onClick={() => setShowSalarySlip(true)} style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 10, padding: "8px 12px", fontSize: 11, fontWeight: 700, color: "#166534", cursor: "pointer" }}>Salary Slip</button>
       </div>
@@ -439,7 +605,7 @@ function StaffDetailScreen({ staff, logs, setLogs, attendance, onBack, onAddLog,
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, padding: "12px 14px 0" }}>
         <div style={styles.statCard}><div style={{ ...styles.statNum, color: "#1a1a2e" }}>{filtered.length}</div><div style={styles.statLabel}>Clients</div></div>
-        <div style={styles.statCard}><div style={{ ...styles.statNum, color: "#16a34a" }}>{formatCurrency(totalRevenue)}</div><div style={styles.statLabel}>Revenue</div></div>
+        <div style={styles.statCard}><div style={{ ...styles.statNum, color: "#16a34a", fontSize: 16 }}>{formatCurrency(totalRevenue)}</div><div style={styles.statLabel}>Revenue</div></div>
         <div style={styles.statCard}><div style={{ ...styles.statNum, color: "#2563eb" }}>{attendedDays}d</div><div style={styles.statLabel}>Present</div></div>
       </div>
       <div style={{ padding: "14px" }}>
@@ -464,6 +630,7 @@ function StaffDetailScreen({ staff, logs, setLogs, attendance, onBack, onAddLog,
   );
 }
 
+// ─── Owner Dashboard ───────────────────────────────────────────────────────────
 function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, setAttendance, showRevenueToStaff, setShowRevenueToStaff, currentUser }) {
   const [view, setView] = useState("list");
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -477,25 +644,15 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
   async function toggleAttendance(staffId) {
     const currentVal = !!(attendance[ownerSelectedDate] || {})[staffId];
     const newVal = !currentVal;
-    setAttendance(prev => {
-      const dm = { ...(prev[ownerSelectedDate] || {}) };
-      dm[staffId] = newVal;
-      return { ...prev, [ownerSelectedDate]: dm };
-    });
+    setAttendance(prev => { const dm = { ...(prev[ownerSelectedDate] || {}) }; dm[staffId] = newVal; return { ...prev, [ownerSelectedDate]: dm }; });
     if (currentUser?.id) {
-      await supabase.from("attendance").upsert({
-        salon_id: currentUser.id, staff_id: staffId,
-        date: ownerSelectedDate, is_present: newVal
-      }, { onConflict: "salon_id,staff_id,date" });
+      await supabase.from("attendance").upsert({ salon_id: currentUser.id, staff_id: staffId, date: ownerSelectedDate, is_present: newVal }, { onConflict: "salon_id,staff_id,date" });
     }
   }
 
   async function addStaff(data) {
     if (currentUser?.id) {
-      const { data: res } = await supabase.from("staff").insert({
-        salon_id: currentUser.id, name: data.name, role: data.role,
-        phone: data.phone, salary: data.salary, pin: data.pin
-      }).select().single();
+      const { data: res } = await supabase.from("staff").insert({ salon_id: currentUser.id, name: data.name, role: data.role, phone: data.phone, salary: data.salary, pin: data.pin }).select().single();
       if (res) { setStaffList(prev => [...prev, res]); return; }
     }
     setStaffList(prev => [...prev, { ...data, id: Date.now() }]);
@@ -503,36 +660,21 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
 
   async function editStaff(updated) {
     if (currentUser?.id && typeof updated.id === "string") {
-      await supabase.from("staff").update({
-        name: updated.name, role: updated.role, phone: updated.phone,
-        salary: updated.salary, pin: updated.pin
-      }).eq("id", updated.id);
+      await supabase.from("staff").update({ name: updated.name, role: updated.role, phone: updated.phone, salary: updated.salary, pin: updated.pin }).eq("id", updated.id);
     }
     setStaffList(prev => prev.map(s => s.id === updated.id ? updated : s));
   }
 
   async function deleteStaff(id) {
-    if (currentUser?.id && typeof id === "string") {
-      await supabase.from("staff").delete().eq("id", id);
-    }
+    if (currentUser?.id && typeof id === "string") { await supabase.from("staff").delete().eq("id", id); }
     setStaffList(prev => prev.filter(s => s.id !== id));
     setView("list");
   }
 
   async function addLog(data) {
     if (currentUser?.id) {
-      const { data: res } = await supabase.from("work_logs").insert({
-        salon_id: currentUser.id, staff_id: data.staffId,
-        client_name: data.clientName, service: data.service,
-        amount: data.amount, date: data.date
-      }).select().single();
-      if (res) {
-        setLogs(prev => [...prev, {
-          id: res.id, staffId: res.staff_id, clientName: res.client_name,
-          service: res.service, amount: res.amount, date: res.date
-        }]);
-        return;
-      }
+      const { data: res } = await supabase.from("work_logs").insert({ salon_id: currentUser.id, staff_id: data.staffId, client_name: data.clientName, service: data.service, amount: data.amount, date: data.date }).select().single();
+      if (res) { setLogs(prev => [...prev, { id: res.id, staffId: res.staff_id, clientName: res.client_name, service: res.service, amount: res.amount, date: res.date }]); return; }
     }
     setLogs(prev => [...prev, { ...data, id: nextLogId }]);
     setNextLogId(n => n + 1);
@@ -546,20 +688,14 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
   const isViewingToday = ownerSelectedDate === today;
   const viewLabel = isViewingToday ? "Aaj" : formatDate(ownerSelectedDate);
 
-  if (showSummary) {
-    return <StaffSummaryScreen staffList={staffList} logs={logs} attendance={attendance} onBack={() => setShowSummary(false)} />;
-  }
+  if (showSummary) return <StaffSummaryScreen staffList={staffList} logs={logs} attendance={attendance} onBack={() => setShowSummary(false)} />;
 
   if (view === "detail" && selectedStaff) {
     return (
       <>
-        <StaffDetailScreen
-          staff={selectedStaff} logs={logs} setLogs={setLogs}
-          attendance={attendance} onBack={() => setView("list")}
+        <StaffDetailScreen staff={selectedStaff} logs={logs} setLogs={setLogs} attendance={attendance} onBack={() => setView("list")}
           onAddLog={() => { setLogForStaff(selectedStaff.id); setShowAddLog(true); }}
-          onEditStaff={editStaff} onDeleteStaff={deleteStaff}
-          currentUser={currentUser}
-        />
+          onEditStaff={editStaff} onDeleteStaff={deleteStaff} currentUser={currentUser} />
         {showAddLog && <WorkLogModal staffList={staffList} preselectedStaffId={logForStaff} onSave={addLog} onClose={() => setShowAddLog(false)} />}
       </>
     );
@@ -567,6 +703,7 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
 
   return (
     <div style={styles.page}>
+      {/* Header */}
       <div style={styles.header}>
         <div><div style={styles.headerTitle}>Staff Management</div><div style={styles.headerSub}>Owner View</div></div>
         <div style={{ display: "flex", gap: 6 }}>
@@ -618,9 +755,7 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
                   ? <div style={{ fontSize: 11, color: "#2563eb", marginTop: 3 }}>{staffLogs.length} clients · {formatCurrency(staffLogs.reduce((a, l) => a + l.amount, 0))} · Detail →</div>
                   : <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>
                       Absent
-                      {attendance[ownerSelectedDate]?.[s.id + "_reason"] &&
-                        <span style={{ color: "#ef4444", marginLeft: 4 }}>· {attendance[ownerSelectedDate][s.id + "_reason"]}</span>
-                      }
+                      {attendance[ownerSelectedDate]?.[s.id + "_reason"] && <span style={{ color: "#ef4444", marginLeft: 4 }}>· {attendance[ownerSelectedDate][s.id + "_reason"]}</span>}
                     </div>
                 }
               </div>
@@ -640,6 +775,7 @@ function OwnerDashboard({ staffList, setStaffList, logs, setLogs, attendance, se
   );
 }
 
+// ─── Staff Self View ───────────────────────────────────────────────────────────
 function StaffSelfView({ staff, logs, setLogs, attendance, setAttendance, nextLogId, setNextLogId, showRevenue, onLogout }) {
   const [tab, setTab] = useState("month");
   const [showAddLog, setShowAddLog] = useState(false);
@@ -693,6 +829,7 @@ function StaffSelfView({ staff, logs, setLogs, attendance, setAttendance, nextLo
   );
 }
 
+// ─── Main Export ───────────────────────────────────────────────────────────────
 export default function StaffManagement({ role = "owner", currentUser, showRevenue = false, setShowRevenue }) {
   const [staffList, setStaffList] = useState([]);
   const [logs, setLogs] = useState([]);
@@ -702,8 +839,7 @@ export default function StaffManagement({ role = "owner", currentUser, showReven
   useEffect(() => {
     async function loadStaff() {
       const { data } = await supabase.from("staff").select("*").eq("salon_id", currentUser?.id);
-      if (data && data.length > 0) setStaffList(data);
-      else setStaffList([]);
+      setStaffList(data && data.length > 0 ? data : []);
     }
     if (currentUser?.id) loadStaff();
   }, [currentUser?.id]);
@@ -711,12 +847,7 @@ export default function StaffManagement({ role = "owner", currentUser, showReven
   useEffect(() => {
     async function loadLogs() {
       const { data } = await supabase.from("work_logs").select("*").eq("salon_id", currentUser?.id);
-      if (data && data.length > 0) {
-        setLogs(data.map(l => ({
-          id: l.id, staffId: l.staff_id, clientName: l.client_name,
-          service: l.service, amount: l.amount, date: l.date
-        })));
-      } else setLogs([]);
+      setLogs(data && data.length > 0 ? data.map(l => ({ id: l.id, staffId: l.staff_id, clientName: l.client_name, service: l.service, amount: l.amount, date: l.date })) : []);
     }
     if (currentUser?.id) loadLogs();
   }, [currentUser?.id]);
@@ -740,25 +871,19 @@ export default function StaffManagement({ role = "owner", currentUser, showReven
   const loggedInStaff = role === "staff" ? staffList.find(s => s.id === currentUser?.staffId) || staffList[0] : null;
 
   if (role === "owner") {
-    return <OwnerDashboard
-      staffList={staffList} setStaffList={setStaffList}
-      logs={logs} setLogs={setLogs}
+    return <OwnerDashboard staffList={staffList} setStaffList={setStaffList} logs={logs} setLogs={setLogs}
       attendance={attendance} setAttendance={setAttendance}
       showRevenueToStaff={showRevenue} setShowRevenueToStaff={setShowRevenue || (() => {})}
-      currentUser={currentUser}
-    />;
+      currentUser={currentUser} />;
   }
   if (role === "staff" && loggedInStaff) {
-    return <StaffSelfView
-      staff={loggedInStaff} logs={logs} setLogs={setLogs}
-      attendance={attendance} setAttendance={setAttendance}
-      nextLogId={nextLogId} setNextLogId={setNextLogId}
-      showRevenue={showRevenue} onLogout={() => {}}
-    />;
+    return <StaffSelfView staff={loggedInStaff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance}
+      nextLogId={nextLogId} setNextLogId={setNextLogId} showRevenue={showRevenue} onLogout={() => {}} />;
   }
   return null;
 }
 
+// ─── Styles ────────────────────────────────────────────────────────────────────
 const styles = {
   page: { background: "#f5f5f0", minHeight: "100vh", paddingBottom: 80, fontFamily: "'Segoe UI', sans-serif", overflowY: "auto", height: "100%" },
   header: { background: "#1a1a2e", color: "white", padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" },
