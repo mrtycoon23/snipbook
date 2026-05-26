@@ -372,7 +372,7 @@ function Onboarding({onComplete,onBack}){
         <div style={{padding:"16px 20px 12px",borderBottom:"2px solid #f0f4f8",background:"linear-gradient(135deg,#f8fafc,#f0fdf4)",display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:36,height:36,borderRadius:11,background:"#e8fdf0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{OB_STEPS[step-1].icon}</div>
           <div style={{fontWeight:900,fontSize:15}}>{OB_STEPS[step-1].title}</div>
-        </div>
+        </div>s
         <div style={{padding:"16px 20px"}}>
           {error&&<div style={{background:"#fff0f0",border:"2px solid #fca5a5",borderRadius:10,padding:"9px 12px",fontSize:12,color:"#dc2626",fontWeight:700,marginBottom:14}}>{error}</div>}
           {step===1&&(<><F label="Full Name"><input value={data.ownerName} onChange={e=>setData(p=>({...p,ownerName:e.target.value}))} placeholder="e.g. Rahul Sharma" style={obIs}/></F><F label="Mobile"><input value={data.phone} onChange={e=>setData(p=>({...p,phone:e.target.value}))} placeholder="+91 98765 43210" style={obIs}/></F><F label="Email"><input value={data.email} onChange={e=>setData(p=>({...p,email:e.target.value}))} placeholder="rahul@gmail.com" type="email" style={obIs}/></F><F label="Password"><input value={data.password} onChange={e=>setData(p=>({...p,password:e.target.value}))} placeholder="Min 6 characters" type="password" style={obIs}/></F></>)}
