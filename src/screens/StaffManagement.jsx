@@ -472,16 +472,7 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
         </div>
 
         {/* Sort Tabs */}
-        <div style={{padding:"10px 14px 0"}}>
-          <div style={{display:"flex",background:"#f0f4f8",borderRadius:10,padding:3,gap:2}}>
-            {[{key:"revenue",label:"💰 Revenue"},{key:"clients",label:"👥 Clients"},{key:"attendance",label:"📅 Attendance"}].map(t=>(
-              <button key={t.key} onClick={()=>setSortBy(t.key)}
-                style={{flex:1,padding:"7px 4px",border:"none",borderRadius:8,background:sortBy===t.key?"#1a1a2e":"transparent",color:sortBy===t.key?"white":"#888",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
+  
 
         {/* Staff Ranking Cards */}
         <div style={{padding:"10px 14px 100px"}}>
