@@ -17,33 +17,16 @@ function fc(n){return "₹"+Number(n).toLocaleString("en-IN");}
 function fd(d){return new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"});}
 function fdFull(d){return new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});}
 
-// iOS safe scroll style
-const scrollStyle = {
-  flex:1, overflowY:"auto", WebkitOverflowScrolling:"touch",
-  paddingBottom:100,
-};
-
-// ─── Phone Input with hard 10 digit limit ─────────────────────────────────────
-function PhoneInput({value, onChange, placeholder="9876543210", style={}}){
+function PhoneInput({value,onChange,placeholder="9876543210",style={}}){
   return(
-    <input
-      type="tel"
-      inputMode="numeric"
-      pattern="[0-9]*"
-      maxLength={10}
-      value={value}
-      onChange={e=>{
-        const v = e.target.value.replace(/\D/g,"").slice(0,10);
-        onChange(v);
-      }}
+    <input type="tel" inputMode="numeric" pattern="[0-9]*" maxLength={10} value={value}
+      onChange={e=>onChange(e.target.value.replace(/\D/g,"").slice(0,10))}
       placeholder={placeholder}
-      style={{width:"100%",border:"1px solid #e2e8f0",borderRadius:8,padding:"9px 11px",fontSize:14,color:"#1a1a2e",background:"#fafafa",outline:"none",boxSizing:"border-box",...style}}
-    />
+      style={{width:"100%",border:"1px solid #e2e8f0",borderRadius:8,padding:"9px 11px",fontSize:14,color:"#1a1a2e",background:"#fafafa",outline:"none",boxSizing:"border-box",...style}}/>
   );
 }
 
-// ─── Date Range Picker ─────────────────────────────────────────────────────────
-function DateRangePicker({fromDate, toDate, onFromChange, onToChange}){
+function DateRangePicker({fromDate,toDate,onFromChange,onToChange}){
   const PRESETS=[
     {label:"Aaj",from:today,to:today},
     {label:"Hafte",from:thisWeekStart,to:today},
@@ -53,10 +36,10 @@ function DateRangePicker({fromDate, toDate, onFromChange, onToChange}){
     <div style={{background:"#fff",padding:"10px 14px",borderBottom:"1px solid #f0f4f8"}}>
       <div style={{display:"flex",gap:6,marginBottom:8}}>
         {PRESETS.map(p=>{
-          const active = fromDate===p.from && toDate===p.to;
+          const active=fromDate===p.from&&toDate===p.to;
           return(
             <button key={p.label} onClick={()=>{onFromChange(p.from);onToChange(p.to);}}
-              style={{padding:"5px 12px",borderRadius:20,border:`1.5px solid ${active?"#22c55e":"#e8edf3"}`,background:active?"#e8fdf0":"white",color:active?"#16a34a":"#888",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+              style={{padding:"5px 14px",borderRadius:20,border:`1.5px solid ${active?"#22c55e":"#e8edf3"}`,background:active?"#e8fdf0":"white",color:active?"#16a34a":"#888",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
               {p.label}
             </button>
           );
@@ -73,7 +56,6 @@ function DateRangePicker({fromDate, toDate, onFromChange, onToChange}){
   );
 }
 
-// ─── Work Log Modal ────────────────────────────────────────────────────────────
 function WorkLogModal({staffList,preselectedStaffId,onSave,onClose}){
   const [staffId,setStaffId]=useState(preselectedStaffId||staffList[0]?.id||"");
   const [clientName,setClientName]=useState("");
@@ -111,7 +93,6 @@ function WorkLogModal({staffList,preselectedStaffId,onSave,onClose}){
   );
 }
 
-// ─── Add Staff Modal ───────────────────────────────────────────────────────────
 function AddStaffModal({onSave,onClose}){
   const [name,setName]=useState("");const [role,setRole]=useState("Hairstylist");
   const [phone,setPhone]=useState("");const [salary,setSalary]=useState("");
@@ -144,7 +125,6 @@ function AddStaffModal({onSave,onClose}){
   );
 }
 
-// ─── Edit Staff Modal ──────────────────────────────────────────────────────────
 function EditStaffModal({staff,onSave,onDelete,onClose}){
   const [name,setName]=useState(staff.name);const [role,setRole]=useState(staff.role);
   const [phone,setPhone]=useState(staff.phone||"");const [salary,setSalary]=useState(staff.salary);
@@ -186,7 +166,6 @@ function EditStaffModal({staff,onSave,onDelete,onClose}){
   );
 }
 
-// ─── Edit Log Modal ────────────────────────────────────────────────────────────
 function EditLogModal({log,onSave,onDelete,onClose}){
   const [clientName,setClientName]=useState(log.clientName);
   const [service,setService]=useState(log.service);
@@ -226,7 +205,6 @@ function EditLogModal({log,onSave,onDelete,onClose}){
   );
 }
 
-// ─── Salary Slip ───────────────────────────────────────────────────────────────
 function SalarySlipScreen({staff,logs,attendance,onBack}){
   const [slipMonth,setSlipMonth]=useState(new Date().toISOString().slice(0,7));
   const monthStart=slipMonth+"-01";
@@ -242,12 +220,12 @@ function SalarySlipScreen({staff,logs,attendance,onBack}){
   const monthLabel=new Date(slipMonth+"-01").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f5f5f0",fontFamily:"'Segoe UI',sans-serif"}}>
-      <div style={S.hdr}>
+      <div style={{...S.hdr,flexShrink:0}}>
         <button onClick={onBack} style={S.backBtn}>← Back</button>
         <div style={{textAlign:"center"}}><div style={S.hdrT}>Salary Slip</div><div style={S.hdrS}>{staff.name}</div></div>
         <div style={{width:60}}/>
       </div>
-      <div style={{...scrollStyle,padding:"14px"}}>
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"14px"}}>
         <div style={S.fg}><label style={S.label}>Month</label><input style={S.input} type="month" value={slipMonth} onChange={e=>setSlipMonth(e.target.value)}/></div>
         <div style={{background:"white",border:"0.5px solid #e8e8e0",borderRadius:14,padding:"14px"}}>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,paddingBottom:12,borderBottom:"0.5px solid #f1f5f9"}}>
@@ -282,17 +260,14 @@ function SalarySlipScreen({staff,logs,attendance,onBack}){
   );
 }
 
-// ─── Revenue Detail Modal ──────────────────────────────────────────────────────
 function RevenueModal({staff,logs,fromDate,toDate,onClose}){
   const rangeLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=fromDate&&l.date<=toDate).sort((a,b)=>b.date.localeCompare(a.date));
   const total=rangeLogs.reduce((s,l)=>s+l.amount,0);
   const c=avatarColor(staff.id);
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,maxHeight:"90vh",display:"flex",flexDirection:"column"}}>
-        {/* Fixed Header */}
+      <div style={{...S.modal,maxHeight:"88vh",display:"flex",flexDirection:"column"}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0}}>
-
           <div style={{...S.av,background:c.bg,color:c.text,width:38,height:38,fontSize:12}}>{initials(staff.name)}</div>
           <div style={{flex:1}}>
             <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e"}}>{staff.name} — Revenue</div>
@@ -300,7 +275,6 @@ function RevenueModal({staff,logs,fromDate,toDate,onClose}){
           </div>
           <button onClick={onClose} style={{background:"#f1f5f9",border:"none",borderRadius:8,padding:"6px 10px",fontSize:13,cursor:"pointer",color:"#555",fontWeight:700}}>✕</button>
         </div>
-        {/* Stats */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14,flexShrink:0}}>
           <div style={{background:"#f0fdf4",borderRadius:10,padding:"12px",textAlign:"center"}}>
             <div style={{fontSize:20,fontWeight:900,color:"#16a34a"}}>{fc(total)}</div>
@@ -311,10 +285,9 @@ function RevenueModal({staff,logs,fromDate,toDate,onClose}){
             <div style={{fontSize:10,color:"#888",marginTop:2}}>Total Clients</div>
           </div>
         </div>
-        {/* Scrollable List */}
         <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
           {rangeLogs.length===0
-            ?<div style={{textAlign:"center",color:"#aaa",padding:"24px 0",fontSize:13}}>Is period mein koi entry nahi</div>
+            ?<div style={{textAlign:"center",color:"#aaa",padding:"24px 0",fontSize:13}}>Koi entry nahi</div>
             :rangeLogs.map((log,i)=>(
               <div key={log.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:i<rangeLogs.length-1?"1px solid #f0f4f8":"none"}}>
                 <div style={{width:34,height:34,borderRadius:10,background:"#f0fdf4",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>✂️</div>
@@ -332,22 +305,20 @@ function RevenueModal({staff,logs,fromDate,toDate,onClose}){
   );
 }
 
-// ─── Attendance Detail Modal ───────────────────────────────────────────────────
 function AttendanceModal({staff,attendance,fromDate,toDate,onClose}){
   const c=avatarColor(staff.id);
   const dates=[];
   let cur=new Date(fromDate+"T00:00:00");
   const end=new Date(toDate+"T00:00:00");
-  while(cur<=end){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+  const todayD=new Date(today+"T00:00:00");
+  while(cur<=end&&cur<=todayD){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
   const presentDays=dates.filter(d=>(attendance[d]||{})[staff.id]).length;
   const absentDays=dates.length-presentDays;
   const attPct=dates.length>0?Math.round((presentDays/dates.length)*100):0;
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,maxHeight:"90vh",display:"flex",flexDirection:"column"}}>
-        {/* Fixed Header */}
+      <div style={{...S.modal,maxHeight:"88vh",display:"flex",flexDirection:"column"}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0}}>
-
           <div style={{...S.av,background:c.bg,color:c.text,width:38,height:38,fontSize:12}}>{initials(staff.name)}</div>
           <div style={{flex:1}}>
             <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e"}}>{staff.name} — Attendance</div>
@@ -355,7 +326,6 @@ function AttendanceModal({staff,attendance,fromDate,toDate,onClose}){
           </div>
           <button onClick={onClose} style={{background:"#f1f5f9",border:"none",borderRadius:8,padding:"6px 10px",fontSize:13,cursor:"pointer",color:"#555",fontWeight:700}}>✕</button>
         </div>
-        {/* Stats */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12,flexShrink:0}}>
           <div style={{background:"#f0fdf4",borderRadius:10,padding:"10px",textAlign:"center"}}>
             <div style={{fontSize:20,fontWeight:800,color:"#16a34a"}}>{presentDays}</div>
@@ -370,11 +340,9 @@ function AttendanceModal({staff,attendance,fromDate,toDate,onClose}){
             <div style={{fontSize:9,color:"#888"}}>Attendance</div>
           </div>
         </div>
-        {/* Progress Bar */}
         <div style={{background:"#f0f4f8",borderRadius:20,height:6,overflow:"hidden",marginBottom:14,flexShrink:0}}>
           <div style={{width:`${attPct}%`,height:"100%",background:attPct>=80?"#22c55e":attPct>=60?"#f59e0b":"#ef4444",borderRadius:20}}/>
         </div>
-        {/* Scrollable Calendar */}
         <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
           <div style={{fontSize:12,fontWeight:700,color:"#888",marginBottom:10}}>📅 Din-wise Record</div>
           <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:14}}>
@@ -394,7 +362,7 @@ function AttendanceModal({staff,attendance,fromDate,toDate,onClose}){
             <div>
               <div style={{fontSize:12,fontWeight:700,color:"#888",marginBottom:8}}>📝 Absent Reasons</div>
               {dates.filter(d=>!(attendance[d]||{})[staff.id]&&(attendance[d]||{})[staff.id+"_reason"]).map(d=>(
-                <div key={d} style={{background:"#fef2f2",borderRadius:8,padding:"8px 10px",marginBottom:6,display:"flex",gap:8,alignItems:"flex-start"}}>
+                <div key={d} style={{background:"#fef2f2",borderRadius:8,padding:"8px 10px",marginBottom:6,display:"flex",gap:8}}>
                   <div style={{fontSize:11,fontWeight:700,color:"#dc2626",flexShrink:0}}>{fd(d)}</div>
                   <div style={{fontSize:11,color:"#555"}}>{(attendance[d]||{})[staff.id+"_reason"]}</div>
                 </div>
@@ -422,7 +390,8 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
     const dates=[];
     let cur=new Date(fromDate+"T00:00:00");
     const end=new Date(toDate+"T00:00:00");
-    while(cur<=end){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+    const todayD=new Date(today+"T00:00:00");
+    while(cur<=end&&cur<=todayD){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
     const totalDays=dates.length;
     const presentDays=dates.filter(d=>(attendance[d]||{})[s.id]).length;
     const attPct=totalDays>0?Math.round((presentDays/totalDays)*100):0;
@@ -443,7 +412,6 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f5f5f0",fontFamily:"'Segoe UI',sans-serif"}}>
-      {/* Sticky Header */}
       <div style={{...S.hdr,flexShrink:0}}>
         <button onClick={onBack} style={S.backBtn}>← Back</button>
         <div style={{textAlign:"center"}}>
@@ -452,13 +420,8 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
         </div>
         <div style={{width:60}}/>
       </div>
-
-      {/* Scrollable Content */}
       <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        {/* Date Range */}
         <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
-
-        {/* Overall Stats */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,padding:"12px 14px 0"}}>
           {[
             {label:"Revenue",val:fc(totalRevenue),color:"#16a34a",bg:"#f0fdf4",icon:"💰"},
@@ -472,11 +435,16 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
             </div>
           ))}
         </div>
-
-        {/* Sort Tabs */}
-  
-
-        {/* Staff Ranking Cards */}
+        <div style={{padding:"10px 14px 0"}}>
+          <div style={{display:"flex",background:"#f0f4f8",borderRadius:10,padding:3,gap:2}}>
+            {[{key:"revenue",label:"💰 Revenue"},{key:"clients",label:"👥 Clients"},{key:"attendance",label:"📅 Attendance"}].map(t=>(
+              <button key={t.key} onClick={()=>setSortBy(t.key)}
+                style={{flex:1,padding:"7px 4px",border:"none",borderRadius:8,background:sortBy===t.key?"#1a1a2e":"transparent",color:sortBy===t.key?"white":"#888",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div style={{padding:"10px 14px 100px"}}>
           {sorted.length===0&&<div style={{textAlign:"center",color:"#9ca3af",padding:"32px 0",fontSize:13}}>Koi staff nahi</div>}
           {sorted.map((s,idx)=>{
@@ -484,50 +452,33 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
             const revenueShare=totalRevenue>0?Math.round((s.revenue/totalRevenue)*100):0;
             return(
               <div key={s.id} style={{background:"white",borderRadius:16,border:`2px solid ${idx===0?"#fde68a":"#e8edf3"}`,padding:"14px",marginBottom:10,boxShadow:idx===0?"0 2px 12px rgba(251,191,36,0.12)":"none"}}>
-                {/* Top Row */}
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                  <div style={{fontSize:idx<3?20:14,fontWeight:800,width:28,textAlign:"center",flexShrink:0}}>
-                    {idx<3?rankMedals[idx]:`#${idx+1}`}
-                  </div>
+                  <div style={{fontSize:idx<3?20:14,fontWeight:800,width:28,textAlign:"center",flexShrink:0}}>{idx<3?rankMedals[idx]:`#${idx+1}`}</div>
                   <div style={{...S.av,background:c.bg,color:c.text,width:38,height:38,fontSize:12,flexShrink:0}}>{initials(s.name)}</div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div>
                     <div style={{fontSize:11,color:"#888",marginTop:1}}>{s.role}</div>
                   </div>
-                  <div style={{background:s.attPct>=80?"#dcfce7":s.attPct>=60?"#fef9c3":"#fee2e2",color:s.attPct>=80?"#16a34a":s.attPct>=60?"#a16207":"#dc2626",fontSize:10,fontWeight:800,padding:"3px 8px",borderRadius:20,flexShrink:0}}>
-                    {s.attPct}%
-                  </div>
+                  <div style={{background:s.attPct>=80?"#dcfce7":s.attPct>=60?"#fef9c3":"#fee2e2",color:s.attPct>=80?"#16a34a":s.attPct>=60?"#a16207":"#dc2626",fontSize:10,fontWeight:800,padding:"3px 8px",borderRadius:20,flexShrink:0}}>{s.attPct}%</div>
                 </div>
-
-                {/* Clickable Stats - 4 boxes */}
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:10}}>
-                  {/* Revenue */}
-                  <div onClick={()=>setRevenueModal(s)}
-                    style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #bbf7d0",userSelect:"none"}}>
+                  <div onClick={()=>setRevenueModal(s)} style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #bbf7d0",userSelect:"none"}}>
                     <div style={{fontSize:12,fontWeight:900,color:"#16a34a"}}>{s.revenue>=1000?`₹${(s.revenue/1000).toFixed(1)}k`:fc(s.revenue)}</div>
                     <div style={{fontSize:9,color:"#888",marginTop:2}}>Revenue</div>
                   </div>
-                  {/* Clients */}
-                  <div onClick={()=>setRevenueModal(s)}
-                    style={{background:"#eff6ff",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #93c5fd",userSelect:"none"}}>
+                  <div onClick={()=>setRevenueModal(s)} style={{background:"#eff6ff",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #93c5fd",userSelect:"none"}}>
                     <div style={{fontSize:12,fontWeight:900,color:"#2563eb"}}>{s.clients}</div>
                     <div style={{fontSize:9,color:"#888",marginTop:2}}>Clients</div>
                   </div>
-                  {/* Present */}
-                  <div onClick={()=>setAttModal(s)}
-                    style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #86efac",userSelect:"none"}}>
+                  <div onClick={()=>setAttModal(s)} style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #86efac",userSelect:"none"}}>
                     <div style={{fontSize:12,fontWeight:900,color:"#16a34a"}}>{s.presentDays}</div>
                     <div style={{fontSize:9,color:"#888",marginTop:2}}>Present</div>
                   </div>
-                  {/* Absent */}
-                  <div onClick={()=>setAttModal(s)}
-                    style={{background:"#fef2f2",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #fca5a5",userSelect:"none"}}>
+                  <div onClick={()=>setAttModal(s)} style={{background:"#fef2f2",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #fca5a5",userSelect:"none"}}>
                     <div style={{fontSize:12,fontWeight:900,color:"#dc2626"}}>{s.absentDays}</div>
                     <div style={{fontSize:9,color:"#888",marginTop:2}}>Absent</div>
                   </div>
                 </div>
-
-                {/* Revenue Share Bar */}
                 <div>
                   <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                     <div style={{fontSize:10,color:"#888",fontWeight:700}}>Revenue share</div>
@@ -542,31 +493,38 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
           })}
         </div>
       </div>
-
       {revenueModal&&<RevenueModal staff={revenueModal} logs={logs} fromDate={fromDate} toDate={toDate} onClose={()=>setRevenueModal(null)}/>}
       {attModal&&<AttendanceModal staff={attModal} attendance={attendance} fromDate={fromDate} toDate={toDate} onClose={()=>setAttModal(null)}/>}
     </div>
   );
 }
 
-// ─── Staff Detail Screen ───────────────────────────────────────────────────────
+// ─── Staff Detail Screen — REDESIGNED ─────────────────────────────────────────
 function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEditStaff,onDeleteStaff,currentUser}){
-  const [tab,setTab]=useState("month");
+  const [fromDate,setFromDate]=useState(thisMonthStart);
+  const [toDate,setToDate]=useState(today);
   const [editingLog,setEditingLog]=useState(null);
   const [showSalarySlip,setShowSalarySlip]=useState(false);
   const [showEditStaff,setShowEditStaff]=useState(false);
+  const [showAttModal,setShowAttModal]=useState(false);
+  const [showRevenueModal,setShowRevenueModal]=useState(false);
   const c=avatarColor(staff.id);
 
   const filtered=useMemo(()=>{
-    const cutoff=tab==="today"?today:tab==="week"?thisWeekStart:thisMonthStart;
-    return logs.filter(l=>l.staffId===staff.id&&l.date>=cutoff).sort((a,b)=>b.date.localeCompare(a.date));
-  },[logs,tab,staff.id]);
+    return logs.filter(l=>l.staffId===staff.id&&l.date>=fromDate&&l.date<=toDate).sort((a,b)=>b.date.localeCompare(a.date));
+  },[logs,fromDate,toDate,staff.id]);
 
   const totalRevenue=filtered.reduce((s,l)=>s+l.amount,0);
-  const attendedDays=Object.entries(attendance).filter(([d,m])=>{
-    const cutoff=tab==="today"?today:tab==="week"?thisWeekStart:thisMonthStart;
-    return d>=cutoff&&m[staff.id];
-  }).length;
+
+  // Attendance count (only past dates)
+  const dates=[];
+  let cur=new Date(fromDate+"T00:00:00");
+  const end=new Date(toDate+"T00:00:00");
+  const todayD=new Date(today+"T00:00:00");
+  while(cur<=end&&cur<=todayD){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+  const attendedDays=dates.filter(d=>(attendance[d]||{})[staff.id]).length;
+  const totalDays=dates.length;
+  const attPct=totalDays>0?Math.round((attendedDays/totalDays)*100):0;
 
   async function handleEditLog(updated){
     if(currentUser?.id){await supabase.from("work_logs").update({client_name:updated.clientName,service:updated.service,amount:updated.amount,date:updated.date}).eq("id",updated.id);}
@@ -581,50 +539,92 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f5f5f0",fontFamily:"'Segoe UI',sans-serif"}}>
+      {/* Header */}
       <div style={{...S.hdr,flexShrink:0}}>
         <button onClick={onBack} style={S.backBtn}>← Back</button>
         <div style={{textAlign:"center"}}><div style={S.hdrT}>{staff.name}</div><div style={S.hdrS}>{staff.role}</div></div>
         <button onClick={()=>setShowEditStaff(true)} style={{...S.backBtn,fontSize:11}}>Edit</button>
       </div>
+
       <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        <div style={{padding:"14px 14px 0",display:"flex",gap:14,alignItems:"center"}}>
-          <div style={{...S.av,width:52,height:52,fontSize:18,background:c.bg,color:c.text}}>{initials(staff.name)}</div>
-          <div style={{flex:1}}><div style={{fontSize:13,color:"#888"}}>{staff.phone} · {fc(staff.salary)}/mo</div></div>
-          <button onClick={()=>setShowSalarySlip(true)} style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,padding:"8px 12px",fontSize:11,fontWeight:700,color:"#166534",cursor:"pointer"}}>Salary Slip</button>
+        {/* Profile Card */}
+        <div style={{background:"white",margin:"14px 14px 0",borderRadius:16,padding:"16px",border:"1px solid #f0f4f8",display:"flex",alignItems:"center",gap:14}}>
+          <div style={{...S.av,width:56,height:56,fontSize:20,background:c.bg,color:c.text,flexShrink:0}}>{initials(staff.name)}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:16,fontWeight:800,color:"#1a1a2e"}}>{staff.name}</div>
+            <div style={{fontSize:12,color:"#888",marginTop:2}}>{staff.role}</div>
+            {staff.phone&&<div style={{fontSize:12,color:"#888",marginTop:1}}>📞 {staff.phone}</div>}
+            <div style={{fontSize:12,color:"#16a34a",fontWeight:700,marginTop:2}}>{fc(staff.salary)}/mo</div>
+          </div>
+          <button onClick={()=>setShowSalarySlip(true)} style={{background:"#f0fdf4",border:"1.5px solid #bbf7d0",borderRadius:12,padding:"8px 12px",fontSize:11,fontWeight:700,color:"#166534",cursor:"pointer",textAlign:"center"}}>
+            📄<br/>Salary<br/>Slip
+          </button>
         </div>
-        <div style={{padding:"12px 14px 0"}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",background:"white",borderRadius:10,border:"0.5px solid #e8e8e0",padding:3,gap:2}}>
-            {[{key:"today",label:"Aaj"},{key:"week",label:"Hafte"},{key:"month",label:"Mahine"}].map(t=>(
-              <button key={t.key} style={{padding:"8px 0",border:"none",borderRadius:8,background:tab===t.key?"#1a1a2e":"transparent",color:tab===t.key?"white":"#888",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}} onClick={()=>setTab(t.key)}>{t.label}</button>
-            ))}
+
+        {/* Date Range */}
+        <div style={{marginTop:12}}>
+          <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
+        </div>
+
+        {/* Clickable Stats */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,padding:"12px 14px 0"}}>
+          {/* Clients + Revenue — clickable */}
+          <div onClick={()=>setShowRevenueModal(true)} style={{background:"linear-gradient(135deg,#f0fdf4,#dcfce7)",borderRadius:14,padding:"14px 10px",textAlign:"center",cursor:"pointer",border:"1.5px solid #bbf7d0",gridColumn:"span 1"}}>
+            <div style={{fontSize:18,fontWeight:900,color:"#16a34a"}}>{filtered.length}</div>
+            <div style={{fontSize:10,color:"#166534",fontWeight:700,marginTop:2}}>Clients 👥</div>
+          </div>
+          <div onClick={()=>setShowRevenueModal(true)} style={{background:"linear-gradient(135deg,#eff6ff,#dbeafe)",borderRadius:14,padding:"14px 10px",textAlign:"center",cursor:"pointer",border:"1.5px solid #93c5fd"}}>
+            <div style={{fontSize:filtered.length>0&&totalRevenue>=10000?13:18,fontWeight:900,color:"#2563eb"}}>{fc(totalRevenue)}</div>
+            <div style={{fontSize:10,color:"#1e40af",fontWeight:700,marginTop:2}}>Revenue 💰</div>
+          </div>
+          {/* Attendance — clickable */}
+          <div onClick={()=>setShowAttModal(true)} style={{background:`linear-gradient(135deg,${attPct>=80?"#f0fdf4,#dcfce7":attPct>=60?"#fef9c3,#fef3c7":"#fef2f2,#fee2e2"})`,borderRadius:14,padding:"14px 10px",textAlign:"center",cursor:"pointer",border:`1.5px solid ${attPct>=80?"#86efac":attPct>=60?"#fcd34d":"#fca5a5"}`}}>
+            <div style={{fontSize:18,fontWeight:900,color:attPct>=80?"#16a34a":attPct>=60?"#a16207":"#dc2626"}}>{attPct}%</div>
+            <div style={{fontSize:10,color:"#888",fontWeight:700,marginTop:2}}>Attendance 📅</div>
           </div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,padding:"12px 14px 0"}}>
-          <div style={S.sc}><div style={{...S.sn,color:"#1a1a2e"}}>{filtered.length}</div><div style={S.sl}>Clients</div></div>
-          <div style={S.sc}><div style={{...S.sn,color:"#16a34a",fontSize:15}}>{fc(totalRevenue)}</div><div style={S.sl}>Revenue</div></div>
-          <div style={S.sc}><div style={{...S.sn,color:"#2563eb"}}>{attendedDays}d</div><div style={S.sl}>Present</div></div>
+
+        {/* Attendance mini bar */}
+        <div style={{padding:"8px 14px 0"}}>
+          <div style={{background:"#f0f4f8",borderRadius:20,height:4,overflow:"hidden"}}>
+            <div style={{width:`${attPct}%`,height:"100%",background:attPct>=80?"#22c55e":attPct>=60?"#f59e0b":"#ef4444",borderRadius:20,transition:"width 0.5s"}}/>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
+            <div style={{fontSize:10,color:"#888"}}>{attendedDays} din present</div>
+            <div style={{fontSize:10,color:"#888"}}>{totalDays-attendedDays} din absent</div>
+          </div>
         </div>
+
+        {/* Work Logs */}
         <div style={{padding:"14px"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{fontSize:14,fontWeight:700,color:"#1a1a2e"}}>Kaam ki entries</div>
+            <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e"}}>Kaam ki Entries</div>
             <button style={S.addBtn} onClick={onAddLog}>+ Add</button>
           </div>
           {filtered.length===0
-            ?<div style={{textAlign:"center",color:"#9ca3af",fontSize:13,padding:"24px 0"}}>Koi entry nahi</div>
+            ?<div style={{textAlign:"center",color:"#9ca3af",fontSize:13,padding:"32px 0",background:"white",borderRadius:14,border:"1px dashed #e8edf3"}}>
+              <div style={{fontSize:24,marginBottom:8}}>📋</div>
+              Is period mein koi entry nahi
+            </div>
             :filtered.map(log=>(
-              <div key={log.id} onClick={()=>setEditingLog(log)} style={{background:"white",borderRadius:10,border:"0.5px solid #e8e8e0",padding:"11px 14px",display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:600,color:"#1a1a2e"}}>{log.clientName}</div>
-                  <div style={{fontSize:12,color:"#888",marginTop:2}}>{log.service} · {fd(log.date)}</div>
+              <div key={log.id} onClick={()=>setEditingLog(log)}
+                style={{background:"white",borderRadius:12,border:"1px solid #f0f4f8",padding:"12px 14px",display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
+                <div style={{width:38,height:38,borderRadius:10,background:"#f0fdf4",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>✂️</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:700,color:"#1a1a2e",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{log.clientName}</div>
+                  <div style={{fontSize:11,color:"#888",marginTop:2}}>{log.service} · {fd(log.date)}</div>
                 </div>
-                <div style={{fontSize:14,fontWeight:700,color:"#16a34a"}}>{fc(log.amount)}</div>
+                <div style={{fontSize:14,fontWeight:800,color:"#16a34a",flexShrink:0}}>{fc(log.amount)}</div>
               </div>
             ))
           }
         </div>
       </div>
+
       {editingLog&&<EditLogModal log={editingLog} onSave={handleEditLog} onDelete={handleDeleteLog} onClose={()=>setEditingLog(null)}/>}
       {showEditStaff&&<EditStaffModal staff={staff} onSave={onEditStaff} onDelete={onDeleteStaff} onClose={()=>setShowEditStaff(false)}/>}
+      {showAttModal&&<AttendanceModal staff={staff} attendance={attendance} fromDate={fromDate} toDate={toDate} onClose={()=>setShowAttModal(false)}/>}
+      {showRevenueModal&&<RevenueModal staff={staff} logs={logs} fromDate={fromDate} toDate={toDate} onClose={()=>setShowRevenueModal(false)}/>}
     </div>
   );
 }
@@ -680,12 +680,8 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
     setNextLogId(n=>n+1);
   }
 
-  // Stats for date range
   const rangeLogs=logs.filter(l=>l.date>=fromDate&&l.date<=toDate);
   const rangeRevenue=rangeLogs.reduce((s,l)=>s+l.amount,0);
-  const rangeServices=rangeLogs.length;
-
-  // Attendance for "today" only on main list
   const todayAtt=attendance[today]||{};
   const presentToday=staffList.filter(s=>todayAtt[s.id]).length;
 
@@ -703,7 +699,6 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f5f5f0",fontFamily:"'Segoe UI',sans-serif"}}>
-      {/* Sticky Header */}
       <div style={{...S.hdr,flexShrink:0}}>
         <div><div style={S.hdrT}>Staff Management</div><div style={S.hdrS}>Owner View</div></div>
         <div style={{display:"flex",gap:6}}>
@@ -711,35 +706,26 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
           <button style={{...S.addBtn,fontSize:11}} onClick={()=>{setLogForStaff(null);setShowAddLog(true);}}>+ Log</button>
         </div>
       </div>
-
-      {/* Scrollable Content */}
       <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        {/* Revenue Toggle */}
         <div style={{background:showRevenueToStaff?"#f0fdf4":"#fef2f2",borderBottom:"0.5px solid #e8e8e0",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div>
             <div style={{fontSize:13,fontWeight:700,color:"#1a1a2e"}}>Staff ko Sales dikhao?</div>
-            <div style={{fontSize:11,color:"#888",marginTop:1}}>{showRevenueToStaff?"ON — Staff apni earnings dekh sakta hai":"OFF — Staff ko ₹ amounts hidden hain"}</div>
+            <div style={{fontSize:11,color:"#888",marginTop:1}}>{showRevenueToStaff?"ON":"OFF"}</div>
           </div>
           <div style={{width:52,height:26,borderRadius:13,background:showRevenueToStaff?"#16a34a":"#d1d5db",position:"relative",cursor:"pointer",flexShrink:0}} onClick={()=>setShowRevenueToStaff(v=>!v)}>
             <div style={{width:20,height:20,borderRadius:"50%",background:"white",position:"absolute",top:3,left:showRevenueToStaff?29:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
           </div>
         </div>
-
-        {/* Date Range Picker */}
         <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
-
-        {/* Stats */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,padding:"12px 14px 0"}}>
           <div style={S.sc}><div style={{...S.sn,color:"#16a34a"}}>{presentToday}</div><div style={S.sl}>Present</div></div>
           <div style={S.sc}><div style={{...S.sn,color:"#dc2626"}}>{staffList.length-presentToday}</div><div style={S.sl}>Absent</div></div>
-          <div style={S.sc}><div style={{...S.sn,color:"#1a1a2e"}}>{rangeServices}</div><div style={S.sl}>Services</div></div>
+          <div style={S.sc}><div style={{...S.sn,color:"#1a1a2e"}}>{rangeLogs.length}</div><div style={S.sl}>Services</div></div>
           <div style={S.sc}><div style={{...S.sn,color:"#2563eb",fontSize:12}}>{fc(rangeRevenue)}</div><div style={S.sl}>Revenue</div></div>
         </div>
-
-        {/* Staff List */}
         <div style={{padding:"14px"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{fontSize:14,fontWeight:700,color:"#1a1a2e"}}>Staff List</div>
+            <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e"}}>Staff List</div>
             <button style={S.addBtn} onClick={()=>setShowAddStaff(true)}>+ Add Staff</button>
           </div>
           {staffList.length===0&&<div style={{textAlign:"center",color:"#9ca3af",fontSize:13,padding:"32px 0"}}>Koi staff nahi — Add Staff karo</div>}
@@ -755,16 +741,10 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
                   <div style={{fontSize:14,fontWeight:700,color:"#1a1a2e"}}>{s.name}</div>
                   <div style={{fontSize:11,color:"#888",marginTop:1}}>{s.role}</div>
                   <div style={{fontSize:11,marginTop:3,color:isPresent?"#2563eb":"#9ca3af"}}>
-                    {isPresent
-                      ?`${staffRangeLogs.length} clients · ${fc(staffRevenue)} · Detail →`
-                      :"Absent today"
-                    }
-                    {!isPresent&&attendance[today]?.[s.id+"_reason"]&&
-                      <span style={{color:"#ef4444",marginLeft:4}}>· {attendance[today][s.id+"_reason"]}</span>
-                    }
+                    {isPresent?`${staffRangeLogs.length} clients · ${fc(staffRevenue)} · Detail →`:"Absent today"}
+                    {!isPresent&&attendance[today]?.[s.id+"_reason"]&&<span style={{color:"#ef4444",marginLeft:4}}>· {attendance[today][s.id+"_reason"]}</span>}
                   </div>
                 </div>
-                {/* Attendance Toggle — today only */}
                 <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flexShrink:0}}>
                   <div style={{width:52,height:26,borderRadius:13,background:isPresent?"#16a34a":"#d1d5db",position:"relative",cursor:"pointer"}} onClick={()=>toggleAttendance(s.id,today)}>
                     <div style={{width:20,height:20,borderRadius:"50%",background:"white",position:"absolute",top:3,left:isPresent?29:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
@@ -897,7 +877,6 @@ export default function StaffManagement({role="owner",currentUser,showRevenue=fa
   return null;
 }
 
-// ─── Styles ────────────────────────────────────────────────────────────────────
 const S={
   hdr:{background:"#1a1a2e",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"},
   hdrT:{fontSize:16,fontWeight:800,color:"#fff"},
