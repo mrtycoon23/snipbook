@@ -266,7 +266,7 @@ function RevenueModal({staff,logs,fromDate,toDate,onClose}){
   const c=avatarColor(staff.id);
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,maxHeight:"88vh",display:"flex",flexDirection:"column"}}>
+      <div style={{...S.modal,height:"88vh",display:"flex",flexDirection:"column"}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0}}>
           <div style={{...S.av,background:c.bg,color:c.text,width:38,height:38,fontSize:12}}>{initials(staff.name)}</div>
           <div style={{flex:1}}>
@@ -317,7 +317,7 @@ function AttendanceModal({staff,attendance,fromDate,toDate,onClose}){
   const attPct=dates.length>0?Math.round((presentDays/dates.length)*100):0;
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,maxHeight:"88vh",display:"flex",flexDirection:"column"}}>
+      <div style={{...S.modal,height:"88vh",display:"flex",flexDirection:"column"}}>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0}}>
           <div style={{...S.av,background:c.bg,color:c.text,width:38,height:38,fontSize:12}}>{initials(staff.name)}</div>
           <div style={{flex:1}}>
@@ -888,7 +888,7 @@ const S={
   sl:{fontSize:10,color:"#888",marginTop:2},
   av:{width:42,height:42,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,flexShrink:0},
   modalBg:{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200},
-  modal:{background:"white",borderRadius:"20px 20px 0 0",padding:20,width:"100%",maxWidth:480},
+  modal:{background:"white",borderRadius:"20px 20px 0 0",padding:20,width:"100%",maxWidth:480,paddingBottom:40},
   modalTitle:{fontSize:16,fontWeight:700,color:"#1a1a2e",marginBottom:16},
   fg:{marginBottom:13},
   fr:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10},
