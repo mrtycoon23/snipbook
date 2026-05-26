@@ -289,9 +289,10 @@ function RevenueModal({staff,logs,fromDate,toDate,onClose}){
   const c=avatarColor(staff.id);
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,maxHeight:"90vh",display:"flex",flexDirection:"column",paddingTop:20}}>
+      <div style={{...S.modal,maxHeight:"90vh",display:"flex",flexDirection:"column"}}>
         {/* Fixed Header */}
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0,position:"sticky",top:0,background:"white",zIndex:1,paddingBottom:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0}}>
+
           <div style={{...S.av,background:c.bg,color:c.text,width:38,height:38,fontSize:12}}>{initials(staff.name)}</div>
           <div style={{flex:1}}>
             <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e"}}>{staff.name} — Revenue</div>
@@ -343,9 +344,10 @@ function AttendanceModal({staff,attendance,fromDate,toDate,onClose}){
   const attPct=dates.length>0?Math.round((presentDays/dates.length)*100):0;
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,maxHeight:"90vh",display:"flex",flexDirection:"column",paddingTop:20}}>
+      <div style={{...S.modal,maxHeight:"90vh",display:"flex",flexDirection:"column"}}>
         {/* Fixed Header */}
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0,position:"sticky",top:0,background:"white",zIndex:1,paddingBottom:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0}}>
+
           <div style={{...S.av,background:c.bg,color:c.text,width:38,height:38,fontSize:12}}>{initials(staff.name)}</div>
           <div style={{flex:1}}>
             <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e"}}>{staff.name} — Attendance</div>
