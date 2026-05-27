@@ -153,7 +153,7 @@ function Landing({onStart,onLogin}){
           )}
           <div style={{fontSize:12,color:"#aaa",fontWeight:700}}>✓ Quick setup &nbsp;·&nbsp; ✓ Indian salons ke liye &nbsp;·&nbsp; ✓ WhatsApp first</div>
           <div style={{display:"flex",justifyContent:"center",gap:28,marginTop:32,flexWrap:"wrap"}}>
-            {[{val:"2,400+",label:"Salons"},{val:"India",label:"Made for"},{val:"70%",label:"Fewer No-shows"},{val:"3 min",label:"Setup"}].map(s=>(<div key={s.label} style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:900,color:"#22c55e"}}>{s.val}</div><div style={{fontSize:11,color:"#888",fontWeight:700,marginTop:2}}>{s.label}</div></div>))}
+            {[{val:"🇮🇳",label:"Made for India"},{val:"24/7",label:"Bot Active"},{val:"Zero",label:"Missed Calls"},{val:"3 min",label:"Setup"}].map(s=>(<div key={s.label} style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:900,color:"#22c55e"}}>{s.val}</div><div style={{fontSize:11,color:"#888",fontWeight:700,marginTop:2}}>{s.label}</div></div>))}
           </div>
         </div>
       </section>
