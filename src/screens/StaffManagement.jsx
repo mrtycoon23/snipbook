@@ -87,7 +87,7 @@ function WorkLogModal({staffList,preselectedStaffId,onSave,onClose}){
           <div style={S.fg}><label style={S.label}>Service</label><select style={S.input} value={service} onChange={e=>setService(e.target.value)}>{SERVICES.map(s=><option key={s}>{s}</option>)}</select></div>
           <div style={S.fg}><label style={S.label}>Amount (₹) *</label><input style={S.input} type="number" placeholder="500" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
         </div>
-        <div style={S.ma}><button style={{...S.bc,backgroundColor:"#e8edf3",color:"#1a1a2e",border:"2px solid #d1d5db"}} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Save</button></div>
+        <div style={S.ma}><button style={{...S.bc,backgroundColor:"#e8edf3",color:"#1a1a2e",border:"2px solid #d1d5db",WebkitTextFillColor:"#1a1a2e",opacity:1}} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Save</button></div>
       </div>
     </div>
   );
