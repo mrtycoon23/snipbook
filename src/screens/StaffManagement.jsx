@@ -87,7 +87,7 @@ function WorkLogModal({staffList,preselectedStaffId,onSave,onClose}){
           <div style={S.fg}><label style={S.label}>Service</label><select style={S.input} value={service} onChange={e=>setService(e.target.value)}>{SERVICES.map(s=><option key={s}>{s}</option>)}</select></div>
           <div style={S.fg}><label style={S.label}>Amount (₹) *</label><input style={S.input} type="number" placeholder="500" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
         </div>
-        <div style={S.ma}><button style={S.bc} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Save</button></div>
+        <div style={S.ma}><button style={{...S.bc,backgroundColor:"#e8edf3",color:"#1a1a2e",border:"2px solid #d1d5db"}} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Save</button></div>
       </div>
     </div>
   );
@@ -895,7 +895,7 @@ const S={
   label:{fontSize:12,fontWeight:600,color:"#555",marginBottom:5,display:"block"},
   input:{width:"100%",border:"1px solid #e2e8f0",borderRadius:8,padding:"9px 11px",fontSize:14,color:"#1a1a2e",background:"#fafafa",outline:"none",boxSizing:"border-box"},
   ma:{display:"flex",gap:10,marginTop:18},
-  bc:{flex:1,padding:11,border:"1px solid #e2e8f0",background:"#f8fafc",borderRadius:10,fontSize:14,fontWeight:600,color:"#1a1a2e",cursor:"pointer",fontFamily:"inherit"},
+  bc:{flex:1,padding:11,border:"2px solid #e2e8f0",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit",backgroundColor:"#f0f4f8",color:"#1a1a2e",WebkitAppearance:"none",appearance:"none"},
   bs:{flex:2,padding:11,border:"none",background:"#1a1a2e",borderRadius:10,fontSize:14,fontWeight:600,color:"white",cursor:"pointer",fontFamily:"inherit"},
   err:{background:"#fff0f0",border:"1px solid #fca5a5",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#dc2626",fontWeight:700,marginBottom:12},
 };
