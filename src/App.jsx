@@ -155,7 +155,7 @@ function Landing({onStart,onLogin}){
           <div style={{display:"flex",justifyContent:"center",gap:28,marginTop:32,flexWrap:"wrap"}}>
             {[{val:"🇮🇳",label:"Made for India"},{val:"24/7",label:"Bot Active"},{val:"Zero",label:"Missed Calls"},{val:"3 min",label:"Setup"}].map(s=>(<div key={s.label} style={{textAlign:"center"}}><div style={{fontSize:22,fontWeight:900,color:"#22c55e"}}>{s.val}</div><div style={{fontSize:11,color:"#888",fontWeight:700,marginTop:2}}>{s.label}</div></div>))}
           </div>
-        </div>
+        </div>  
       </section>
       <section style={{padding:"40px 20px",background:"#1a1a2e"}}>
         <div style={{maxWidth:480,margin:"0 auto",textAlign:"center"}}>
@@ -1147,9 +1147,10 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                 >
                   {welcomeSending?"Sending...":"💬 Welcome Msg"}
                 </button>
-              </div>
+              </div> 
               <button onClick={()=>{setEditClient({...selClient});setShowEditClient(true);}} style={{width:"100%",padding:"11px",background:"#fff",border:"2px solid #e8edf3",borderRadius:12,color:"#555",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8}}>✏️ Edit Profile</button>
               <button onClick={()=>{setScreen("history");setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,color:"#16a34a",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📋 Visit History →</button>
+              <button onClick={async()=>{if(!window.confirm(`${selClient.name} ko delete karna hai? Yeh undo nahi hoga!`))return;await supabase.from("customers").delete().eq("id",selClient.id);setClients(prev=>prev.filter(c=>c.id!==selClient.id));setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#fff0f0",border:"2px solid #fca5a5",borderRadius:12,color:"#dc2626",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",marginTop:8}}>🗑️ Delete Customer</button>
             </div></div>)}
 
             {/* ✅ Custom Welcome Modal — browser popup GONE */}
