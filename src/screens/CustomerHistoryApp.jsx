@@ -145,10 +145,17 @@ function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {filtered.map(c=>{
             const tag=TAG[c.tag]||TAG.Regular;const bday=getBirthdayStatus(c.dob);const inactive=daysSince(c.last_visit||c.lastVisit)>=30;const lastSvc=(c.visitHistory||[])[0]?.services?.[0]||null;
-            let cardBg=T.purpleLight,cardColor=T.purple,avBg="#c4b8f0",avColor=T.purpleMid;
-            if(c.tag==="VIP"){cardBg="#fef9c3";cardColor="#a16207";avBg="#fde68a";avColor="#a16207";}
-            else if(c.tag==="New"){cardBg="#f0fdf4";cardColor="#16a34a";avBg="#bbf7d0";avColor="#16a34a";}
-            else if(inactive&&c.tag!=="VIP"&&c.tag!=="New"){cardBg="#fff0f0";cardColor="#dc2626";avBg="#fca5a5";avColor="#dc2626";}
+            const CARD_COLORS=[
+  {cardBg:"#ede9fe",cardColor:"#5b3fc4",avBg:"#c4b8f0",avColor:"#2d1b69"},
+  {cardBg:"#fef9c3",cardColor:"#a16207",avBg:"#fde68a",avColor:"#a16207"},
+  {cardBg:"#f0fdf4",cardColor:"#16a34a",avBg:"#bbf7d0",avColor:"#16a34a"},
+  {cardBg:"#fff0f6",cardColor:"#db2777",avBg:"#fbcfe8",avColor:"#db2777"},
+  {cardBg:"#eff6ff",cardColor:"#2563eb",avBg:"#bfdbfe",avColor:"#1d4ed8"},
+  {cardBg:"#fff7ed",cardColor:"#ea580c",avBg:"#fed7aa",avColor:"#ea580c"},
+  {cardBg:"#f0fdfa",cardColor:"#0d9488",avBg:"#99f6e4",avColor:"#0f766e"},
+];  
+const cidx=Math.abs((c.id||"").toString().split("").reduce((a,ch)=>a+ch.charCodeAt(0),0))%CARD_COLORS.length;
+const{cardBg,cardColor,avBg,avColor}=CARD_COLORS[cidx];
             return(<div key={c.id} onClick={()=>onSelect(c)} style={{borderRadius:18,padding:"13px 14px",cursor:"pointer",background:cardBg,position:"relative",overflow:"hidden"}}>
               <div style={{position:"absolute",width:70,height:70,borderRadius:"50%",top:-15,right:-15,background:"rgba(255,255,255,0.08)"}}/>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
