@@ -154,7 +154,7 @@ function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
   {cardBg:"#fff7ed",cardColor:"#ea580c",avBg:"#fed7aa",avColor:"#ea580c"},
   {cardBg:"#f0fdfa",cardColor:"#0d9488",avBg:"#99f6e4",avColor:"#0f766e"},
 ];  
-const cidx=(c.name||"a").split("").reduce((a,ch)=>a+ch.charCodeAt(0),0)%CARD_COLORS.length;.toString().split("").reduce((a,ch)=>a+ch.charCodeAt(0),0))%CARD_COLORS.length;
+const cidx=filtered.indexOf(c)%CARD_COLORS.length;.toString().split("").reduce((a,ch)=>a+ch.charCodeAt(0),0))%CARD_COLORS.length;
 const{cardBg,cardColor,avBg,avColor}=CARD_COLORS[cidx];
             return(<div key={c.id} onClick={()=>onSelect(c)} style={{borderRadius:18,padding:"13px 14px",cursor:"pointer",background:cardBg,position:"relative",overflow:"hidden"}}>
               <div style={{position:"absolute",width:70,height:70,borderRadius:"50%",top:-15,right:-15,background:"rgba(255,255,255,0.08)"}}/>
