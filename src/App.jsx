@@ -216,8 +216,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const weekDays=Array.from({length:6},(_,i)=>addDays(weekStart,i));
 
   return(
-    <div style={{height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#1a0a4a",fontFamily:"system-ui,sans-serif"}}>
-    <div style={{width:"100%",maxWidth:430,height:"100vh",display:"flex",flexDirection:"column",color:TP.text,background:TP.bg,overflow:"hidden",position:"relative",boxShadow:"0 0 60px rgba(0,0,0,0.5)"}}>
+    <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
       <SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
 
@@ -366,7 +365,6 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       </div>
 
       {showNotifs&&(<div onClick={()=>setShowNotifs(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-start",justifyContent:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",width:"90%",maxWidth:360,height:"100vh",overflowY:"auto"}}><div style={{padding:"16px",borderBottom:`2px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:TP.purple,position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:16,color:"#fff"}}>🔔 Notifications</div><button onClick={()=>setShowNotifs(false)} style={{background:"rgba(255,255,255,0.15)",border:"none",fontSize:18,cursor:"pointer",color:"#fff",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>{notifications.length===0?(<div style={{padding:32,textAlign:"center",color:TP.ts}}>Koi notification nahi</div>):notifications.map((n,i)=>(<div key={i} onClick={()=>{setScreen("calendar");setSelDate(new Date(n.date));setShowNotifs(false);}} style={{padding:"14px 16px",borderBottom:`2px solid ${TP.bg}`,cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:12,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>📅</div><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:TP.text}}>{n.customer_name||"Customer"}</div><div style={{fontSize:11,color:TP.ts,marginTop:2}}>{n.service} · \u20b9{n.amount||0}</div><div style={{fontSize:11,color:TP.purple,marginTop:2,fontWeight:700}}>{n.date} at {n.time_slot}</div></div></div></div>))}</div></div>)}
-    </div>
     </div>
   );
 }
