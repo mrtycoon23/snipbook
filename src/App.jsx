@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "./lib/supabase";
-import StaffManagement from "./screens/StaffManagement"; 
+import StaffManagement from "./screens/StaffManagement";
 import CustomerHistory from "./screens/CustomerHistoryApp";
 import EngagementCenter from "./screens/EngagementCenter";
 import StaffDashboard, { StaffLoginPage } from "./screens/StaffDashboard";
@@ -38,16 +38,24 @@ function seedBookings(){
 function Logo({size=15,iconSize=32}){return(<div style={{display:"flex",alignItems:"center",gap:8}}><div style={{width:iconSize,height:iconSize,background:TP.purple,borderRadius:Math.round(iconSize*0.28),display:"flex",alignItems:"center",justifyContent:"center",fontSize:iconSize*0.5}}>✂️</div><span style={{fontWeight:900,fontSize:size,color:"#fff"}}>Snip<span style={{color:"#c4b8f0"}}>Book</span></span></div>);}
 
 function SalonHeader({user,screen,onSettings,unreadCount=0,onBell,onBack}){
-  const salonName=user?.salon||"My Salon";const logoUrl=user?.logo_url||null;const initials=user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2)||"??";
   const screenLabel={dashboard:"Home",calendar:"Calendar",clients:"Clients",staff:"Staff",history:"Customer History",engage:"Engagement",settings:"Settings",chats:"Bot Chats"}[screen]||screen;
   const isDashboard=screen==="dashboard";
-  return(<div style={{background:TP.purple,padding:"0 16px",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,boxShadow:"0 2px 12px rgba(45,27,105,0.4)"}}>
-    <div style={{width:40,display:"flex",alignItems:"center"}}>{isDashboard?(logoUrl?<img src={logoUrl} alt="logo" style={{width:34,height:34,borderRadius:10,objectFit:"cover",border:"2px solid rgba(255,255,255,0.3)"}}/>:<div style={{width:34,height:34,background:"rgba(255,255,255,0.15)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:17}}>✂️</div>):(<button onClick={onBack} style={{width:34,height:34,background:"rgba(255,255,255,0.15)",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,cursor:"pointer",color:"#fff",fontFamily:"inherit"}}>←</button>)}</div>
-    <div style={{flex:1,textAlign:"center",padding:"0 8px"}}>{isDashboard?<div style={{fontWeight:900,fontSize:15,color:"#fff",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{salonName}</div>:<div style={{fontWeight:800,fontSize:14,color:"#fff"}}>{screenLabel}</div>}</div>
-    <div style={{width:72,display:"flex",alignItems:"center",justifyContent:"flex-end",gap:8}}>
-      <div onClick={onBell} style={{position:"relative",width:34,height:34,borderRadius:10,background:unreadCount>0?"rgba(255,215,0,0.2)":"rgba(255,255,255,0.15)",border:`2px solid ${unreadCount>0?"rgba(255,215,0,0.4)":"rgba(255,255,255,0.2)"}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}><span style={{fontSize:16}}>🔔</span>{unreadCount>0&&<div style={{position:"absolute",top:-4,right:-4,width:16,height:16,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}</div>
-      <div onClick={onSettings} style={{width:34,height:34,borderRadius:10,background:screen==="settings"?"rgba(255,255,255,0.3)":"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",cursor:"pointer",border:"2px solid rgba(255,255,255,0.2)"}}>{initials}</div>
+  if(isDashboard){return(
+    <div style={{background:TP.bg,padding:"16px 18px 8px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+      <div><div style={{fontSize:13,color:TP.ts,fontWeight:600,marginBottom:2}}>Good Morning 👋</div><div style={{fontWeight:900,fontSize:22,color:TP.text}}>{user?.name?.split(" ")[0]}!</div></div>
+      <div style={{display:"flex",gap:10,alignItems:"center"}}>
+        <div style={{width:40,height:40,borderRadius:"50%",background:"#fff",border:`1.5px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,cursor:"pointer",boxShadow:"0 2px 8px rgba(45,27,105,0.08)"}}>🔍</div>
+        <div onClick={onBell} style={{position:"relative",width:40,height:40,borderRadius:"50%",background:"#fff",border:`1.5px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",boxShadow:"0 2px 8px rgba(45,27,105,0.08)"}}>
+          <span style={{fontSize:18}}>🔔</span>
+          {unreadCount>0&&<div style={{position:"absolute",top:0,right:0,width:14,height:14,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
+        </div>
+      </div>
     </div>
+  );}
+  return(<div style={{background:TP.purple,padding:"0 16px",height:56,display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,boxShadow:"0 2px 12px rgba(45,27,105,0.3)"}}>
+    <button onClick={onBack} style={{width:34,height:34,background:"rgba(255,255,255,0.15)",border:"none",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,cursor:"pointer",color:"#fff",fontFamily:"inherit"}}>←</button>
+    <div style={{flex:1,textAlign:"center"}}><div style={{fontWeight:800,fontSize:14,color:"#fff"}}>{screenLabel}</div></div>
+    <div onClick={onSettings} style={{width:34,height:34,borderRadius:10,background:screen==="settings"?"rgba(255,255,255,0.3)":"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff",cursor:"pointer",border:"2px solid rgba(255,255,255,0.2)"}}>{user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2)||"??"}</div>
   </div>);
 }
 
@@ -216,15 +224,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         {screen==="dashboard"&&(
           <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
 
-            {/* Top greeting */}
-            <div style={{padding:"20px 18px 0",background:TP.bg}}>
-              <div style={{fontSize:13,color:TP.ts,fontWeight:600,marginBottom:2}}>Good Morning 👋</div>
-              <div style={{fontWeight:900,fontSize:22,color:TP.text,marginBottom:1}}>{user.name.split(" ")[0]} ka Dashboard</div>
-              <div style={{fontSize:11,color:TP.ts}}>{new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}</div>
-            </div>
-
             {/* Purple stats card — stats INSIDE */}
-            <div style={{margin:"14px 18px 0",background:`linear-gradient(135deg,#2d1b69,#5b3fc4)`,borderRadius:20,padding:"18px 16px 20px",position:"relative",overflow:"hidden"}}>
+            <div style={{margin:"8px 18px 0",background:`linear-gradient(135deg,#2d1b69,#5b3fc4)`,borderRadius:20,padding:"18px 16px 20px",position:"relative",overflow:"hidden"}}>
               <div style={{position:"absolute",width:120,height:120,borderRadius:"50%",background:"rgba(255,255,255,0.06)",top:-30,right:-20}}/>
               <div style={{position:"absolute",width:80,height:80,borderRadius:"50%",background:"rgba(255,255,255,0.04)",bottom:-10,left:10}}/>
               <div style={{position:"relative"}}>
@@ -242,10 +243,10 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                 {weekDays.map((d,i)=>{
                   const key=dateKey(d);const isSel=key===selKey;const isToday=key===dateKey(today);
                   const cnt=Object.values(bookings[key]||{}).filter(b=>b.status!=="break").length;
-                  return(<div key={i} onClick={()=>{setSelDate(d);setScreen("calendar");}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"8px 2px",borderRadius:14,cursor:"pointer",background:isSel?TP.purple:"transparent"}}>
-                    <div style={{fontSize:9,fontWeight:700,color:isSel?"rgba(255,255,255,0.7)":TP.ts}}>{["MON","TUE","WED","THU","FRI","SAT","SUN"][d.getDay()===0?6:d.getDay()-1]}</div>
-                    <div style={{fontSize:16,fontWeight:900,color:isSel?"#fff":isToday?TP.purple:TP.text}}>{d.getDate()}</div>
-                    <div style={{width:5,height:5,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.7)":TP.purple):"transparent"}}/>
+                  return(<div key={i} onClick={()=>{setSelDate(d);setScreen("calendar");}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4,padding:"4px 2px",cursor:"pointer"}}>
+                    <div style={{fontSize:9,fontWeight:700,color:TP.ts,letterSpacing:0.5}}>{["MON","TUE","WED","THU","FRI","SAT","SUN"][d.getDay()===0?6:d.getDay()-1]}</div>
+                    <div style={{width:34,height:34,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isSel?TP.purple:"transparent"}}><div style={{fontSize:16,fontWeight:900,color:isSel?"#fff":isToday?TP.purple:TP.text}}>{d.getDate()}</div></div>
+                    <div style={{width:5,height:5,borderRadius:"50%",background:cnt>0?TP.purple:"transparent"}}/>
                   </div>);
                 })}
               </div>
@@ -383,3 +384,4 @@ export default function SnipBook(){
   if(page==="loading"){return(<div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,fontFamily:"system-ui,sans-serif"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:48,height:48,background:"rgba(255,255,255,0.15)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>✂️</div><span style={{fontWeight:900,fontSize:22,color:"#fff"}}>Snip<span style={{color:"#c4b8f0"}}>Book</span></span></div><div style={{marginTop:20,fontSize:13,color:"rgba(255,255,255,0.5)",fontWeight:700}}>Loading...</div></div>);}
   return(<>{page==="landing"&&<Landing onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}{page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{setPage("staffSalonEntry");}} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}{page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{const sd={...staffData,salon_id:staffData.salon_id};setStaffUser(sd);localStorage.setItem("snipbook_staff",JSON.stringify(sd));setPage("staffApp");}} onBack={()=>setPage("login")}/>}{page==="staffApp"&&staffUser&&<StaffDashboard staff={staffUser} showRevenue={showRevenue} onLogout={staffLogout}/>}{page==="onboarding"&&<Onboarding onComplete={u=>{setUser(u);setPage("app");}} onBack={()=>setPage("landing")}/>}{page==="resetPassword"&&<ResetPasswordPage onDone={()=>setPage("login")}/>}{page==="app"&&user&&<MainApp user={user} setUser={setUser} onLogout={ownerLogout} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/>}</>);
 }
+ 
