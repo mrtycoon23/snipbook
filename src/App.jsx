@@ -225,37 +225,37 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
           <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
 
             {/* Purple stats card — stats INSIDE */}
-            <div style={{margin:"12px 16px 0",background:`linear-gradient(145deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)`,borderRadius:24,padding:"20px 18px 22px",position:"relative",overflow:"hidden",boxShadow:"0 8px 32px rgba(45,27,105,0.35)"}}>
+            <div style={{margin:"8px 16px 0",background:`linear-gradient(145deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)`,borderRadius:24,padding:"20px 18px 22px",position:"relative",overflow:"hidden",boxShadow:"0 8px 32px rgba(45,27,105,0.35)"}}>
               <div style={{position:"absolute",width:120,height:120,borderRadius:"50%",background:"rgba(255,255,255,0.06)",top:-30,right:-20}}/>
               <div style={{position:"absolute",width:80,height:80,borderRadius:"50%",background:"rgba(255,255,255,0.04)",bottom:-10,left:10}}/>
               <div style={{position:"relative"}}>
                 <div style={{fontSize:10,color:"rgba(255,255,255,0.5)",fontWeight:700,letterSpacing:1,marginBottom:2}}>{user.salon.toUpperCase()} · TODAY'S OVERVIEW</div>
                 <div style={{fontSize:12,color:"rgba(255,255,255,0.6)",marginBottom:14}}>{new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                  {[{val:booked,label:"BOOKINGS",color:"#fff"},{val:`\u20b9${revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue}`,label:"REVENUE",color:"#c4b8f0"},{val:pending,label:"PENDING",color:"#fde68a"}].map(s=>(<div key={s.label} style={{background:"rgba(255,255,255,0.15)",borderRadius:16,padding:"14px 8px",textAlign:"center",backdropFilter:"blur(4px)"}}><div style={{fontWeight:900,fontSize:26,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:9,color:"rgba(255,255,255,0.55)",fontWeight:700,marginTop:5,letterSpacing:1}}>{s.label}</div></div>))}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
+                  {[{val:booked,label:"BOOKINGS",color:"#fff"},{val:`\u20b9${revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue}`,label:"REVENUE",color:"#c4b8f0"},{val:pending,label:"PENDING",color:"#fde68a"}].map(s=>(<div key={s.label} style={{background:"rgba(255,255,255,0.15)",borderRadius:14,padding:"12px 6px",textAlign:"center"}}><div style={{fontWeight:900,fontSize:24,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:9,color:"rgba(255,255,255,0.5)",fontWeight:700,marginTop:4,letterSpacing:0.8}}>{s.label}</div></div>))}
                 </div>
               </div>
             </div>
 
             {/* Week strip */}
-            <div style={{padding:"14px 16px 0"}}>
-              <div style={{display:"flex",justifyContent:"space-between"}}>
+            <div style={{padding:"10px 16px 0"}}>
+              <div style={{display:"flex",justifyContent:"space-around",alignItems:"center"}}>
                 {weekDays.map((d,i)=>{
                   const key=dateKey(d);const isSel=key===selKey;const isToday=key===dateKey(today);
                   const cnt=Object.values(bookings[key]||{}).filter(b=>b.status!=="break").length;
-                  return(<div key={i} onClick={()=>{setSelDate(d);setScreen("calendar");}} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,cursor:"pointer",padding:"4px 0"}}>
-                    <div style={{fontSize:10,fontWeight:700,color:TP.ts,letterSpacing:0.5}}>{["MON","TUE","WED","THU","FRI","SAT","SUN"][d.getDay()===0?6:d.getDay()-1]}</div>
-                    <div style={{width:40,height:40,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isSel?"#2d1b69":"transparent",boxShadow:isSel?"0 4px 12px rgba(45,27,105,0.4)":"none"}}><div style={{fontSize:17,fontWeight:900,color:isSel?"#fff":isToday?"#2d1b69":TP.text}}>{d.getDate()}</div></div>
-                    <div style={{width:5,height:5,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.6)":"#2d1b69"):"transparent"}}/>
+                  return(<div key={i} onClick={()=>{setSelDate(d);setScreen("calendar");}} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer"}}>
+                    <div style={{fontSize:9,fontWeight:700,color:TP.ts,letterSpacing:0.5}}>{["MON","TUE","WED","THU","FRI","SAT","SUN"][d.getDay()===0?6:d.getDay()-1]}</div>
+                    <div style={{width:36,height:36,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isSel?"#2d1b69":"transparent",boxShadow:isSel?"0 4px 12px rgba(45,27,105,0.35)":"none"}}><div style={{fontSize:16,fontWeight:900,color:isSel?"#fff":isToday?"#2d1b69":TP.text}}>{d.getDate()}</div></div>
+                    <div style={{width:4,height:4,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.7)":"#2d1b69"):"transparent"}}/>
                   </div>);
                 })}
               </div>
             </div>
 
             {/* Today's Appointments */}
-            <div style={{padding:"16px 18px 0"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                <div style={{fontWeight:900,fontSize:17,color:TP.text}}>Today's Appointments</div>
+            <div style={{padding:"12px 16px 0"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <div style={{fontWeight:800,fontSize:16,color:TP.text}}>Today's Appointments</div>
                 <div onClick={()=>setScreen("calendar")} style={{fontSize:13,fontWeight:700,color:TP.purple,cursor:"pointer"}}>See all →</div>
               </div>
               {Object.entries(dayData).filter(([,b])=>b.status!=="break").length===0?(
@@ -274,8 +274,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             </div>
 
             {/* Quick Actions */}
-            <div style={{padding:"16px 18px 100px"}}>
-              <div style={{fontWeight:900,fontSize:17,color:TP.text,marginBottom:12}}>Quick Actions</div>
+            <div style={{padding:"12px 16px 100px"}}>
+              <div style={{fontWeight:800,fontSize:15,color:TP.text,marginBottom:10}}>Quick Actions</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 {[{icon:"📅",label:"Calendar",sub:`${booked} booked today`,s:"calendar"},{icon:"👥",label:"Clients",sub:`${clients.length} total`,s:"clients"},{icon:"💬",label:"Bot Chats",sub:"WhatsApp history",s:"chats"},{icon:"💫",label:"Engage",sub:"Campaigns & offers",s:"engage"}].map(a=>(<div key={a.label} onClick={()=>setScreen(a.s)} style={{background:"#fff",borderRadius:20,padding:"18px 16px",cursor:"pointer",boxShadow:"0 2px 16px rgba(45,27,105,0.07)"}}>
                   <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}><div style={{width:40,height:40,background:TP.purpleLight,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>{a.icon}</div><div style={{color:"#ccc",fontSize:18}}>›</div></div>
