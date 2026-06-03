@@ -67,15 +67,14 @@ function Landing({onStart,onLogin}){
         <div style={{display:"flex",alignItems:"center",gap:9}}><div style={{width:34,height:34,background:"#3d2490",borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:16}}>✂</div><span style={{fontWeight:800,fontSize:17,color:"#0f0a2e"}}>SnipBook</span></div>
         <div style={{display:"flex",gap:16,alignItems:"center"}}><span onClick={onLogin} style={{fontSize:14,color:"#374151",cursor:"pointer"}}>Login</span><button onClick={onStart} style={{background:"#3d2490",color:"#fff",border:"none",borderRadius:9,padding:"10px 22px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Get Started →</button></div>
       </nav>
-      <div style={{background:"#eeeaff",padding:"40px 24px 0",position:"relative",overflow:"hidden"}}>
+      <div style={{background:"#eeeaff",padding:"48px 40px 0",position:"relative",overflow:"hidden"}}>
         <div style={{position:"absolute",color:"#c4b8f0",fontSize:18,top:80,left:"54%",pointerEvents:"none"}}>✦</div>
         <div style={{position:"absolute",color:"#c4b8f0",fontSize:12,top:160,left:"63%",pointerEvents:"none"}}>✦</div>
         <div style={{position:"absolute",color:"#c4b8f0",fontSize:24,top:55,left:"74%",pointerEvents:"none"}}>✦</div>
-        <div style={{position:"absolute",color:"#c4b8f0",fontSize:14,top:200,left:"82%",pointerEvents:"none"}}>✦</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:24,maxWidth:1100,margin:"0 auto",alignItems:"center",overflowX:"hidden"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:32,maxWidth:1200,margin:"0 auto",alignItems:"center"}}>
           <div>
             <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.8)",border:"1px solid #c4b8f0",borderRadius:20,padding:"5px 14px",fontSize:12,color:"#3d2490",fontWeight:600,marginBottom:20}}>☆ Made for Indian Salons</div>
-            <h1 style={{fontSize:36,fontWeight:900,lineHeight:1.1,color:"#0f0a2e",marginBottom:16}}>Apne Salon Ki Bookings<br/><span style={{color:"#4f3acc"}}>WhatsApp Pe Auto-Pilot</span> Karo</h1>
+            <h1 style={{fontSize:"clamp(28px,3vw,42px)",fontWeight:900,lineHeight:1.15,color:"#0f0a2e",marginBottom:16}}>Apne Salon Ki Bookings<br/><span style={{color:"#4f3acc"}}>WhatsApp Pe Auto-Pilot</span> Karo</h1>
             <p style={{fontSize:16,color:"#374151",lineHeight:1.8,marginBottom:28}}>Client WhatsApp karta hai.<br/>SnipBook booking confirm karta hai.<br/>Aap bas customers serve karo.</p>
             <div style={{display:"flex",gap:12,marginBottom:28}}><button onClick={onStart} style={{background:"#3d2490",color:"#fff",border:"none",borderRadius:10,padding:"14px 26px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Start Free – 3 Min Setup</button></div>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -83,8 +82,8 @@ function Landing({onStart,onLogin}){
               <span style={{fontSize:13,color:"#374151"}}><strong style={{color:"#0f0a2e"}}>Trusted by salon owners</strong> across India</span>
             </div>
           </div>
-          <div style={{display:"flex",alignItems:"flex-end",justifyContent:"center",position:"relative"}}>
-            <div style={{background:"#fff",borderRadius:24,padding:"16px 14px",width:340,flexShrink:0,zIndex:1,boxShadow:"0 16px 64px rgba(61,36,144,0.18),0 0 0 1px rgba(196,184,240,0.3)"}}>
+          <div style={{display:"flex",alignItems:"flex-end",justifyContent:"flex-start",position:"relative",overflow:"hidden",minHeight:520}}>
+            <div style={{background:"#fff",borderRadius:20,padding:"18px 16px",width:"55%",minWidth:280,maxWidth:360,flexShrink:0,zIndex:1,boxShadow:"0 12px 48px rgba(61,36,144,0.15),0 0 0 1px rgba(196,184,240,0.3)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><span style={{fontSize:15,fontWeight:700,color:"#0f0a2e"}}>Dashboard</span><span style={{color:"#9b8ec4",fontSize:20}}>+</span></div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>{[["6","Bookings Today"],["₹3.8k","Revenue"],["2","Pending"]].map(([n,l])=>(<div key={l} style={{background:"#f8f7ff",borderRadius:12,padding:"14px 8px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:"#0f0a2e"}}>{n}</div><div style={{fontSize:10,color:"#9b8ec4",marginTop:3}}>{l}</div></div>))}</div>
               <div style={{fontSize:13,fontWeight:700,color:"#0f0a2e",marginBottom:10}}>Today's Appointments</div>
@@ -97,7 +96,7 @@ function Landing({onStart,onLogin}){
                 </div>
               </div>
             </div>
-            <div style={{width:160,flexShrink:0,marginLeft:-40,marginBottom:32,zIndex:2,position:"relative"}}>
+            <div style={{width:"38%",maxWidth:180,flexShrink:0,marginLeft:"-8%",marginBottom:24,zIndex:2,position:"relative",alignSelf:"flex-end"}}>
               <div style={{position:"absolute",inset:-8,borderRadius:52,background:"linear-gradient(145deg,rgba(61,36,144,0.15),rgba(0,0,0,0.08))",filter:"blur(16px)",zIndex:-1}}/>
               <div style={{background:"linear-gradient(145deg,#2a2a2a,#1a1a1a)",borderRadius:46,padding:5,boxShadow:"inset 0 0 0 1px rgba(255,255,255,0.1),0 0 0 1px #111,0 32px 64px rgba(0,0,0,0.35)"}}>
                 <div style={{background:"#fff",borderRadius:40,overflow:"hidden"}}>
@@ -119,7 +118,7 @@ function Landing({onStart,onLogin}){
             </div>
           </div>
         </div>
-        <div style={{display:"flex",justifyContent:"center",padding:"24px 32px 36px",maxWidth:1100,margin:"0 auto"}}>
+        <div style={{display:"flex",justifyContent:"center",padding:"24px 40px 36px",maxWidth:1200,margin:"0 auto"}}>
           {[["💬","WhatsApp First"],["📵","Zero Missed Calls"],["📲","No App Download"],["🕐","24/7 Booking"],["⚡","3 Minute Setup"]].map(([icon,label])=>(<div key={label} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"12px 8px"}}><div style={{width:50,height:50,borderRadius:"50%",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,background:"rgba(255,255,255,0.65)"}}>{icon}</div><span style={{fontSize:12,fontWeight:600,color:"#3d2490",textAlign:"center"}}>{label}</span></div>))}
         </div>
       </div>
