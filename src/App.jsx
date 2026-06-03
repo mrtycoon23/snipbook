@@ -61,225 +61,181 @@ function SalonHeader({user,screen,onSettings,unreadCount=0,onBell,onBack}){
 
 function Landing({onStart,onLogin}){
   const [email,setEmail]=useState("");const [done,setDone]=useState(false);
+  const [isMobile,setIsMobile]=useState(window.innerWidth<768);
+  useEffect(()=>{const fn=()=>setIsMobile(window.innerWidth<768);window.addEventListener("resize",fn);return()=>window.removeEventListener("resize",fn);},[]);
+
   return(
     <div style={{fontFamily:"'Inter',system-ui,sans-serif",background:"#fff",minHeight:"100vh",overflowY:"auto"}}>
 
       {/* NAV */}
-      <nav style={{background:"#fff",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 20px",height:60,borderBottom:"1px solid #f0eeff",position:"sticky",top:0,zIndex:100}}>
+      <nav style={{background:"#fff",display:"flex",alignItems:"center",justifyContent:"space-between",padding:isMobile?"0 16px":"0 48px",height:isMobile?56:64,borderBottom:"1px solid #f0eeff",position:"sticky",top:0,zIndex:100,boxShadow:"0 1px 0 #f0eeff"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <div style={{width:32,height:32,background:"#3d2490",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:15}}>✂</div>
-          <span style={{fontWeight:800,fontSize:16,color:"#0f0a2e"}}>SnipBook</span>
+          <span style={{fontWeight:800,fontSize:isMobile?15:17,color:"#0f0a2e"}}>SnipBook</span>
         </div>
         <div style={{display:"flex",gap:10,alignItems:"center"}}>
           <span onClick={onLogin} style={{fontSize:13,color:"#374151",cursor:"pointer",fontWeight:600}}>Login</span>
-          <button onClick={onStart} style={{background:"#3d2490",color:"#fff",border:"none",borderRadius:8,padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Get Started →</button>
+          <button onClick={onStart} style={{background:"#3d2490",color:"#fff",border:"none",borderRadius:8,padding:isMobile?"8px 14px":"10px 22px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Get Started →</button>
         </div>
       </nav>
 
       {/* HERO */}
-      <div style={{background:"#eeeaff",padding:"36px 20px 0",textAlign:"center",position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",color:"#c4b8f0",fontSize:16,top:20,right:40,pointerEvents:"none"}}>✦</div>
-        <div style={{position:"absolute",color:"#c4b8f0",fontSize:10,top:60,right:80,pointerEvents:"none"}}>✦</div>
-        <div style={{position:"absolute",color:"#c4b8f0",fontSize:20,top:30,left:40,pointerEvents:"none"}}>✦</div>
+      <div style={{background:"#eeeaff",padding:isMobile?"36px 20px 0":"56px 48px 0",position:"relative",overflow:"hidden"}}>
+        {!isMobile&&<><div style={{position:"absolute",color:"#c4b8f0",fontSize:18,top:80,left:"54%",pointerEvents:"none"}}>✦</div><div style={{position:"absolute",color:"#c4b8f0",fontSize:12,top:160,left:"63%",pointerEvents:"none"}}>✦</div><div style={{position:"absolute",color:"#c4b8f0",fontSize:24,top:55,left:"74%",pointerEvents:"none"}}>✦</div><div style={{position:"absolute",color:"#c4b8f0",fontSize:14,top:200,left:"82%",pointerEvents:"none"}}>✦</div></>}
 
-        {/* Badge */}
-        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,0.8)",border:"1px solid #c4b8f0",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#3d2490",fontWeight:600,marginBottom:16}}>☆ Made for Indian Salons</div>
-
-        {/* Title */}
-        <h1 style={{fontSize:"clamp(28px,7vw,48px)",fontWeight:900,lineHeight:1.15,color:"#0f0a2e",marginBottom:12,letterSpacing:"-0.5px"}}>
-          Apne Salon Ki Bookings<br/><span style={{color:"#4f3acc"}}>WhatsApp Pe Auto-Pilot</span> Karo
-        </h1>
-
-        {/* Subtitle */}
-        <p style={{fontSize:15,color:"#374151",lineHeight:1.7,marginBottom:24,maxWidth:420,margin:"0 auto 24px"}}>
-          Client WhatsApp karta hai. SnipBook booking confirm karta hai. Aap bas customers serve karo.
-        </p>
-
-        {/* CTA Button */}
-        <button onClick={onStart} style={{background:"#3d2490",color:"#fff",border:"none",borderRadius:12,padding:"14px 28px",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:16,display:"inline-block"}}>
-          Start Free – 3 Min Setup
-        </button>
-
-        {/* Social Proof */}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:28}}>
-          <div style={{display:"flex"}}>
-            {[["RS","#5b3fc4"],["PK","#7c5fe6"],["AM","#3d2490"],["NK","#9b8ec4"]].map(([init,bg],i)=>(
-              <div key={i} style={{width:28,height:28,borderRadius:"50%",border:"2px solid #eeeaff",background:bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700,marginLeft:i===0?0:-7}}>{init}</div>
-            ))}
-          </div>
-          <span style={{fontSize:12,color:"#374151"}}><strong style={{color:"#0f0a2e"}}>Trusted by salon owners</strong> across India</span>
-        </div>
-
-        {/* DASHBOARD MOCKUP - Mobile Optimized */}
-        <div style={{position:"relative",maxWidth:360,margin:"0 auto",paddingBottom:0}}>
-          {/* Dashboard Card */}
-          <div style={{background:"#fff",borderRadius:20,padding:"16px",boxShadow:"0 12px 48px rgba(61,36,144,0.15)",border:"1px solid #e0d8ff",textAlign:"left",marginRight:40}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <span style={{fontSize:13,fontWeight:700,color:"#0f0a2e"}}>Dashboard</span>
-              <span style={{color:"#9b8ec4",fontSize:18}}>+</span>
+        {isMobile?(
+          /* MOBILE HERO — single column centered */
+          <div style={{textAlign:"center",maxWidth:480,margin:"0 auto"}}>
+            <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,255,255,0.8)",border:"1px solid #c4b8f0",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#3d2490",fontWeight:600,marginBottom:16}}>☆ Made for Indian Salons</div>
+            <h1 style={{fontSize:"clamp(26px,7vw,40px)",fontWeight:900,lineHeight:1.15,color:"#0f0a2e",marginBottom:12}}>Apne Salon Ki Bookings<br/><span style={{color:"#4f3acc"}}>WhatsApp Pe Auto-Pilot</span> Karo</h1>
+            <p style={{fontSize:14,color:"#374151",lineHeight:1.7,marginBottom:22}}>Client WhatsApp karta hai. SnipBook booking confirm karta hai. Aap bas customers serve karo.</p>
+            <button onClick={onStart} style={{background:"#3d2490",color:"#fff",border:"none",borderRadius:12,padding:"13px 28px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:16}}>Start Free – 3 Min Setup</button>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:28}}>
+              <div style={{display:"flex"}}>{[["RS","#5b3fc4"],["PK","#7c5fe6"],["AM","#3d2490"],["NK","#9b8ec4"]].map(([init,bg],i)=>(<div key={i} style={{width:26,height:26,borderRadius:"50%",border:"2px solid #eeeaff",background:bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,color:"#fff",fontWeight:700,marginLeft:i===0?0:-7}}>{init}</div>))}</div>
+              <span style={{fontSize:11,color:"#374151"}}><strong style={{color:"#0f0a2e"}}>Trusted by salon owners</strong> across India</span>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-              {[["6","Bookings"],["₹3.8k","Revenue"],["2","Pending"]].map(([n,l])=>(
-                <div key={l} style={{background:"#f8f7ff",borderRadius:10,padding:"10px 6px",textAlign:"center"}}>
-                  <div style={{fontSize:18,fontWeight:800,color:"#0f0a2e"}}>{n}</div>
-                  <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>{l}</div>
+            {/* Mobile Dashboard Mockup */}
+            <div style={{position:"relative",maxWidth:320,margin:"0 auto"}}>
+              <div style={{background:"#fff",borderRadius:18,padding:"14px",boxShadow:"0 8px 32px rgba(61,36,144,0.15)",border:"1px solid #e0d8ff",textAlign:"left",marginRight:32}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><span style={{fontSize:12,fontWeight:700,color:"#0f0a2e"}}>Dashboard</span><span style={{color:"#9b8ec4"}}>+</span></div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:10}}>
+                  {[["6","Bookings"],["₹3.8k","Revenue"],["2","Pending"]].map(([n,l])=>(<div key={l} style={{background:"#f8f7ff",borderRadius:8,padding:"8px 4px",textAlign:"center"}}><div style={{fontSize:16,fontWeight:800,color:"#0f0a2e"}}>{n}</div><div style={{fontSize:8,color:"#9b8ec4",marginTop:1}}>{l}</div></div>))}
                 </div>
-              ))}
-            </div>
-            <div style={{fontSize:12,fontWeight:700,color:"#0f0a2e",marginBottom:8}}>Today's Appointments</div>
-            {[
-              {init:"RS",bg:"#ede9fe",tc:"#5b3fc4",name:"Rahul Sharma",svc:"Haircut + Beard",time:"10:00 AM",sb:"#e8fdf0",sc:"#16a34a",status:"✓ Confirmed"},
-              {init:"PM",bg:"#fef9c3",tc:"#a16207",name:"Priya Mehta",svc:"Hair Colour",time:"11:30 AM",sb:"#fef9c3",sc:"#a16207",status:"⏳ Pending"}
-            ].map(a=>(
-              <div key={a.name} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid #f4f2ff"}}>
-                <div style={{width:28,height:28,borderRadius:"50%",background:a.bg,color:a.tc,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,flexShrink:0}}>{a.init}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:11,fontWeight:700,color:"#0f0a2e"}}>{a.name}</div>
-                  <div style={{fontSize:10,color:"#9b8ec4"}}>{a.svc}</div>
-                </div>
-                <div style={{textAlign:"right",flexShrink:0}}>
-                  <div style={{fontSize:10,fontWeight:700,color:"#0f0a2e"}}>{a.time}</div>
-                  <div style={{fontSize:9,padding:"1px 6px",borderRadius:20,background:a.sb,color:a.sc,fontWeight:600,marginTop:2,display:"inline-block"}}>{a.status}</div>
-                </div>
+                <div style={{fontSize:11,fontWeight:700,color:"#0f0a2e",marginBottom:6}}>Today's Appointments</div>
+                {[{init:"RS",bg:"#ede9fe",tc:"#5b3fc4",name:"Rahul Sharma",svc:"Haircut + Beard",time:"10:00",sb:"#e8fdf0",sc:"#16a34a",st:"✓ Confirmed"},{init:"PM",bg:"#fef9c3",tc:"#a16207",name:"Priya Mehta",svc:"Hair Colour",time:"11:30",sb:"#fef9c3",sc:"#a16207",st:"⏳ Pending"}].map(a=>(<div key={a.name} style={{display:"flex",alignItems:"center",gap:7,padding:"7px 0",borderBottom:"1px solid #f4f2ff"}}><div style={{width:24,height:24,borderRadius:"50%",background:a.bg,color:a.tc,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:700,flexShrink:0}}>{a.init}</div><div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#0f0a2e"}}>{a.name}</div><div style={{fontSize:9,color:"#9b8ec4"}}>{a.svc}</div></div><div style={{textAlign:"right"}}><div style={{fontSize:9,fontWeight:700,color:"#0f0a2e"}}>{a.time}</div><div style={{fontSize:8,padding:"1px 5px",borderRadius:10,background:a.sb,color:a.sc,fontWeight:600,marginTop:1}}>{a.st}</div></div></div>))}
               </div>
-            ))}
-          </div>
-
-          {/* Phone mockup - overlapping bottom right */}
-          <div style={{position:"absolute",bottom:-20,right:-10,width:130,zIndex:2}}>
-            <div style={{background:"linear-gradient(145deg,#2a2a2a,#1a1a1a)",borderRadius:30,padding:4,boxShadow:"0 8px 32px rgba(0,0,0,0.3),inset 0 0 0 1px rgba(255,255,255,0.1)"}}>
-              <div style={{background:"#fff",borderRadius:24,overflow:"hidden"}}>
-                <div style={{width:50,height:8,background:"#1a1a1a",borderRadius:4,margin:"6px auto 4px"}}/>
-                <div style={{padding:"6px 8px",display:"flex",alignItems:"center",gap:6,borderBottom:"1px solid #f0eeff"}}>
-                  <div style={{width:20,height:20,background:"#3d2490",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,color:"#fff",fontWeight:700}}>SB</div>
-                  <div>
-                    <div style={{fontSize:9,fontWeight:700,color:"#0f0a2e"}}>SnipBook Bot</div>
-                    <div style={{fontSize:7,color:"#22c55e"}}>● Online</div>
-                  </div>
-                </div>
-                <div style={{padding:"6px 8px",background:"#f0eeff",display:"flex",flexDirection:"column",gap:4}}>
-                  {[
-                    {t:"Haircut booking karni hai",u:true,time:"10:21"},
-                    {t:"Kaun si service chahiye?",u:false,time:"10:21"},
-                    {t:"Haircut",u:true,time:"10:22"},
-                    {t:"Kal 11 AM chalega?",u:false,time:"10:22"},
-                  ].map((m,i)=>(
-                    <div key={i} style={{display:"flex",justifyContent:m.u?"flex-end":"flex-start"}}>
-                      <div style={{background:m.u?"#3d2490":"#fff",color:m.u?"#fff":"#0f0a2e",borderRadius:m.u?"8px 8px 2px 8px":"8px 8px 8px 2px",padding:"4px 6px",fontSize:8,lineHeight:1.3,maxWidth:"85%"}}>
-                        {m.t}
-                        <div style={{fontSize:6,opacity:0.6,marginTop:1,textAlign:"right"}}>{m.time}</div>
-                      </div>
+              {/* Phone overlapping */}
+              <div style={{position:"absolute",bottom:-16,right:-8,width:110,zIndex:2}}>
+                <div style={{background:"linear-gradient(145deg,#2a2a2a,#1a1a1a)",borderRadius:24,padding:3,boxShadow:"0 8px 24px rgba(0,0,0,0.3)"}}>
+                  <div style={{background:"#fff",borderRadius:20,overflow:"hidden"}}>
+                    <div style={{width:40,height:6,background:"#1a1a1a",borderRadius:3,margin:"5px auto 3px"}}/>
+                    <div style={{padding:"5px 7px",display:"flex",alignItems:"center",gap:5,borderBottom:"1px solid #f0eeff"}}><div style={{width:16,height:16,background:"#3d2490",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:6,color:"#fff",fontWeight:700}}>SB</div><div><div style={{fontSize:8,fontWeight:700,color:"#0f0a2e"}}>SnipBook Bot</div><div style={{fontSize:6,color:"#22c55e"}}>● Online</div></div></div>
+                    <div style={{padding:"5px 7px",background:"#f0eeff",display:"flex",flexDirection:"column",gap:3}}>
+                      {[{t:"Haircut karni hai",u:true},{t:"Kaun si service?",u:false},{t:"Haircut",u:true},{t:"11 AM chalega?",u:false}].map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.u?"flex-end":"flex-start"}}><div style={{background:m.u?"#3d2490":"#fff",color:m.u?"#fff":"#0f0a2e",borderRadius:m.u?"6px 6px 2px 6px":"6px 6px 6px 2px",padding:"3px 5px",fontSize:7,maxWidth:"85%"}}>{m.t}</div></div>))}
+                      <div style={{background:"#22c55e",color:"#fff",borderRadius:"6px 6px 6px 2px",padding:"3px 5px",fontSize:7}}><strong>✅ Confirmed!</strong><br/>4 June, 11 AM</div>
                     </div>
-                  ))}
-                  <div style={{background:"#22c55e",color:"#fff",borderRadius:"8px 8px 8px 2px",padding:"5px 6px",fontSize:8,lineHeight:1.4}}>
-                    <strong>✅ Confirmed!</strong><br/>4 June, 11 AM
+                    <div style={{width:30,height:2,background:"#1a1a1a",borderRadius:1,margin:"3px auto",opacity:0.3}}/>
                   </div>
                 </div>
-                <div style={{width:40,height:3,background:"#1a1a1a",borderRadius:2,margin:"4px auto",opacity:0.3}}/>
+              </div>
+            </div>
+            <div style={{height:32}}/>
+          </div>
+        ):(
+          /* DESKTOP HERO — two column */
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1.4fr",gap:40,maxWidth:1100,margin:"0 auto",alignItems:"center"}}>
+            <div>
+              <div style={{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(255,255,255,0.8)",border:"1px solid #c4b8f0",borderRadius:20,padding:"5px 14px",fontSize:12,color:"#3d2490",fontWeight:600,marginBottom:20}}>☆ Made for Indian Salons</div>
+              <h1 style={{fontSize:42,fontWeight:900,lineHeight:1.1,color:"#0f0a2e",marginBottom:14}}>Apne Salon Ki Bookings<br/><span style={{color:"#4f3acc"}}>WhatsApp Pe Auto-Pilot</span> Karo</h1>
+              <p style={{fontSize:16,color:"#374151",lineHeight:1.8,marginBottom:26}}>Client WhatsApp karta hai.<br/>SnipBook booking confirm karta hai.<br/>Aap bas customers serve karo.</p>
+              <div style={{marginBottom:24}}><button onClick={onStart} style={{background:"#3d2490",color:"#fff",border:"none",borderRadius:10,padding:"14px 28px",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Start Free – 3 Min Setup</button></div>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{display:"flex"}}>{[["RS","#5b3fc4"],["PK","#7c5fe6"],["AM","#3d2490"],["NK","#9b8ec4"]].map(([init,bg],i)=>(<div key={i} style={{width:32,height:32,borderRadius:"50%",border:"2px solid #eeeaff",background:bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#fff",fontWeight:700,marginLeft:i===0?0:-8}}>{init}</div>))}</div>
+                <span style={{fontSize:13,color:"#374151"}}><strong style={{color:"#0f0a2e"}}>Trusted by salon owners</strong> across India</span>
+              </div>
+            </div>
+            {/* Desktop mockups */}
+            <div style={{display:"flex",alignItems:"flex-end",justifyContent:"center",position:"relative",paddingBottom:0}}>
+              <div style={{background:"#fff",borderRadius:22,padding:"20px 18px",width:390,flexShrink:0,zIndex:1,boxShadow:"0 16px 56px rgba(61,36,144,0.16),0 0 0 1px rgba(196,184,240,0.3)"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}><span style={{fontSize:14,fontWeight:700,color:"#0f0a2e"}}>Dashboard</span><span style={{color:"#9b8ec4",fontSize:18}}>+</span></div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
+                  {[["6","Bookings Today"],["₹3.8k","Revenue"],["2","Pending"]].map(([n,l])=>(<div key={l} style={{background:"#f8f7ff",borderRadius:10,padding:"12px 6px",textAlign:"center"}}><div style={{fontSize:20,fontWeight:800,color:"#0f0a2e"}}>{n}</div><div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>{l}</div></div>))}
+                </div>
+                <div style={{fontSize:12,fontWeight:700,color:"#0f0a2e",marginBottom:8}}>Today's Appointments</div>
+                {[{init:"RS",bg:"#ede9fe",tc:"#5b3fc4",name:"Rahul Sharma",svc:"Haircut + Beard",time:"10:00 AM",sb:"#e8fdf0",sc:"#16a34a",st:"✓ Confirmed"},{init:"PM",bg:"#fef9c3",tc:"#a16207",name:"Priya Mehta",svc:"Hair Colour",time:"11:30 AM",sb:"#fef9c3",sc:"#a16207",st:"⏳ Pending"}].map(a=>(<div key={a.name} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 0",borderBottom:"1px solid #f4f2ff"}}><div style={{width:30,height:30,borderRadius:"50%",background:a.bg,color:a.tc,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,flexShrink:0}}>{a.init}</div><div style={{flex:1}}><div style={{fontSize:11,fontWeight:700,color:"#0f0a2e"}}>{a.name}</div><div style={{fontSize:10,color:"#9b8ec4"}}>{a.svc}</div></div><div style={{textAlign:"right"}}><div style={{fontSize:11,fontWeight:700,color:"#0f0a2e"}}>{a.time}</div><div style={{fontSize:9,padding:"2px 7px",borderRadius:20,background:a.sb,color:a.sc,fontWeight:600,marginTop:2,display:"inline-block"}}>{a.st}</div></div></div>))}
+                <div style={{marginTop:12}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><span style={{fontSize:12,fontWeight:700,color:"#0f0a2e"}}>June 2026</span><span style={{fontSize:11,color:"#9b8ec4"}}>← →</span></div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:1,textAlign:"center"}}>
+                    {["M","T","W","T","F","S","S"].map((d,i)=>(<div key={i} style={{fontSize:9,color:"#9b8ec4",fontWeight:600,padding:"3px 0"}}>{d}</div>))}
+                    {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30].map(d=>(<div key={d} style={{fontSize:11,color:d===3?"#fff":"#374151",width:22,height:22,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",margin:"1px auto",background:d===3?"#3d2490":"transparent",fontWeight:d===3?700:400}}>{d}</div>))}
+                  </div>
+                </div>
+              </div>
+              {/* Desktop Phone */}
+              <div style={{width:175,flexShrink:0,marginLeft:-45,marginBottom:28,zIndex:2}}>
+                <div style={{background:"linear-gradient(145deg,#2a2a2a,#1a1a1a)",borderRadius:40,padding:5,boxShadow:"inset 0 0 0 1px rgba(255,255,255,0.1),0 0 0 1px #111,0 24px 56px rgba(0,0,0,0.3)"}}>
+                  <div style={{background:"#fff",borderRadius:34,overflow:"hidden"}}>
+                    <div style={{width:60,height:8,background:"#1a1a1a",borderRadius:4,margin:"8px auto 5px"}}/>
+                    <div style={{padding:"8px 10px",display:"flex",alignItems:"center",gap:7,borderBottom:"1px solid #f0eeff"}}><span style={{color:"#3d2490",fontSize:13,fontWeight:700}}>←</span><div style={{width:22,height:22,background:"#3d2490",borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:"#fff",fontWeight:700}}>SB</div><div><div style={{fontSize:10,fontWeight:700,color:"#0f0a2e"}}>SnipBook Bot</div><div style={{fontSize:8,color:"#22c55e"}}>● Online</div></div></div>
+                    <div style={{padding:"8px 10px",background:"#f0eeff",display:"flex",flexDirection:"column",gap:5}}>
+                      {[{t:"Haircut booking karni hai",u:true,time:"10:21"},{t:"Namaste! Kaun si service?",u:false,time:"10:21"},{t:"Haircut",u:true,time:"10:22"},{t:"Kal 11:00 AM chalega?",u:false,time:"10:22"},{t:"Haan, confirm karo",u:true,time:"10:22"}].map((m,i)=>(<div key={i} style={{display:"flex",justifyContent:m.u?"flex-end":"flex-start"}}><div style={{background:m.u?"#3d2490":"#fff",color:m.u?"#fff":"#0f0a2e",borderRadius:m.u?"10px 10px 3px 10px":"10px 10px 10px 3px",padding:"6px 8px",fontSize:10,lineHeight:1.3,maxWidth:"85%",boxShadow:m.u?"none":"0 1px 3px rgba(0,0,0,0.06)"}}>{m.t}<div style={{fontSize:7,opacity:0.6,marginTop:2,textAlign:"right"}}>{m.time}</div></div></div>))}
+                      <div style={{background:"#22c55e",color:"#fff",borderRadius:"10px 10px 10px 3px",padding:"7px 8px",fontSize:10,lineHeight:1.4}}><strong>✅ Booking Confirmed!</strong><br/>4 June, 11:00 AM<div style={{fontSize:7,opacity:0.65,marginTop:2}}>10:23</div></div>
+                    </div>
+                    <div style={{width:60,height:3,background:"#1a1a1a",borderRadius:2,margin:"6px auto",opacity:0.3}}/>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Bottom padding for phone overlap */}
-        <div style={{height:40}}/>
-      </div>
-
-      {/* FEATURES ROW */}
-      <div style={{background:"#eeeaff",padding:"8px 16px 28px"}}>
-        <div style={{display:"flex",justifyContent:"space-around",flexWrap:"wrap",gap:8,maxWidth:500,margin:"0 auto"}}>
-          {[["💬","WhatsApp\nFirst"],["📵","Zero\nMissed Calls"],["📲","No App\nDownload"],["🕐","24/7\nBooking"],["⚡","3 Min\nSetup"]].map(([icon,label])=>(
-            <div key={label} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:"8px 6px",minWidth:60}}>
-              <div style={{width:44,height:44,borderRadius:"50%",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,background:"rgba(255,255,255,0.65)"}}>{icon}</div>
-              <span style={{fontSize:10,fontWeight:600,color:"#3d2490",textAlign:"center",lineHeight:1.3,whiteSpace:"pre-line"}}>{label}</span>
+        {/* FEATURES ROW */}
+        <div style={{display:"flex",justifyContent:"center",padding:isMobile?"12px 16px 24px":"20px 48px 32px",maxWidth:isMobile?480:1100,margin:"0 auto",flexWrap:"wrap",gap:isMobile?4:0}}>
+          {[["💬","WhatsApp First"],["📵","Zero Missed Calls"],["📲","No App Download"],["🕐","24/7 Booking"],["⚡","3 Minute Setup"]].map(([icon,label])=>(
+            <div key={label} style={{flex:isMobile?"0 0 auto":"1",display:"flex",flexDirection:"column",alignItems:"center",gap:6,padding:isMobile?"8px 10px":"10px 6px"}}>
+              <div style={{width:isMobile?40:46,height:isMobile?40:46,borderRadius:"50%",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:isMobile?18:22,background:"rgba(255,255,255,0.65)"}}>{icon}</div>
+              <span style={{fontSize:isMobile?10:11,fontWeight:600,color:"#3d2490",textAlign:"center"}}>{label}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* TRUST BAR */}
-      <div style={{background:"#fff",padding:"18px 20px",textAlign:"center",borderTop:"1px solid #f0eeff"}}>
-        <div style={{fontSize:10,color:"#9b8ec4",fontWeight:700,letterSpacing:1.2,marginBottom:12}}>TRUSTED BY SALON OWNERS ACROSS INDIA</div>
-        <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:20,flexWrap:"wrap"}}>
-          {["HEADMASTERS","LOOKS","TONI&GUY","GREENTRENDS","GEETANJALI"].map(l=>(
-            <span key={l} style={{fontSize:11,fontWeight:800,color:"#d1d5db",letterSpacing:0.5}}>{l}</span>
-          ))}
+      <div style={{background:"#fff",padding:isMobile?"16px 20px":"20px 48px",textAlign:"center",borderTop:"1px solid #f0eeff"}}>
+        <div style={{fontSize:isMobile?9:11,color:"#9b8ec4",fontWeight:700,letterSpacing:1.2,marginBottom:12}}>TRUSTED BY SALON OWNERS ACROSS INDIA</div>
+        <div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:isMobile?16:36,flexWrap:"wrap"}}>
+          {["HEADMASTERS","LOOKS","TONI&GUY","GREENTRENDS","GEETANJALI"].map(l=>(<span key={l} style={{fontSize:isMobile?10:12,fontWeight:800,color:"#d1d5db",letterSpacing:0.5}}>{l}</span>))}
         </div>
       </div>
 
       {/* HOW IT WORKS */}
-      <div style={{background:"#fff",padding:"40px 20px"}}>
-        <div style={{textAlign:"center",marginBottom:28}}>
-          <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:20,padding:"3px 12px",fontSize:11,color:"#16a34a",fontWeight:600,marginBottom:12}}>
-            <div style={{width:6,height:6,background:"#22c55e",borderRadius:"50%"}}/>Early Access — Beta
-          </div>
-          <div style={{fontSize:24,fontWeight:800,color:"#0f0a2e",marginBottom:6}}>Your Salon Runs Itself.</div>
-          <div style={{fontSize:13,color:"#9b8ec4"}}>WhatsApp → Booking in seconds.</div>
+      <div style={{background:"#fff",padding:isMobile?"36px 20px":"52px 48px"}}>
+        <div style={{textAlign:"center",marginBottom:32}}>
+          <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:20,padding:"3px 12px",fontSize:11,color:"#16a34a",fontWeight:600,marginBottom:12}}><div style={{width:6,height:6,background:"#22c55e",borderRadius:"50%"}}/>Early Access — Beta</div>
+          <div style={{fontSize:isMobile?22:28,fontWeight:800,color:"#0f0a2e",marginBottom:6}}>Your Salon Runs Itself.</div>
+          <div style={{fontSize:isMobile?13:14,color:"#9b8ec4"}}>From WhatsApp message to confirmed booking in seconds.</div>
         </div>
-
-        {/* Flow Steps - Mobile Friendly */}
-        <div style={{display:"flex",alignItems:"center",justifyContent:"center",maxWidth:420,margin:"0 auto 28px",flexWrap:"nowrap",overflowX:"auto",gap:0,padding:"0 4px"}}>
-          {[
-            {bg:"#dcfce7",e:"💬",label:"Customer\nWhatsApp"},
-            {bg:"#ede9fe",e:"🤖",label:"AI Replies"},
-            {bg:"#dbeafe",e:"📅",label:"Booking\nCreated"},
-            {bg:"#fef9c3",e:"🔔",label:"You Get\nNotified"},
-            {bg:"#dcfce7",e:"📈",label:"Revenue\nUpdated"}
-          ].map((s,i)=>(
+        <div style={{display:"flex",alignItems:"center",justifyContent:"center",maxWidth:isMobile?380:720,margin:"0 auto 36px",overflowX:"auto",gap:0,padding:"0 4px"}}>
+          {[{bg:"#dcfce7",e:"💬",label:"Customer\nWhatsApp"},{bg:"#ede9fe",e:"🤖",label:"AI Replies\nInstantly"},{bg:"#dbeafe",e:"📅",label:"Booking\nCreated"},{bg:"#fef9c3",e:"🔔",label:"Calendar\nUpdated"},{bg:"#dcfce7",e:"📈",label:"Revenue\nUpdated"}].map((s,i)=>(
             <div key={i} style={{display:"flex",alignItems:"center",flexShrink:0}}>
-              {i>0&&<div style={{color:"#d1d5db",fontSize:12,padding:"0 2px",marginBottom:20}}>→</div>}
-              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
-                <div style={{width:52,height:52,borderRadius:"50%",background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>{s.e}</div>
-                <div style={{fontSize:10,fontWeight:600,color:"#1a1a2e",textAlign:"center",lineHeight:1.3,whiteSpace:"pre-line"}}>{s.label}</div>
+              {i>0&&<div style={{color:"#d1d5db",fontSize:isMobile?12:14,padding:isMobile?"0 4px":"0 6px",marginBottom:22}}>→</div>}
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8}}>
+                <div style={{width:isMobile?54:66,height:isMobile?54:66,borderRadius:"50%",background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:isMobile?22:26}}>{s.e}</div>
+                <div style={{fontSize:isMobile?10:12,fontWeight:700,color:"#1a1a2e",textAlign:"center",lineHeight:1.3,whiteSpace:"pre-line"}}>{s.label}</div>
               </div>
             </div>
           ))}
         </div>
-
-        {/* Stats */}
-        <div style={{background:"#f4f2ff",borderRadius:16,padding:"20px 16px",display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,maxWidth:420,margin:"0 auto"}}>
-          {[["3 min","Setup time"],["24/7","Bot active"],["Zero","Missed bookings"],["100%","WhatsApp native"]].map(([v,l])=>(
-            <div key={l} style={{textAlign:"center"}}>
-              <div style={{fontSize:26,fontWeight:800,color:"#2d1b69"}}>{v}</div>
-              <div style={{fontSize:11,color:"#9b8ec4",marginTop:3}}>{l}</div>
-            </div>
-          ))}
+        <div style={{background:"#f4f2ff",borderRadius:16,padding:isMobile?"18px 12px":"24px 20px",display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(4,1fr)",gap:isMobile?12:0,maxWidth:isMobile?400:720,margin:"0 auto"}}>
+          {[["3 min","Setup time"],["24/7","Bot always active"],["Zero","Missed bookings"],["100%","WhatsApp native"]].map(([v,l])=>(<div key={l} style={{textAlign:"center",padding:isMobile?"4px":"4px 10px"}}><div style={{fontSize:isMobile?24:30,fontWeight:800,color:"#2d1b69"}}>{v}</div><div style={{fontSize:isMobile?11:12,color:"#9b8ec4",marginTop:4}}>{l}</div></div>))}
         </div>
       </div>
 
       {/* CTA */}
-      <div style={{background:"#f4f2ff",padding:"40px 20px",textAlign:"center"}}>
+      <div style={{background:"#f4f2ff",padding:isMobile?"36px 20px":"56px 48px",textAlign:"center"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:20,flexWrap:"wrap"}}>
-          <div style={{background:"#fff",border:"1.5px solid #e0d8ff",borderRadius:20,padding:"8px 16px",fontSize:12,color:"#4a3580",fontWeight:500}}>Kal 3 baje haircut chahiye</div>
+          <div style={{background:"#fff",border:"1.5px solid #e0d8ff",borderRadius:22,padding:"9px 18px",fontSize:12,color:"#4a3580",fontWeight:500}}>Kal 3 baje haircut chahiye</div>
           <div style={{color:"#9b8ec4",fontSize:16}}>→</div>
-          <div style={{background:"#22c55e",borderRadius:20,padding:"8px 16px",fontSize:12,color:"#fff",fontWeight:700}}>✅ Booked! 3 PM kal</div>
+          <div style={{background:"#22c55e",borderRadius:22,padding:"9px 18px",fontSize:12,color:"#fff",fontWeight:700}}>✅ Booked! Tomorrow 3 PM</div>
         </div>
-        <div style={{fontSize:26,fontWeight:800,color:"#0f0a2e",marginBottom:6}}>Try SnipBook Free</div>
-        <div style={{fontSize:13,color:"#9b8ec4",marginBottom:20}}>No credit card. 3 min setup. Cancel anytime.</div>
+        <div style={{fontSize:isMobile?24:30,fontWeight:800,color:"#0f0a2e",marginBottom:6}}>Try SnipBook Free</div>
+        <div style={{fontSize:13,color:"#9b8ec4",marginBottom:22}}>No credit card required. 3 minute setup. Cancel anytime.</div>
         {!done?(
-          <div style={{display:"flex",maxWidth:380,margin:"0 auto 14px",background:"#fff",border:"1.5px solid #e0d8ff",borderRadius:12,overflow:"hidden"}}>
+          <div style={{display:"flex",maxWidth:420,margin:"0 auto 14px",background:"#fff",border:"1.5px solid #e0d8ff",borderRadius:12,overflow:"hidden"}}>
             <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Enter your email..." type="email" style={{flex:1,background:"transparent",border:"none",padding:"13px 14px",fontSize:13,color:"#0f0a2e",outline:"none",fontFamily:"inherit"}}/>
             <button onClick={()=>{if(email){setDone(true);}else{onStart();}}} style={{background:"#2d1b69",color:"#fff",border:"none",padding:"13px 18px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",borderRadius:"0 10px 10px 0",whiteSpace:"nowrap"}}>Get Started →</button>
           </div>
         ):(
-          <div style={{background:"#ede9fe",border:"2px solid #c4b8f0",borderRadius:12,padding:12,maxWidth:380,margin:"0 auto 14px",fontWeight:800,color:"#3d2490",fontSize:14}}>🎉 We'll be in touch soon!</div>
+          <div style={{background:"#ede9fe",border:"2px solid #c4b8f0",borderRadius:12,padding:12,maxWidth:420,margin:"0 auto 14px",fontWeight:800,color:"#3d2490",fontSize:14}}>🎉 We'll be in touch soon!</div>
         )}
-        <div style={{display:"flex",justifyContent:"center",gap:16,flexWrap:"wrap"}}>
-          {["No credit card","3 min setup","Cancel anytime"].map(l=>(
-            <div key={l} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"#9b8ec4"}}>
-              <div style={{width:5,height:5,background:"#22c55e",borderRadius:"50%"}}/>
-              {l}
-            </div>
-          ))}
+        <div style={{display:"flex",justifyContent:"center",gap:20,flexWrap:"wrap"}}>
+          {["No credit card","3 min setup","Cancel anytime"].map(l=>(<div key={l} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"#9b8ec4"}}><div style={{width:5,height:5,background:"#22c55e",borderRadius:"50%"}}/>{l}</div>))}
         </div>
       </div>
 
       {/* FOOTER */}
-      <div style={{padding:"16px 20px",borderTop:"1px solid #f0eeff",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
-        <div style={{display:"flex",alignItems:"center",gap:7}}>
-          <div style={{width:26,height:26,background:"#3d2490",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12}}>✂</div>
-          <span style={{fontWeight:700,fontSize:13,color:"#0f0a2e"}}>SnipBook</span>
-        </div>
+      <div style={{padding:isMobile?"14px 20px":"18px 48px",borderTop:"1px solid #f0eeff",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{width:26,height:26,background:"#3d2490",borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:12}}>✂</div><span style={{fontWeight:700,fontSize:13,color:"#0f0a2e"}}>SnipBook</span></div>
         <span style={{fontSize:11,color:"#c4b8f0"}}>© 2026 SnipBook · Made for Indian Salons</span>
         <button onClick={onLogin} style={{background:"none",border:"none",color:"#9b8ec4",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Login →</button>
       </div>
