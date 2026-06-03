@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "./lib/supabase"; 
-import StaffManagement from "./screens/StaffManagement"; 
+import StaffManagement from "./screens/StaffManagement";
 import CustomerHistory from "./screens/CustomerHistoryApp";
 import EngagementCenter from "./screens/EngagementCenter";
 import StaffDashboard, { StaffLoginPage } from "./screens/StaffDashboard";
@@ -134,7 +134,7 @@ function Landing({onStart,onLogin}){
           <div style={{fontSize:14,color:"#9b8ec4"}}>From WhatsApp message to confirmed booking in seconds.</div>
         </div>
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",maxWidth:780,margin:"0 auto 44px"}}>
-          {[{bg:"#dcfce7",label:"Customer\nWhatsApp",e:"💬"},{bg:"#ede9fe",label:"AI Replies\nInstantly",e:"🤖"},{bg:"#dbeafe",label:"Booking\nCreated",e:"📅"},{bg:"#fef9c3",label:"Calendar\nUpdated",e:"🔔"},{bg:"#dcfce7",label:"Revenue\nUpdated",e:"📈"}].map((s,i)=>(<React.Fragment key={i}>{i>0&&<div style={{color:"#d1d5db",fontSize:14,marginBottom:24,padding:"0 4px"}}>→</div>}<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12,flex:1}}><div style={{width:72,height:72,borderRadius:"50%",background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28}}>{s.e}</div><div style={{fontSize:13,fontWeight:700,color:"#1a1a2e",textAlign:"center",lineHeight:1.4,whiteSpace:"pre-line"}}>{s.label}</div></div></React.Fragment>))}
+          {[{bg:"#dcfce7",label:"Customer\nWhatsApp",e:"💬"},{bg:"#ede9fe",label:"AI Replies\nInstantly",e:"🤖"},{bg:"#dbeafe",label:"Booking\nCreated",e:"📅"},{bg:"#fef9c3",label:"Calendar\nUpdated",e:"🔔"},{bg:"#dcfce7",label:"Revenue\nUpdated",e:"📈"}].map((s,i)=>([i>0&&<div key={"a"+i} style={{color:"#d1d5db",fontSize:14,marginBottom:24,padding:"0 4px"}}>→</div>,<div key={"b"+i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12,flex:1}}><div style={{width:72,height:72,borderRadius:"50%",background:s.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28}}>{s.e}</div><div style={{fontSize:13,fontWeight:700,color:"#1a1a2e",textAlign:"center",lineHeight:1.4,whiteSpace:"pre-line"}}>{s.label}</div></div>]))}
         </div>
         <div style={{background:"#f4f2ff",borderRadius:18,padding:"28px 24px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",maxWidth:780,margin:"0 auto"}}>{[["3 min","Setup time"],["24/7","Bot always active"],["Zero","Missed bookings"],["100%","WhatsApp native"]].map(([v,l])=>(<div key={l} style={{textAlign:"center",padding:"4px 10px"}}><div style={{fontSize:32,fontWeight:800,color:"#2d1b69"}}>{v}</div><div style={{fontSize:13,color:"#9b8ec4",marginTop:5}}>{l}</div></div>))}</div>
       </div>
