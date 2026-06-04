@@ -383,19 +383,15 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         {screen==="dashboard"&&(
           <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff"}}>
 
-            {/* Greeting Header */}
-            <div style={{background:"#fff",padding:"16px 20px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff"}}>
+            {/* Greeting Header — compact */}
+            <div style={{background:"#fff",padding:"12px 20px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff"}}>
               <div>
-                <div style={{fontSize:13,color:"#9b8ec4",fontWeight:600}}>Good Morning 👋</div>
-                <div style={{fontSize:22,fontWeight:800,color:"#1a0a4a",marginTop:2}}>{user?.name?.split(" ")[0]}!</div>
-                <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>Here's what's happening in your salon today.</div>
+                <div style={{fontSize:12,color:"#9b8ec4",fontWeight:600}}>Good Morning 👋</div>
+                <div style={{fontSize:18,fontWeight:800,color:"#1a0a4a",marginTop:1}}>{user?.name?.split(" ")[0]}!</div>
               </div>
-              <div style={{display:"flex",gap:10}}>
-                <div style={{width:40,height:40,borderRadius:"50%",background:"#f4f2ff",border:"1.5px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,cursor:"pointer"}}>🔍</div>
-                <div onClick={handleBell} style={{position:"relative",width:40,height:40,borderRadius:"50%",background:"#f4f2ff",border:"1.5px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-                  <span style={{fontSize:16}}>🔔</span>
-                  {unreadCount>0&&<div style={{position:"absolute",top:0,right:0,width:14,height:14,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
-                </div>
+              <div onClick={handleBell} style={{position:"relative",width:36,height:36,borderRadius:"50%",background:"#f4f2ff",border:"1.5px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                <span style={{fontSize:16}}>🔔</span>
+                {unreadCount>0&&<div style={{position:"absolute",top:0,right:0,width:13,height:13,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
               </div>
             </div>
 
@@ -473,18 +469,20 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             </div>
 
             {/* Quick Actions */}
-            <div style={{padding:"14px 16px 100px"}}>
-              <div style={{fontSize:15,fontWeight:800,color:"#1a0a4a",marginBottom:10}}>Quick Actions</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div style={{padding:"12px 16px 30px"}}>
+              <div style={{fontSize:13,fontWeight:800,color:"#1a0a4a",marginBottom:8}}>Quick Actions</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                 {[
                   {icon:"📅",label:"New Booking",sub:"Add appointment",s:"calendar",dark:true},
                   {icon:"👥",label:"Add Client",sub:"New customer",s:"clients",dark:false},
                   {icon:"💬",label:"Bot Chats",sub:"WhatsApp history",s:"chats",dark:false},
                   {icon:"💫",label:"Create Offer",sub:"New campaign",s:"engage",dark:false}
-                ].map(a=>(<div key={a.label} onClick={()=>setScreen(a.s)} style={{background:a.dark?"#2d1b69":"#fff",borderRadius:18,padding:"20px 16px",cursor:"pointer",border:a.dark?"none":"0.5px solid #e0d8ff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",minHeight:110}}>
-                  <div style={{width:44,height:44,background:a.dark?"rgba(255,255,255,0.15)":"#f4f2ff",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,marginBottom:10}}>{a.icon}</div>
-                  <div style={{fontWeight:700,fontSize:13,color:a.dark?"#fff":"#1a0a4a"}}>{a.label}</div>
-                  <div style={{fontSize:11,color:a.dark?"rgba(255,255,255,0.5)":"#9b8ec4",marginTop:3}}>{a.sub}</div>
+                ].map(a=>(<div key={a.label} onClick={()=>setScreen(a.s)} style={{background:a.dark?"#2d1b69":"#fff",borderRadius:14,padding:"14px 12px",cursor:"pointer",border:a.dark?"none":"0.5px solid #e0d8ff",display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:36,height:36,background:a.dark?"rgba(255,255,255,0.15)":"#f4f2ff",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{a.icon}</div>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:13,color:a.dark?"#fff":"#1a0a4a"}}>{a.label}</div>
+                    <div style={{fontSize:11,color:a.dark?"rgba(255,255,255,0.5)":"#9b8ec4",marginTop:1}}>{a.sub}</div>
+                  </div>
                 </div>))}
               </div>
             </div>
