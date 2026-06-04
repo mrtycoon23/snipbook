@@ -383,20 +383,31 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         {screen==="dashboard"&&(
           <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff"}}>
 
-            {/* Greeting Header — compact */}
-            <div style={{background:"#fff",padding:"12px 20px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff"}}>
-              <div>
-                <div style={{fontSize:12,color:"#9b8ec4",fontWeight:600}}>Good Morning 👋</div>
-                <div style={{fontSize:18,fontWeight:800,color:"#1a0a4a",marginTop:1}}>{user?.name?.split(" ")[0]}!</div>
+            {/* Dashboard Header — Image 1 style */}
+            <div style={{background:"#fff",padding:"12px 18px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{display:"flex",flexDirection:"column",gap:4,cursor:"pointer"}}>
+                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:20}}/>
+                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:14}}/>
+                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:20}}/>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <div style={{width:24,height:24,background:"#2d1b69",borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff"}}>✂</div>
+                  <span style={{fontWeight:800,fontSize:16,color:"#2d1b69"}}>Snip<span style={{color:"#5b3fc4"}}>Book</span></span>
+                </div>
               </div>
-              <div onClick={handleBell} style={{position:"relative",width:36,height:36,borderRadius:"50%",background:"#f4f2ff",border:"1.5px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
-                <span style={{fontSize:16}}>🔔</span>
-                {unreadCount>0&&<div style={{position:"absolute",top:0,right:0,width:13,height:13,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div onClick={handleBell} style={{position:"relative",width:34,height:34,borderRadius:"50%",background:"#f4f2ff",border:"1.5px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                  <span style={{fontSize:15}}>🔔</span>
+                  {unreadCount>0&&<div style={{position:"absolute",top:0,right:0,width:13,height:13,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
+                </div>
+                <div style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff"}}>{user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div>
               </div>
             </div>
 
+
             {/* Revenue Card */}
-            <div style={{margin:"12px 16px 0",background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:20,padding:"18px",position:"relative",overflow:"hidden"}}>
+            <div style={{margin:"10px 16px 0",background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:18,padding:"16px",position:"relative",overflow:"hidden"}}>
               <svg style={{position:"absolute",bottom:0,right:0,opacity:0.15}} width="140" height="70" viewBox="0 0 140 70"><polyline points="0,60 25,45 50,52 75,28 100,35 120,15 140,22" fill="none" stroke="#fff" stroke-width="2.5"/></svg>
               <div style={{position:"absolute",width:100,height:100,borderRadius:"50%",background:"rgba(255,255,255,0.05)",top:-30,right:-20}}/>
               <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:700,letterSpacing:0.5,marginBottom:4}}>{user.salon.toUpperCase()} · TODAY'S REVENUE</div>
@@ -408,16 +419,16 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             </div>
 
             {/* Stats Row */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,margin:"10px 16px 0"}}>
-              {[{icon:"📅",val:booked,label:"Bookings",color:"#1a0a4a"},{icon:"⏳",val:pending,label:"Pending",color:"#f59e0b"},{icon:"👥",val:clients.length,label:"Clients",color:"#22c55e"},{icon:"💰",val:"₹"+(revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||0),label:"Revenue",color:"#5b3fc4"}].map(s=>(<div key={s.label} style={{background:"#fff",borderRadius:12,padding:"10px 6px",textAlign:"center",border:"0.5px solid #e0d8ff"}}>
-                <div style={{fontSize:14,marginBottom:3}}>{s.icon}</div>
-                <div style={{fontSize:16,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
-                <div style={{fontSize:9,color:"#9b8ec4",marginTop:3}}>{s.label}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,margin:"8px 16px 0"}}>
+              {[{icon:"📅",val:booked,label:"Bookings",color:"#1a0a4a"},{icon:"⏳",val:pending,label:"Pending",color:"#f59e0b"},{icon:"👥",val:clients.length,label:"Clients",color:"#22c55e"},{icon:"💰",val:"₹"+(revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||0),label:"Revenue",color:"#5b3fc4"}].map(s=>(<div key={s.label} style={{background:"#fff",borderRadius:10,padding:"8px 4px",textAlign:"center",border:"0.5px solid #e0d8ff"}}>
+                <div style={{fontSize:13,marginBottom:2}}>{s.icon}</div>
+                <div style={{fontSize:15,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
+                <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>{s.label}</div>
               </div>))}
             </div>
 
             {/* Week Strip */}
-            <div style={{padding:"12px 16px 0"}}>
+            <div style={{padding:"8px 16px 0"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 {weekDays.map((d,i)=>{
                   const key=dateKey(d);const isSel=key===selKey;const isToday=key===dateKey(today);
@@ -623,8 +634,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             </div>
 
             {selClient&&(<div onClick={()=>setSelClient(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
-              <div style={{background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",padding:"20px 18px",borderRadius:"20px 20px 0 0"}}><div style={{width:36,height:4,background:"rgba(255,255,255,0.3)",borderRadius:2,margin:"0 auto 16px"}}/><div style={{display:"flex",gap:12,alignItems:"center"}}><div style={{width:50,height:50,borderRadius:16,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:18,color:"#fff"}}>{selClient.avatar}</div><div><div style={{fontWeight:900,fontSize:17,color:"#fff"}}>{selClient.name}</div><div style={{fontSize:12,color:"rgba(255,255,255,0.6)"}}>{selClient.phone} · {selClient.city||"—"}</div></div></div></div>
-              <div style={{padding:"16px 18px"}}><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>{[{icon:"🔁",val:selClient.visits||0,label:"Visits"},{icon:"💸",val:`₹${(selClient.totalSpent||0).toLocaleString()}`,label:"Total"},{icon:"📅",val:selClient.lastVisit||"—",label:"Last Visit"}].map(s=>(<div key={s.label} style={{background:"#f4f2ff",borderRadius:11,padding:"10px",textAlign:"center"}}><div style={{fontSize:16,marginBottom:3}}>{s.icon}</div><div style={{fontWeight:900,fontSize:13,color:"#1a0a4a"}}>{s.val}</div><div style={{fontSize:10,color:"#9b8ec4",fontWeight:700}}>{s.label}</div></div>))}</div>
+              <div style={{background:"#fff",padding:"12px 18px 10px",borderRadius:"20px 20px 0 0",borderBottom:"0.5px solid #f0eeff"}}><div style={{width:32,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 10px"}}/><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:40,height:40,borderRadius:12,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:15,color:"#5b3fc4",flexShrink:0}}>{selClient.avatar}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:15,color:"#1a0a4a"}}>{selClient.name}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{selClient.phone}{selClient.city?" · "+selClient.city:""}</div></div><div style={{background:"#ede9fe",borderRadius:20,padding:"2px 10px",fontSize:10,fontWeight:700,color:"#5b3fc4",flexShrink:0}}>{selClient.tag||"Regular"}</div></div></div>
+              <div style={{padding:"16px 18px"}}><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>{[{val:selClient.visits||0,label:"Visits",color:"#5b3fc4"},{val:`₹${(selClient.totalSpent||0).toLocaleString()}`,label:"Total Spent",color:"#16a34a"},{val:selClient.lastVisit||"—",label:"Last Visit",color:"#f59e0b"}].map(s=>(<div key={s.label} style={{background:"#f8f7ff",borderRadius:10,padding:"10px 6px",textAlign:"center",border:"0.5px solid #e0d8ff"}}><div style={{fontWeight:800,fontSize:16,color:s.color}}>{s.val}</div><div style={{fontSize:10,color:"#9b8ec4",marginTop:2,fontWeight:600}}>{s.label}</div></div>))}</div>
               <div style={{display:"flex",gap:8,marginBottom:10}}><button onClick={()=>{setScreen("calendar");setSelClient(null);}} style={{flex:1,padding:"11px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📅 Book Now</button><button onClick={()=>{if(!selClient?.phone)return;setWelcomeModal("confirm");}} style={{flex:1,padding:"11px",background:welcomeSending?"#f4f2ff":"#ede9fe",border:"0.5px solid #c4b8f0",borderRadius:12,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{welcomeSending?"Sending...":"💬 WhatsApp"}</button></div>
               <button onClick={()=>{setEditClient({...selClient});setShowEditClient(true);}} style={{width:"100%",padding:"11px",background:"#fff",border:"0.5px solid #e0d8ff",borderRadius:12,color:"#4a3580",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8}}>✏️ Edit Profile</button>
               <button onClick={()=>{setScreen("history");setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#ede9fe",border:"0.5px solid #c4b8f0",borderRadius:12,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",marginBottom:8}}>📋 Visit History →</button>
