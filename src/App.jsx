@@ -387,7 +387,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             {/* Dashboard Header — Image 1 style */}
             <div style={{background:"#fff",padding:"12px 18px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <div style={{display:"flex",flexDirection:"column",gap:4,cursor:"pointer"}}>
+                <div onClick={()=>setShowDrawer(true)} style={{display:"flex",flexDirection:"column",gap:4,cursor:"pointer",padding:"4px"}}>
                   <div style={{height:2,background:"#2d1b69",borderRadius:2,width:20}}/>
                   <div style={{height:2,background:"#2d1b69",borderRadius:2,width:14}}/>
                   <div style={{height:2,background:"#2d1b69",borderRadius:2,width:20}}/>
