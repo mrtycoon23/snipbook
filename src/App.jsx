@@ -680,43 +680,39 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       {showDrawer&&(<>
         <div onClick={()=>setShowDrawer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:700}}/>
         <div style={{position:"fixed",top:0,left:0,bottom:0,width:280,background:"#fff",zIndex:800,display:"flex",flexDirection:"column",boxShadow:"4px 0 24px rgba(0,0,0,0.15)"}}>
-          {/* Drawer header — salon name big, owner small */}
-          <div style={{background:"#f4f2ff",padding:"48px 20px 16px",borderBottom:"0.5px solid #e0d8ff"}}>
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:44,height:44,borderRadius:12,background:"#ede9fe",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:16,color:"#5b3fc4",flexShrink:0}}>{user?.salon?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div>
+          {/* Drawer header — compact */}
+          <div style={{background:"#f4f2ff",padding:"44px 16px 12px",borderBottom:"0.5px solid #e0d8ff"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{width:38,height:38,borderRadius:10,background:"#ede9fe",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:"#5b3fc4",flexShrink:0}}>{user?.salon?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div>
               <div>
-                <div style={{fontWeight:800,fontSize:16,color:"#1a0a4a"}}>✂️ {user?.salon}</div>
-                <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>{user?.name}</div>
+                <div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>✂️ {user?.salon}</div>
+                <div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{user?.name}</div>
               </div>
             </div>
           </div>
           {/* Drawer items */}
-          <div style={{flex:1,overflowY:"auto",padding:"6px 0"}}>
-
+          <div style={{flex:1,overflowY:"auto",padding:"4px 0"}}>
             {[
-              {id:"dashboard",icon:"🏠",label:"Home",sub:"Overview"},
-              {id:"calendar",icon:"📅",label:"Calendar",sub:"Bookings"},
-              {id:"clients",icon:"👥",label:"Clients",sub:"All customers"},
-              {id:"staff",icon:"👨‍💼",label:"Staff",sub:"Team management"},
-              {id:"history",icon:"📋",label:"Customer History",sub:"Visit records"},
-              {id:"engage",icon:"💫",label:"Engagement",sub:"Campaigns"},
-              {id:"chats",icon:"💬",label:"Bot Chats",sub:"WhatsApp history"},
-              {id:"settings",icon:"⚙️",label:"Settings",sub:"Salon settings"},
+              {id:"dashboard",icon:"🏠",label:"Home"},
+              {id:"calendar",icon:"📅",label:"Calendar"},
+              {id:"clients",icon:"👥",label:"Clients"},
+              {id:"staff",icon:"👨‍💼",label:"Staff"},
+              {id:"history",icon:"📋",label:"Customer History"},
+              {id:"engage",icon:"💫",label:"Engagement"},
+              {id:"chats",icon:"💬",label:"Bot Chats"},
+              {id:"settings",icon:"⚙️",label:"Settings"},
             ].map(item=>{
               const active=screen===item.id;
-              return(<div key={item.id} onClick={()=>{setScreen(item.id);setShowDrawer(false);}} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 20px",cursor:"pointer",background:active?"#f4f2ff":"transparent",borderLeft:active?"3px solid #2d1b69":"3px solid transparent"}}>
-                <div style={{width:36,height:36,borderRadius:10,background:active?"#ede9fe":"#f8f8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:17,flexShrink:0}}>{item.icon}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontWeight:active?800:600,fontSize:13,color:active?"#2d1b69":"#1a0a4a"}}>{item.label}</div>
-                  <div style={{fontSize:10,color:"#9b8ec4",marginTop:1}}>{item.sub}</div>
-                </div>
-                {active&&<div style={{width:6,height:6,borderRadius:"50%",background:"#2d1b69"}}/>}
+              return(<div key={item.id} onClick={()=>{setScreen(item.id);setShowDrawer(false);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 16px",cursor:"pointer",background:active?"#f4f2ff":"transparent",borderLeft:active?"3px solid #2d1b69":"3px solid transparent"}}>
+                <div style={{width:30,height:30,borderRadius:8,background:active?"#ede9fe":"#f4f2ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{item.icon}</div>
+                <div style={{fontWeight:active?800:500,fontSize:13,color:active?"#2d1b69":"#1a0a4a"}}>{item.label}</div>
+                {active&&<div style={{marginLeft:"auto",width:5,height:5,borderRadius:"50%",background:"#2d1b69"}}/>}
               </div>);
             })}
           </div>
           {/* Drawer footer */}
-          <div style={{padding:"16px 20px",borderTop:"0.5px solid #f0eeff"}}>
-            <div style={{fontSize:11,color:"#9b8ec4",textAlign:"center"}}>SnipBook · {user?.salon}</div>
+          <div style={{padding:"10px 16px",borderTop:"0.5px solid #f0eeff"}}>
+            <div style={{fontSize:10,color:"#c4b8f0",textAlign:"center"}}>SnipBook · {user?.salon}</div>
           </div>
         </div>
       </>)}
