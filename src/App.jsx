@@ -473,13 +473,10 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                   {icon:"👥",label:"Add Client",sub:"New customer",s:"clients",dark:false},
                   {icon:"💬",label:"Bot Chats",sub:"WhatsApp history",s:"chats",dark:false},
                   {icon:"💫",label:"Create Offer",sub:"New campaign",s:"engage",dark:false}
-                ].map(a=>(<div key={a.label} onClick={()=>setScreen(a.s)} style={{background:a.dark?"#2d1b69":"#fff",borderRadius:18,padding:"16px",cursor:"pointer",border:a.dark?"none":"0.5px solid #e0d8ff"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
-                    <div style={{width:40,height:40,background:a.dark?"rgba(255,255,255,0.15)":"#f4f2ff",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{a.icon}</div>
-                    <div style={{color:a.dark?"rgba(255,255,255,0.3)":"#e0d8ff",fontSize:16}}>›</div>
-                  </div>
+                ].map(a=>(<div key={a.label} onClick={()=>setScreen(a.s)} style={{background:a.dark?"#2d1b69":"#fff",borderRadius:18,padding:"20px 16px",cursor:"pointer",border:a.dark?"none":"0.5px solid #e0d8ff",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",textAlign:"center",minHeight:110}}>
+                  <div style={{width:44,height:44,background:a.dark?"rgba(255,255,255,0.15)":"#f4f2ff",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,marginBottom:10}}>{a.icon}</div>
                   <div style={{fontWeight:700,fontSize:13,color:a.dark?"#fff":"#1a0a4a"}}>{a.label}</div>
-                  <div style={{fontSize:11,color:a.dark?"rgba(255,255,255,0.5)":"#9b8ec4",marginTop:2}}>{a.sub}</div>
+                  <div style={{fontSize:11,color:a.dark?"rgba(255,255,255,0.5)":"#9b8ec4",marginTop:3}}>{a.sub}</div>
                 </div>))}
               </div>
             </div>
