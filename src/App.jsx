@@ -532,12 +532,21 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                   if(b?.status==="break")return(<div key={key} style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:"#ccc",textAlign:"right"}}>{fmt12(key)}</div><div style={{flex:1,background:"repeating-linear-gradient(45deg,#f8fafc,#f8fafc 5px,#f0f4f8 5px,#f0f4f8 10px)",border:"0.5px dashed #e0d8ff",borderRadius:10,padding:"9px 12px",color:"#ccc",fontSize:12,fontWeight:700}}>Break</div></div>);
                   if(b){
                     const st=STATUS_MAP[b.status]||STATUS_MAP.confirmed;
-                    const colorMap={confirmed:{bg:"#ede9fe",left:"#5b3fc4"},done:{bg:"#f0f4f8",left:"#888"},pending:{bg:"#fef9c3",left:"#f59e0b"}};
-                    const cm=colorMap[b.status]||colorMap.confirmed;
-                    return(<div key={key} style={{display:"flex",gap:10,alignItems:"flex-start"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:isHour?"#1a0a4a":"#ccc",textAlign:"right",paddingTop:12}}>{fmt12(key)}</div><div style={{flex:1,background:cm.bg,borderRadius:12,padding:"10px 12px",borderLeft:`3px solid ${cm.left}`}}>
+                    const cardStyles=[
+                      {cardBg:"#ede9fe",left:"#5b3fc4",nameColor:"#2d1b69",priceColor:"#5b3fc4"},
+                      {cardBg:"#fef9c3",left:"#f59e0b",nameColor:"#92400e",priceColor:"#a16207"},
+                      {cardBg:"#e8fdf0",left:"#16a34a",nameColor:"#14532d",priceColor:"#16a34a"},
+                      {cardBg:"#fff0f6",left:"#db2777",nameColor:"#9d174d",priceColor:"#db2777"},
+                      {cardBg:"#eff6ff",left:"#2563eb",nameColor:"#1e40af",priceColor:"#2563eb"},
+                      {cardBg:"#f0fdfa",left:"#0d9488",nameColor:"#0f766e",priceColor:"#0d9488"},
+                    ];
+                    const slotIdx=slots.indexOf(key);
+                    const cs=cardStyles[slotIdx%cardStyles.length];
+                    return(<div key={key} style={{display:"flex",gap:10,alignItems:"flex-start"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:isHour?"#1a0a4a":"#ccc",textAlign:"right",paddingTop:12}}>{fmt12(key)}</div><div style={{flex:1,background:cs.cardBg,borderRadius:12,padding:"11px 13px",borderLeft:`3px solid ${cs.left}`,position:"relative",overflow:"hidden"}}>
+                      <div style={{position:"absolute",width:50,height:50,borderRadius:"50%",background:"rgba(255,255,255,0.2)",top:-10,right:-10}}/>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div><div style={{fontSize:12,fontWeight:700,color:"#1a0a4a"}}>{b.name}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>{b.service}</div></div>
-                        <div style={{textAlign:"right"}}><div style={{fontSize:11,fontWeight:700,color:cm.left}}>₹{b.price}</div><div style={{background:st.bg,color:st.color,fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,marginTop:3}}>{st.label}</div></div>
+                        <div><div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>{b.name}</div><div style={{fontSize:11,color:cs.nameColor,opacity:0.8,marginTop:2}}>{b.service}</div></div>
+                        <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:12,fontWeight:800,color:cs.priceColor}}>₹{b.price}</div><div style={{background:"rgba(255,255,255,0.6)",color:cs.left,fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:20,marginTop:3,display:"inline-block"}}>{st.label}</div></div>
                       </div>
                     </div></div>);
                   }
