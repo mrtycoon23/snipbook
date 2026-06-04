@@ -448,17 +448,25 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
               ):Object.entries(dayData).filter(([,b])=>b.status!=="break").slice(0,3).map(([slot,b],i)=>{
                 const st=STATUS_MAP[b.status]||STATUS_MAP.confirmed;
                 const av=b.name.split(" ").map(w=>w[0]).join("").slice(0,2);
-                const avColors=[{bg:"#ede9fe",color:"#5b3fc4"},{bg:"#fef9c3",color:"#a16207"},{bg:"#e8fdf0",color:"#16a34a"},{bg:"#fff0f6",color:"#db2777"},{bg:"#eff6ff",color:"#2563eb"},{bg:"#f0fdfa",color:"#0d9488"}];
-                const ac=avColors[i%avColors.length];
-                return(<div key={i} style={{background:"#fff",borderRadius:14,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"0.5px solid #e0d8ff"}}>
-                  <div style={{width:42,height:42,borderRadius:12,background:ac.bg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:ac.color,flexShrink:0}}>{av}</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:700,fontSize:13,color:"#1a0a4a"}}>{b.name}</div>
-                    <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>{b.service} · {b.src==="wa"?"💬":"🚶"}</div>
+                const cardStyles=[
+                  {cardBg:"#ede9fe",avBg:"#c4b8f0",avColor:"#2d1b69",textColor:"#3d1f8f"},
+                  {cardBg:"#fef9c3",avBg:"#fde68a",avColor:"#a16207",textColor:"#92400e"},
+                  {cardBg:"#e8fdf0",avBg:"#bbf7d0",avColor:"#16a34a",textColor:"#14532d"},
+                  {cardBg:"#fff0f6",avBg:"#fbcfe8",avColor:"#db2777",textColor:"#9d174d"},
+                  {cardBg:"#eff6ff",avBg:"#bfdbfe",avColor:"#2563eb",textColor:"#1e40af"},
+                  {cardBg:"#f0fdfa",avBg:"#99f6e4",avColor:"#0d9488",textColor:"#0f766e"}
+                ];
+                const cs=cardStyles[i%cardStyles.length];
+                return(<div key={i} style={{background:cs.cardBg,borderRadius:16,padding:"13px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:12,position:"relative",overflow:"hidden"}}>
+                  <div style={{position:"absolute",width:60,height:60,borderRadius:"50%",background:"rgba(255,255,255,0.25)",top:-15,right:-10}}/>
+                  <div style={{width:44,height:44,borderRadius:13,background:cs.avBg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:cs.avColor,flexShrink:0}}>{av}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:800,fontSize:13,color:"#1a0a4a"}}>{b.name}</div>
+                    <div style={{fontSize:11,color:cs.textColor,opacity:0.8,marginTop:2}}>{b.service} · {b.src==="wa"?"💬":"🚶"}</div>
                   </div>
                   <div style={{textAlign:"right",flexShrink:0}}>
-                    <div style={{fontSize:12,fontWeight:700,color:"#1a0a4a",marginBottom:3}}>{fmt12(slot)}</div>
-                    <div style={{background:st.bg,color:st.color,fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20}}>{st.label}</div>
+                    <div style={{fontSize:12,fontWeight:800,color:"#1a0a4a",marginBottom:4}}>{fmt12(slot)}</div>
+                    <div style={{background:"rgba(255,255,255,0.6)",color:cs.avColor,fontSize:10,fontWeight:700,padding:"2px 9px",borderRadius:20}}>{st.label}</div>
                   </div>
                 </div>);
               })}
@@ -657,4 +665,3 @@ export default function SnipBook(){
   if(page==="loading"){return(<div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,fontFamily:"system-ui,sans-serif"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:48,height:48,background:"rgba(255,255,255,0.15)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>✂️</div><span style={{fontWeight:900,fontSize:22,color:"#fff"}}>Snip<span style={{color:"#c4b8f0"}}>Book</span></span></div><div style={{marginTop:20,fontSize:13,color:"rgba(255,255,255,0.5)",fontWeight:700}}>Loading...</div></div>);}
   return(<>{page==="landing"&&<Landing onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}{page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{setPage("staffSalonEntry");}} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}{page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{const sd={...staffData,salon_id:staffData.salon_id};setStaffUser(sd);localStorage.setItem("snipbook_staff",JSON.stringify(sd));setPage("staffApp");}} onBack={()=>setPage("login")}/>}{page==="staffApp"&&staffUser&&<StaffDashboard staff={staffUser} showRevenue={showRevenue} onLogout={staffLogout}/>}{page==="onboarding"&&<Onboarding onComplete={u=>{setUser(u);setPage("app");}} onBack={()=>setPage("landing")}/>}{page==="resetPassword"&&<ResetPasswordPage onDone={()=>setPage("login")}/>}{page==="app"&&user&&<MainApp user={user} setUser={setUser} onLogout={ownerLogout} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/>}</>);
 }
- 
