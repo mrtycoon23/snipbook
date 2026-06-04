@@ -381,117 +381,249 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       <SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
         {screen==="dashboard"&&(
-          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-            <div style={{margin:"8px 16px 0",background:`linear-gradient(145deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)`,borderRadius:24,padding:"20px 18px 22px",position:"relative",overflow:"hidden",boxShadow:"0 8px 32px rgba(45,27,105,0.35)"}}>
-              <div style={{position:"absolute",width:120,height:120,borderRadius:"50%",background:"rgba(255,255,255,0.06)",top:-30,right:-20}}/>
-              <div style={{position:"absolute",width:80,height:80,borderRadius:"50%",background:"rgba(255,255,255,0.04)",bottom:-10,left:10}}/>
-              <div style={{position:"relative"}}>
-                <div style={{fontSize:10,color:"rgba(255,255,255,0.5)",fontWeight:700,letterSpacing:1,marginBottom:2}}>{user.salon.toUpperCase()} · TODAY'S OVERVIEW</div>
-                <div style={{fontSize:12,color:"rgba(255,255,255,0.6)",marginBottom:14}}>{new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6}}>
-                  {[{val:booked,label:"BOOKINGS",color:"#fff"},{val:`₹${revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue}`,label:"REVENUE",color:"#c4b8f0"},{val:pending,label:"PENDING",color:"#fde68a"}].map(s=>(<div key={s.label} style={{background:"rgba(255,255,255,0.15)",borderRadius:14,padding:"12px 6px",textAlign:"center"}}><div style={{fontWeight:900,fontSize:24,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:9,color:"rgba(255,255,255,0.5)",fontWeight:700,marginTop:4,letterSpacing:0.8}}>{s.label}</div></div>))}
+          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff"}}>
+
+            {/* Greeting Header */}
+            <div style={{background:"#fff",padding:"16px 20px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff"}}>
+              <div>
+                <div style={{fontSize:13,color:"#9b8ec4",fontWeight:600}}>Good Morning 👋</div>
+                <div style={{fontSize:22,fontWeight:800,color:"#1a0a4a",marginTop:2}}>{user?.name?.split(" ")[0]}!</div>
+                <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>Here's what's happening in your salon today.</div>
+              </div>
+              <div style={{display:"flex",gap:10}}>
+                <div style={{width:40,height:40,borderRadius:"50%",background:"#f4f2ff",border:"1.5px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,cursor:"pointer"}}>🔍</div>
+                <div onClick={handleBell} style={{position:"relative",width:40,height:40,borderRadius:"50%",background:"#f4f2ff",border:"1.5px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+                  <span style={{fontSize:16}}>🔔</span>
+                  {unreadCount>0&&<div style={{position:"absolute",top:0,right:0,width:14,height:14,borderRadius:"50%",background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:900,color:"#fff",border:"2px solid #fff"}}>{unreadCount>9?"9+":unreadCount}</div>}
                 </div>
               </div>
             </div>
-            <div style={{padding:"10px 16px 0"}}>
-              <div style={{display:"flex",justifyContent:"space-around",alignItems:"center"}}>
+
+            {/* Revenue Card */}
+            <div style={{margin:"12px 16px 0",background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:20,padding:"18px",position:"relative",overflow:"hidden"}}>
+              <svg style={{position:"absolute",bottom:0,right:0,opacity:0.15}} width="140" height="70" viewBox="0 0 140 70"><polyline points="0,60 25,45 50,52 75,28 100,35 120,15 140,22" fill="none" stroke="#fff" stroke-width="2.5"/></svg>
+              <div style={{position:"absolute",width:100,height:100,borderRadius:"50%",background:"rgba(255,255,255,0.05)",top:-30,right:-20}}/>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:700,letterSpacing:0.5,marginBottom:4}}>{user.salon.toUpperCase()} · TODAY'S REVENUE</div>
+              <div style={{fontSize:32,fontWeight:800,color:"#fff",marginBottom:6}}>₹{revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||"0"}</div>
+              <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}>
+                <span style={{color:"#22c55e",fontSize:11,fontWeight:700}}>↑ 18%</span>
+                <span style={{color:"rgba(255,255,255,0.6)",fontSize:11}}>from yesterday</span>
+              </div>
+            </div>
+
+            {/* Stats Row */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,margin:"10px 16px 0"}}>
+              {[{icon:"📅",val:booked,label:"Bookings",color:"#1a0a4a"},{icon:"⏳",val:pending,label:"Pending",color:"#f59e0b"},{icon:"👥",val:clients.length,label:"Clients",color:"#22c55e"},{icon:"💰",val:"₹"+(revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||0),label:"Revenue",color:"#5b3fc4"}].map(s=>(<div key={s.label} style={{background:"#fff",borderRadius:12,padding:"10px 6px",textAlign:"center",border:"0.5px solid #e0d8ff"}}>
+                <div style={{fontSize:14,marginBottom:3}}>{s.icon}</div>
+                <div style={{fontSize:16,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
+                <div style={{fontSize:9,color:"#9b8ec4",marginTop:3}}>{s.label}</div>
+              </div>))}
+            </div>
+
+            {/* Week Strip */}
+            <div style={{padding:"12px 16px 0"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 {weekDays.map((d,i)=>{
                   const key=dateKey(d);const isSel=key===selKey;const isToday=key===dateKey(today);
                   const cnt=Object.values(bookings[key]||{}).filter(b=>b.status!=="break").length;
-                  return(<div key={i} onClick={()=>{setSelDate(d);setScreen("calendar");}} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer"}}>
-                    <div style={{fontSize:9,fontWeight:700,color:TP.ts,letterSpacing:0.5}}>{["MON","TUE","WED","THU","FRI","SAT","SUN"][d.getDay()===0?6:d.getDay()-1]}</div>
-                    <div style={{width:36,height:36,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isSel?"#2d1b69":"transparent",boxShadow:isSel?"0 4px 12px rgba(45,27,105,0.35)":"none"}}><div style={{fontSize:16,fontWeight:900,color:isSel?"#fff":isToday?"#2d1b69":TP.text}}>{d.getDate()}</div></div>
-                    <div style={{width:4,height:4,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.7)":"#2d1b69"):"transparent"}}/>
+                  return(<div key={i} onClick={()=>{setSelDate(d);setScreen("calendar");}} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",flex:1}}>
+                    <div style={{fontSize:9,fontWeight:700,color:isSel?"#5b3fc4":"#9b8ec4",letterSpacing:0.3}}>{["MON","TUE","WED","THU","FRI","SAT"][i]}</div>
+                    <div style={{width:34,height:34,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isSel?"#2d1b69":isToday?"#ede9fe":"transparent",boxShadow:isSel?"0 4px 12px rgba(45,27,105,0.3)":"none"}}>
+                      <div style={{fontSize:14,fontWeight:800,color:isSel?"#fff":isToday?"#2d1b69":"#1a0a4a"}}>{d.getDate()}</div>
+                    </div>
+                    <div style={{width:4,height:4,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.8)":"#5b3fc4"):"transparent"}}/>
                   </div>);
                 })}
               </div>
             </div>
-            <div style={{padding:"12px 16px 0"}}>
+
+            {/* Today's Appointments */}
+            <div style={{padding:"14px 16px 0"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <div style={{fontWeight:800,fontSize:16,color:TP.text}}>Today's Appointments</div>
-                <div onClick={()=>setScreen("calendar")} style={{fontSize:13,fontWeight:700,color:TP.purple,cursor:"pointer"}}>See all →</div>
+                <div style={{fontSize:15,fontWeight:800,color:"#1a0a4a"}}>Today's Appointments</div>
+                <div onClick={()=>setScreen("calendar")} style={{fontSize:12,fontWeight:700,color:"#5b3fc4",cursor:"pointer"}}>View all →</div>
               </div>
               {Object.entries(dayData).filter(([,b])=>b.status!=="break").length===0?(
-                <div style={{background:"#fff",borderRadius:16,padding:"24px",textAlign:"center",color:TP.ts,fontSize:13,border:`2px solid ${TP.border}`}}>No appointments today</div>
+                <div style={{background:"#fff",borderRadius:14,padding:"20px",textAlign:"center",color:"#9b8ec4",fontSize:13,border:"0.5px solid #e0d8ff"}}>No appointments today 🌟</div>
               ):Object.entries(dayData).filter(([,b])=>b.status!=="break").slice(0,3).map(([slot,b],i)=>{
                 const st=STATUS_MAP[b.status]||STATUS_MAP.confirmed;
                 const av=b.name.split(" ").map(w=>w[0]).join("").slice(0,2);
-                const avColors=[{bg:"#ede9fe",color:"#5b3fc4"},{bg:"#fef9c3",color:"#a16207"},{bg:"#f0fdf4",color:"#16a34a"},{bg:"#fff0f6",color:"#db2777"},{bg:"#eff6ff",color:"#2563eb"},{bg:"#f0fdfa",color:"#0d9488"}];
+                const avColors=[{bg:"#ede9fe",color:"#5b3fc4"},{bg:"#fef9c3",color:"#a16207"},{bg:"#e8fdf0",color:"#16a34a"},{bg:"#fff0f6",color:"#db2777"},{bg:"#eff6ff",color:"#2563eb"},{bg:"#f0fdfa",color:"#0d9488"}];
                 const ac=avColors[i%avColors.length];
-                return(<div key={i} style={{background:"#fff",borderRadius:18,padding:"14px 16px",marginBottom:10,display:"flex",alignItems:"center",gap:14,boxShadow:"0 2px 16px rgba(45,27,105,0.08)"}}>
-                  <div style={{width:48,height:48,borderRadius:14,background:ac.bg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:15,color:ac.color,flexShrink:0}}>{av}</div>
-                  <div style={{flex:1}}><div style={{fontWeight:800,fontSize:14,color:TP.text,marginBottom:2}}>{b.name}</div><div style={{fontSize:12,color:TP.ts}}>{b.service} · {b.src==="wa"?"💬 WhatsApp":"🚶 Walk-in"}</div></div>
-                  <div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:900,fontSize:13,color:TP.text,marginBottom:4}}>{fmt12(slot)}</div><div style={{background:st.bg,color:st.color,fontSize:10,fontWeight:800,padding:"3px 8px",borderRadius:20}}>{st.label}</div></div>
-                </div>);
-              })}
-            </div>
-            <div style={{padding:"12px 16px 100px"}}>
-              <div style={{fontWeight:800,fontSize:15,color:TP.text,marginBottom:10}}>Quick Actions</div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                {[{icon:"📅",label:"Calendar",sub:`${booked} booked today`,s:"calendar"},{icon:"👥",label:"Clients",sub:`${clients.length} total`,s:"clients"},{icon:"💬",label:"Bot Chats",sub:"WhatsApp history",s:"chats"},{icon:"💫",label:"Engage",sub:"Campaigns & offers",s:"engage"}].map(a=>(<div key={a.label} onClick={()=>setScreen(a.s)} style={{background:"#fff",borderRadius:20,padding:"18px 16px",cursor:"pointer",boxShadow:"0 2px 16px rgba(45,27,105,0.07)"}}>
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}><div style={{width:40,height:40,background:TP.purpleLight,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>{a.icon}</div><div style={{color:"#ccc",fontSize:18}}>›</div></div>
-                  <div style={{fontWeight:800,fontSize:14,color:TP.text}}>{a.label}</div>
-                  <div style={{fontSize:12,color:TP.ts,marginTop:3}}>{a.sub}</div>
-                </div>))}
-              </div>
-            </div>
-          </div>
-        )}
-        {screen==="calendar"&&(
-          <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-            <div style={{background:"#fff",borderBottom:`2px solid ${TP.border}`,padding:"10px 12px",flexShrink:0}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><div style={{fontWeight:900,fontSize:14,color:TP.text}}>{MONTHS[selDate.getMonth()]} {selDate.getFullYear()}</div><div style={{display:"flex",gap:6}}><button onClick={prevDay} style={{...nb,color:TP.text}}>←</button><button onClick={()=>{setSelDate(today);const ws=new Date(today);ws.setDate(ws.getDate()-ws.getDay()+1);setWeekStart(ws);}} style={{...nb,padding:"4px 10px",fontSize:11,color:TP.purple,borderColor:"#c4b8f0",background:TP.purpleLight,width:"auto"}}>Today</button><button onClick={nextDay} style={{...nb,color:TP.text}}>→</button></div></div>
-              <div style={{display:"flex",gap:5}}>{Array.from({length:7}).map((_,i)=>{const d=addDays(weekStart,i);const key=dateKey(d);const isSel=dateKey(d)===selKey;const isToday=dateKey(d)===dateKey(today);const cnt=Object.values(bookings[key]||{}).filter(b=>b.status!=="break").length;return(<div key={i} onClick={()=>setSelDate(d)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"7px 2px",borderRadius:11,cursor:"pointer",background:isSel?TP.purple:isToday?TP.purpleLight:"#fff",border:`2px solid ${isSel?TP.purple:isToday?"#c4b8f0":TP.border}`}}><div style={{fontSize:9,fontWeight:800,color:isSel?"rgba(255,255,255,0.7)":"#aaa"}}>{DAYS_S[d.getDay()]}</div><div style={{fontSize:15,fontWeight:900,color:isSel?"#fff":isToday?TP.purple:TP.text}}>{d.getDate()}</div><div style={{width:5,height:5,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.6)":"#c4b8f0"):TP.border}}/></div>);})}
-              </div>
-            </div>
-            <div style={{padding:"8px 12px",background:TP.bg,borderBottom:`2px solid ${TP.border}`,display:"flex",gap:8,alignItems:"center",flexShrink:0}}><div style={{fontWeight:800,fontSize:13,flex:1,color:TP.text}}>{DAYS_S[selDate.getDay()]}, {selDate.getDate()} {SHORT_M[selDate.getMonth()]}</div><div style={{fontSize:12,fontWeight:700,color:TP.purple}}>{Object.values(sDayData).filter(b=>b.status!=="break").length} booked</div><div style={{fontSize:12,fontWeight:700,color:TP.purpleMid}}>₹{Object.values(sDayData).reduce((s,b)=>s+(b.price||0),0).toLocaleString()}</div></div>
-            <div style={{flex:1,overflowY:"auto",padding:"10px 12px",WebkitOverflowScrolling:"touch"}} onTouchStart={e=>{touchStart.current=e.touches[0].clientX;}} onTouchEnd={e=>{if(touchStart.current===null)return;const diff=touchStart.current-e.changedTouches[0].clientX;if(Math.abs(diff)>50){diff>0?nextDay():prevDay();}touchStart.current=null;}}>
-              <div style={{display:"flex",flexDirection:"column",gap:5}}>
-                {slots.map(key=>{const b=sDayData[key];const isHour=key.endsWith(":00");
-                if(b?.status==="break")return(<div key={key} style={{display:"flex",gap:8,alignItems:"center"}}><div style={{width:50,flexShrink:0,fontSize:11,fontWeight:800,color:"#ccc",textAlign:"right"}}>{fmt12(key)}</div><div style={{flex:1,background:"repeating-linear-gradient(45deg,#f8fafc,#f8fafc 5px,#f0f4f8 5px,#f0f4f8 10px)",border:`2px dashed ${TP.border}`,borderRadius:10,padding:"9px 12px",color:"#bbb",fontSize:12,fontWeight:700}}>Break</div></div>);
-                if(b){const st=STATUS_MAP[b.status]||STATUS_MAP.confirmed;return(<div key={key} style={{display:"flex",gap:8,alignItems:"center"}}><div style={{width:50,flexShrink:0,fontSize:11,fontWeight:800,color:isHour?TP.text:"#ccc",textAlign:"right"}}>{fmt12(key)}</div><div style={{flex:1,background:TP.purpleLight,border:"2px solid #c4b8f0",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:10}}><div style={{width:8,height:8,borderRadius:"50%",background:TP.purple,flexShrink:0}}/><div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:13,color:TP.text}}>{b.name}</div><div style={{fontSize:11,color:TP.ts}}>{b.service}</div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:800,fontSize:12,color:TP.purple}}>₹{b.price}</div><div style={{background:st.bg,color:st.color,fontSize:9,fontWeight:800,padding:"2px 6px",borderRadius:20,marginTop:3}}>{st.label}</div></div></div></div>);}
-                return(<div key={key} style={{display:"flex",gap:8,alignItems:"center"}}><div style={{width:50,flexShrink:0,fontSize:11,fontWeight:800,color:isHour?TP.text:"#ccc",textAlign:"right"}}>{fmt12(key)}</div><button onClick={()=>{setCalForm({name:"",service:SERVICES_LIST[0],price:"",src:"wa"});setCalModal({slot:key});}} style={{flex:1,border:`2px dashed ${TP.border}`,borderRadius:10,background:"#fff",padding:"9px 12px",color:"#ccc",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}>+ {fmt12(key)}</button></div>);})}
-              </div>
-            </div>
-            {calModal&&(<div onClick={()=>setCalModal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 18px 32px",width:"100%"}}><div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/><div style={{fontWeight:900,fontSize:15,marginBottom:4,color:TP.text}}>New Booking</div><div style={{fontSize:12,color:TP.ts,marginBottom:14}}>{fmt12(calModal.slot)}</div>{[{label:"Client Name",el:<input value={calForm.name} onChange={e=>setCalForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Priya Sharma" style={obIs}/>},{label:"Service",el:<select value={calForm.service} onChange={e=>setCalForm(f=>({...f,service:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}>{SERVICES_LIST.map(s=><option key={s}>{s}</option>)}</select>},{label:"Price",el:<input type="number" value={calForm.price} onChange={e=>setCalForm(f=>({...f,price:e.target.value}))} placeholder="450" style={{...is,marginTop:5}}/>},{label:"Source",el:<select value={calForm.src} onChange={e=>setCalForm(f=>({...f,src:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}><option value="wa">WhatsApp</option><option value="walk">Walk-in</option></select>}].map(({label,el})=>(<div key={label} style={{marginBottom:10}}><div style={{fontSize:12,fontWeight:800,color:TP.tm}}>{label}</div>{el}</div>))}<div style={{display:"flex",gap:10,marginTop:14}}><button onClick={()=>setCalModal(null)} style={{flex:1,padding:11,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button><button onClick={saveCal} style={{flex:2,padding:11,border:"none",borderRadius:12,background:calForm.name.trim()?TP.purple:"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
-          </div>
-        )}
-        {screen==="clients"&&(
-          <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-            <div style={{background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",padding:"18px 18px 22px",position:"relative",overflow:"hidden",flexShrink:0}}>
-              <div style={{position:"absolute",width:150,height:150,borderRadius:"50%",background:"rgba(255,255,255,0.06)",top:-40,right:-30}}/>
-              <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                <div><div style={{fontSize:11,color:"rgba(255,255,255,0.5)",fontWeight:600,marginBottom:6}}>Clients</div><div style={{fontSize:22,fontWeight:900,color:"#fff"}}>Your Customers</div><div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginTop:4}}>{clients.length} total</div></div>
-                <div onClick={()=>setShowAddClient(true)} style={{background:"#fff",borderRadius:22,padding:"10px 16px",fontSize:13,fontWeight:800,color:TP.purple,cursor:"pointer",flexShrink:0}}>+ Add New</div>
-              </div>
-            </div>
-            <div style={{padding:"12px 16px 8px",background:TP.bg,flexShrink:0}}><div style={{position:"relative"}}><span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:14,color:TP.tf}}>🔍</span><input value={cSearch} onChange={e=>setCSearch(e.target.value)} placeholder="Search clients..." style={{width:"100%",padding:"9px 12px 9px 32px",border:`2px solid ${TP.border}`,borderRadius:11,fontSize:13,fontFamily:"inherit",outline:"none",boxSizing:"border-box",background:"#fff",color:TP.text}} onFocus={e=>e.target.style.borderColor=TP.purple} onBlur={e=>e.target.style.borderColor=TP.border}/></div></div>
-            <div style={{flex:1,overflowY:"auto",padding:"4px 16px 80px",WebkitOverflowScrolling:"touch"}}>
-              {filtC.map((c,idx)=>{
-                const{cardBg,cardColor,avBg,avColor}=CARD_COLORS[idx%CARD_COLORS.length];
-                return(<div key={c.id} onClick={()=>setSelClient(c)} style={{borderRadius:18,padding:"13px 14px",cursor:"pointer",marginBottom:8,background:cardBg,position:"relative",overflow:"hidden"}}>
-                  <div style={{position:"absolute",width:70,height:70,borderRadius:"50%",top:-15,right:-15,background:"rgba(255,255,255,0.1)"}}/>
-                  <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{width:42,height:42,borderRadius:13,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:14,background:avBg,color:avColor,flexShrink:0}}>{c.avatar}</div>
-                    <div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14,color:TP.text}}>{c.name}</div><div style={{fontSize:11,color:cardColor,opacity:0.9,marginTop:2}}>{c.city||"—"} · {c.src==="wa"?"WA":"Walk-in"}</div></div>
-                    <div style={{textAlign:"right",flexShrink:0}}><div style={{background:"rgba(255,255,255,0.4)",color:cardColor,fontSize:10,fontWeight:800,padding:"2px 8px",borderRadius:20,marginBottom:4}}>{c.tag==="VIP"?"VIP":c.tag}</div><div style={{display:"flex",gap:8}}><div style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:800,color:cardColor}}>{c.visits||0}</div><div style={{fontSize:9,color:cardColor,opacity:0.6}}>visits</div></div><div style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:800,color:cardColor}}>₹{((c.totalSpent||0)/1000).toFixed(1)}k</div><div style={{fontSize:9,color:cardColor,opacity:0.6}}>spent</div></div></div></div>
+                return(<div key={i} style={{background:"#fff",borderRadius:14,padding:"12px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"0.5px solid #e0d8ff"}}>
+                  <div style={{width:42,height:42,borderRadius:12,background:ac.bg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:ac.color,flexShrink:0}}>{av}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,fontSize:13,color:"#1a0a4a"}}>{b.name}</div>
+                    <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>{b.service} · {b.src==="wa"?"💬":"🚶"}</div>
+                  </div>
+                  <div style={{textAlign:"right",flexShrink:0}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#1a0a4a",marginBottom:3}}>{fmt12(slot)}</div>
+                    <div style={{background:st.bg,color:st.color,fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20}}>{st.label}</div>
                   </div>
                 </div>);
               })}
             </div>
+
+            {/* Quick Actions */}
+            <div style={{padding:"14px 16px 100px"}}>
+              <div style={{fontSize:15,fontWeight:800,color:"#1a0a4a",marginBottom:10}}>Quick Actions</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {[
+                  {icon:"📅",label:"New Booking",sub:"Add appointment",s:"calendar",dark:true},
+                  {icon:"👥",label:"Add Client",sub:"New customer",s:"clients",dark:false},
+                  {icon:"💬",label:"Bot Chats",sub:"WhatsApp history",s:"chats",dark:false},
+                  {icon:"💫",label:"Create Offer",sub:"New campaign",s:"engage",dark:false}
+                ].map(a=>(<div key={a.label} onClick={()=>setScreen(a.s)} style={{background:a.dark?"#2d1b69":"#fff",borderRadius:18,padding:"16px",cursor:"pointer",border:a.dark?"none":"0.5px solid #e0d8ff"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                    <div style={{width:40,height:40,background:a.dark?"rgba(255,255,255,0.15)":"#f4f2ff",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{a.icon}</div>
+                    <div style={{color:a.dark?"rgba(255,255,255,0.3)":"#e0d8ff",fontSize:16}}>›</div>
+                  </div>
+                  <div style={{fontWeight:700,fontSize:13,color:a.dark?"#fff":"#1a0a4a"}}>{a.label}</div>
+                  <div style={{fontSize:11,color:a.dark?"rgba(255,255,255,0.5)":"#9b8ec4",marginTop:2}}>{a.sub}</div>
+                </div>))}
+              </div>
+            </div>
+          </div>
+        )
+        }
+        {screen==="calendar"&&(
+          <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            {/* Calendar Header */}
+            <div style={{background:"#fff",borderBottom:"0.5px solid #e0d8ff",padding:"12px 16px",flexShrink:0}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                <div style={{fontSize:17,fontWeight:800,color:"#1a0a4a"}}>{MONTHS[selDate.getMonth()]} {selDate.getFullYear()}</div>
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  <button onClick={prevDay} style={{width:30,height:30,borderRadius:8,border:"0.5px solid #e0d8ff",background:"#fff",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#5b3fc4"}}>←</button>
+                  <button onClick={()=>{setSelDate(today);const ws=new Date(today);ws.setDate(ws.getDate()-ws.getDay()+1);setWeekStart(ws);}} style={{background:"#ede9fe",border:"0.5px solid #c4b8f0",borderRadius:8,padding:"5px 12px",fontSize:11,fontWeight:700,color:"#5b3fc4",cursor:"pointer",fontFamily:"inherit"}}>Today</button>
+                  <button onClick={nextDay} style={{width:30,height:30,borderRadius:8,border:"0.5px solid #e0d8ff",background:"#fff",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#5b3fc4"}}>→</button>
+                </div>
+              </div>
+              {/* Week strip */}
+              <div style={{display:"flex",gap:4}}>
+                {Array.from({length:7}).map((_,i)=>{
+                  const d=addDays(weekStart,i);const key=dateKey(d);
+                  const isSel=dateKey(d)===selKey;const isToday=dateKey(d)===dateKey(today);
+                  const cnt=Object.values(bookings[key]||{}).filter(b=>b.status!=="break").length;
+                  return(<div key={i} onClick={()=>setSelDate(d)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"8px 2px",borderRadius:10,cursor:"pointer",background:isSel?"#2d1b69":isToday?"#ede9fe":"#fff",border:`0.5px solid ${isSel?"#2d1b69":isToday?"#c4b8f0":"#e0d8ff"}`}}>
+                    <div style={{fontSize:9,fontWeight:700,color:isSel?"rgba(255,255,255,0.6)":isToday?"#5b3fc4":"#9b8ec4"}}>{DAYS_S[d.getDay()]}</div>
+                    <div style={{fontSize:15,fontWeight:800,color:isSel?"#fff":isToday?"#2d1b69":"#1a0a4a"}}>{d.getDate()}</div>
+                    <div style={{width:5,height:5,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.7)":"#5b3fc4"):"transparent"}}/>
+                  </div>);
+                })}
+              </div>
+            </div>
+
+            {/* Date bar */}
+            <div style={{padding:"8px 16px",background:"#f4f2ff",borderBottom:"0.5px solid #e0d8ff",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+              <div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>{DAYS_S[selDate.getDay()]}, {selDate.getDate()} {SHORT_M[selDate.getMonth()]}</div>
+              <div style={{fontSize:12,fontWeight:700,color:"#5b3fc4"}}>{Object.values(sDayData).filter(b=>b.status!=="break").length} Booked</div>
+            </div>
+
+            {/* Time slots */}
+            <div style={{flex:1,overflowY:"auto",padding:"10px 16px",WebkitOverflowScrolling:"touch"}} onTouchStart={e=>{touchStart.current=e.touches[0].clientX;}} onTouchEnd={e=>{if(touchStart.current===null)return;const diff=touchStart.current-e.changedTouches[0].clientX;if(Math.abs(diff)>50){diff>0?nextDay():prevDay();}touchStart.current=null;}}>
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {slots.map(key=>{
+                  const b=sDayData[key];const isHour=key.endsWith(":00");
+                  if(b?.status==="break")return(<div key={key} style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:"#ccc",textAlign:"right"}}>{fmt12(key)}</div><div style={{flex:1,background:"repeating-linear-gradient(45deg,#f8fafc,#f8fafc 5px,#f0f4f8 5px,#f0f4f8 10px)",border:"0.5px dashed #e0d8ff",borderRadius:10,padding:"9px 12px",color:"#ccc",fontSize:12,fontWeight:700}}>Break</div></div>);
+                  if(b){
+                    const st=STATUS_MAP[b.status]||STATUS_MAP.confirmed;
+                    const colorMap={confirmed:{bg:"#ede9fe",left:"#5b3fc4"},done:{bg:"#f0f4f8",left:"#888"},pending:{bg:"#fef9c3",left:"#f59e0b"}};
+                    const cm=colorMap[b.status]||colorMap.confirmed;
+                    return(<div key={key} style={{display:"flex",gap:10,alignItems:"flex-start"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:isHour?"#1a0a4a":"#ccc",textAlign:"right",paddingTop:12}}>{fmt12(key)}</div><div style={{flex:1,background:cm.bg,borderRadius:12,padding:"10px 12px",borderLeft:`3px solid ${cm.left}`}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                        <div><div style={{fontSize:12,fontWeight:700,color:"#1a0a4a"}}>{b.name}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>{b.service}</div></div>
+                        <div style={{textAlign:"right"}}><div style={{fontSize:11,fontWeight:700,color:cm.left}}>₹{b.price}</div><div style={{background:st.bg,color:st.color,fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20,marginTop:3}}>{st.label}</div></div>
+                      </div>
+                    </div></div>);
+                  }
+                  return(<div key={key} style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:isHour?"#1a0a4a":"#ccc",textAlign:"right"}}>{fmt12(key)}</div><button onClick={()=>{setCalForm({name:"",service:SERVICES_LIST[0],price:"",src:"wa"});setCalModal({slot:key});}} style={{flex:1,border:"0.5px dashed #e0d8ff",borderRadius:10,background:"#fff",padding:"9px 12px",color:"#ccc",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}>+ {fmt12(key)}</button></div>);
+                })}
+              </div>
+            </div>
+            {calModal&&(<div onClick={()=>setCalModal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 18px 32px",width:"100%"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 16px"}}/><div style={{fontWeight:800,fontSize:15,marginBottom:4,color:"#1a0a4a"}}>New Booking</div><div style={{fontSize:12,color:"#9b8ec4",marginBottom:14}}>{fmt12(calModal.slot)}</div>{[{label:"Client Name",el:<input value={calForm.name} onChange={e=>setCalForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Priya Sharma" style={obIs}/>},{label:"Service",el:<select value={calForm.service} onChange={e=>setCalForm(f=>({...f,service:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}>{SERVICES_LIST.map(s=><option key={s}>{s}</option>)}</select>},{label:"Price",el:<input type="number" value={calForm.price} onChange={e=>setCalForm(f=>({...f,price:e.target.value}))} placeholder="450" style={{...is,marginTop:5}}/>},{label:"Source",el:<select value={calForm.src} onChange={e=>setCalForm(f=>({...f,src:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}><option value="wa">WhatsApp</option><option value="walk">Walk-in</option></select>}].map(({label,el})=>(<div key={label} style={{marginBottom:10}}><div style={{fontSize:12,fontWeight:800,color:"#4a3580"}}>{label}</div>{el}</div>))}<div style={{display:"flex",gap:10,marginTop:14}}><button onClick={()=>setCalModal(null)} style={{flex:1,padding:11,border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Cancel</button><button onClick={saveCal} style={{flex:2,padding:11,border:"none",borderRadius:12,background:calForm.name.trim()?"#2d1b69":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
+          </div>
+        )
+        }
+        {screen==="clients"&&(
+          <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            {/* Header — same style as staff/engagement */}
+            <div style={{background:"#fff",padding:"14px 20px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <div style={{display:"flex",flexDirection:"column",gap:4,justifyContent:"center",cursor:"pointer"}} onClick={()=>setScreen("dashboard")}>
+                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:22}}/>
+                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:16}}/>
+                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:22}}/>
+                </div>
+                <div>
+                  <div style={{fontSize:17,fontWeight:800,color:"#1a0a4a"}}>Clients</div>
+                  <div style={{fontSize:11,color:"#9b8ec4"}}>Manage your customers</div>
+                </div>
+              </div>
+              <div onClick={()=>setShowAddClient(true)} style={{background:"#5b3fc4",color:"#fff",border:"none",borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add New</div>
+            </div>
+
+            {/* Stats Row */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",background:"#fff",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
+              {[{val:clients.length,label:"Total",color:"#1a0a4a"},{val:clients.filter(c=>c.tag==="VIP").length,label:"VIP",color:"#5b3fc4"},{val:clients.filter(c=>c.tag==="Regular").length,label:"Regular",color:"#f59e0b"},{val:clients.filter(c=>c.tag==="New").length,label:"New",color:"#22c55e"}].map((s,i)=>(<div key={s.label} style={{textAlign:"center",padding:"12px 8px",borderRight:i<3?"0.5px solid #f0eeff":"none"}}>
+                <div style={{fontSize:20,fontWeight:800,color:s.color}}>{s.val}</div>
+                <div style={{fontSize:10,color:"#9b8ec4",marginTop:2}}>{s.label}</div>
+              </div>))}
+            </div>
+
+            {/* Search */}
+            <div style={{padding:"10px 16px 8px",background:"#fff",borderBottom:"0.5px solid #f0eeff",flexShrink:0}}>
+              <div style={{background:"#f4f2ff",borderRadius:12,padding:"9px 14px",display:"flex",alignItems:"center",gap:8,border:"0.5px solid #e0d8ff"}}>
+                <span style={{fontSize:14,color:"#9b8ec4"}}>🔍</span>
+                <input value={cSearch} onChange={e=>setCSearch(e.target.value)} placeholder="Search by name or number..." style={{background:"transparent",border:"none",outline:"none",fontSize:13,color:"#1a0a4a",fontFamily:"inherit",flex:1}}/>
+              </div>
+            </div>
+
+            {/* Client List */}
+            <div style={{flex:1,overflowY:"auto",padding:"8px 16px 80px",WebkitOverflowScrolling:"touch"}}>
+              <div style={{fontSize:11,color:"#9b8ec4",textAlign:"center",padding:"4px 0 8px"}}>Showing all customers</div>
+              {filtC.length===0&&<div style={{textAlign:"center",padding:"32px 0",color:"#9b8ec4",fontSize:13}}>No clients found</div>}
+              {filtC.map((c,idx)=>{
+                const avColors=[{bg:"#ede9fe",color:"#5b3fc4"},{bg:"#fef9c3",color:"#a16207"},{bg:"#e8fdf0",color:"#16a34a"},{bg:"#fff0f6",color:"#db2777"},{bg:"#eff6ff",color:"#2563eb"},{bg:"#f0fdfa",color:"#0d9488"}];
+                const ac=avColors[idx%avColors.length];
+                return(<div key={c.id} onClick={()=>setSelClient(c)} style={{background:"#fff",borderRadius:16,padding:"14px",marginBottom:8,border:"0.5px solid #e0d8ff",cursor:"pointer"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:c.visits>0?10:0}}>
+                    <div style={{width:44,height:44,borderRadius:14,background:ac.bg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:ac.color,flexShrink:0}}>{c.avatar}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <div style={{fontWeight:800,fontSize:13,color:"#1a0a4a"}}>{c.name}</div>
+                        {c.tag==="VIP"&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20}}>⭐ VIP</div>}
+                      </div>
+                      <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,display:"flex",alignItems:"center",gap:4}}>
+                        <span>{c.src==="wa"?"💬":"🚶"}</span>
+                        <span>{c.phone}</span>
+                      </div>
+                    </div>
+                    <div style={{text:"right",flexShrink:0}}>
+                      <div style={{background:c.tag==="VIP"?"#fef9c3":c.tag==="New"?"#e8fdf0":"#ede9fe",color:c.tag==="VIP"?"#a16207":c.tag==="New"?"#16a34a":"#5b3fc4",fontSize:10,fontWeight:700,padding:"2px 9px",borderRadius:20,display:"inline-block",marginBottom:4}}>{c.tag}</div>
+                      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+                        <div style={{textAlign:"center"}}><div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>{c.visits||0}</div><div style={{fontSize:9,color:"#9b8ec4"}}>visits</div></div>
+                        <div style={{textAlign:"center"}}><div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>₹{((c.totalSpent||0)/1000).toFixed(1)}k</div><div style={{fontSize:9,color:"#9b8ec4"}}>spent</div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>);
+              })}
+            </div>
+
             {selClient&&(<div onClick={()=>setSelClient(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
               <div style={{background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",padding:"20px 18px",borderRadius:"20px 20px 0 0"}}><div style={{width:36,height:4,background:"rgba(255,255,255,0.3)",borderRadius:2,margin:"0 auto 16px"}}/><div style={{display:"flex",gap:12,alignItems:"center"}}><div style={{width:50,height:50,borderRadius:16,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:18,color:"#fff"}}>{selClient.avatar}</div><div><div style={{fontWeight:900,fontSize:17,color:"#fff"}}>{selClient.name}</div><div style={{fontSize:12,color:"rgba(255,255,255,0.6)"}}>{selClient.phone} · {selClient.city||"—"}</div></div></div></div>
-              <div style={{padding:"16px 18px"}}><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>{[{icon:"🔁",val:selClient.visits||0,label:"Visits"},{icon:"💸",val:`₹${(selClient.totalSpent||0).toLocaleString()}`,label:"Total"},{icon:"📅",val:selClient.lastVisit||"—",label:"Last Visit"}].map(s=>(<div key={s.label} style={{background:TP.purpleLight,borderRadius:11,padding:"10px",textAlign:"center"}}><div style={{fontSize:16,marginBottom:3}}>{s.icon}</div><div style={{fontWeight:900,fontSize:13,color:TP.text}}>{s.val}</div><div style={{fontSize:10,color:TP.ts,fontWeight:700}}>{s.label}</div></div>))}</div>
-              <div style={{display:"flex",gap:8,marginBottom:10}}><button onClick={()=>{setScreen("calendar");setSelClient(null);}} style={{flex:1,padding:"11px",background:TP.purple,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Book Now</button><button onClick={()=>{if(!selClient?.phone)return;setWelcomeModal("confirm");}} style={{flex:1,padding:"11px",background:welcomeSending?TP.bg:TP.purpleLight,border:`2px solid #c4b8f0`,borderRadius:12,color:TP.purple,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{welcomeSending?"Sending...":"Welcome Msg"}</button></div>
-              <button onClick={()=>{setEditClient({...selClient});setShowEditClient(true);}} style={{width:"100%",padding:"11px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:12,color:TP.tm,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8}}>Edit Profile</button>
-              <button onClick={()=>{setScreen("history");setSelClient(null);}} style={{width:"100%",padding:"12px",background:TP.purpleLight,border:`2px solid #c4b8f0`,borderRadius:12,color:TP.purple,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",marginBottom:8}}>Visit History →</button>
-              <button onClick={async()=>{if(!window.confirm(`${selClient.name} ko delete karna hai?`))return;await supabase.from("customers").delete().eq("id",selClient.id);setClients(prev=>prev.filter(c=>c.id!==selClient.id));setSelClient(null);}} style={{width:"100%",padding:"12px",background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,color:TP.rt,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Delete Customer</button></div>
+              <div style={{padding:"16px 18px"}}><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:14}}>{[{icon:"🔁",val:selClient.visits||0,label:"Visits"},{icon:"💸",val:`₹${(selClient.totalSpent||0).toLocaleString()}`,label:"Total"},{icon:"📅",val:selClient.lastVisit||"—",label:"Last Visit"}].map(s=>(<div key={s.label} style={{background:"#f4f2ff",borderRadius:11,padding:"10px",textAlign:"center"}}><div style={{fontSize:16,marginBottom:3}}>{s.icon}</div><div style={{fontWeight:900,fontSize:13,color:"#1a0a4a"}}>{s.val}</div><div style={{fontSize:10,color:"#9b8ec4",fontWeight:700}}>{s.label}</div></div>))}</div>
+              <div style={{display:"flex",gap:8,marginBottom:10}}><button onClick={()=>{setScreen("calendar");setSelClient(null);}} style={{flex:1,padding:"11px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📅 Book Now</button><button onClick={()=>{if(!selClient?.phone)return;setWelcomeModal("confirm");}} style={{flex:1,padding:"11px",background:welcomeSending?"#f4f2ff":"#ede9fe",border:"0.5px solid #c4b8f0",borderRadius:12,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{welcomeSending?"Sending...":"💬 WhatsApp"}</button></div>
+              <button onClick={()=>{setEditClient({...selClient});setShowEditClient(true);}} style={{width:"100%",padding:"11px",background:"#fff",border:"0.5px solid #e0d8ff",borderRadius:12,color:"#4a3580",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8}}>✏️ Edit Profile</button>
+              <button onClick={()=>{setScreen("history");setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#ede9fe",border:"0.5px solid #c4b8f0",borderRadius:12,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",marginBottom:8}}>📋 Visit History →</button>
+              <button onClick={async()=>{if(!window.confirm(`${selClient.name} ko delete karna hai?`))return;await supabase.from("customers").delete().eq("id",selClient.id);setClients(prev=>prev.filter(c=>c.id!==selClient.id));setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#fff0f0",border:"0.5px solid #fca5a5",borderRadius:12,color:"#dc2626",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🗑️ Delete Customer</button></div>
             </div></div>)}
-            {welcomeModal&&selClient&&(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}><div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:340}}>{welcomeModal==="confirm"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{width:64,height:64,borderRadius:20,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 12px"}}>💬</div><div style={{fontWeight:900,fontSize:17,color:TP.text,marginBottom:6}}>Welcome Message?</div><div style={{fontSize:13,color:"#666"}}>{selClient.name} ko WhatsApp pe message jayega</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setWelcomeModal(null)} style={{flex:1,padding:"12px",border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}>Cancel</button><button onClick={sendWelcomeMessage} style={{flex:2,padding:"12px",background:TP.purple,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Bhejo</button></div></>)}{welcomeModal==="success"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{fontSize:50,marginBottom:8}}>✅</div><div style={{fontWeight:900,fontSize:17,color:TP.gd,marginBottom:8}}>Message Bhej Diya!</div><div style={{fontSize:13,color:"#555"}}>{welcomeModalMsg}</div></div><button onClick={()=>setWelcomeModal(null)} style={{width:"100%",padding:"13px",background:TP.purple,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Done</button></>)}{welcomeModal==="error"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{fontSize:50,marginBottom:8}}>❌</div><div style={{fontWeight:900,fontSize:17,color:TP.rt,marginBottom:8}}>Message Nahi Gaya</div><div style={{fontSize:13,color:"#555"}}>{welcomeModalMsg}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setWelcomeModal(null)} style={{flex:1,padding:"12px",border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}>Close</button><button onClick={()=>setWelcomeModal("confirm")} style={{flex:1,padding:"12px",background:"#ef4444",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Retry</button></div></>)}</div></div>)}
-            {showEditClient&&editClient&&(<div onClick={()=>setShowEditClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,marginBottom:16,color:TP.text}}>Edit Customer</div>{[{label:"Full Name",key:"name",ph:"Priya Sharma",type:"text"},{label:"Phone",key:"phone",ph:"9876543210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"},{label:"Email",key:"email",ph:"customer@gmail.com",type:"email"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:4}}>{f.label}</div><input type={f.type} value={editClient[f.key]||""} onChange={e=>setEditClient(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={is} onFocus={e=>e.target.style.borderColor=TP.purple} onBlur={e=>e.target.style.borderColor=TP.border}/></div>))}<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"Male"},{id:"female",label:"Female"}].map(g=>(<button key={g.id} onClick={()=>setEditClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.gender===g.id?TP.purple:TP.border}`,background:editClient.gender===g.id?TP.purpleLight:"#fff",color:editClient.gender===g.id?TP.purple:"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setEditClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.tag===t?TP.purple:TP.border}`,background:editClient.tag===t?TP.purpleLight:"#fff",color:editClient.tag===t?TP.purple:"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowEditClient(false)} style={{flex:1,padding:"12px",border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button><button onClick={async()=>{if(!editClient.name.trim())return;await supabase.from("customers").update({name:editClient.name.trim(),phone:editClient.phone||"",city:editClient.city||"",birthday:editClient.dob||null,email:editClient.email||"",tag:editClient.tag||"Regular",gender:editClient.gender||"male"}).eq("id",editClient.id);setClients(prev=>prev.map(c=>c.id===editClient.id?{...c,...editClient,name:editClient.name.trim()}:c));setSelClient(prev=>prev?{...prev,...editClient,name:editClient.name.trim()}:null);setShowEditClient(false);}} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:editClient.name.trim()?TP.purple:"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
-            {showAddClient&&(<div onClick={()=>setShowAddClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,marginBottom:16,color:TP.text}}>Add New Customer</div>{[{label:"Full Name *",key:"name",ph:"Priya Sharma",type:"text"},{label:"Phone *",key:"phone",ph:"9876543210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:4}}>{f.label}</div><input type={f.type} value={newClient[f.key]} onChange={e=>setNewClient(p=>({...p,[f.key]:f.key==="phone"?e.target.value.replace(/\D/g,"").slice(0,10):e.target.value}))} placeholder={f.ph} maxLength={f.key==="phone"?10:undefined} inputMode={f.key==="phone"?"numeric":undefined} style={is} onFocus={e=>e.target.style.borderColor=TP.purple} onBlur={e=>e.target.style.borderColor=TP.border}/></div>))}<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"Male"},{id:"female",label:"Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.gender===g.id?TP.purple:TP.border}`,background:newClient.gender===g.id?TP.purpleLight:"#fff",color:newClient.gender===g.id?TP.purple:"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setNewClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.tag===t?TP.purple:TP.border}`,background:newClient.tag===t?TP.purpleLight:"#fff",color:newClient.tag===t?TP.purple:"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowAddClient(false)} style={{flex:1,padding:"12px",border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button><button onClick={async()=>{if(!newClient.name.trim()||!newClient.phone.trim())return;await supabase.from("customers").insert({salon_id:user.id,name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"",tag:newClient.tag,source:"walk",birthday:newClient.dob||null,gender:newClient.gender||"male"});const ini=newClient.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();setClients(prev=>[{id:Date.now(),name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"—",src:"walk",avatar:ini,joined:new Date().toLocaleDateString("en-IN",{month:"short",year:"numeric"}),visits:0,totalSpent:0,lastVisit:"—",tag:newClient.tag,history:[]},...prev]);setNewClient({name:"",phone:"",city:"",dob:"",tag:"Regular",gender:"male"});setShowAddClient(false);}} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:newClient.name.trim()&&newClient.phone.trim()?TP.purple:"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
+            {welcomeModal&&selClient&&(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}><div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:340}}>{welcomeModal==="confirm"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{width:64,height:64,borderRadius:20,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 12px"}}>💬</div><div style={{fontWeight:900,fontSize:17,color:"#1a0a4a",marginBottom:6}}>Welcome Message?</div><div style={{fontSize:13,color:"#666"}}>{selClient.name} ko WhatsApp pe message jayega</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setWelcomeModal(null)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}>Cancel</button><button onClick={sendWelcomeMessage} style={{flex:2,padding:"12px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Bhejo</button></div></>)}{welcomeModal==="success"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{fontSize:50,marginBottom:8}}>✅</div><div style={{fontWeight:900,fontSize:17,color:"#16a34a",marginBottom:8}}>Message Bhej Diya!</div><div style={{fontSize:13,color:"#555"}}>{welcomeModalMsg}</div></div><button onClick={()=>setWelcomeModal(null)} style={{width:"100%",padding:"13px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Done</button></>)}{welcomeModal==="error"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{fontSize:50,marginBottom:8}}>❌</div><div style={{fontWeight:900,fontSize:17,color:"#dc2626",marginBottom:8}}>Message Nahi Gaya</div><div style={{fontSize:13,color:"#555"}}>{welcomeModalMsg}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setWelcomeModal(null)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}>Close</button><button onClick={()=>setWelcomeModal("confirm")} style={{flex:1,padding:"12px",background:"#ef4444",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Retry</button></div></>)}</div></div>)}
+            {showEditClient&&editClient&&(<div onClick={()=>setShowEditClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,marginBottom:16,color:"#1a0a4a"}}>Edit Customer</div>{[{label:"Full Name",key:"name",ph:"Priya Sharma",type:"text"},{label:"Phone",key:"phone",ph:"9876543210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"},{label:"Email",key:"email",ph:"customer@gmail.com",type:"email"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:4}}>{f.label}</div><input type={f.type} value={editClient[f.key]||""} onChange={e=>setEditClient(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={is} onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e0d8ff"}/></div>))}<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"Male"},{id:"female",label:"Female"}].map(g=>(<button key={g.id} onClick={()=>setEditClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.gender===g.id?"#5b3fc4":"#e0d8ff"}`,background:editClient.gender===g.id?"#ede9fe":"#fff",color:editClient.gender===g.id?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setEditClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.tag===t?"#5b3fc4":"#e0d8ff"}`,background:editClient.tag===t?"#ede9fe":"#fff",color:editClient.tag===t?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowEditClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Cancel</button><button onClick={async()=>{if(!editClient.name.trim())return;await supabase.from("customers").update({name:editClient.name.trim(),phone:editClient.phone||"",city:editClient.city||"",birthday:editClient.dob||null,email:editClient.email||"",tag:editClient.tag||"Regular",gender:editClient.gender||"male"}).eq("id",editClient.id);setClients(prev=>prev.map(c=>c.id===editClient.id?{...c,...editClient,name:editClient.name.trim()}:c));setSelClient(prev=>prev?{...prev,...editClient,name:editClient.name.trim()}:null);setShowEditClient(false);}} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:editClient.name.trim()?"#2d1b69":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
+            {showAddClient&&(<div onClick={()=>setShowAddClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,marginBottom:16,color:"#1a0a4a"}}>Add New Customer</div>{[{label:"Full Name *",key:"name",ph:"Priya Sharma",type:"text"},{label:"Phone *",key:"phone",ph:"9876543210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:4}}>{f.label}</div><input type={f.type} value={newClient[f.key]} onChange={e=>setNewClient(p=>({...p,[f.key]:f.key==="phone"?e.target.value.replace(/\D/g,"").slice(0,10):e.target.value}))} placeholder={f.ph} maxLength={f.key==="phone"?10:undefined} inputMode={f.key==="phone"?"numeric":undefined} style={is} onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e0d8ff"}/></div>))}<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"Male"},{id:"female",label:"Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.gender===g.id?"#5b3fc4":"#e0d8ff"}`,background:newClient.gender===g.id?"#ede9fe":"#fff",color:newClient.gender===g.id?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setNewClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.tag===t?"#5b3fc4":"#e0d8ff"}`,background:newClient.tag===t?"#ede9fe":"#fff",color:newClient.tag===t?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowAddClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Cancel</button><button onClick={async()=>{if(!newClient.name.trim()||!newClient.phone.trim())return;await supabase.from("customers").insert({salon_id:user.id,name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"",tag:newClient.tag,source:"walk",birthday:newClient.dob||null,gender:newClient.gender||"male"});const ini=newClient.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();setClients(prev=>[{id:Date.now(),name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"—",src:"walk",avatar:ini,joined:new Date().toLocaleDateString("en-IN",{month:"short",year:"numeric"}),visits:0,totalSpent:0,lastVisit:"—",tag:newClient.tag,history:[]},...prev]);setNewClient({name:"",phone:"",city:"",dob:"",tag:"Regular",gender:"male"});setShowAddClient(false);}} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:newClient.name.trim()&&newClient.phone.trim()?"#2d1b69":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
           </div>
-        )}
+        )
+        }
         {screen==="staff"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><div style={{flex:1,overflowY:"auto"}}><StaffManagement role="owner" currentUser={user} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/></div></div>)}
         {screen==="history"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><CustomerHistory key={screen} currentUser={{...user,role:"owner"}} onBookAppointment={()=>setScreen("calendar")}/></div>)}
         {screen==="chats"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><ChatHistory salonId={user.id}/></div>)}
