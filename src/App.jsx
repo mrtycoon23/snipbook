@@ -375,6 +375,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   },[user.id,screen]);
   const filtC=clients.filter(c=>{const q=cSearch.toLowerCase();return !q||c.name.toLowerCase().includes(q)||c.phone.includes(q);});
   async function sendWelcomeMessage(){if(!selClient?.phone)return;setWelcomeSending(true);setWelcomeModal(null);try{const res=await fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:selClient.phone,customerName:selClient.name,salonId:user.id,salonName:user.salon})});if(res.ok){setWelcomeModalMsg(`${user.salon} ka bot ab ${selClient.name} ke liye ready hai!`);setWelcomeModal("success");}else{setWelcomeModalMsg("Phone number check karo.");setWelcomeModal("error");}}catch(e){setWelcomeModalMsg("Network error: "+e.message);setWelcomeModal("error");}setWelcomeSending(false);}
+  const [showDrawer,setShowDrawer]=useState(false);
   const weekDays=Array.from({length:6},(_,i)=>addDays(weekStart,i));
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
@@ -653,15 +654,71 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         {screen==="engage"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><EngagementCenter currentUser={user}/></div>)}
         {screen==="settings"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><Settings user={user} onLogout={onLogout} onSalonUpdate={(newName,newLogoUrl)=>setUser(prev=>({...prev,salon:newName,logo_url:newLogoUrl||prev.logo_url}))} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/></div>)}
       </div>
-      <div style={{background:"#fff",borderTop:`1px solid ${TP.border}`,paddingBottom:"env(safe-area-inset-bottom,8px)",display:"flex",flexShrink:0,boxShadow:"0 -4px 20px rgba(45,27,105,0.07)"}}>
-        {NAV.map(item=>{const active=screen===item.id;return(
-          <div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative"}}>
-            {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:24,height:3,borderRadius:"0 0 4px 4px",background:TP.purple}}/>}
-            <div style={{width:32,height:32,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",background:active?TP.purpleLight:"transparent",transition:"all 0.15s"}}><span style={{fontSize:17}}>{item.icon}</span></div>
-            <span style={{fontSize:9,fontWeight:active?800:600,color:active?TP.purple:TP.ts}}>{item.label}</span>
+      {/* Bottom Nav — 4 items + center + button */}
+      <div style={{background:"#fff",borderTop:"0.5px solid #e0d8ff",paddingBottom:"env(safe-area-inset-bottom,0px)",display:"flex",alignItems:"center",flexShrink:0,boxShadow:"0 -4px 20px rgba(45,27,105,0.07)",position:"relative",height:62}}>
+        {[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",label:"Calendar"}].map(item=>{const active=screen===item.id;return(
+          <div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>
+            {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}
+            <div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div>
+            <span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span>
+          </div>
+        );})}
+        {/* Center + button */}
+        <div style={{flex:1,display:"flex",justifyContent:"center",alignItems:"center"}}>
+          <div onClick={()=>setShowAddClient(true)} style={{width:50,height:50,borderRadius:"50%",background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,color:"#fff",boxShadow:"0 4px 16px rgba(45,27,105,0.4)",cursor:"pointer",marginBottom:8}}>+</div>
+        </div>
+        {[{id:"clients",icon:"👥",label:"Clients"},{id:"more",icon:"⋯",label:"More"}].map(item=>{const active=screen===item.id||item.id==="more"&&["staff","history","engage","settings","chats"].includes(screen);return(
+          <div key={item.id} onClick={()=>item.id==="more"?setShowDrawer(true):setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>
+            {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}
+            <div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:item.id==="more"?20:16}}>{item.icon}</span></div>
+            <span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span>
           </div>
         );})}
       </div>
+
+      {/* Slide-out Drawer */}
+      {showDrawer&&(<>
+        <div onClick={()=>setShowDrawer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:700}}/>
+        <div style={{position:"fixed",top:0,left:0,bottom:0,width:280,background:"#fff",zIndex:800,display:"flex",flexDirection:"column",boxShadow:"4px 0 24px rgba(0,0,0,0.15)"}}>
+          {/* Drawer header */}
+          <div style={{background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",padding:"48px 20px 20px"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
+              <div style={{width:44,height:44,borderRadius:13,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:16,color:"#fff"}}>{user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div>
+              <div>
+                <div style={{fontWeight:800,fontSize:15,color:"#fff"}}>{user?.name}</div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.6)"}}>{user?.salon}</div>
+              </div>
+            </div>
+          </div>
+          {/* Drawer items */}
+          <div style={{flex:1,overflowY:"auto",padding:"8px 0"}}>
+            {[
+              {id:"dashboard",icon:"🏠",label:"Home",sub:"Overview"},
+              {id:"calendar",icon:"📅",label:"Calendar",sub:"Bookings"},
+              {id:"clients",icon:"👥",label:"Clients",sub:"Customers"},
+              {id:"staff",icon:"👨‍💼",label:"Staff",sub:"Team management"},
+              {id:"history",icon:"📋",label:"Customer History",sub:"Visit records"},
+              {id:"engage",icon:"💫",label:"Engagement",sub:"Campaigns"},
+              {id:"chats",icon:"💬",label:"Bot Chats",sub:"WhatsApp history"},
+              {id:"settings",icon:"⚙️",label:"Settings",sub:"Salon settings"},
+            ].map(item=>{
+              const active=screen===item.id;
+              return(<div key={item.id} onClick={()=>{setScreen(item.id);setShowDrawer(false);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 20px",cursor:"pointer",background:active?"#f4f2ff":"transparent",borderLeft:active?"3px solid #2d1b69":"3px solid transparent"}}>
+                <div style={{width:38,height:38,borderRadius:11,background:active?"#ede9fe":"#f8f8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{item.icon}</div>
+                <div>
+                  <div style={{fontWeight:active?800:600,fontSize:14,color:active?"#2d1b69":"#1a0a4a"}}>{item.label}</div>
+                  <div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{item.sub}</div>
+                </div>
+                {active&&<div style={{marginLeft:"auto",width:6,height:6,borderRadius:"50%",background:"#2d1b69"}}/>}
+              </div>);
+            })}
+          </div>
+          {/* Drawer footer */}
+          <div style={{padding:"16px 20px",borderTop:"0.5px solid #f0eeff"}}>
+            <div style={{fontSize:11,color:"#9b8ec4",textAlign:"center"}}>SnipBook · {user?.salon}</div>
+          </div>
+        </div>
+      </>)}
       {showNotifs&&(<div onClick={()=>setShowNotifs(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-start",justifyContent:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",width:"90%",maxWidth:360,height:"100vh",overflowY:"auto"}}><div style={{padding:"16px",borderBottom:`2px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:TP.purple,position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:16,color:"#fff"}}>🔔 Notifications</div><button onClick={()=>setShowNotifs(false)} style={{background:"rgba(255,255,255,0.15)",border:"none",fontSize:18,cursor:"pointer",color:"#fff",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>{notifications.length===0?(<div style={{padding:32,textAlign:"center",color:TP.ts}}>No notifications</div>):notifications.map((n,i)=>(<div key={i} onClick={()=>{setScreen("calendar");setSelDate(new Date(n.date));setShowNotifs(false);}} style={{padding:"14px 16px",borderBottom:`2px solid ${TP.bg}`,cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:12,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>📅</div><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:TP.text}}>{n.customer_name||"Customer"}</div><div style={{fontSize:11,color:TP.ts,marginTop:2}}>{n.service} · ₹{n.amount||0}</div><div style={{fontSize:11,color:TP.purple,marginTop:2,fontWeight:700}}>{n.date} at {n.time_slot}</div></div></div></div>))}</div></div>)}
     </div>
   );
