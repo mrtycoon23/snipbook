@@ -146,8 +146,8 @@ const StatCard = ({ icon, value, label, change, changePositive = true }) => (
   <div
     style={{
       background: C.white,
-      borderRadius: 16,
-      padding: "16px 14px",
+      borderRadius: 12,
+      padding: "10px 8px",
       flex: 1,
       minWidth: 0,
       border: `1px solid ${C.border}`,
@@ -155,25 +155,25 @@ const StatCard = ({ icon, value, label, change, changePositive = true }) => (
   >
     <div
       style={{
-        width: 40,
-        height: 40,
+        width: 28,
+        height: 28,
         borderRadius: "50%",
         background: C.purpleLight,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: 10,
+        marginBottom: 6,
         color: C.purpleMid,
-        fontSize: 18,
+        fontSize: 13,
       }}
     >
       {icon}
     </div>
-    <div style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+    <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 1 }}>
       {value}
     </div>
-    <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 6 }}>{label}</div>
-    <div style={{ fontSize: 11, color: changePositive ? C.green : C.red, fontWeight: 500 }}>
+    <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 4, lineHeight: 1.2 }}>{label}</div>
+    <div style={{ fontSize: 9, color: changePositive ? C.green : C.red, fontWeight: 500 }}>
       ↑ {change}
     </div>
   </div>
@@ -287,27 +287,27 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
   return (
     <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 80 }}>
       {/* Header */}
-      <div style={{ padding: "20px 20px 0", background: C.bg }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ padding: "14px 16px 0", background: C.bg }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: C.text, margin: 0 }}>Staff Management</h1>
-            <p style={{ fontSize: 13, color: C.textMuted, margin: "4px 0 0" }}>Manage your team performance</p>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: 0 }}>Staff Management</h1>
+            <p style={{ fontSize: 12, color: C.textMuted, margin: "2px 0 0" }}>Manage your team performance</p>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <button
               onClick={onAddStaff}
               style={{
                 background: C.purpleMid,
                 color: C.white,
                 border: "none",
-                borderRadius: 12,
-                padding: "10px 18px",
-                fontSize: 14,
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 13,
                 fontWeight: 600,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
+                gap: 4,
               }}
             >
               + Add Staff
@@ -318,14 +318,14 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
                 background: C.white,
                 color: C.purpleMid,
                 border: `1px solid ${C.purpleBorder}`,
-                borderRadius: 12,
-                padding: "10px 18px",
-                fontSize: 14,
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 13,
                 fontWeight: 500,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
+                gap: 4,
               }}
             >
               📈 View Analytics
@@ -334,20 +334,20 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
         </div>
 
         {/* Period Tabs */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
           {periods.map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
               style={{
                 flex: 1,
-                padding: "10px 0",
-                borderRadius: 12,
+                padding: "8px 0",
+                borderRadius: 10,
                 border: "none",
                 background: period === p ? C.purpleMid : C.white,
                 color: period === p ? C.white : C.textMuted,
                 fontWeight: period === p ? 600 : 400,
-                fontSize: 13,
+                fontSize: 12,
                 cursor: "pointer",
               }}
             >
@@ -356,8 +356,8 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
           ))}
         </div>
 
-        {/* Stat Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+        {/* Stat Cards — 4 in a row like reference */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
           <StatCard icon="👥" value={staff.length} label="Active Staff" change="2 vs yesterday" />
           <StatCard icon="₹" value={`₹${fmt(totalRevenue)}`} label="Revenue Today" change="18% vs yesterday" />
           <StatCard icon="✂️" value={totalServices} label="Total Services" change="12% vs yesterday" />
@@ -365,7 +365,7 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
         </div>
 
         {/* Search + Filter */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
           <div
             style={{
               flex: 1,
@@ -373,26 +373,26 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
               alignItems: "center",
               background: C.white,
               border: `1px solid ${C.border}`,
-              borderRadius: 12,
-              padding: "10px 14px",
-              gap: 8,
+              borderRadius: 10,
+              padding: "8px 12px",
+              gap: 6,
             }}
           >
-            <span style={{ color: C.textMuted, fontSize: 16 }}>🔍</span>
+            <span style={{ color: C.textMuted, fontSize: 14 }}>🔍</span>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search staff by name, role..."
-              style={{ border: "none", outline: "none", flex: 1, fontSize: 13, color: C.text, background: "transparent" }}
+              style={{ border: "none", outline: "none", flex: 1, fontSize: 12, color: C.text, background: "transparent" }}
             />
           </div>
           <button
             style={{
               background: C.white,
               border: `1px solid ${C.border}`,
-              borderRadius: 12,
-              padding: "0 14px",
-              fontSize: 13,
+              borderRadius: 10,
+              padding: "0 10px",
+              fontSize: 12,
               color: C.textMuted,
               cursor: "pointer",
             }}
@@ -403,9 +403,9 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
             style={{
               background: C.white,
               border: `1px solid ${C.border}`,
-              borderRadius: 12,
-              padding: "0 14px",
-              fontSize: 13,
+              borderRadius: 10,
+              padding: "0 10px",
+              fontSize: 12,
               color: C.textMuted,
               cursor: "pointer",
             }}
@@ -415,18 +415,18 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
         </div>
 
         {/* Filter Pills */}
-        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 14 }}>
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 10 }}>
           {filterOptions.map((o) => (
             <button
               key={o.value}
               onClick={() => setFilter(o.value)}
               style={{
-                padding: "7px 14px",
+                padding: "5px 12px",
                 borderRadius: 20,
                 border: filter === o.value ? "none" : `1px solid ${C.border}`,
                 background: filter === o.value ? C.purpleMid : C.white,
                 color: filter === o.value ? C.white : C.textMuted,
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: filter === o.value ? 600 : 400,
                 cursor: "pointer",
                 whiteSpace: "nowrap",
@@ -443,50 +443,50 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
       </div>
 
       {/* Staff List */}
-      <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 10 }}>
         {filtered.map((s) => (
           <div
             key={s.id}
             onClick={() => onSelectStaff(s)}
             style={{
               background: C.white,
-              borderRadius: 16,
-              padding: "16px",
+              borderRadius: 14,
+              padding: "12px 14px",
               border: `1px solid ${C.border}`,
               display: "flex",
               alignItems: "center",
-              gap: 12,
+              gap: 10,
               cursor: "pointer",
             }}
           >
-            <Avatar name={s.name} photo={s.photo} size={52} showOnline status={s.status} />
+            <Avatar name={s.name} photo={s.photo} size={44} showOnline status={s.status} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                <span style={{ fontWeight: 600, fontSize: 15, color: C.text }}>{s.name}</span>
-                {s.is_top && <span style={{ fontSize: 14 }}>⭐</span>}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 1 }}>
+                <span style={{ fontWeight: 600, fontSize: 14, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
+                {s.is_top && <span style={{ fontSize: 12 }}>⭐</span>}
               </div>
-              <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 4 }}>{s.role || "Staff"}</div>
+              <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 3 }}>{s.role || "Staff"}</div>
               <StatusLabel status={s.status} />
             </div>
             <div
               style={{
                 background: C.purpleLight,
-                borderRadius: 10,
-                padding: "10px 14px",
+                borderRadius: 8,
+                padding: "6px 10px",
                 textAlign: "center",
-                minWidth: 90,
+                flexShrink: 0,
               }}
             >
-              <div style={{ fontWeight: 700, fontSize: 15, color: C.purpleMid }}>₹{fmt(s.revenue_today)}</div>
-              <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>Revenue Today</div>
+              <div style={{ fontWeight: 700, fontSize: 13, color: C.purpleMid, whiteSpace: "nowrap" }}>₹{fmt(s.revenue_today)}</div>
+              <div style={{ fontSize: 9, color: C.textMuted, marginTop: 1 }}>Revenue Today</div>
             </div>
-            <div style={{ textAlign: "right", minWidth: 50 }}>
-              <div style={{ fontWeight: 600, fontSize: 15, color: C.text }}>{s.services_today || 0}</div>
-              <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 4 }}>Services</div>
-              <div style={{ fontWeight: 600, fontSize: 13, color: C.green }}>{s.attendance_pct || 95}%</div>
-              <div style={{ fontSize: 10, color: C.textMuted }}>Attendance</div>
+            <div style={{ textAlign: "right", flexShrink: 0 }}>
+              <div style={{ fontWeight: 600, fontSize: 14, color: C.text }}>{s.services_today || 0}</div>
+              <div style={{ fontSize: 9, color: C.textMuted, marginBottom: 3 }}>Services</div>
+              <div style={{ fontWeight: 600, fontSize: 12, color: C.green }}>{s.attendance_pct || 0}%</div>
+              <div style={{ fontSize: 9, color: C.textMuted }}>Attendance</div>
             </div>
-            <span style={{ color: C.textMuted, fontSize: 18 }}>›</span>
+            <span style={{ color: C.textMuted, fontSize: 16, flexShrink: 0 }}>›</span>
           </div>
         ))}
       </div>
@@ -1313,14 +1313,13 @@ export default function StaffManagement({ salonId, onBack }) {
       .eq("salon_id", SALON_ID)
       .order("name");
     if (data) {
-      // Enrich with mock today stats (replace with real data when available)
       setStaff(
         data.map((s) => ({
           ...s,
           status: s.status || "available",
-          revenue_today: s.revenue_today || Math.floor(Math.random() * 12000) + 2000,
-          services_today: s.services_today || Math.floor(Math.random() * 8) + 1,
-          attendance_pct: s.attendance_pct || Math.floor(Math.random() * 10) + 88,
+          revenue_today: s.revenue_today || 0,
+          services_today: s.services_today || 0,
+          attendance_pct: s.attendance_pct || 0,
           is_top: s.is_top || false,
         }))
       );
