@@ -379,7 +379,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const weekDays=Array.from({length:6},(_,i)=>addDays(weekStart,i));
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
-      {["history","chats","engage","settings","staff"].includes(screen)&&<SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>}
+      {["history","chats","engage","settings"].includes(screen)&&<SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
         {screen==="dashboard"&&(
           <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff"}}>
@@ -584,7 +584,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                 </div>
               </div>
               <div onClick={()=>setShowAddClient(true)} style={{background:"#5b3fc4",color:"#fff",border:"none",borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add New</div>
-            </div>
+            </div> 
 
             {/* Stats Row */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",background:"#fff",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
