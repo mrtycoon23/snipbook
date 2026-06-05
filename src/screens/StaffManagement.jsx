@@ -256,38 +256,26 @@ const BackHeader = ({ title, onBack, right }) => (
 // ══════════════════════════════════════════════════════════════════════════════
 // SCREEN 1 — Staff Management Main List
 // ══════════════════════════════════════════════════════════════════════════════
-const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) => {
+const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff, onBack }) => {
   const [period, setPeriod] = useState("Today");
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
-
   const periods = ["Today", "Week", "Month", "Custom"];
-  const filterOptions = [
-    { value: "all", label: `All Staff (${staff.length})` },
-    { value: "available", label: `Available (${staff.filter((s) => s.status === "available").length})` },
-    { value: "away", label: `On Leave (${staff.filter((s) => s.status === "away" || s.status === "on_leave").length})` },
-    { value: "offline", label: `Absent (${staff.filter((s) => s.status === "offline").length})` },
-  ];
-
-  const filtered = staff.filter((s) => {
-    const matchFilter =
-      filter === "all" ||
-      s.status === filter ||
-      (filter === "away" && s.status === "on_leave");
-    const matchSearch = s.name?.toLowerCase().includes(search.toLowerCase());
-    return matchFilter && matchSearch;
-  });
 
   const totalRevenue = staff.reduce((sum, s) => sum + (s.revenue_today || 0), 0);
   const totalServices = staff.reduce((sum, s) => sum + (s.services_today || 0), 0);
-  const avgAttendance = staff.length
-    ? Math.round(staff.reduce((s, m) => s + (m.attendance_pct || 95), 0) / staff.length)
-    : 0;
 
   return (
     <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 80 }}>
-      {/* Header */}
       <div style={{ padding: "14px 16px 0", background: C.bg }}>
+
+        {/* Back button row */}
+        <button
+          onClick={onBack}
+          style={{ background: "none", border: "none", cursor: "pointer", color: C.purpleMid, fontSize: 14, fontWeight: 500, padding: "0 0 10px 0", display: "flex", alignItems: "center", gap: 4 }}
+        >
+          ← Back
+        </button>
+
+        {/* Title + Action buttons */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 12 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: C.text, margin: 0 }}>Staff Management</h1>
@@ -296,37 +284,13 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <button
               onClick={onAddStaff}
-              style={{
-                background: C.purpleMid,
-                color: C.white,
-                border: "none",
-                borderRadius: 10,
-                padding: "8px 14px",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
+              style={{ background: C.purpleMid, color: C.white, border: "none", borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
             >
               + Add Staff
             </button>
             <button
               onClick={onViewSummary}
-              style={{
-                background: C.white,
-                color: C.purpleMid,
-                border: `1px solid ${C.purpleBorder}`,
-                borderRadius: 10,
-                padding: "8px 14px",
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-              }}
+              style={{ background: C.white, color: C.purpleMid, border: `1px solid ${C.purpleBorder}`, borderRadius: 10, padding: "8px 14px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}
             >
               📈 View Analytics
             </button>
@@ -339,112 +303,25 @@ const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) =>
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              style={{
-                flex: 1,
-                padding: "8px 0",
-                borderRadius: 10,
-                border: "none",
-                background: period === p ? C.purpleMid : C.white,
-                color: period === p ? C.white : C.textMuted,
-                fontWeight: period === p ? 600 : 400,
-                fontSize: 12,
-                cursor: "pointer",
-              }}
+              style={{ flex: 1, padding: "8px 0", borderRadius: 10, border: "none", background: period === p ? C.purpleMid : C.white, color: period === p ? C.white : C.textMuted, fontWeight: period === p ? 600 : 400, fontSize: 12, cursor: "pointer" }}
             >
               {p}
             </button>
           ))}
         </div>
 
-        {/* Stat Cards — 4 in a row like reference */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-          <StatCard icon="👥" value={staff.length} label="Active Staff" change="2 vs yesterday" />
-          <StatCard icon="₹" value={`₹${fmt(totalRevenue)}`} label="Revenue Today" change="18% vs yesterday" />
-          <StatCard icon="✂️" value={totalServices} label="Total Services" change="12% vs yesterday" />
-          <StatCard icon="○" value={`${avgAttendance}%`} label="Attendance" change="5% vs yesterday" />
+        {/* 3 Stat Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+          <StatCard icon="👥" value={staff.length} label="Active Staff" change="2 vs yest." />
+          <StatCard icon="₹" value={`₹${fmt(totalRevenue)}`} label="Revenue Today" change="18% vs yest." />
+          <StatCard icon="✂️" value={totalServices} label="Total Services" change="12% vs yest." />
         </div>
 
-        {/* Search + Filter */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              background: C.white,
-              border: `1px solid ${C.border}`,
-              borderRadius: 10,
-              padding: "8px 12px",
-              gap: 6,
-            }}
-          >
-            <span style={{ color: C.textMuted, fontSize: 14 }}>🔍</span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search staff by name, role..."
-              style={{ border: "none", outline: "none", flex: 1, fontSize: 12, color: C.text, background: "transparent" }}
-            />
-          </div>
-          <button
-            style={{
-              background: C.white,
-              border: `1px solid ${C.border}`,
-              borderRadius: 10,
-              padding: "0 10px",
-              fontSize: 12,
-              color: C.textMuted,
-              cursor: "pointer",
-            }}
-          >
-            🔽 Filter
-          </button>
-          <button
-            style={{
-              background: C.white,
-              border: `1px solid ${C.border}`,
-              borderRadius: 10,
-              padding: "0 10px",
-              fontSize: 12,
-              color: C.textMuted,
-              cursor: "pointer",
-            }}
-          >
-            ↕ Sort
-          </button>
-        </div>
-
-        {/* Filter Pills */}
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4, marginBottom: 10 }}>
-          {filterOptions.map((o) => (
-            <button
-              key={o.value}
-              onClick={() => setFilter(o.value)}
-              style={{
-                padding: "5px 12px",
-                borderRadius: 20,
-                border: filter === o.value ? "none" : `1px solid ${C.border}`,
-                background: filter === o.value ? C.purpleMid : C.white,
-                color: filter === o.value ? C.white : C.textMuted,
-                fontSize: 11,
-                fontWeight: filter === o.value ? 600 : 400,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-              }}
-            >
-              {filter !== o.value && o.value === "available" && <span style={{ color: C.green }}>● </span>}
-              {filter !== o.value && o.value === "away" && <span style={{ color: C.orange }}>● </span>}
-              {filter !== o.value && o.value === "offline" && <span style={{ color: C.red }}>● </span>}
-              {o.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Staff List */}
       <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-        {filtered.map((s) => (
+        {staff.map((s) => (
           <div
             key={s.id}
             onClick={() => onSelectStaff(s)}
@@ -1387,6 +1264,7 @@ export default function StaffManagement({ salonId, onBack }) {
       onAddStaff={() => setScreen("add")}
       onViewSummary={() => setScreen("summary")}
       onSelectStaff={(s) => { setSelected(s); setScreen("profile"); }}
+      onBack={onBack}
     />
   );
 }
