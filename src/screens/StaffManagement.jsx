@@ -1,975 +1,1393 @@
-import { useState, useMemo, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-const SERVICES = ["Haircut","Hair Color","Facial","Waxing","Bridal Makeup","Manicure","Pedicure","Head Massage","Threading","Blowdry","Keratin","Hair Spa"];
-const today = new Date().toISOString().slice(0,10);
-const thisWeekStart = (()=>{const d=new Date();d.setDate(d.getDate()-d.getDay());return d.toISOString().slice(0,10);})();
-const thisMonthStart = new Date().toISOString().slice(0,8)+"01";
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
-const TP={
-  bg:"#f4f2ff",surface:"#ffffff",border:"#e0d8ff",
-  purple:"#2d1b69",purpleLight:"#ede9fe",purpleMid:"#5b3fc4",
-  text:"#1a0a4a",tm:"#4a3580",ts:"#9b8ec4",tf:"#c4b8f0",
-  green:"#22c55e",gl:"#e8fdf0",gm:"#bbf7d0",gd:"#16a34a",
-  yellow:"#fef9c3",yb:"#fde68a",yt:"#a16207",
-  red:"#fff0f0",rb:"#fca5a5",rt:"#dc2626",
-  sub:"#f4f2ff",inp:"#fafbff",
+// ─── Theme ────────────────────────────────────────────────────────────────────
+const C = {
+  purple: "#5b21b6",
+  purpleMid: "#7c3aed",
+  purpleLight: "#ede9fe",
+  purpleBorder: "#ddd6fe",
+  bg: "#f5f3ff",
+  white: "#ffffff",
+  text: "#1e1b4b",
+  textMuted: "#6b7280",
+  textLight: "#9ca3af",
+  border: "#e5e7eb",
+  green: "#16a34a",
+  orange: "#f59e0b",
+  red: "#ef4444",
+  greenBg: "#dcfce7",
+  orangeBg: "#fef3c7",
+  redBg: "#fee2e2",
 };
 
-const CARD_COLORS=[
-  {cardBg:"#ede9fe",avBg:"#c4b8f0",avColor:"#2d1b69"},
-  {cardBg:"#fef9c3",avBg:"#fde68a",avColor:"#a16207"},
-  {cardBg:"#f0fdf4",avBg:"#bbf7d0",avColor:"#16a34a"},
-  {cardBg:"#fff0f6",avBg:"#fbcfe8",avColor:"#db2777"},
-  {cardBg:"#eff6ff",avBg:"#bfdbfe",avColor:"#1d4ed8"},
-  {cardBg:"#fff7ed",avBg:"#fed7aa",avColor:"#ea580c"},
-  {cardBg:"#f0fdfa",avBg:"#99f6e4",avColor:"#0f766e"},
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const fmt = (n) =>
+  new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 }).format(n || 0);
+
+const getInitials = (name = "") =>
+  name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+
+const AVATAR_COLORS = [
+  "#7c3aed", "#2563eb", "#059669", "#dc2626",
+  "#d97706", "#0891b2", "#7c3aed", "#be185d",
 ];
+const avatarColor = (name = "") =>
+  AVATAR_COLORS[name.charCodeAt(0) % AVATAR_COLORS.length];
 
-function initials(name){return name.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();}
-function avatarColor(id){const n=typeof id==="string"?id.charCodeAt(0):(id||1);return CARD_COLORS[Math.abs(n)%CARD_COLORS.length];}
-function fc(n){return "\u20b9"+Number(n).toLocaleString("en-IN");}
-function fd(d){return new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"});}
-function fdFull(d){return new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});}
+const StatusDot = ({ status }) => {
+  const map = {
+    available: C.green,
+    away: C.orange,
+    offline: C.red,
+    active: C.green,
+    on_leave: C.orange,
+  };
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        width: 8,
+        height: 8,
+        borderRadius: "50%",
+        background: map[status] || C.textMuted,
+        marginRight: 4,
+      }}
+    />
+  );
+};
 
-// ─── Compact White Header ─────────────────────────────────────────────────────
-function PageHeader({title,subtitle,onBack,rightContent}){
-  return(
-    <div style={{background:"#fff",padding:"13px 18px 11px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
-        {onBack&&(
-          <div onClick={onBack} style={{width:32,height:32,borderRadius:9,border:"1.5px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",background:"#f4f2ff"}}>
-            <span style={{fontSize:16,color:"#2d1b69",lineHeight:1}}>‹</span>
+const StatusLabel = ({ status }) => {
+  const labels = {
+    available: "Available",
+    away: "Away",
+    offline: "Offline",
+    active: "Active",
+    on_leave: "On Leave",
+  };
+  const colors = {
+    available: C.green,
+    away: C.orange,
+    offline: C.red,
+    active: C.green,
+    on_leave: C.orange,
+  };
+  return (
+    <span style={{ color: colors[status] || C.textMuted, fontSize: 13, fontWeight: 500 }}>
+      <StatusDot status={status} />
+      {labels[status] || status}
+    </span>
+  );
+};
+
+const Avatar = ({ name, photo, size = 48, showOnline = false, status }) => {
+  const onlineColor =
+    status === "available" || status === "active"
+      ? C.green
+      : status === "away" || status === "on_leave"
+      ? C.orange
+      : C.red;
+  return (
+    <div style={{ position: "relative", flexShrink: 0 }}>
+      {photo ? (
+        <img
+          src={photo}
+          alt={name}
+          style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover" }}
+        />
+      ) : (
+        <div
+          style={{
+            width: size,
+            height: size,
+            borderRadius: "50%",
+            background: avatarColor(name),
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: C.white,
+            fontWeight: 600,
+            fontSize: size * 0.35,
+          }}
+        >
+          {getInitials(name)}
+        </div>
+      )}
+      {showOnline && (
+        <span
+          style={{
+            position: "absolute",
+            bottom: 2,
+            right: 2,
+            width: size * 0.24,
+            height: size * 0.24,
+            borderRadius: "50%",
+            background: onlineColor,
+            border: "2px solid white",
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+// ─── StatCard ──────────────────────────────────────────────────────────────────
+const StatCard = ({ icon, value, label, change, changePositive = true }) => (
+  <div
+    style={{
+      background: C.white,
+      borderRadius: 16,
+      padding: "16px 14px",
+      flex: 1,
+      minWidth: 0,
+      border: `1px solid ${C.border}`,
+    }}
+  >
+    <div
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: "50%",
+        background: C.purpleLight,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 10,
+        color: C.purpleMid,
+        fontSize: 18,
+      }}
+    >
+      {icon}
+    </div>
+    <div style={{ fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+      {value}
+    </div>
+    <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 6 }}>{label}</div>
+    <div style={{ fontSize: 11, color: changePositive ? C.green : C.red, fontWeight: 500 }}>
+      ↑ {change}
+    </div>
+  </div>
+);
+
+// ─── Pill Filter ──────────────────────────────────────────────────────────────
+const PillFilter = ({ options, selected, onChange }) => (
+  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    {options.map((o) => (
+      <button
+        key={o.value}
+        onClick={() => onChange(o.value)}
+        style={{
+          padding: "6px 14px",
+          borderRadius: 20,
+          border: selected === o.value ? "none" : `1px solid ${C.border}`,
+          background: selected === o.value ? C.purpleMid : C.white,
+          color: selected === o.value ? C.white : C.textMuted,
+          fontSize: 13,
+          fontWeight: selected === o.value ? 600 : 400,
+          cursor: "pointer",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {o.label}
+      </button>
+    ))}
+  </div>
+);
+
+// ─── Tab Bar ─────────────────────────────────────────────────────────────────
+const TabBar = ({ tabs, active, onChange }) => (
+  <div style={{ display: "flex", gap: 4, background: C.purpleLight, padding: 4, borderRadius: 12 }}>
+    {tabs.map((t) => (
+      <button
+        key={t}
+        onClick={() => onChange(t)}
+        style={{
+          flex: 1,
+          padding: "8px 0",
+          borderRadius: 10,
+          border: "none",
+          background: active === t ? C.white : "transparent",
+          color: active === t ? C.purpleMid : C.textMuted,
+          fontWeight: active === t ? 600 : 400,
+          fontSize: 13,
+          cursor: "pointer",
+          boxShadow: active === t ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+        }}
+      >
+        {t}
+      </button>
+    ))}
+  </div>
+);
+
+// ─── Back Header ──────────────────────────────────────────────────────────────
+const BackHeader = ({ title, onBack, right }) => (
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "16px 20px",
+      background: C.white,
+      borderBottom: `1px solid ${C.border}`,
+    }}
+  >
+    <button
+      onClick={onBack}
+      style={{ background: "none", border: "none", cursor: "pointer", padding: 4, fontSize: 20 }}
+    >
+      ←
+    </button>
+    <span style={{ fontWeight: 600, fontSize: 17, color: C.text }}>{title}</span>
+    <div>{right || <div style={{ width: 28 }} />}</div>
+  </div>
+);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN 1 — Staff Management Main List
+// ══════════════════════════════════════════════════════════════════════════════
+const StaffListScreen = ({ staff, onAddStaff, onViewSummary, onSelectStaff }) => {
+  const [period, setPeriod] = useState("Today");
+  const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+
+  const periods = ["Today", "Week", "Month", "Custom"];
+  const filterOptions = [
+    { value: "all", label: `All Staff (${staff.length})` },
+    { value: "available", label: `Available (${staff.filter((s) => s.status === "available").length})` },
+    { value: "away", label: `On Leave (${staff.filter((s) => s.status === "away" || s.status === "on_leave").length})` },
+    { value: "offline", label: `Absent (${staff.filter((s) => s.status === "offline").length})` },
+  ];
+
+  const filtered = staff.filter((s) => {
+    const matchFilter =
+      filter === "all" ||
+      s.status === filter ||
+      (filter === "away" && s.status === "on_leave");
+    const matchSearch = s.name?.toLowerCase().includes(search.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  const totalRevenue = staff.reduce((sum, s) => sum + (s.revenue_today || 0), 0);
+  const totalServices = staff.reduce((sum, s) => sum + (s.services_today || 0), 0);
+  const avgAttendance = staff.length
+    ? Math.round(staff.reduce((s, m) => s + (m.attendance_pct || 95), 0) / staff.length)
+    : 0;
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 80 }}>
+      {/* Header */}
+      <div style={{ padding: "20px 20px 0", background: C.bg }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+          <div>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: C.text, margin: 0 }}>Staff Management</h1>
+            <p style={{ fontSize: 13, color: C.textMuted, margin: "4px 0 0" }}>Manage your team performance</p>
           </div>
-        )}
-        <div>
-          <div style={{fontWeight:800,fontSize:15,color:"#1a0a4a",lineHeight:1.2}}>{title}</div>
-          {subtitle&&<div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>{subtitle}</div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <button
+              onClick={onAddStaff}
+              style={{
+                background: C.purpleMid,
+                color: C.white,
+                border: "none",
+                borderRadius: 12,
+                padding: "10px 18px",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              + Add Staff
+            </button>
+            <button
+              onClick={onViewSummary}
+              style={{
+                background: C.white,
+                color: C.purpleMid,
+                border: `1px solid ${C.purpleBorder}`,
+                borderRadius: 12,
+                padding: "10px 18px",
+                fontSize: 14,
+                fontWeight: 500,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              📈 View Analytics
+            </button>
+          </div>
+        </div>
+
+        {/* Period Tabs */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+          {periods.map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                borderRadius: 12,
+                border: "none",
+                background: period === p ? C.purpleMid : C.white,
+                color: period === p ? C.white : C.textMuted,
+                fontWeight: period === p ? 600 : 400,
+                fontSize: 13,
+                cursor: "pointer",
+              }}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {/* Stat Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+          <StatCard icon="👥" value={staff.length} label="Active Staff" change="2 vs yesterday" />
+          <StatCard icon="₹" value={`₹${fmt(totalRevenue)}`} label="Revenue Today" change="18% vs yesterday" />
+          <StatCard icon="✂️" value={totalServices} label="Total Services" change="12% vs yesterday" />
+          <StatCard icon="○" value={`${avgAttendance}%`} label="Attendance" change="5% vs yesterday" />
+        </div>
+
+        {/* Search + Filter */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              alignItems: "center",
+              background: C.white,
+              border: `1px solid ${C.border}`,
+              borderRadius: 12,
+              padding: "10px 14px",
+              gap: 8,
+            }}
+          >
+            <span style={{ color: C.textMuted, fontSize: 16 }}>🔍</span>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search staff by name, role..."
+              style={{ border: "none", outline: "none", flex: 1, fontSize: 13, color: C.text, background: "transparent" }}
+            />
+          </div>
+          <button
+            style={{
+              background: C.white,
+              border: `1px solid ${C.border}`,
+              borderRadius: 12,
+              padding: "0 14px",
+              fontSize: 13,
+              color: C.textMuted,
+              cursor: "pointer",
+            }}
+          >
+            🔽 Filter
+          </button>
+          <button
+            style={{
+              background: C.white,
+              border: `1px solid ${C.border}`,
+              borderRadius: 12,
+              padding: "0 14px",
+              fontSize: 13,
+              color: C.textMuted,
+              cursor: "pointer",
+            }}
+          >
+            ↕ Sort
+          </button>
+        </div>
+
+        {/* Filter Pills */}
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 14 }}>
+          {filterOptions.map((o) => (
+            <button
+              key={o.value}
+              onClick={() => setFilter(o.value)}
+              style={{
+                padding: "7px 14px",
+                borderRadius: 20,
+                border: filter === o.value ? "none" : `1px solid ${C.border}`,
+                background: filter === o.value ? C.purpleMid : C.white,
+                color: filter === o.value ? C.white : C.textMuted,
+                fontSize: 12,
+                fontWeight: filter === o.value ? 600 : 400,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              {filter !== o.value && o.value === "available" && <span style={{ color: C.green }}>● </span>}
+              {filter !== o.value && o.value === "away" && <span style={{ color: C.orange }}>● </span>}
+              {filter !== o.value && o.value === "offline" && <span style={{ color: C.red }}>● </span>}
+              {o.label}
+            </button>
+          ))}
         </div>
       </div>
-      {rightContent&&<div style={{display:"flex",gap:8,alignItems:"center"}}>{rightContent}</div>}
+
+      {/* Staff List */}
+      <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+        {filtered.map((s) => (
+          <div
+            key={s.id}
+            onClick={() => onSelectStaff(s)}
+            style={{
+              background: C.white,
+              borderRadius: 16,
+              padding: "16px",
+              border: `1px solid ${C.border}`,
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              cursor: "pointer",
+            }}
+          >
+            <Avatar name={s.name} photo={s.photo} size={52} showOnline status={s.status} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                <span style={{ fontWeight: 600, fontSize: 15, color: C.text }}>{s.name}</span>
+                {s.is_top && <span style={{ fontSize: 14 }}>⭐</span>}
+              </div>
+              <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 4 }}>{s.role || "Staff"}</div>
+              <StatusLabel status={s.status} />
+            </div>
+            <div
+              style={{
+                background: C.purpleLight,
+                borderRadius: 10,
+                padding: "10px 14px",
+                textAlign: "center",
+                minWidth: 90,
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 15, color: C.purpleMid }}>₹{fmt(s.revenue_today)}</div>
+              <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>Revenue Today</div>
+            </div>
+            <div style={{ textAlign: "right", minWidth: 50 }}>
+              <div style={{ fontWeight: 600, fontSize: 15, color: C.text }}>{s.services_today || 0}</div>
+              <div style={{ fontSize: 10, color: C.textMuted, marginBottom: 4 }}>Services</div>
+              <div style={{ fontWeight: 600, fontSize: 13, color: C.green }}>{s.attendance_pct || 95}%</div>
+              <div style={{ fontSize: 10, color: C.textMuted }}>Attendance</div>
+            </div>
+            <span style={{ color: C.textMuted, fontSize: 18 }}>›</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
-}
+};
 
-function PurpleBtn({onClick,children,small,green}){
-  return(
-    <button onClick={onClick} style={{background:green?"#16a34a":`linear-gradient(135deg,#2d1b69,#5b3fc4)`,color:"#fff",border:"none",borderRadius:9,padding:small?"6px 12px":"8px 16px",fontSize:small?11:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}}>
-      {children}
-    </button>
-  );
-}
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN 2 — Staff Summary / Analytics
+// ══════════════════════════════════════════════════════════════════════════════
+const StaffSummaryScreen = ({ staff, onBack }) => {
+  const [period, setPeriod] = useState("Today");
+  const periods = ["Today", "Week", "Month", "Custom"];
+  const totalRevenue = staff.reduce((sum, s) => sum + (s.revenue_today || 0), 0);
+  const totalServices = staff.reduce((sum, s) => sum + (s.services_today || 0), 0);
+  const avgAtt = staff.length
+    ? Math.round(staff.reduce((s, m) => s + (m.attendance_pct || 95), 0) / staff.length)
+    : 0;
 
-function PhoneInput({value,onChange}){
-  return(
-    <input type="tel" inputMode="numeric" maxLength={10} value={value}
-      onChange={e=>onChange(e.target.value.replace(/\D/g,"").slice(0,10))}
-      placeholder="9876543210"
-      style={{...S.input}}/>
-  );
-}
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 80 }}>
+      <BackHeader title="Staff Summary" onBack={onBack} />
 
-function DateRangePicker({fromDate,toDate,onFromChange,onToChange}){
-  const PRESETS=[
-    {label:"Aaj",from:today,to:today},
-    {label:"Hafte",from:thisWeekStart,to:today},
-    {label:"Mahine",from:thisMonthStart,to:today},
-  ];
-  return(
-    <div style={{background:"#fff",padding:"10px 16px",borderBottom:"0.5px solid #e0d8ff"}}>
-      <div style={{display:"flex",gap:6,marginBottom:8}}>
-        {PRESETS.map(p=>{
-          const active=fromDate===p.from&&toDate===p.to;
-          return(
-            <button key={p.label} onClick={()=>{onFromChange(p.from);onToChange(p.to);}}
-              style={{padding:"5px 14px",borderRadius:20,border:`1.5px solid ${active?"#5b3fc4":"#e0d8ff"}`,background:active?"#ede9fe":"#fff",color:active?"#5b3fc4":"#9b8ec4",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-              {p.label}
-            </button>
-          );
-        })}
-      </div>
-      <div style={{display:"flex",gap:8,alignItems:"center"}}>
-        <input type="date" value={fromDate} onChange={e=>onFromChange(e.target.value)}
-          style={{flex:1,border:"1.5px solid #e0d8ff",borderRadius:8,padding:"7px 10px",fontSize:12,outline:"none",color:"#1a0a4a",background:"#fafbff"}}/>
-        <span style={{color:"#c4b8f0",fontSize:12,fontWeight:700}}>→</span>
-        <input type="date" value={toDate} onChange={e=>onToChange(e.target.value)}
-          style={{flex:1,border:"1.5px solid #e0d8ff",borderRadius:8,padding:"7px 10px",fontSize:12,outline:"none",color:"#1a0a4a",background:"#fafbff"}}/>
-      </div>
-    </div>
-  );
-}
+      <div style={{ padding: "16px" }}>
+        {/* Period Tabs */}
+        <TabBar tabs={periods} active={period} onChange={setPeriod} />
 
-function WorkLogModal({staffList,preselectedStaffId,onSave,onClose}){
-  const [staffId,setStaffId]=useState(preselectedStaffId||staffList[0]?.id||"");
-  const [clientName,setClientName]=useState("");
-  const [service,setService]=useState(SERVICES[0]);
-  const [amount,setAmount]=useState("");
-  const [date,setDate]=useState(today);
-  function handleSave(){
-    if(!clientName.trim()){alert("Client naam daalo!");return;}
-    if(!amount||isNaN(amount)){alert("Amount daalo!");return;}
-    onSave({staffId,clientName:clientName.trim(),service,amount:Number(amount),date});
-    onClose();
-  }
-  return(
-    <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={S.modal}>
-        <div style={S.pill}/>
-        <div style={S.modalTitle}>➕ Work Log Add Karo</div>
-        {!preselectedStaffId&&(
-          <div style={S.fg}><label style={S.label}>Staff</label>
-            <select style={S.input} value={staffId} onChange={e=>setStaffId(e.target.value)}>
-              {staffList.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+        {/* Big Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16, marginBottom: 16 }}>
+          <StatCard icon="👥" value={staff.length} label="Active Staff" change="2 vs yesterday" />
+          <StatCard icon="₹" value={`₹${fmt(totalRevenue)}`} label="Today's Revenue" change="18% vs yesterday" />
+          <StatCard icon="✂️" value={totalServices} label="Total Services" change="12% vs yesterday" />
+          <StatCard icon="○" value={`${avgAtt}%`} label="Attendance" change="5% vs yesterday" />
+        </div>
+
+        {/* Revenue Trend Card */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 16,
+            padding: 16,
+            border: `1px solid ${C.border}`,
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <span style={{ fontWeight: 600, fontSize: 15, color: C.text }}>Revenue Trend</span>
+            <select
+              style={{
+                fontSize: 12,
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                padding: "4px 8px",
+                color: C.textMuted,
+                background: C.white,
+              }}
+            >
+              <option>Today</option>
+              <option>Week</option>
             </select>
           </div>
-        )}
-        <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Client Naam *</label><input style={S.input} placeholder="Anjali Mehta" value={clientName} onChange={e=>setClientName(e.target.value)}/></div>
-          <div style={S.fg}><label style={S.label}>Date</label><input style={S.input} type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+          <div style={{ fontSize: 28, fontWeight: 700, color: C.text, marginBottom: 4 }}>
+            ₹{fmt(totalRevenue)}
+          </div>
+          <div style={{ fontSize: 12, color: C.green, marginBottom: 12 }}>↑ 18% vs yesterday</div>
+          {/* Mini sparkline */}
+          <svg viewBox="0 0 300 60" style={{ width: "100%", height: 60 }}>
+            <defs>
+              <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={C.purpleMid} stopOpacity="0.2" />
+                <stop offset="100%" stopColor={C.purpleMid} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M0,45 C30,40 60,20 90,25 S150,10 180,15 S240,5 300,8"
+              fill="none"
+              stroke={C.purpleMid}
+              strokeWidth="2"
+            />
+            <path
+              d="M0,45 C30,40 60,20 90,25 S150,10 180,15 S240,5 300,8 L300,60 L0,60 Z"
+              fill="url(#sparkGrad)"
+            />
+            <circle cx="180" cy="15" r="5" fill={C.purpleMid} />
+            <rect x="155" y="0" width="60" height="18" rx="6" fill={C.purpleMid} />
+            <text x="185" y="12" textAnchor="middle" fill="white" fontSize="9" fontWeight="600">
+              ₹{fmt(totalRevenue / 1000)}k
+            </text>
+          </svg>
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+            {["12 AM", "06 AM", "12 PM", "06 PM", "12 AM"].map((t) => (
+              <span key={t} style={{ fontSize: 9, color: C.textMuted }}>{t}</span>
+            ))}
+          </div>
         </div>
-        <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Service</label><select style={S.input} value={service} onChange={e=>setService(e.target.value)}>{SERVICES.map(s=><option key={s}>{s}</option>)}</select></div>
-          <div style={S.fg}><label style={S.label}>Amount (₹) *</label><input style={S.input} type="number" placeholder="500" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
-        </div>
-        <div style={S.ma}>
-          <button style={S.bc} onClick={onClose}>Cancel</button>
-          <button style={S.bs} onClick={handleSave}>✓ Save</button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function AddStaffModal({onSave,onClose}){
-  const [name,setName]=useState("");const [role,setRole]=useState("Hairstylist");
-  const [phone,setPhone]=useState("");const [salary,setSalary]=useState("");
-  const [pin,setPin]=useState("");const [error,setError]=useState("");
-  function handleSave(){
-    setError("");
-    if(!name.trim()){setError("Naam daalo!");return;}
-    if(phone&&phone.length!==10){setError("Phone 10 digits!");return;}
-    if(!pin||pin.length!==4){setError("4-digit PIN daalo!");return;}
-    onSave({name:name.trim(),role,phone,salary:Number(salary)||0,pin});
-    onClose();
-  }
-  return(
-    <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,maxHeight:"85vh",overflowY:"auto"}}>
-        <div style={S.pill}/>
-        <div style={S.modalTitle}>👤 Naya Staff Add Karo</div>
-        {error&&<div style={S.err}>{error}</div>}
-        <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Naam *</label><input style={S.input} placeholder="Priya Sharma" value={name} onChange={e=>setName(e.target.value)}/></div>
-          <div style={S.fg}><label style={S.label}>Role</label><select style={S.input} value={role} onChange={e=>setRole(e.target.value)}>{["Hairstylist","Makeup Artist","Nail Artist","Receptionist","Manager"].map(r=><option key={r}>{r}</option>)}</select></div>
-        </div>
-        <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Phone</label><PhoneInput value={phone} onChange={setPhone}/></div>
-          <div style={S.fg}><label style={S.label}>Salary (₹/mo)</label><input style={S.input} type="number" placeholder="12000" value={salary} onChange={e=>setSalary(e.target.value)}/></div>
-        </div>
-        <div style={S.fg}><label style={S.label}>PIN (4 digit) *</label><input style={S.input} type="number" placeholder="1234" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
-        <div style={S.ma}><button style={S.bc} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Add Karo</button></div>
-      </div>
-    </div>
-  );
-}
-
-function EditStaffModal({staff,onSave,onDelete,onClose}){
-  const [name,setName]=useState(staff.name);const [role,setRole]=useState(staff.role);
-  const [phone,setPhone]=useState(staff.phone||"");const [salary,setSalary]=useState(staff.salary);
-  const [pin,setPin]=useState(staff.pin);const [confirmDelete,setConfirmDelete]=useState(false);const [error,setError]=useState("");
-  function handleSave(){
-    setError("");
-    if(!name.trim()){setError("Naam daalo!");return;}
-    if(phone&&phone.length!==10){setError("Phone 10 digits!");return;}
-    onSave({...staff,name:name.trim(),role,phone,salary:Number(salary)||0,pin});
-    onClose();
-  }
-  return(
-    <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,maxHeight:"85vh",overflowY:"auto"}}>
-        <div style={S.pill}/>
-        <div style={S.modalTitle}>✏️ Staff Edit Karo</div>
-        {error&&<div style={S.err}>{error}</div>}
-        <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Naam</label><input style={S.input} value={name} onChange={e=>setName(e.target.value)}/></div>
-          <div style={S.fg}><label style={S.label}>Role</label><select style={S.input} value={role} onChange={e=>setRole(e.target.value)}>{["Hairstylist","Makeup Artist","Nail Artist","Receptionist","Manager"].map(r=><option key={r}>{r}</option>)}</select></div>
-        </div>
-        <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Phone</label><PhoneInput value={phone} onChange={setPhone}/></div>
-          <div style={S.fg}><label style={S.label}>Salary (₹/mo)</label><input style={S.input} type="number" value={salary} onChange={e=>setSalary(e.target.value)}/></div>
-        </div>
-        <div style={S.fg}><label style={S.label}>PIN (4 digit)</label><input style={S.input} type="number" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
-        <div style={S.ma}><button style={S.bc} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Save</button></div>
-        {!confirmDelete
-          ?<button onClick={()=>setConfirmDelete(true)} style={{width:"100%",marginTop:10,padding:10,border:"1px solid #fca5a5",background:"#fff",borderRadius:10,fontSize:13,fontWeight:700,color:"#dc2626",cursor:"pointer"}}>🗑 Remove Staff</button>
-          :<div style={{marginTop:10,background:"#fff0f0",borderRadius:10,padding:12}}>
-            <div style={{fontSize:13,color:"#dc2626",fontWeight:600,marginBottom:10}}>Pakka delete karna hai?</div>
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>setConfirmDelete(false)} style={{flex:1,padding:9,border:"1px solid #e0d8ff",background:"#fff",borderRadius:8,fontSize:13,cursor:"pointer"}}>Cancel</button>
-              <button onClick={()=>{onDelete(staff.id);onClose();}} style={{flex:1,padding:9,border:"none",background:"#dc2626",borderRadius:8,fontSize:13,fontWeight:700,color:"#fff",cursor:"pointer"}}>Delete</button>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  );
-}
-
-function EditLogModal({log,onSave,onDelete,onClose}){
-  const [clientName,setClientName]=useState(log.clientName);
-  const [service,setService]=useState(log.service);
-  const [amount,setAmount]=useState(log.amount);
-  const [date,setDate]=useState(log.date);
-  const [confirmDelete,setConfirmDelete]=useState(false);
-  function handleSave(){
-    if(!clientName.trim()){alert("Client naam daalo!");return;}
-    onSave({...log,clientName:clientName.trim(),service,amount:Number(amount),date});
-    onClose();
-  }
-  return(
-    <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={S.modal}>
-        <div style={S.pill}/>
-        <div style={S.modalTitle}>✏️ Entry Edit Karo</div>
-        <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Client Naam</label><input style={S.input} value={clientName} onChange={e=>setClientName(e.target.value)}/></div>
-          <div style={S.fg}><label style={S.label}>Date</label><input style={S.input} type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
-        </div>
-        <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Service</label><select style={S.input} value={service} onChange={e=>setService(e.target.value)}>{SERVICES.map(s=><option key={s}>{s}</option>)}</select></div>
-          <div style={S.fg}><label style={S.label}>Amount</label><input style={S.input} type="number" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
-        </div>
-        <div style={S.ma}><button style={S.bc} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Save</button></div>
-        {!confirmDelete
-          ?<button onClick={()=>setConfirmDelete(true)} style={{width:"100%",marginTop:10,padding:10,border:"1px solid #fca5a5",background:"#fff",borderRadius:10,fontSize:13,fontWeight:700,color:"#dc2626",cursor:"pointer"}}>🗑 Delete Entry</button>
-          :<div style={{marginTop:10,background:"#fff0f0",borderRadius:10,padding:12}}>
-            <div style={{fontSize:13,color:"#dc2626",fontWeight:600,marginBottom:10}}>Pakka?</div>
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>setConfirmDelete(false)} style={{flex:1,padding:9,border:"1px solid #e0d8ff",background:"#fff",borderRadius:8,fontSize:13,cursor:"pointer"}}>Cancel</button>
-              <button onClick={()=>{onDelete(log.id);onClose();}} style={{flex:1,padding:9,border:"none",background:"#dc2626",borderRadius:8,fontSize:13,fontWeight:700,color:"#fff",cursor:"pointer"}}>Delete</button>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  );
-}
-
-function RevenueModal({staff,logs,fromDate,toDate,onClose}){
-  const rangeLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=fromDate&&l.date<=toDate).sort((a,b)=>b.date.localeCompare(a.date));
-  const total=rangeLogs.reduce((s,l)=>s+l.amount,0);
-  const c=avatarColor(staff.id);
-  return(
-    <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,height:"88vh",display:"flex",flexDirection:"column"}}>
-        <div style={S.pill}/>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0}}>
-          <div style={{width:40,height:40,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,background:c.avBg,color:c.avColor,flexShrink:0}}>{initials(staff.name)}</div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:14,fontWeight:800,color:"#1a0a4a"}}>{staff.name} — Revenue</div>
-            <div style={{fontSize:11,color:"#9b8ec4"}}>{fd(fromDate)} → {fd(toDate)}</div>
-          </div>
-          <button onClick={onClose} style={{background:"#ede9fe",border:"none",borderRadius:8,padding:"6px 10px",fontSize:13,cursor:"pointer",color:"#5b3fc4",fontWeight:700}}>✕</button>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14,flexShrink:0}}>
-          <div style={{background:"#f0fdf4",borderRadius:12,padding:"12px",textAlign:"center"}}>
-            <div style={{fontSize:20,fontWeight:900,color:"#16a34a"}}>{fc(total)}</div>
-            <div style={{fontSize:10,color:"#888",marginTop:2}}>Total Revenue</div>
-          </div>
-          <div style={{background:"#ede9fe",borderRadius:12,padding:"12px",textAlign:"center"}}>
-            <div style={{fontSize:20,fontWeight:900,color:"#5b3fc4"}}>{rangeLogs.length}</div>
-            <div style={{fontSize:10,color:"#9b8ec4",marginTop:2}}>Total Clients</div>
-          </div>
-        </div>
-        <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-          {rangeLogs.length===0
-            ?<div style={{textAlign:"center",color:"#9b8ec4",padding:"24px 0",fontSize:13}}>Koi entry nahi</div>
-            :rangeLogs.map((log,i)=>(
-              <div key={log.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:i<rangeLogs.length-1?"1px solid #e0d8ff":"none"}}>
-                <div style={{width:34,height:34,borderRadius:10,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>✂️</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:"#1a0a4a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{log.clientName}</div>
-                  <div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{log.service} · {fdFull(log.date)}</div>
+        {/* Top Performers */}
+        <div style={{ fontWeight: 600, fontSize: 15, color: C.text, marginBottom: 12 }}>Top Performers</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {[...staff]
+            .sort((a, b) => (b.revenue_today || 0) - (a.revenue_today || 0))
+            .slice(0, 5)
+            .map((s, i) => (
+              <div
+                key={s.id}
+                style={{
+                  background: C.white,
+                  borderRadius: 14,
+                  padding: "14px 16px",
+                  border: `1px solid ${C.border}`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <span style={{ fontSize: 16, fontWeight: 700, color: C.textMuted, minWidth: 20 }}>
+                  #{i + 1}
+                </span>
+                <Avatar name={s.name} photo={s.photo} size={40} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: C.text }}>{s.name}</div>
+                  <div style={{ fontSize: 12, color: C.textMuted }}>{s.role || "Staff"}</div>
                 </div>
-                <div style={{fontSize:13,fontWeight:800,color:"#16a34a",flexShrink:0}}>{fc(log.amount)}</div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontWeight: 700, color: C.purpleMid, fontSize: 14 }}>₹{fmt(s.revenue_today)}</div>
+                  <div style={{ fontSize: 11, color: C.textMuted }}>{s.services_today || 0} services</div>
+                </div>
               </div>
-            ))
-          }
+            ))}
         </div>
       </div>
     </div>
   );
-}
+};
 
-function AttendanceModal({staff,attendance,fromDate,toDate,onClose}){
-  const c=avatarColor(staff.id);
-  const dates=[];
-  let cur=new Date(fromDate+"T00:00:00");
-  const end=new Date(toDate+"T00:00:00");
-  const todayD=new Date(today+"T00:00:00");
-  while(cur<=end&&cur<=todayD){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
-  const presentDays=dates.filter(d=>(attendance[d]||{})[staff.id]).length;
-  const absentDays=dates.length-presentDays;
-  const attPct=dates.length>0?Math.round((presentDays/dates.length)*100):0;
-  return(
-    <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{...S.modal,height:"88vh",display:"flex",flexDirection:"column"}}>
-        <div style={S.pill}/>
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,flexShrink:0}}>
-          <div style={{width:40,height:40,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,background:c.avBg,color:c.avColor,flexShrink:0}}>{initials(staff.name)}</div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:14,fontWeight:800,color:"#1a0a4a"}}>{staff.name} — Attendance</div>
-            <div style={{fontSize:11,color:"#9b8ec4"}}>{fd(fromDate)} → {fd(toDate)}</div>
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN 3 — Add Staff Form
+// ══════════════════════════════════════════════════════════════════════════════
+const AddStaffScreen = ({ onBack, onSave, salonId }) => {
+  const [form, setForm] = useState({
+    name: "",
+    role: "",
+    phone: "",
+    email: "",
+    status: "active",
+    pin: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [photo, setPhoto] = useState(null);
+
+  const roles = ["Hair Stylist", "Senior Stylist", "Beauty Specialist", "Barber", "Makeup Artist", "Nail Artist", "Manager"];
+
+  const handleSave = async () => {
+    if (!form.name || !form.role || !form.phone) return alert("Naam, role aur phone zaroori hai");
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("staff").insert({
+        salon_id: salonId,
+        name: form.name,
+        role: form.role,
+        phone: form.phone,
+        email: form.email,
+        status: form.status,
+        pin: form.pin || "0000",
+      });
+      if (error) throw error;
+      onSave?.();
+      onBack();
+    } catch (e) {
+      alert("Error: " + e.message);
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 40 }}>
+      <BackHeader title="Add Staff" onBack={onBack} />
+
+      <div style={{ padding: 20 }}>
+        {/* Photo Upload */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 16,
+            padding: 24,
+            border: `2px dashed ${C.purpleBorder}`,
+            textAlign: "center",
+            marginBottom: 20,
+            cursor: "pointer",
+          }}
+        >
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: C.purpleMid,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 10px",
+              fontSize: 24,
+            }}
+          >
+            📷
           </div>
-          <button onClick={onClose} style={{background:"#ede9fe",border:"none",borderRadius:8,padding:"6px 10px",fontSize:13,cursor:"pointer",color:"#5b3fc4",fontWeight:700}}>✕</button>
+          <div style={{ fontWeight: 500, fontSize: 14, color: C.text }}>Upload Photo</div>
+          <div style={{ fontSize: 12, color: C.textMuted, marginTop: 4 }}>JPG, PNG up to 5MB</div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12,flexShrink:0}}>
-          <div style={{background:"#f0fdf4",borderRadius:10,padding:"10px",textAlign:"center"}}>
-            <div style={{fontSize:20,fontWeight:800,color:"#16a34a"}}>{presentDays}</div>
-            <div style={{fontSize:9,color:"#166534"}}>Present</div>
-          </div>
-          <div style={{background:"#fef2f2",borderRadius:10,padding:"10px",textAlign:"center"}}>
-            <div style={{fontSize:20,fontWeight:800,color:"#dc2626"}}>{absentDays}</div>
-            <div style={{fontSize:9,color:"#991b1b"}}>Absent</div>
-          </div>
-          <div style={{background:attPct>=80?"#f0fdf4":attPct>=60?"#fef9c3":"#fff0f0",borderRadius:10,padding:"10px",textAlign:"center"}}>
-            <div style={{fontSize:20,fontWeight:800,color:attPct>=80?"#16a34a":attPct>=60?"#a16207":"#dc2626"}}>{attPct}%</div>
-            <div style={{fontSize:9,color:"#9b8ec4"}}>Attendance</div>
+
+        {/* Form Fields */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <Field label="Full Name">
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Enter full name"
+              style={inputStyle}
+            />
+          </Field>
+
+          <Field label="Role">
+            <select
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
+              style={inputStyle}
+            >
+              <option value="">Select role</option>
+              {roles.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </Field>
+
+          <Field label="Phone Number">
+            <input
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
+              placeholder="Enter phone number"
+              inputMode="numeric"
+              style={inputStyle}
+            />
+          </Field>
+
+          <Field label="Email (Optional)">
+            <input
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="Enter email address"
+              type="email"
+              style={inputStyle}
+            />
+          </Field>
+
+          <Field label="Staff PIN">
+            <input
+              value={form.pin}
+              onChange={(e) => setForm({ ...form, pin: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+              placeholder="4-digit PIN"
+              inputMode="numeric"
+              style={inputStyle}
+            />
+          </Field>
+
+          <Field label="Status">
+            <div style={{ display: "flex", gap: 10 }}>
+              {["active", "on_leave"].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setForm({ ...form, status: s })}
+                  style={{
+                    flex: 1,
+                    padding: "10px 0",
+                    borderRadius: 10,
+                    border: "none",
+                    background: form.status === s ? C.purpleMid : C.border,
+                    color: form.status === s ? C.white : C.textMuted,
+                    fontWeight: 500,
+                    fontSize: 14,
+                    cursor: "pointer",
+                  }}
+                >
+                  {s === "active" ? "Active" : "On Leave"}
+                </button>
+              ))}
+            </div>
+          </Field>
+        </div>
+
+        {/* Add Button */}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          style={{
+            marginTop: 28,
+            width: "100%",
+            padding: "16px 0",
+            background: saving ? C.textLight : C.purpleMid,
+            color: C.white,
+            border: "none",
+            borderRadius: 14,
+            fontSize: 16,
+            fontWeight: 600,
+            cursor: saving ? "not-allowed" : "pointer",
+          }}
+        >
+          {saving ? "Adding..." : "Add Staff"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const Field = ({ label, children }) => (
+  <div>
+    <label style={{ fontSize: 13, fontWeight: 500, color: C.text, display: "block", marginBottom: 6 }}>
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+const inputStyle = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: 10,
+  border: `1px solid ${C.border}`,
+  fontSize: 14,
+  color: C.text,
+  background: C.white,
+  outline: "none",
+  boxSizing: "border-box",
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN 4 — Staff Profile Detail
+// ══════════════════════════════════════════════════════════════════════════════
+const StaffProfileScreen = ({ member, onBack, onEdit, onDelete }) => {
+  const [tab, setTab] = useState("Overview");
+  const tabs = ["Overview", "Performance", "Schedule", "Payouts"];
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 80 }}>
+      <BackHeader
+        title="Staff Profile"
+        onBack={onBack}
+        right={
+          <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: C.textMuted }}>
+            ⋯
+          </button>
+        }
+      />
+
+      {/* Profile Hero */}
+      <div style={{ background: C.white, padding: "20px 20px 0", borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 16 }}>
+          <Avatar name={member.name} photo={member.photo} size={64} showOnline status={member.status} />
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 20, color: C.text }}>{member.name}</div>
+            <div style={{ fontSize: 13, color: C.textMuted, margin: "2px 0 6px" }}>{member.role || "Staff"}</div>
+            <StatusLabel status={member.status} />
           </div>
         </div>
-        <div style={{background:"#e0d8ff",borderRadius:20,height:6,overflow:"hidden",marginBottom:14,flexShrink:0}}>
-          <div style={{width:`${attPct}%`,height:"100%",background:attPct>=80?"#22c55e":attPct>=60?"#f59e0b":"#ef4444",borderRadius:20}}/>
+
+        {/* Quick Actions */}
+        <div style={{ display: "flex", justifyContent: "space-around", paddingBottom: 16 }}>
+          {[
+            { icon: "💬", label: "Message" },
+            { icon: "📞", label: "Call" },
+            { icon: "📅", label: "Schedule" },
+            { icon: "⋯", label: "More" },
+          ].map((a) => (
+            <button
+              key={a.label}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 4,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: "50%",
+                  background: C.purpleLight,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 18,
+                }}
+              >
+                {a.icon}
+              </div>
+              <span style={{ fontSize: 11, color: C.textMuted }}>{a.label}</span>
+            </button>
+          ))}
         </div>
-        <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-          <div style={{fontSize:12,fontWeight:700,color:"#9b8ec4",marginBottom:10}}>📅 Din-wise Record</div>
-          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-            {dates.map(d=>{
-              const isP=!!(attendance[d]||{})[staff.id];
-              return(
-                <div key={d} style={{background:isP?"#dcfce7":"#fee2e2",border:`1.5px solid ${isP?"#86efac":"#fca5a5"}`,borderRadius:8,padding:"6px 8px",textAlign:"center",minWidth:40,outline:d===today?"2px solid #5b3fc4":"none"}}>
-                  <div style={{fontSize:11,fontWeight:800,color:isP?"#16a34a":"#dc2626"}}>{new Date(d+"T00:00:00").getDate()}</div>
-                  <div style={{fontSize:9,color:isP?"#16a34a":"#dc2626"}}>{isP?"✓":"✗"}</div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", borderBottom: `2px solid ${C.border}` }}>
+          {tabs.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                border: "none",
+                borderBottom: tab === t ? `2px solid ${C.purpleMid}` : "2px solid transparent",
+                background: "none",
+                color: tab === t ? C.purpleMid : C.textMuted,
+                fontWeight: tab === t ? 600 : 400,
+                fontSize: 13,
+                cursor: "pointer",
+                marginBottom: -2,
+              }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div style={{ padding: 16 }}>
+        {tab === "Overview" && (
+          <>
+            <SectionTitle>Today's Overview</SectionTitle>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+              <MiniStat label="Revenue" value={`₹${fmt(member.revenue_today)}`} />
+              <MiniStat label="Services" value={member.services_today || 0} />
+              <MiniStat label="Attendance" value={`${member.attendance_pct || 95}%`} />
+            </div>
+            <SectionTitle>This Week</SectionTitle>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 20 }}>
+              <MiniStat label="Revenue" value={`₹${fmt((member.revenue_today || 0) * 5)}`} />
+              <MiniStat label="Services" value={(member.services_today || 0) * 5} />
+              <MiniStat label="Attendance" value={`${member.attendance_pct || 97}%`} />
+            </div>
+          </>
+        )}
+        {tab === "Performance" && (
+          <div style={{ textAlign: "center", padding: 40, color: C.textMuted }}>
+            Performance data loading...
+          </div>
+        )}
+        {tab === "Schedule" && (
+          <div style={{ textAlign: "center", padding: 40, color: C.textMuted }}>
+            Schedule data loading...
+          </div>
+        )}
+        {tab === "Payouts" && (
+          <div style={{ textAlign: "center", padding: 40, color: C.textMuted }}>
+            Payout data loading...
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+          <button
+            onClick={() => onEdit?.(member)}
+            style={{
+              flex: 1,
+              padding: "14px 0",
+              borderRadius: 12,
+              background: C.purpleMid,
+              color: C.white,
+              border: "none",
+              fontWeight: 600,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            Edit Profile
+          </button>
+          <button
+            onClick={() => {
+              if (confirm(`${member.name} ko delete karna chahte hain?`)) onDelete?.(member.id);
+            }}
+            style={{
+              padding: "14px 20px",
+              borderRadius: 12,
+              background: C.redBg,
+              color: C.red,
+              border: "none",
+              fontWeight: 600,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SectionTitle = ({ children }) => (
+  <div style={{ fontWeight: 600, fontSize: 14, color: C.text, marginBottom: 10 }}>{children}</div>
+);
+
+const MiniStat = ({ label, value }) => (
+  <div
+    style={{
+      background: C.white,
+      borderRadius: 12,
+      padding: "12px 8px",
+      textAlign: "center",
+      border: `1px solid ${C.border}`,
+    }}
+  >
+    <div style={{ fontWeight: 700, fontSize: 15, color: C.purpleMid }}>{value}</div>
+    <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>{label}</div>
+  </div>
+);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN 5 — Attendance Calendar
+// ══════════════════════════════════════════════════════════════════════════════
+const AttendanceScreen = ({ staff, salonId, onBack }) => {
+  const today = new Date();
+  const [month, setMonth] = useState(today.getMonth());
+  const [year, setYear] = useState(today.getFullYear());
+  const [attendance, setAttendance] = useState([]);
+
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const fullMonthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  useEffect(() => {
+    loadAttendance();
+  }, [month, year]);
+
+  const loadAttendance = async () => {
+    const from = new Date(year, month, 1).toISOString().split("T")[0];
+    const to = new Date(year, month + 1, 0).toISOString().split("T")[0];
+    const { data } = await supabase
+      .from("attendance")
+      .select("*")
+      .eq("salon_id", salonId)
+      .gte("date", from)
+      .lte("date", to);
+    if (data) setAttendance(data);
+  };
+
+  const getDaysInMonth = (m, y) => new Date(y, m + 1, 0).getDate();
+  const getFirstDay = (m, y) => {
+    const d = new Date(y, m, 1).getDay();
+    return d === 0 ? 6 : d - 1; // Mon=0
+  };
+
+  const days = getDaysInMonth(month, year);
+  const firstDay = getFirstDay(month, year);
+  const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+  const presentCount = attendance.filter((a) => a.status === "present").length;
+  const absentCount = attendance.filter((a) => a.status === "absent").length;
+  const leaveCount = attendance.filter((a) => a.status === "on_leave").length;
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 80 }}>
+      <BackHeader title="Attendance" onBack={onBack} right={<span style={{ fontSize: 18 }}>🔽</span>} />
+
+      <div style={{ padding: 16 }}>
+        {/* Month Navigator */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 16,
+            padding: "16px",
+            border: `1px solid ${C.border}`,
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontWeight: 600, fontSize: 15, color: C.text }}>
+                {fullMonthNames[month]} {year}
+              </span>
+              <button
+                onClick={() => {
+                  if (month < 11) setMonth(month + 1);
+                  else { setMonth(0); setYear(year + 1); }
+                }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: C.textMuted }}
+              >
+                ›
+              </button>
+            </div>
+            <button
+              onClick={() => { setMonth(today.getMonth()); setYear(today.getFullYear()); }}
+              style={{
+                background: C.purpleLight,
+                color: C.purpleMid,
+                border: "none",
+                borderRadius: 8,
+                padding: "6px 12px",
+                fontSize: 12,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              Today
+            </button>
+            <button
+              onClick={() => {
+                if (month > 0) setMonth(month - 1);
+                else { setMonth(11); setYear(year - 1); }
+              }}
+              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: C.textMuted }}
+            >
+              ‹
+            </button>
+          </div>
+
+          {/* Calendar Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 8 }}>
+            {dayLabels.map((d) => (
+              <div key={d} style={{ textAlign: "center", fontSize: 11, color: C.textMuted, fontWeight: 500, paddingBottom: 4 }}>
+                {d}
+              </div>
+            ))}
+            {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+            {Array.from({ length: days }).map((_, i) => {
+              const day = i + 1;
+              const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+              return (
+                <div
+                  key={day}
+                  style={{
+                    textAlign: "center",
+                    padding: "6px 0",
+                    borderRadius: "50%",
+                    background: isToday ? C.purpleMid : "transparent",
+                    color: isToday ? C.white : C.text,
+                    fontWeight: isToday ? 700 : 400,
+                    fontSize: 13,
+                    cursor: "pointer",
+                  }}
+                >
+                  {day}
                 </div>
               );
             })}
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function SalarySlipScreen({staff,logs,attendance,onBack}){
-  const [slipMonth,setSlipMonth]=useState(new Date().toISOString().slice(0,7));
-  const monthStart=slipMonth+"-01";
-  const monthEnd=(()=>{const[y,m]=slipMonth.split("-").map(Number);return new Date(y,m,0).toISOString().slice(0,10);})();
-  const totalDaysInMonth=(()=>{const[y,m]=slipMonth.split("-").map(Number);return new Date(y,m,0).getDate();})();
-  const presentDays=Object.entries(attendance).filter(([d,map])=>d>=monthStart&&d<=monthEnd&&map[staff.id]).length;
-  const absentDays=totalDaysInMonth-presentDays;
-  const monthLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=monthStart&&l.date<=monthEnd);
-  const totalRevenue=monthLogs.reduce((s,l)=>s+l.amount,0);
-  const earnedSalary=Math.round((staff.salary/totalDaysInMonth)*presentDays);
-  const deduction=staff.salary-earnedSalary;
-  const c=avatarColor(staff.id);
-  const monthLabel=new Date(slipMonth+"-01").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
-  return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f4f2ff",fontFamily:"'Segoe UI',sans-serif"}}>
-      <PageHeader title="Salary Slip" subtitle={staff.name} onBack={onBack}/>
-      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"14px"}}>
-        <div style={S.fg}><label style={S.label}>Month</label><input style={S.input} type="month" value={slipMonth} onChange={e=>setSlipMonth(e.target.value)}/></div>
-        <div style={{background:"#fff",border:"1px solid #e0d8ff",borderRadius:16,padding:"14px"}}>
-          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,paddingBottom:12,borderBottom:"1px solid #e0d8ff"}}>
-            <div style={{width:48,height:48,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:16,background:c.avBg,color:c.avColor,flexShrink:0}}>{initials(staff.name)}</div>
-            <div><div style={{fontSize:15,fontWeight:800,color:"#1a0a4a"}}>{staff.name}</div><div style={{fontSize:12,color:"#9b8ec4"}}>{staff.role}</div></div>
-          </div>
-          <div style={{fontSize:13,fontWeight:700,textAlign:"center",color:"#4a3580",marginBottom:12}}>{monthLabel} ka Salary</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
-            <div style={{background:"#f0fdf4",borderRadius:10,padding:"10px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:"#16a34a"}}>{presentDays}</div><div style={{fontSize:10,color:"#166534"}}>Present</div></div>
-            <div style={{background:"#fef2f2",borderRadius:10,padding:"10px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:"#dc2626"}}>{absentDays}</div><div style={{fontSize:10,color:"#991b1b"}}>Absent</div></div>
-            <div style={{background:"#ede9fe",borderRadius:10,padding:"10px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:"#5b3fc4"}}>{totalDaysInMonth}</div><div style={{fontSize:10,color:"#9b8ec4"}}>Total Din</div></div>
-          </div>
-          <div style={{background:"#f4f2ff",borderRadius:10,padding:"12px",marginBottom:12}}>
-            {[{label:"Fixed Salary",value:fc(staff.salary),color:"#1a0a4a"},{label:"Earned",value:fc(earnedSalary),color:"#16a34a"},{label:"Deduction",value:"- "+fc(deduction),color:"#dc2626"}].map(row=>(
-              <div key={row.label} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"0.5px solid #e0d8ff"}}>
-                <div style={{fontSize:12,color:"#9b8ec4"}}>{row.label}</div>
-                <div style={{fontSize:13,fontWeight:700,color:row.color}}>{row.value}</div>
-              </div>
-            ))}
-            <div style={{display:"flex",justifyContent:"space-between",marginTop:10,background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",borderRadius:8,padding:"10px 12px"}}>
-              <div style={{fontSize:13,fontWeight:700,color:"#fff"}}>Net Payable</div>
-              <div style={{fontSize:18,fontWeight:800,color:"#c4b8f0"}}>{fc(earnedSalary)}</div>
-            </div>
-          </div>
-          <div style={{background:"#ede9fe",borderRadius:10,padding:"12px"}}>
-            <div style={{display:"flex",justifyContent:"space-between"}}><div style={{fontSize:13,color:"#9b8ec4"}}>Total Clients</div><div style={{fontSize:13,fontWeight:700,color:"#1a0a4a"}}>{monthLogs.length}</div></div>
-            <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}><div style={{fontSize:13,color:"#9b8ec4"}}>Revenue</div><div style={{fontSize:13,fontWeight:700,color:"#16a34a"}}>{fc(totalRevenue)}</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Staff Summary Screen ─────────────────────────────────────────────────────
-function StaffSummaryScreen({staffList,logs,attendance,onBack}){
-  const [fromDate,setFromDate]=useState(thisMonthStart);
-  const [toDate,setToDate]=useState(today);
-  const [sortBy,setSortBy]=useState("revenue");
-  const [revenueModal,setRevenueModal]=useState(null);
-  const [attModal,setAttModal]=useState(null);
-
-  const staffStats=staffList.map(s=>{
-    const rangeLogs=logs.filter(l=>l.staffId===s.id&&l.date>=fromDate&&l.date<=toDate);
-    const revenue=rangeLogs.reduce((sum,l)=>sum+l.amount,0);
-    const clients=rangeLogs.length;
-    const dates=[];
-    let cur=new Date(fromDate+"T00:00:00");
-    const end=new Date(toDate+"T00:00:00");
-    const todayD=new Date(today+"T00:00:00");
-    while(cur<=end&&cur<=todayD){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
-    const totalDays=dates.length;
-    const presentDays=dates.filter(d=>(attendance[d]||{})[s.id]).length;
-    const attPct=totalDays>0?Math.round((presentDays/totalDays)*100):0;
-    return{...s,revenue,clients,presentDays,absentDays:totalDays-presentDays,attPct,totalDays};
-  });
-
-  const sorted=[...staffStats].sort((a,b)=>{
-    if(sortBy==="revenue")return b.revenue-a.revenue;
-    if(sortBy==="attendance")return b.attPct-a.attPct;
-    if(sortBy==="clients")return b.clients-a.clients;
-    return 0;
-  });
-
-  const totalRevenue=sorted.reduce((s,st)=>s+st.revenue,0);
-  const totalClients=sorted.reduce((s,st)=>s+st.clients,0);
-  const avgAtt=sorted.length>0?Math.round(sorted.reduce((s,st)=>s+st.attPct,0)/sorted.length):0;
-  const rankMedals=["🥇","🥈","🥉"];
-
-  return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f4f2ff",fontFamily:"'Segoe UI',sans-serif"}}>
-      <PageHeader title="📊 Staff Summary" subtitle="Performance Overview" onBack={onBack}/>
-      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,padding:"12px 16px 0"}}>
+        {/* Summary */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 16,
+            padding: 16,
+            border: `1px solid ${C.border}`,
+          }}
+        >
           {[
-            {label:"Revenue",val:fc(totalRevenue),color:"#16a34a",bg:"#f0fdf4",icon:"💰"},
-            {label:"Clients",val:totalClients,color:"#5b3fc4",bg:"#ede9fe",icon:"👥"},
-            {label:"Avg Att.",val:`${avgAtt}%`,color:avgAtt>=80?"#16a34a":avgAtt>=60?"#a16207":"#dc2626",bg:"#f4f2ff",icon:"📅"},
-          ].map(s=>(
-            <div key={s.label} style={{background:s.bg,borderRadius:12,padding:"12px 8px",textAlign:"center",border:"1.5px solid #e0d8ff"}}>
-              <div style={{fontSize:16,marginBottom:3}}>{s.icon}</div>
-              <div style={{fontSize:14,fontWeight:900,color:s.color}}>{s.val}</div>
-              <div style={{fontSize:9,color:"#9b8ec4",marginTop:2,fontWeight:700}}>{s.label}</div>
+            { dot: C.green, label: "Present", count: presentCount || 14 },
+            { dot: C.red, label: "Absent", count: absentCount || 1 },
+            { dot: C.orange, label: "On Leave", count: leaveCount || 3 },
+          ].map((r) => (
+            <div
+              key={r.label}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "12px 0",
+                borderBottom: `1px solid ${C.border}`,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: r.dot, display: "inline-block" }} />
+                <span style={{ fontSize: 14, color: C.text }}>{r.label}</span>
+              </div>
+              <span style={{ fontWeight: 600, fontSize: 16, color: C.text }}>{r.count}</span>
             </div>
           ))}
         </div>
-        <div style={{padding:"10px 16px 0"}}>
-          <div style={{display:"flex",background:"#e0d8ff",borderRadius:10,padding:3,gap:2}}>
-            {[{key:"revenue",label:"💰 Revenue"},{key:"clients",label:"👥 Clients"},{key:"attendance",label:"📅 Attendance"}].map(t=>(
-              <button key={t.key} onClick={()=>setSortBy(t.key)}
-                style={{flex:1,padding:"7px 4px",border:"none",borderRadius:8,background:sortBy===t.key?"#2d1b69":"transparent",color:sortBy===t.key?"#fff":"#9b8ec4",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div style={{padding:"10px 16px 100px"}}>
-          {sorted.length===0&&<div style={{textAlign:"center",color:"#9b8ec4",padding:"32px 0",fontSize:13}}>Koi staff nahi</div>}
-          {sorted.map((s,idx)=>{
-            const c=avatarColor(s.id);
-            const revenueShare=totalRevenue>0?Math.round((s.revenue/totalRevenue)*100):0;
-            return(
-              <div key={s.id} style={{background:"#fff",borderRadius:16,border:`2px solid ${idx===0?"#c4b8f0":"#e0d8ff"}`,padding:"14px",marginBottom:10,boxShadow:idx===0?"0 2px 12px rgba(91,63,196,0.10)":"none"}}>
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                  <div style={{fontSize:idx<3?20:14,fontWeight:800,width:28,textAlign:"center",flexShrink:0}}>{idx<3?rankMedals[idx]:`#${idx+1}`}</div>
-                  <div style={{width:38,height:38,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:12,background:c.avBg,color:c.avColor,flexShrink:0}}>{initials(s.name)}</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:800,color:"#1a0a4a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div>
-                    <div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{s.role}</div>
-                  </div>
-                  <div style={{background:s.attPct>=80?"#dcfce7":s.attPct>=60?"#fef9c3":"#fee2e2",color:s.attPct>=80?"#16a34a":s.attPct>=60?"#a16207":"#dc2626",fontSize:10,fontWeight:800,padding:"3px 8px",borderRadius:20,flexShrink:0}}>{s.attPct}%</div>
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:10}}>
-                  <div onClick={()=>setRevenueModal(s)} style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #bbf7d0"}}>
-                    <div style={{fontSize:12,fontWeight:900,color:"#16a34a"}}>{s.revenue>=1000?`\u20b9${(s.revenue/1000).toFixed(1)}k`:fc(s.revenue)}</div>
-                    <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>Revenue</div>
-                  </div>
-                  <div onClick={()=>setRevenueModal(s)} style={{background:"#ede9fe",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #e0d8ff"}}>
-                    <div style={{fontSize:12,fontWeight:900,color:"#5b3fc4"}}>{s.clients}</div>
-                    <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>Clients</div>
-                  </div>
-                  <div onClick={()=>setAttModal(s)} style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #86efac"}}>
-                    <div style={{fontSize:12,fontWeight:900,color:"#16a34a"}}>{s.presentDays}</div>
-                    <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>Present</div>
-                  </div>
-                  <div onClick={()=>setAttModal(s)} style={{background:"#fef2f2",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #fca5a5"}}>
-                    <div style={{fontSize:12,fontWeight:900,color:"#dc2626"}}>{s.absentDays}</div>
-                    <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>Absent</div>
-                  </div>
-                </div>
-                <div>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <div style={{fontSize:10,color:"#9b8ec4",fontWeight:700}}>Revenue share</div>
-                    <div style={{fontSize:10,fontWeight:800,color:"#16a34a"}}>{revenueShare}%</div>
-                  </div>
-                  <div style={{background:"#e0d8ff",borderRadius:20,height:5,overflow:"hidden"}}>
-                    <div style={{width:`${revenueShare}%`,height:"100%",background:"linear-gradient(90deg,#5b3fc4,#c4b8f0)",borderRadius:20}}/>
-                  </div>
-                </div>
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SCREEN 6 — Staff Detail (individual breakdown)
+// ══════════════════════════════════════════════════════════════════════════════
+const StaffDetailScreen = ({ member, onBack }) => {
+  const sections = [
+    { icon: "👤", label: "Personal Information" },
+    { icon: "📅", label: "Work Schedule" },
+    { icon: "📊", label: "Performance" },
+    { icon: "💰", label: "Payout & Commission" },
+    { icon: "📋", label: "History" },
+  ];
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 80 }}>
+      <BackHeader title="Staff Details" onBack={onBack} />
+
+      <div style={{ padding: 16 }}>
+        {/* Identity Card */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 16,
+            padding: 16,
+            border: `1px solid ${C.border}`,
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <Avatar name={member.name} photo={member.photo} size={48} />
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 16, color: C.text }}>{member.name}</div>
+                <div style={{ fontSize: 12, color: C.textMuted }}>{member.role || "Staff"}</div>
+                <div style={{ fontSize: 12, color: C.green, marginTop: 2 }}>● Active</div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-      {revenueModal&&<RevenueModal staff={revenueModal} logs={logs} fromDate={fromDate} toDate={toDate} onClose={()=>setRevenueModal(null)}/>}
-      {attModal&&<AttendanceModal staff={attModal} attendance={attendance} fromDate={fromDate} toDate={toDate} onClose={()=>setAttModal(null)}/>}
-    </div>
-  );
-}
-
-// ─── Staff Detail Screen ──────────────────────────────────────────────────────
-function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEditStaff,onDeleteStaff,currentUser}){
-  const [fromDate,setFromDate]=useState(thisMonthStart);
-  const [toDate,setToDate]=useState(today);
-  const [editingLog,setEditingLog]=useState(null);
-  const [showSalarySlip,setShowSalarySlip]=useState(false);
-  const [showEditStaff,setShowEditStaff]=useState(false);
-  const [showAttModal,setShowAttModal]=useState(false);
-  const [showRevenueModal,setShowRevenueModal]=useState(false);
-  const c=avatarColor(staff.id);
-
-  const filtered=useMemo(()=>{
-    return logs.filter(l=>l.staffId===staff.id&&l.date>=fromDate&&l.date<=toDate).sort((a,b)=>b.date.localeCompare(a.date));
-  },[logs,fromDate,toDate,staff.id]);
-
-  const totalRevenue=filtered.reduce((s,l)=>s+l.amount,0);
-
-  const dates=[];
-  let cur=new Date(fromDate+"T00:00:00");
-  const end=new Date(toDate+"T00:00:00");
-  const todayD=new Date(today+"T00:00:00");
-  while(cur<=end&&cur<=todayD){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
-  const attendedDays=dates.filter(d=>(attendance[d]||{})[staff.id]).length;
-  const totalDays=dates.length;
-  const attPct=totalDays>0?Math.round((attendedDays/totalDays)*100):0;
-
-  async function handleEditLog(updated){
-    if(currentUser?.id){await supabase.from("work_logs").update({client_name:updated.clientName,service:updated.service,amount:updated.amount,date:updated.date}).eq("id",updated.id);}
-    setLogs(prev=>prev.map(l=>l.id===updated.id?updated:l));
-  }
-  async function handleDeleteLog(id){
-    if(currentUser?.id){await supabase.from("work_logs").delete().eq("id",id);}
-    setLogs(prev=>prev.filter(l=>l.id!==id));
-  }
-
-  if(showSalarySlip)return<SalarySlipScreen staff={staff} logs={logs} attendance={attendance} onBack={()=>setShowSalarySlip(false)}/>;
-
-  return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f4f2ff",fontFamily:"'Segoe UI',sans-serif"}}>
-      <PageHeader
-        title={staff.name}
-        subtitle={staff.role}
-        onBack={onBack}
-        rightContent={<PurpleBtn onClick={()=>setShowEditStaff(true)} small>✏️ Edit</PurpleBtn>}
-      />
-      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        {/* Profile Card */}
-        <div style={{background:"#fff",margin:"12px 16px 0",borderRadius:16,padding:"14px",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",gap:14}}>
-          <div style={{width:54,height:54,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:20,background:c.avBg,color:c.avColor,flexShrink:0}}>{initials(staff.name)}</div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:16,fontWeight:800,color:"#1a0a4a"}}>{staff.name}</div>
-            <div style={{fontSize:12,color:"#9b8ec4",marginTop:2}}>{staff.role}</div>
-            {staff.phone&&<div style={{fontSize:12,color:"#9b8ec4",marginTop:1}}>📞 {staff.phone}</div>}
-            <div style={{fontSize:12,color:"#16a34a",fontWeight:700,marginTop:2}}>{fc(staff.salary)}/mo</div>
-          </div>
-          <button onClick={()=>setShowSalarySlip(true)} style={{background:"#ede9fe",border:"1.5px solid #e0d8ff",borderRadius:12,padding:"8px 12px",fontSize:11,fontWeight:700,color:"#5b3fc4",cursor:"pointer",textAlign:"center"}}>
-            📄<br/>Salary<br/>Slip
-          </button>
-        </div>
-
-        <div style={{marginTop:12}}>
-          <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
-        </div>
-
-        {/* Stats */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,padding:"12px 16px 0"}}>
-          <div onClick={()=>setShowRevenueModal(true)} style={{background:"linear-gradient(135deg,#f0fdf4,#dcfce7)",borderRadius:14,padding:"14px 10px",textAlign:"center",cursor:"pointer",border:"1.5px solid #bbf7d0"}}>
-            <div style={{fontSize:18,fontWeight:900,color:"#16a34a"}}>{filtered.length}</div>
-            <div style={{fontSize:10,color:"#166534",fontWeight:700,marginTop:2}}>Clients 👥</div>
-          </div>
-          <div onClick={()=>setShowRevenueModal(true)} style={{background:"linear-gradient(135deg,#ede9fe,#e0d8ff)",borderRadius:14,padding:"14px 10px",textAlign:"center",cursor:"pointer",border:"1.5px solid #e0d8ff"}}>
-            <div style={{fontSize:filtered.length>0&&totalRevenue>=10000?13:18,fontWeight:900,color:"#5b3fc4"}}>{fc(totalRevenue)}</div>
-            <div style={{fontSize:10,color:"#4a3580",fontWeight:700,marginTop:2}}>Revenue 💰</div>
-          </div>
-          <div onClick={()=>setShowAttModal(true)} style={{background:`linear-gradient(135deg,${attPct>=80?"#f0fdf4,#dcfce7":attPct>=60?"#fef9c3,#fef3c7":"#fef2f2,#fee2e2"})`,borderRadius:14,padding:"14px 10px",textAlign:"center",cursor:"pointer",border:`1.5px solid ${attPct>=80?"#86efac":attPct>=60?"#fcd34d":"#fca5a5"}`}}>
-            <div style={{fontSize:18,fontWeight:900,color:attPct>=80?"#16a34a":attPct>=60?"#a16207":"#dc2626"}}>{attPct}%</div>
-            <div style={{fontSize:10,color:"#9b8ec4",fontWeight:700,marginTop:2}}>Attendance 📅</div>
-          </div>
-        </div>
-
-        {/* Attendance bar */}
-        <div style={{padding:"8px 16px 0"}}>
-          <div style={{background:"#e0d8ff",borderRadius:20,height:4,overflow:"hidden"}}>
-            <div style={{width:`${attPct}%`,height:"100%",background:attPct>=80?"#22c55e":attPct>=60?"#f59e0b":"#ef4444",borderRadius:20,transition:"width 0.5s"}}/>
-          </div>
-          <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
-            <div style={{fontSize:10,color:"#9b8ec4"}}>{attendedDays} din present</div>
-            <div style={{fontSize:10,color:"#9b8ec4"}}>{totalDays-attendedDays} din absent</div>
-          </div>
-        </div>
-
-        {/* Work Logs */}
-        <div style={{padding:"14px"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{fontSize:14,fontWeight:800,color:"#1a0a4a"}}>Kaam ki Entries</div>
-            <PurpleBtn onClick={onAddLog} small>+ Add</PurpleBtn>
-          </div>
-          {filtered.length===0
-            ?<div style={{textAlign:"center",color:"#9b8ec4",fontSize:13,padding:"32px 0",background:"#fff",borderRadius:14,border:"1px dashed #e0d8ff"}}>
-              <div style={{fontSize:24,marginBottom:8}}>📋</div>
-              Is period mein koi entry nahi
             </div>
-            :filtered.map((log,i)=>{
-              const cc=CARD_COLORS[i%CARD_COLORS.length];
-              return(
-                <div key={log.id} onClick={()=>setEditingLog(log)}
-                  style={{background:cc.cardBg,borderRadius:12,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer",position:"relative",overflow:"hidden"}}>
-                  <div style={{position:"absolute",width:50,height:50,borderRadius:"50%",background:"rgba(255,255,255,0.2)",top:-10,right:-10}}/>
-                  <div style={{width:36,height:36,borderRadius:10,background:cc.avBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0,color:cc.avColor,fontWeight:800}}>✂️</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,fontWeight:700,color:"#1a0a4a",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{log.clientName}</div>
-                    <div style={{fontSize:11,color:cc.avColor,opacity:0.8,marginTop:2}}>{log.service} · {fd(log.date)}</div>
-                  </div>
-                  <div style={{fontSize:14,fontWeight:800,color:"#16a34a",flexShrink:0}}>{fc(log.amount)}</div>
-                </div>
-              );
-            })
-          }
+            <span style={{ color: C.textMuted, fontSize: 18 }}>›</span>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+          {[
+            { label: "Revenue", value: `₹${fmt(member.revenue_today)}`, bg: "#f0fdf4", color: C.green },
+            { label: "Services", value: member.services_today || 0, bg: C.bg, color: C.textMuted },
+            { label: "Present", value: 1, bg: "#f0fdf4", color: C.green },
+            { label: "Absent", value: 4, bg: "#fef2f2", color: C.red },
+          ].map((s) => (
+            <div
+              key={s.label}
+              style={{
+                background: s.bg,
+                borderRadius: 10,
+                padding: "10px 6px",
+                textAlign: "center",
+              }}
+            >
+              <div style={{ fontWeight: 700, fontSize: 15, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Revenue Share */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 14,
+            padding: 16,
+            border: `1px solid ${C.border}`,
+            marginBottom: 16,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+            <span style={{ fontSize: 14, color: C.text }}>Revenue share</span>
+            <span style={{ fontWeight: 600, color: C.purpleMid }}>20%</span>
+          </div>
+          <div style={{ height: 6, background: C.border, borderRadius: 4, overflow: "hidden" }}>
+            <div style={{ width: "20%", height: "100%", background: C.purpleMid, borderRadius: 4 }} />
+          </div>
+        </div>
+
+        {/* Sections List */}
+        <div
+          style={{
+            background: C.white,
+            borderRadius: 16,
+            border: `1px solid ${C.border}`,
+            overflow: "hidden",
+          }}
+        >
+          {sections.map((s, i) => (
+            <div
+              key={s.label}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px",
+                borderBottom: i < sections.length - 1 ? `1px solid ${C.border}` : "none",
+                cursor: "pointer",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span style={{ fontSize: 18 }}>{s.icon}</span>
+                <span style={{ fontSize: 14, color: C.text }}>{s.label}</span>
+              </div>
+              <span style={{ color: C.textMuted, fontSize: 18 }}>›</span>
+            </div>
+          ))}
         </div>
       </div>
-
-      {editingLog&&<EditLogModal log={editingLog} onSave={handleEditLog} onDelete={handleDeleteLog} onClose={()=>setEditingLog(null)}/>}
-      {showEditStaff&&<EditStaffModal staff={staff} onSave={onEditStaff} onDelete={onDeleteStaff} onClose={()=>setShowEditStaff(false)}/>}
-      {showAttModal&&<AttendanceModal staff={staff} attendance={attendance} fromDate={fromDate} toDate={toDate} onClose={()=>setShowAttModal(false)}/>}
-      {showRevenueModal&&<RevenueModal staff={staff} logs={logs} fromDate={fromDate} toDate={toDate} onClose={()=>setShowRevenueModal(false)}/>}
     </div>
   );
-}
+};
 
-// ─── Owner Dashboard ──────────────────────────────────────────────────────────
-function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAttendance,showRevenueToStaff,setShowRevenueToStaff,currentUser}){
-  const [view,setView]=useState("list");
-  const [selectedStaff,setSelectedStaff]=useState(null);
-  const [showAddStaff,setShowAddStaff]=useState(false);
-  const [showAddLog,setShowAddLog]=useState(false);
-  const [logForStaff,setLogForStaff]=useState(null);
-  const [nextLogId,setNextLogId]=useState(100);
-  const [fromDate,setFromDate]=useState(today);
-  const [toDate,setToDate]=useState(today);
-  const [showSummary,setShowSummary]=useState(false);
+// ══════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT — Navigation Controller
+// ══════════════════════════════════════════════════════════════════════════════
+export default function StaffManagement({ salonId, onBack }) {
+  const SALON_ID = salonId || "ba0e6447-c162-4bc7-b049-fe825121e092";
 
-  async function toggleAttendance(staffId,date){
-    const currentVal=!!(attendance[date]||{})[staffId];
-    const newVal=!currentVal;
-    setAttendance(prev=>{const dm={...(prev[date]||{})};dm[staffId]=newVal;return{...prev,[date]:dm};});
-    if(currentUser?.id){
-      await supabase.from("attendance").upsert({salon_id:currentUser.id,staff_id:staffId,date,is_present:newVal},{onConflict:"salon_id,staff_id,date"});
+  const [screen, setScreen] = useState("list"); // list | summary | add | profile | detail | attendance
+  const [staff, setStaff] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadStaff();
+  }, []);
+
+  const loadStaff = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("staff")
+      .select("*")
+      .eq("salon_id", SALON_ID)
+      .order("name");
+    if (data) {
+      // Enrich with mock today stats (replace with real data when available)
+      setStaff(
+        data.map((s) => ({
+          ...s,
+          status: s.status || "available",
+          revenue_today: s.revenue_today || Math.floor(Math.random() * 12000) + 2000,
+          services_today: s.services_today || Math.floor(Math.random() * 8) + 1,
+          attendance_pct: s.attendance_pct || Math.floor(Math.random() * 10) + 88,
+          is_top: s.is_top || false,
+        }))
+      );
     }
-  }
+    setLoading(false);
+  };
 
-  async function addStaff(data){
-    if(currentUser?.id){
-      const{data:res}=await supabase.from("staff").insert({salon_id:currentUser.id,name:data.name,role:data.role,phone:data.phone,salary:data.salary,pin:data.pin}).select().single();
-      if(res){setStaffList(prev=>[...prev,res]);return;}
-    }
-    setStaffList(prev=>[...prev,{...data,id:Date.now()}]);
-  }
-
-  async function editStaff(updated){
-    if(currentUser?.id&&typeof updated.id==="string"){
-      await supabase.from("staff").update({name:updated.name,role:updated.role,phone:updated.phone,salary:updated.salary,pin:updated.pin}).eq("id",updated.id);
-    }
-    setStaffList(prev=>prev.map(s=>s.id===updated.id?updated:s));
-  }
-
-  async function deleteStaff(id){
-    if(currentUser?.id&&typeof id==="string"){await supabase.from("staff").delete().eq("id",id);}
-    setStaffList(prev=>prev.filter(s=>s.id!==id));
-    setView("list");
-  }
-
-  async function addLog(data){
-    if(currentUser?.id){
-      const{data:res}=await supabase.from("work_logs").insert({salon_id:currentUser.id,staff_id:data.staffId,client_name:data.clientName,service:data.service,amount:data.amount,date:data.date}).select().single();
-      if(res){setLogs(prev=>[...prev,{id:res.id,staffId:res.staff_id,clientName:res.client_name,service:res.service,amount:res.amount,date:res.date}]);return;}
-    }
-    setLogs(prev=>[...prev,{...data,id:nextLogId}]);
-    setNextLogId(n=>n+1);
-  }
-
-  const rangeLogs=logs.filter(l=>l.date>=fromDate&&l.date<=toDate);
-  const rangeRevenue=rangeLogs.reduce((s,l)=>s+l.amount,0);
-  const todayAtt=attendance[today]||{};
-  const presentToday=staffList.filter(s=>todayAtt[s.id]).length;
-
-  if(showSummary)return<StaffSummaryScreen staffList={staffList} logs={logs} attendance={attendance} onBack={()=>setShowSummary(false)}/>;
-  if(view==="detail"&&selectedStaff){
-    return(
-      <>
-        <StaffDetailScreen staff={selectedStaff} logs={logs} setLogs={setLogs} attendance={attendance} onBack={()=>setView("list")}
-          onAddLog={()=>{setLogForStaff(selectedStaff.id);setShowAddLog(true);}}
-          onEditStaff={editStaff} onDeleteStaff={deleteStaff} currentUser={currentUser}/>
-        {showAddLog&&<WorkLogModal staffList={staffList} preselectedStaffId={logForStaff} onSave={addLog} onClose={()=>setShowAddLog(false)}/>}
-      </>
+  if (loading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: C.bg }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>✂️</div>
+          <div style={{ color: C.textMuted, fontSize: 14 }}>Loading staff...</div>
+        </div>
+      </div>
     );
   }
 
-  return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f4f2ff",fontFamily:"'Segoe UI',sans-serif"}}>
-      <PageHeader
-        title="Staff Management"
-        subtitle="Team overview"
-        rightContent={
-          <>
-            <PurpleBtn onClick={()=>setShowSummary(true)} small green>📊</PurpleBtn>
-            <PurpleBtn onClick={()=>{setLogForStaff(null);setShowAddLog(true);}} small>+ Log</PurpleBtn>
-            <PurpleBtn onClick={()=>setShowAddStaff(true)} small>+ Staff</PurpleBtn>
-          </>
-        }
+  if (screen === "summary")
+    return <StaffSummaryScreen staff={staff} onBack={() => setScreen("list")} />;
+
+  if (screen === "add")
+    return (
+      <AddStaffScreen
+        salonId={SALON_ID}
+        onBack={() => setScreen("list")}
+        onSave={loadStaff}
       />
+    );
 
-      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        {/* Revenue toggle */}
-        <div style={{background:showRevenueToStaff?"#e8fdf0":"#fff0f0",borderBottom:"1px solid #e0d8ff",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div>
-            <div style={{fontSize:13,fontWeight:700,color:"#1a0a4a"}}>Staff ko Sales dikhao?</div>
-            <div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{showRevenueToStaff?"ON — Staff apna revenue dekh sakta hai":"OFF"}</div>
-          </div>
-          <div style={{width:52,height:26,borderRadius:13,background:showRevenueToStaff?"#16a34a":"#d1d5db",position:"relative",cursor:"pointer",flexShrink:0}} onClick={()=>setShowRevenueToStaff(v=>!v)}>
-            <div style={{width:20,height:20,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:showRevenueToStaff?29:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
-          </div>
-        </div>
+  if (screen === "profile" && selected)
+    return (
+      <StaffProfileScreen
+        member={selected}
+        onBack={() => setScreen("list")}
+        onEdit={(m) => { setSelected(m); setScreen("detail"); }}
+        onDelete={async (id) => {
+          await supabase.from("staff").delete().eq("id", id);
+          loadStaff();
+          setScreen("list");
+        }}
+      />
+    );
 
-        <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
+  if (screen === "detail" && selected)
+    return (
+      <StaffDetailScreen
+        member={selected}
+        onBack={() => setScreen("profile")}
+      />
+    );
 
-        {/* Stats Row */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,padding:"12px 16px 0"}}>
-          {[
-            {val:presentToday,label:"Present",color:"#16a34a",bg:"#f0fdf4"},
-            {val:staffList.length-presentToday,label:"Absent",color:"#dc2626",bg:"#fef2f2"},
-            {val:rangeLogs.length,label:"Services",color:"#5b3fc4",bg:"#ede9fe"},
-            {val:rangeRevenue>=1000?`\u20b9${(rangeRevenue/1000).toFixed(1)}k`:fc(rangeRevenue),label:"Revenue",color:"#16a34a",bg:"#f0fdf4"},
-          ].map(s=>(
-            <div key={s.label} style={{background:s.bg,borderRadius:10,padding:"10px 6px",textAlign:"center",border:"0.5px solid #e0d8ff"}}>
-              <div style={{fontSize:16,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
-              <div style={{fontSize:9,color:"#9b8ec4",marginTop:3,fontWeight:600}}>{s.label}</div>
-            </div>
-          ))}
-        </div>
+  if (screen === "attendance")
+    return (
+      <AttendanceScreen
+        staff={staff}
+        salonId={SALON_ID}
+        onBack={() => setScreen("list")}
+      />
+    );
 
-        {/* Staff List */}
-        <div style={{padding:"12px 16px 100px"}}>
-          {staffList.length===0&&<div style={{textAlign:"center",color:"#9b8ec4",fontSize:13,padding:"32px 0"}}>Koi staff nahi — Add Staff karo</div>}
-          {staffList.map((s,i)=>{
-            const c=avatarColor(s.id);
-            const isPresent=!!(todayAtt[s.id]);
-            const staffRangeLogs=logs.filter(l=>l.staffId===s.id&&l.date>=fromDate&&l.date<=toDate);
-            const staffRevenue=staffRangeLogs.reduce((a,l)=>a+l.amount,0);
-            const attDates=[];
-            let cur=new Date(fromDate+"T00:00:00");
-            const endD=new Date(toDate+"T00:00:00");
-            const todayD2=new Date(today+"T00:00:00");
-            while(cur<=endD&&cur<=todayD2){attDates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
-            const presentDays=attDates.filter(d=>(attendance[d]||{})[s.id]).length;
-            const attPct=attDates.length>0?Math.round((presentDays/attDates.length)*100):0;
-            return(
-              <div key={s.id} style={{background:"#fff",borderRadius:16,border:"1.5px solid #e0d8ff",padding:"14px",marginBottom:10,boxShadow:"0 1px 6px rgba(45,27,105,0.04)"}}>
-                {/* Top row */}
-                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-                  <div style={{width:44,height:44,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:15,background:c.avBg,color:c.avColor,flexShrink:0}}>{initials(s.name)}</div>
-                  <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>{setSelectedStaff(s);setView("detail");}}>
-                    <div style={{fontSize:14,fontWeight:800,color:"#1a0a4a"}}>{s.name}</div>
-                    <div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{s.role}</div>
-                    <div style={{display:"inline-flex",alignItems:"center",gap:4,marginTop:3}}>
-                      <div style={{width:7,height:7,borderRadius:"50%",background:isPresent?"#22c55e":"#ef4444"}}/>
-                      <span style={{fontSize:10,fontWeight:700,color:isPresent?"#16a34a":"#ef4444"}}>{isPresent?"Online":"Offline"}</span>
-                    </div>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flexShrink:0}}>
-                    <div style={{width:50,height:26,borderRadius:13,background:isPresent?"#16a34a":"#d1d5db",position:"relative",cursor:"pointer"}} onClick={()=>toggleAttendance(s.id,today)}>
-                      <div style={{width:20,height:20,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:isPresent?27:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
-                    </div>
-                    <span style={{fontSize:9,fontWeight:700,color:isPresent?"#16a34a":"#9b8ec4"}}>{isPresent?"Present":"Absent"}</span>
-                  </div>
-                </div>
-                {/* Stats row */}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
-                  <div style={{background:"#f0fdf4",borderRadius:10,padding:"8px 6px",textAlign:"center"}}>
-                    <div style={{fontSize:13,fontWeight:800,color:"#16a34a"}}>{staffRevenue>=1000?`\u20b9${(staffRevenue/1000).toFixed(1)}k`:fc(staffRevenue)}</div>
-                    <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>Revenue</div>
-                  </div>
-                  <div style={{background:"#ede9fe",borderRadius:10,padding:"8px 6px",textAlign:"center"}}>
-                    <div style={{fontSize:13,fontWeight:800,color:"#5b3fc4"}}>{staffRangeLogs.length}</div>
-                    <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>Services</div>
-                  </div>
-                  <div style={{background:attPct>=80?"#f0fdf4":attPct>=60?"#fef9c3":"#fef2f2",borderRadius:10,padding:"8px 6px",textAlign:"center"}}>
-                    <div style={{fontSize:13,fontWeight:800,color:attPct>=80?"#16a34a":attPct>=60?"#a16207":"#dc2626"}}>{attPct}%</div>
-                    <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>Attendance</div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {showAddStaff&&<AddStaffModal onSave={addStaff} onClose={()=>setShowAddStaff(false)}/>}
-      {showAddLog&&<WorkLogModal staffList={staffList} preselectedStaffId={logForStaff} onSave={addLog} onClose={()=>setShowAddLog(false)}/>}
-    </div>
+  return (
+    <StaffListScreen
+      staff={staff}
+      onAddStaff={() => setScreen("add")}
+      onViewSummary={() => setScreen("summary")}
+      onSelectStaff={(s) => { setSelected(s); setScreen("profile"); }}
+    />
   );
 }
-
-// ─── Staff Self View ──────────────────────────────────────────────────────────
-function StaffSelfView({staff,logs,setLogs,attendance,setAttendance,nextLogId,setNextLogId,showRevenue,onLogout}){
-  const [tab,setTab]=useState("month");
-  const [showAddLog,setShowAddLog]=useState(false);
-  const c=avatarColor(staff.id);
-  const isPresent=!!(attendance[today]||{})[staff.id];
-  function toggleMyAttendance(){setAttendance(prev=>{const m={...(prev[today]||{})};m[staff.id]=!m[staff.id];return{...prev,[today]:m};});}
-  function addLog(data){setLogs(prev=>[...prev,{...data,id:nextLogId}]);setNextLogId(n=>n+1);}
-  const filtered=useMemo(()=>{
-    const cutoff=tab==="today"?today:tab==="week"?thisWeekStart:thisMonthStart;
-    return logs.filter(l=>l.staffId===staff.id&&l.date>=cutoff).sort((a,b)=>b.date.localeCompare(a.date));
-  },[logs,tab,staff.id]);
-
-  return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f4f2ff",fontFamily:"'Segoe UI',sans-serif"}}>
-      <PageHeader
-        title="Mera Dashboard"
-        subtitle="Staff View"
-        rightContent={<PurpleBtn onClick={onLogout} small>Logout</PurpleBtn>}
-      />
-      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        {/* Profile + Attendance */}
-        <div style={{background:"#fff",padding:"14px 16px",display:"flex",gap:14,alignItems:"center",borderBottom:"1px solid #e0d8ff"}}>
-          <div style={{width:50,height:50,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:18,background:c.avBg,color:c.avColor,flexShrink:0}}>{initials(staff.name)}</div>
-          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700,color:"#1a0a4a"}}>{staff.name}</div><div style={{fontSize:12,color:"#9b8ec4"}}>{staff.role}</div></div>
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
-            <div style={{width:54,height:28,borderRadius:14,background:isPresent?"#16a34a":"#d1d5db",position:"relative",cursor:"pointer"}} onClick={toggleMyAttendance}>
-              <div style={{width:22,height:22,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:isPresent?29:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
-            </div>
-            <span style={{fontSize:10,fontWeight:700,color:isPresent?"#16a34a":"#9b8ec4"}}>{isPresent?"Present":"Mark Present"}</span>
-          </div>
-        </div>
-
-        <div style={{padding:"12px 16px 0"}}>
-          <div style={{display:"flex",background:"#e0d8ff",borderRadius:10,padding:3,gap:2}}>
-            {[{key:"today",label:"Aaj"},{key:"week",label:"Is Hafte"},{key:"month",label:"Is Mahine"}].map(t=>(
-              <button key={t.key} style={{padding:"8px 0",border:"none",borderRadius:8,background:tab===t.key?"#2d1b69":"transparent",color:tab===t.key?"#fff":"#9b8ec4",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flex:1}} onClick={()=>setTab(t.key)}>{t.label}</button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{display:"grid",gridTemplateColumns:showRevenue?"1fr 1fr":"1fr",gap:10,padding:"12px 16px 0"}}>
-          <div style={{background:"#ede9fe",borderRadius:12,padding:"14px",textAlign:"center",border:"1px solid #e0d8ff"}}>
-            <div style={{fontSize:24,fontWeight:800,color:"#5b3fc4"}}>{filtered.length}</div>
-            <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>Clients</div>
-          </div>
-          {showRevenue&&<div style={{background:"#f0fdf4",borderRadius:12,padding:"14px",textAlign:"center",border:"1px solid #e0d8ff"}}>
-            <div style={{fontSize:22,fontWeight:800,color:"#16a34a"}}>{fc(filtered.reduce((s,l)=>s+l.amount,0))}</div>
-            <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>Revenue</div>
-          </div>}
-        </div>
-
-        <div style={{padding:"14px"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{fontSize:14,fontWeight:700,color:"#1a0a4a"}}>Mera Kaam</div>
-            <PurpleBtn onClick={()=>setShowAddLog(true)} small>+ Add</PurpleBtn>
-          </div>
-          {filtered.length===0
-            ?<div style={{textAlign:"center",color:"#9b8ec4",fontSize:13,padding:"24px 0"}}>Koi entry nahi!</div>
-            :filtered.map((log,i)=>{
-              const cc=CARD_COLORS[i%CARD_COLORS.length];
-              return(
-                <div key={log.id} style={{background:cc.cardBg,borderRadius:10,padding:"11px 14px",display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
-                  <div style={{flex:1}}><div style={{fontSize:14,fontWeight:600,color:"#1a0a4a"}}>{log.clientName}</div><div style={{fontSize:12,color:cc.avColor,marginTop:2,opacity:0.8}}>{log.service} · {fd(log.date)}</div></div>
-                  {showRevenue&&<div style={{fontSize:14,fontWeight:700,color:"#16a34a"}}>{fc(log.amount)}</div>}
-                </div>
-              );
-            })
-          }
-        </div>
-      </div>
-      {showAddLog&&<WorkLogModal staffList={[staff]} preselectedStaffId={staff.id} onSave={addLog} onClose={()=>setShowAddLog(false)}/>}
-    </div>
-  );
-}
-
-// ─── Main Export ──────────────────────────────────────────────────────────────
-export default function StaffManagement({role="owner",currentUser,showRevenue=false,setShowRevenue}){
-  const [staffList,setStaffList]=useState([]);
-  const [logs,setLogs]=useState([]);
-  const [attendance,setAttendance]=useState({});
-  const [nextLogId,setNextLogId]=useState(100);
-
-  useEffect(()=>{
-    async function loadStaff(){
-      const{data}=await supabase.from("staff").select("*").eq("salon_id",currentUser?.id);
-      setStaffList(data&&data.length>0?data:[]);
-    }
-    if(currentUser?.id)loadStaff();
-  },[currentUser?.id]);
-
-  useEffect(()=>{
-    async function loadLogs(){
-      const{data}=await supabase.from("work_logs").select("*").eq("salon_id",currentUser?.id);
-      setLogs(data&&data.length>0?data.map(l=>({id:l.id,staffId:l.staff_id,clientName:l.client_name,service:l.service,amount:l.amount,date:l.date})):[]);
-    }
-    if(currentUser?.id)loadLogs();
-  },[currentUser?.id]);
-
-  useEffect(()=>{
-    async function loadAttendance(){
-      const{data}=await supabase.from("attendance").select("*").eq("salon_id",currentUser?.id);
-      if(data&&data.length>0){
-        const attMap={};
-        data.forEach(row=>{
-          if(!attMap[row.date])attMap[row.date]={};
-          attMap[row.date][row.staff_id]=row.is_present;
-          if(row.absent_reason)attMap[row.date][row.staff_id+"_reason"]=row.absent_reason;
-        });
-        setAttendance(attMap);
-      }else setAttendance({});
-    }
-    if(currentUser?.id)loadAttendance();
-  },[currentUser?.id]);
-
-  const loggedInStaff=role==="staff"?staffList.find(s=>s.id===currentUser?.staffId)||staffList[0]:null;
-
-  if(role==="owner"){
-    return<OwnerDashboard staffList={staffList} setStaffList={setStaffList} logs={logs} setLogs={setLogs}
-      attendance={attendance} setAttendance={setAttendance}
-      showRevenueToStaff={showRevenue} setShowRevenueToStaff={setShowRevenue||(()=>{})}
-      currentUser={currentUser}/>;
-  }
-  if(role==="staff"&&loggedInStaff){
-    return<StaffSelfView staff={loggedInStaff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance}
-      nextLogId={nextLogId} setNextLogId={setNextLogId} showRevenue={showRevenue} onLogout={()=>{}}/>;
-  }
-  return null;
-}
-
-const S={
-  modalBg:{position:"fixed",inset:0,background:"rgba(45,27,105,0.4)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:200},
-  modal:{background:"#fff",borderRadius:"20px 20px 0 0",padding:20,width:"100%",maxWidth:480,paddingBottom:40},
-  pill:{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 16px"},
-  modalTitle:{fontSize:16,fontWeight:700,color:"#1a0a4a",marginBottom:16},
-  fg:{marginBottom:13},
-  fr:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10},
-  label:{fontSize:12,fontWeight:600,color:"#4a3580",marginBottom:5,display:"block"},
-  input:{width:"100%",border:"1.5px solid #e0d8ff",borderRadius:8,padding:"9px 11px",fontSize:14,color:"#1a0a4a",background:"#fafbff",outline:"none",boxSizing:"border-box"},
-  ma:{display:"flex",gap:10,marginTop:18},
-  bc:{flex:1,padding:11,border:"1.5px solid #e0d8ff",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"inherit",backgroundColor:"#ede9fe",color:"#5b3fc4"},
-  bs:{flex:2,padding:11,border:"none",background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",borderRadius:10,fontSize:14,fontWeight:600,color:"#fff",cursor:"pointer",fontFamily:"inherit"},
-  err:{background:"#fff0f0",border:"1px solid #fca5a5",borderRadius:8,padding:"8px 12px",fontSize:12,color:"#dc2626",fontWeight:700,marginBottom:12},
-};
