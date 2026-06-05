@@ -93,8 +93,8 @@ const StaffListScreen = ({ staff, onBack, onAddStaff, onViewAnalytics, onSelectS
 
         {/* Back button */}
         <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", marginBottom: 12, padding: 0 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: C.white, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <i className="ti ti-arrow-left" style={{ fontSize: 16, color: C.text }} />
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: C.white, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: C.text, fontWeight: 600 }}>
+            ←
           </div>
           <span style={{ fontSize: 13, color: C.textMuted, fontWeight: 500 }}>Back</span>
         </button>
@@ -110,8 +110,7 @@ const StaffListScreen = ({ staff, onBack, onAddStaff, onViewAnalytics, onSelectS
               + Add Staff
             </button>
             <button onClick={onViewAnalytics} style={{ background: C.white, color: C.purpleMid, border: `1px solid ${C.purpleBorder}`, borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
-              <i className="ti ti-chart-line" style={{ fontSize: 12, marginRight: 4 }} />
-              Analytics
+              📈 Analytics
             </button>
           </div>
         </div>
@@ -164,7 +163,7 @@ const StaffListScreen = ({ staff, onBack, onAddStaff, onViewAnalytics, onSelectS
               <div style={{ fontWeight: 600, fontSize: 11, color: C.green, marginTop: 3 }}>{s.attendance_pct || 0}%</div>
               <div style={{ fontSize: 9, color: C.textMuted }}>Att.</div>
             </div>
-            <i className="ti ti-chevron-right" style={{ fontSize: 16, color: C.textLight, flexShrink: 0 }} />
+            <span style={{ fontSize: 16, color: C.textLight, flexShrink: 0 }}>›</span>
           </div>
         ))}
       </div>
@@ -239,12 +238,12 @@ const StaffProfileScreen = ({ member, salonId, onBack, onEdit }) => {
       {/* Dark purple header */}
       <div style={{ background: C.purple, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button onClick={onBack} style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 10, padding: "7px 14px", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-          <i className="ti ti-arrow-left" style={{ fontSize: 15, color: C.white }} />
+          <span style={{ fontSize: 15, color: C.white }}>←</span>
           <span style={{ fontSize: 13, color: C.white, fontWeight: 500 }}>Back</span>
         </button>
         <span style={{ fontSize: 16, fontWeight: 700, color: C.white }}>Staff Profile</span>
         <button onClick={() => onEdit(member)} style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 10, padding: "7px 14px", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-          <i className="ti ti-pencil" style={{ fontSize: 15, color: C.white }} />
+          <span style={{ fontSize: 14, color: C.white }}>✏️</span>
           <span style={{ fontSize: 13, color: C.white, fontWeight: 500 }}>Edit</span>
         </button>
       </div>
@@ -259,7 +258,7 @@ const StaffProfileScreen = ({ member, salonId, onBack, onEdit }) => {
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>{member.role || "Staff"}</div>
             {member.phone && (
               <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5 }}>
-                <i className="ti ti-phone" style={{ fontSize: 13, color: C.textMuted }} />
+                <span style={{ fontSize: 13 }}>📞</span>
                 <span style={{ fontSize: 12, color: C.textMuted }}>{member.phone}</span>
               </div>
             )}
@@ -271,9 +270,9 @@ const StaffProfileScreen = ({ member, salonId, onBack, onEdit }) => {
             onClick={() => alert("Salary slip feature coming soon!")}
             style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 10px", textAlign: "center", flexShrink: 0, cursor: "pointer", minWidth: 68 }}
           >
-            <i className="ti ti-file-invoice" style={{ fontSize: 22, color: C.purpleMid, display: "block", marginBottom: 4 }} />
+            <span style={{ fontSize: 22, display: "block", marginBottom: 4 }}>🧾</span>
             <div style={{ fontSize: 10, color: C.purpleMid, fontWeight: 600, lineHeight: 1.3 }}>Salary<br />Slip</div>
-            <i className="ti ti-chevron-right" style={{ fontSize: 11, color: C.textLight, marginTop: 2, display: "block" }} />
+            <span style={{ fontSize: 11, color: C.textLight, marginTop: 2, display: "block" }}>›</span>
           </button>
         </div>
 
@@ -289,12 +288,12 @@ const StaffProfileScreen = ({ member, salonId, onBack, onEdit }) => {
         {/* Custom date range */}
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div style={{ flex: 1, background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-            <i className="ti ti-calendar" style={{ fontSize: 15, color: C.purpleMid }} />
+            📅
             <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); setPeriod("Custom"); }} style={{ border: "none", outline: "none", flex: 1, fontSize: 12, color: C.text, background: "transparent" }} />
           </div>
           <span style={{ color: C.textMuted, fontSize: 14, fontWeight: 500 }}>→</span>
           <div style={{ flex: 1, background: C.white, border: `1px solid ${C.border}`, borderRadius: 10, padding: "9px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-            <i className="ti ti-calendar" style={{ fontSize: 15, color: C.purpleMid }} />
+            📅
             <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); setPeriod("Custom"); }} style={{ border: "none", outline: "none", flex: 1, fontSize: 12, color: C.text, background: "transparent" }} />
           </div>
         </div>
@@ -302,19 +301,19 @@ const StaffProfileScreen = ({ member, salonId, onBack, onEdit }) => {
         {/* 3 Stat boxes */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           <div style={{ background: C.greenBg, borderRadius: 14, padding: "14px 8px", textAlign: "center" }}>
-            <i className="ti ti-users" style={{ fontSize: 22, color: C.green, display: "block", marginBottom: 6 }} />
+            <span style={{ fontSize: 22, display: "block", marginBottom: 6 }}>👥</span>
             <div style={{ fontSize: 22, fontWeight: 700, color: C.green }}>{totalClients}</div>
             <div style={{ fontSize: 11, color: C.green, marginTop: 4, fontWeight: 500 }}>Clients</div>
             <div style={{ fontSize: 9, color: C.green, marginTop: 4 }}>↑ 0% vs last month</div>
           </div>
           <div style={{ background: "#faf5ff", borderRadius: 14, padding: "14px 8px", textAlign: "center", border: `1px solid ${C.purpleBorder}` }}>
-            <i className="ti ti-currency-rupee" style={{ fontSize: 22, color: C.purpleMid, display: "block", marginBottom: 6 }} />
+            <span style={{ fontSize: 22, display: "block", marginBottom: 6 }}>💰</span>
             <div style={{ fontSize: 22, fontWeight: 700, color: C.text }}>₹{fmt(totalRevenue)}</div>
             <div style={{ fontSize: 11, color: C.textMuted, marginTop: 4, fontWeight: 500 }}>Revenue</div>
             <div style={{ fontSize: 9, color: C.green, marginTop: 4 }}>↑ 0% vs last month</div>
           </div>
           <div style={{ background: C.redBg, borderRadius: 14, padding: "14px 8px", textAlign: "center" }}>
-            <i className="ti ti-cut" style={{ fontSize: 22, color: C.red, display: "block", marginBottom: 6 }} />
+            <span style={{ fontSize: 22, display: "block", marginBottom: 6 }}>✂️</span>
             <div style={{ fontSize: 22, fontWeight: 700, color: C.red }}>{attendancePct}%</div>
             <div style={{ fontSize: 11, color: C.red, marginTop: 4, fontWeight: 500 }}>Attendance</div>
             <div style={{ fontSize: 9, color: C.red, marginTop: 4 }}>↓ 0% vs last month</div>
@@ -341,15 +340,15 @@ const StaffProfileScreen = ({ member, salonId, onBack, onEdit }) => {
         {/* Action buttons */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
           <button onClick={handleMessage} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, cursor: "pointer" }}>
-            <i className="ti ti-brand-whatsapp" style={{ fontSize: 20, color: C.purpleMid }} />
+            <span style={{ fontSize: 20 }}>💬</span>
             <span style={{ fontSize: 12, color: C.purpleMid, fontWeight: 500 }}>Message</span>
           </button>
           <button onClick={handleSchedule} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, cursor: "pointer" }}>
-            <i className="ti ti-calendar-event" style={{ fontSize: 20, color: C.purpleMid }} />
+            <span style={{ fontSize: 20 }}>📅</span>
             <span style={{ fontSize: 12, color: C.purpleMid, fontWeight: 500 }}>Schedule</span>
           </button>
           <button onClick={() => alert("More options coming soon!")} style={{ background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 8px", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, cursor: "pointer" }}>
-            <i className="ti ti-dots" style={{ fontSize: 20, color: C.purpleMid }} />
+            <span style={{ fontSize: 20 }}>⋯</span>
             <span style={{ fontSize: 12, color: C.purpleMid, fontWeight: 500 }}>More</span>
           </button>
         </div>
@@ -358,7 +357,7 @@ const StaffProfileScreen = ({ member, salonId, onBack, onEdit }) => {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: C.text }}>Kaam ki Entries</div>
           <button onClick={() => setShowAddEntry(true)} style={{ background: C.purpleMid, color: C.white, border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
-            <i className="ti ti-plus" style={{ fontSize: 13, color: C.white }} />
+            <span style={{ fontSize: 13 }}>+</span>
             Add Entry
           </button>
         </div>
@@ -369,7 +368,7 @@ const StaffProfileScreen = ({ member, salonId, onBack, onEdit }) => {
         ) : workLogs.length === 0 ? (
           <div style={{ background: C.white, borderRadius: 14, padding: 32, border: `1px solid ${C.border}`, textAlign: "center" }}>
             <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.purpleLight, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-              <i className="ti ti-clipboard-list" style={{ fontSize: 26, color: C.purpleMid }} />
+              <span style={{ fontSize: 26 }}>📋</span>
             </div>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 4 }}>Koi entry nahi abhi</div>
             <div style={{ fontSize: 12, color: C.textLight }}>Jab bhi kaam assign hoga, yahan dikhega.</div>
@@ -481,7 +480,7 @@ const AddStaffScreen = ({ salonId, onBack, onSaved }) => {
     <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 40 }}>
       <div style={{ background: C.purple, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button onClick={onBack} style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 10, padding: "7px 14px", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-          <i className="ti ti-arrow-left" style={{ fontSize: 15, color: C.white }} />
+          <span style={{ fontSize: 15, color: C.white }}>←</span>
           <span style={{ fontSize: 13, color: C.white, fontWeight: 500 }}>Back</span>
         </button>
         <span style={{ fontSize: 16, fontWeight: 700, color: C.white }}>Add Staff</span>
@@ -559,12 +558,12 @@ const EditStaffScreen = ({ member, onBack, onSaved }) => {
     <div style={{ background: C.bg, minHeight: "100vh", paddingBottom: 40 }}>
       <div style={{ background: C.purple, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button onClick={onBack} style={{ background: "rgba(255,255,255,0.12)", border: "none", borderRadius: 10, padding: "7px 14px", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-          <i className="ti ti-arrow-left" style={{ fontSize: 15, color: C.white }} />
+          <span style={{ fontSize: 15, color: C.white }}>←</span>
           <span style={{ fontSize: 13, color: C.white, fontWeight: 500 }}>Back</span>
         </button>
         <span style={{ fontSize: 16, fontWeight: 700, color: C.white }}>Edit Staff</span>
         <button onClick={deleteStaff} style={{ background: "rgba(239,68,68,0.2)", border: "none", borderRadius: 10, padding: "7px 14px", cursor: "pointer" }}>
-          <i className="ti ti-trash" style={{ fontSize: 15, color: "#fca5a5" }} />
+          <span style={{ fontSize: 15 }}>🗑️</span>
         </button>
       </div>
 
@@ -636,7 +635,7 @@ export default function StaffManagement({ salonId, onBack }) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: C.bg }}>
         <div style={{ textAlign: "center" }}>
-          <i className="ti ti-cut" style={{ fontSize: 32, color: C.purpleMid, display: "block", marginBottom: 12 }} />
+          <span style={{ fontSize: 32, display: "block", marginBottom: 12 }}>✂️</span>
           <div style={{ color: C.textMuted, fontSize: 14 }}>Loading staff...</div>
         </div>
       </div>
@@ -659,7 +658,7 @@ export default function StaffManagement({ salonId, onBack }) {
       staff={staff}
       onBack={onBack}
       onAddStaff={() => setScreen("add")}
-      onViewAnalytics={() => alert("Analytics coming soon!")}
+      onViewAnalytics={() => setScreen("summary")}
       onSelectStaff={(s) => { setSelected(s); setScreen("profile"); }}
     />
   );
