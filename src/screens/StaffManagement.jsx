@@ -452,35 +452,25 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
         </div>
 
         {/* 3 Stat Cards */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
-          <div style={{background:"#f0fdf4",borderRadius:14,padding:"14px 8px",textAlign:"center",border:"1px solid #bbf7d0"}}>
-            <div style={{width:36,height:36,borderRadius:"50%",background:"#dcfce7",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px",fontSize:18}}>💰</div>
-            <div style={{fontSize:18,fontWeight:700,color:NP.green}}>{fc(totalRevenue)}</div>
-            <div style={{fontSize:10,color:NP.green,marginTop:3,fontWeight:500}}>Total Revenue</div>
-            <div style={{fontSize:9,color:NP.green,marginTop:3}}>↑ 18% vs last month</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:7,marginBottom:12}}>
+          <div style={{background:"#f0fdf4",borderRadius:10,padding:"10px 6px",textAlign:"center",border:"1px solid #bbf7d0"}}>
+            <div style={{fontSize:15,marginBottom:3}}>💰</div>
+            <div style={{fontSize:15,fontWeight:700,color:NP.green,lineHeight:1}}>{fc(totalRevenue)}</div>
+            <div style={{fontSize:9,color:NP.green,marginTop:3,fontWeight:500}}>Total Revenue</div>
+            <div style={{fontSize:8,color:NP.green,marginTop:2}}>↑ 18% vs last month</div>
           </div>
-          <div style={{background:"#eff6ff",borderRadius:14,padding:"14px 8px",textAlign:"center",border:"1px solid #bfdbfe"}}>
-            <div style={{width:36,height:36,borderRadius:"50%",background:"#dbeafe",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px",fontSize:18}}>👥</div>
-            <div style={{fontSize:18,fontWeight:700,color:NP.blue}}>{totalClients}</div>
-            <div style={{fontSize:10,color:NP.blue,marginTop:3,fontWeight:500}}>Total Clients</div>
-            <div style={{fontSize:9,color:NP.blue,marginTop:3}}>↑ 12% vs last month</div>
+          <div style={{background:"#eff6ff",borderRadius:10,padding:"10px 6px",textAlign:"center",border:"1px solid #bfdbfe"}}>
+            <div style={{fontSize:15,marginBottom:3}}>👥</div>
+            <div style={{fontSize:15,fontWeight:700,color:NP.blue,lineHeight:1}}>{totalClients}</div>
+            <div style={{fontSize:9,color:NP.blue,marginTop:3,fontWeight:500}}>Total Clients</div>
+            <div style={{fontSize:8,color:NP.blue,marginTop:2}}>↑ 12% vs last month</div>
           </div>
-          <div style={{background:avgAtt>=80?"#f0fdf4":avgAtt>=60?"#fef9c3":"#fff5f5",borderRadius:14,padding:"14px 8px",textAlign:"center",border:`1px solid ${avgAtt>=80?"#bbf7d0":avgAtt>=60?"#fcd34d":"#fca5a5"}`}}>
-            <div style={{width:36,height:36,borderRadius:"50%",background:avgAtt>=80?"#dcfce7":avgAtt>=60?"#fef3c7":"#fee2e2",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px",fontSize:18}}>📅</div>
-            <div style={{fontSize:18,fontWeight:700,color:avgAtt>=80?NP.green:avgAtt>=60?"#a16207":NP.red}}>{avgAtt}%</div>
-            <div style={{fontSize:10,color:avgAtt>=80?NP.green:avgAtt>=60?"#a16207":NP.red,marginTop:3,fontWeight:500}}>Avg. Attendance</div>
-            <div style={{fontSize:9,color:NP.red,marginTop:3}}>↓ 5% vs last month</div>
+          <div style={{background:avgAtt>=80?"#f0fdf4":avgAtt>=60?"#fef9c3":"#fff5f5",borderRadius:10,padding:"10px 6px",textAlign:"center",border:`1px solid ${avgAtt>=80?"#bbf7d0":avgAtt>=60?"#fcd34d":"#fca5a5"}`}}>
+            <div style={{fontSize:15,marginBottom:3}}>📅</div>
+            <div style={{fontSize:15,fontWeight:700,color:avgAtt>=80?NP.green:avgAtt>=60?"#a16207":NP.red,lineHeight:1}}>{avgAtt}%</div>
+            <div style={{fontSize:9,color:avgAtt>=80?NP.green:avgAtt>=60?"#a16207":NP.red,marginTop:3,fontWeight:500}}>Avg. Attendance</div>
+            <div style={{fontSize:8,color:NP.red,marginTop:2}}>↓ 5% vs last month</div>
           </div>
-        </div>
-
-        {/* Sort tabs */}
-        <div style={{display:"flex",background:NP.white,borderRadius:12,padding:4,gap:3,marginBottom:14,border:`1px solid ${NP.border}`}}>
-          {[{key:"revenue",label:"💰 Revenue"},{key:"clients",label:"👥 Clients"},{key:"attendance",label:"📅 Attendance"}].map(t=>(
-            <button key={t.key} onClick={()=>setSortBy(t.key)}
-              style={{flex:1,padding:"8px 4px",border:"none",borderRadius:9,background:sortBy===t.key?NP.purple:"transparent",color:sortBy===t.key?"#fff":NP.muted,fontSize:11,fontWeight:sortBy===t.key?700:400,cursor:"pointer",fontFamily:"inherit"}}>
-              {t.label}
-            </button>
-          ))}
         </div>
 
         {/* Staff ranking cards */}
@@ -489,22 +479,22 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
           const c=avatarColor(s.id);
           const revenueShare=totalRevenue>0?Math.round((s.revenue/totalRevenue)*100):0;
           return(
-            <div key={s.id} style={{background:NP.white,borderRadius:16,border:`1.5px solid ${idx===0?"#fde68a":NP.border}`,padding:"14px",marginBottom:10,boxShadow:idx===0?"0 2px 12px rgba(251,191,36,0.15)":"none"}}>
-              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                <div style={{fontSize:idx<3?22:14,width:28,textAlign:"center",flexShrink:0}}>{idx<3?rankMedals[idx]:`#${idx+1}`}</div>
-                <div style={{width:40,height:40,borderRadius:"50%",background:c.bg,color:c.text,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,flexShrink:0}}>{initials(s.name)}</div>
+            <div key={s.id} style={{background:NP.white,borderRadius:16,border:`1.5px solid ${idx===0?"#fde68a":NP.border}`,padding:"10px 12px",marginBottom:8,boxShadow:idx===0?"0 2px 8px rgba(251,191,36,0.12)":"none"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                <span style={{fontSize:idx<3?18:12,width:22,textAlign:"center",flexShrink:0}}>{idx<3?rankMedals[idx]:`#${idx+1}`}</span>
+                <div style={{width:34,height:34,borderRadius:"50%",background:c.bg,color:c.text,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:12,flexShrink:0}}>{initials(s.name)}</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:14,fontWeight:700,color:NP.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div>
-                  <div style={{fontSize:11,color:NP.muted,marginTop:1}}>{s.role}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:NP.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div>
+                  <div style={{fontSize:10,color:NP.muted}}>{s.role}</div>
                 </div>
-                <div style={{background:s.attPct>=80?"#dcfce7":s.attPct>=60?"#fef9c3":"#fee2e2",color:s.attPct>=80?NP.green:s.attPct>=60?"#a16207":NP.red,fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,flexShrink:0}}>{s.attPct}%</div>
+                <div style={{background:s.attPct>=80?"#dcfce7":s.attPct>=60?"#fef9c3":"#fee2e2",color:s.attPct>=80?NP.green:s.attPct>=60?"#a16207":NP.red,fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:20,flexShrink:0}}>{s.attPct}%</div>
               </div>
 
-              {/* 4 stat boxes */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:10}}>
-                <div onClick={()=>setRevenueModal(s)} style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1px solid #bbf7d0"}}>
-                  <div style={{fontSize:12,fontWeight:700,color:NP.green}}>{s.revenue>=1000?`₹${(s.revenue/1000).toFixed(1)}k`:fc(s.revenue)}</div>
-                  <div style={{fontSize:9,color:NP.muted,marginTop:2}}>Revenue</div>
+              {/* 4 compact mini stats */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5,marginBottom:8}}>
+                <div onClick={()=>setRevenueModal(s)} style={{background:"#f0fdf4",borderRadius:8,padding:"7px 4px",textAlign:"center",cursor:"pointer",border:"1px solid #bbf7d0"}}>
+                  <div style={{fontSize:11,fontWeight:700,color:NP.green}}>{s.revenue>=1000?`₹${(s.revenue/1000).toFixed(1)}k`:fc(s.revenue)}</div>
+                  <div style={{fontSize:8,color:NP.muted,marginTop:2}}>Revenue</div>
                 </div>
                 <div onClick={()=>setRevenueModal(s)} style={{background:"#eff6ff",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1px solid #bfdbfe"}}>
                   <div style={{fontSize:12,fontWeight:700,color:NP.blue}}>{s.clients}</div>
@@ -525,7 +515,7 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
                 <span style={{fontSize:11,color:NP.muted}}>Revenue Share</span>
                 <span style={{fontSize:11,fontWeight:700,color:NP.green}}>{revenueShare}%</span>
               </div>
-              <div style={{background:"#f0f4f8",borderRadius:20,height:5,overflow:"hidden"}}>
+              <div style={{background:"#f0f4f8",borderRadius:20,height:4,overflow:"hidden"}}>
                 <div style={{width:`${revenueShare}%`,height:"100%",background:"linear-gradient(90deg,#22c55e,#86efac)",borderRadius:20}}/>
               </div>
             </div>
