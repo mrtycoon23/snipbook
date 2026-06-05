@@ -537,88 +537,114 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
 
   if(showSalarySlip)return<SalarySlipScreen staff={staff} logs={logs} attendance={attendance} onBack={()=>setShowSalarySlip(false)}/>;
 
+  const NP={purple:"#1e1b4b",purpleMid:"#7c3aed",purpleLight:"#ede9fe",purpleBorder:"#ddd6fe",bg:"#f5f3ff",white:"#ffffff",text:"#1e1b4b",muted:"#6b7280",light:"#9ca3af",border:"#e5e7eb",green:"#16a34a",greenBg:"#f0fdf4",red:"#ef4444",redBg:"#fff5f5"};
+
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f5f5f0",fontFamily:"'Segoe UI',sans-serif"}}>
-      {/* Header */}
-      <div style={{...S.hdr,flexShrink:0}}>
-        <button onClick={onBack} style={S.backBtn}>← Back</button>
-        <div style={{textAlign:"center"}}><div style={S.hdrT}>{staff.name}</div><div style={S.hdrS}>{staff.role}</div></div>
-        <button onClick={()=>setShowEditStaff(true)} style={{...S.backBtn,fontSize:11}}>Edit</button>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:NP.bg,fontFamily:"system-ui,sans-serif"}}>
+
+      {/* Dark purple header */}
+      <div style={{background:NP.purple,padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+        <button onClick={onBack} style={{background:"rgba(255,255,255,0.12)",border:"none",borderRadius:10,padding:"7px 14px",display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>
+          <span style={{fontSize:15,color:"#fff"}}>←</span>
+          <span style={{fontSize:13,color:"#fff",fontWeight:500}}>Back</span>
+        </button>
+        <span style={{fontSize:16,fontWeight:700,color:"#fff"}}>Staff Profile</span>
+        <button onClick={()=>setShowEditStaff(true)} style={{background:"rgba(255,255,255,0.12)",border:"none",borderRadius:10,padding:"7px 14px",cursor:"pointer"}}>
+          <span style={{fontSize:13,color:"#fff",fontWeight:500}}>✏️ Edit</span>
+        </button>
       </div>
 
-      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"14px 16px"}}>
+
         {/* Profile Card */}
-        <div style={{background:"white",margin:"14px 14px 0",borderRadius:16,padding:"16px",border:"1px solid #f0f4f8",display:"flex",alignItems:"center",gap:14}}>
-          <div style={{...S.av,width:56,height:56,fontSize:20,background:c.bg,color:c.text,flexShrink:0}}>{initials(staff.name)}</div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:16,fontWeight:800,color:"#1a1a2e"}}>{staff.name}</div>
-            <div style={{fontSize:12,color:"#888",marginTop:2}}>{staff.role}</div>
-            {staff.phone&&<div style={{fontSize:12,color:"#888",marginTop:1}}>📞 {staff.phone}</div>}
-            <div style={{fontSize:12,color:"#16a34a",fontWeight:700,marginTop:2}}>{fc(staff.salary)}/mo</div>
+        <div style={{background:NP.white,borderRadius:16,padding:16,border:`1px solid ${NP.border}`,display:"flex",alignItems:"center",gap:14,marginBottom:12}}>
+          <div style={{position:"relative",flexShrink:0}}>
+            <div style={{width:58,height:58,borderRadius:"50%",background:c.bg,color:c.text,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:20}}>{initials(staff.name)}</div>
+            <span style={{position:"absolute",bottom:2,right:2,width:14,height:14,borderRadius:"50%",background:NP.green,border:"2px solid white"}}/>
           </div>
-          <button onClick={()=>setShowSalarySlip(true)} style={{background:"#f0fdf4",border:"1.5px solid #bbf7d0",borderRadius:12,padding:"8px 12px",fontSize:11,fontWeight:700,color:"#166534",cursor:"pointer",textAlign:"center"}}>
-            📄<br/>Salary<br/>Slip
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:700,fontSize:17,color:NP.text}}>{staff.name}</div>
+            <div style={{fontSize:12,color:NP.muted,marginTop:1}}>{staff.role}</div>
+            {staff.phone&&<div style={{fontSize:12,color:NP.muted,marginTop:3}}>📞 {staff.phone}</div>}
+            <div style={{fontSize:13,fontWeight:700,color:NP.green,marginTop:4}}>{fc(staff.salary||0)}/mo</div>
+          </div>
+          <button onClick={()=>setShowSalarySlip(true)} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"10px 10px",textAlign:"center",flexShrink:0,cursor:"pointer",minWidth:64}}>
+            <div style={{fontSize:20,marginBottom:3}}>🧾</div>
+            <div style={{fontSize:10,color:NP.purpleMid,fontWeight:600,lineHeight:1.3}}>Salary<br/>Slip</div>
           </button>
         </div>
 
         {/* Date Range */}
-        <div style={{marginTop:12}}>
+        <div style={{marginBottom:12}}>
           <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
         </div>
 
-        {/* Clickable Stats */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,padding:"12px 14px 0"}}>
-          {/* Clients + Revenue — clickable */}
-          <div onClick={()=>setShowRevenueModal(true)} style={{background:"linear-gradient(135deg,#f0fdf4,#dcfce7)",borderRadius:14,padding:"14px 10px",textAlign:"center",cursor:"pointer",border:"1.5px solid #bbf7d0",gridColumn:"span 1"}}>
-            <div style={{fontSize:18,fontWeight:900,color:"#16a34a"}}>{filtered.length}</div>
-            <div style={{fontSize:10,color:"#166534",fontWeight:700,marginTop:2}}>Clients 👥</div>
+        {/* 3 Stat boxes — all clickable */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+          <div onClick={()=>setShowRevenueModal(true)} style={{background:NP.greenBg,borderRadius:14,padding:"14px 8px",textAlign:"center",cursor:"pointer"}}>
+            <div style={{fontSize:22,fontWeight:700,color:NP.green}}>{filtered.length}</div>
+            <div style={{fontSize:10,color:NP.green,marginTop:4,fontWeight:500}}>Clients 👥</div>
           </div>
-          <div onClick={()=>setShowRevenueModal(true)} style={{background:"linear-gradient(135deg,#eff6ff,#dbeafe)",borderRadius:14,padding:"14px 10px",textAlign:"center",cursor:"pointer",border:"1.5px solid #93c5fd"}}>
-            <div style={{fontSize:filtered.length>0&&totalRevenue>=10000?13:18,fontWeight:900,color:"#2563eb"}}>{fc(totalRevenue)}</div>
-            <div style={{fontSize:10,color:"#1e40af",fontWeight:700,marginTop:2}}>Revenue 💰</div>
+          <div onClick={()=>setShowRevenueModal(true)} style={{background:"#eff6ff",borderRadius:14,padding:"14px 8px",textAlign:"center",cursor:"pointer",border:`1px solid #dbeafe`}}>
+            <div style={{fontSize:filtered.length>0&&totalRevenue>=10000?13:20,fontWeight:700,color:"#2563eb"}}>{fc(totalRevenue)}</div>
+            <div style={{fontSize:10,color:"#2563eb",marginTop:4,fontWeight:500}}>Revenue 💰</div>
           </div>
-          {/* Attendance — clickable */}
-          <div onClick={()=>setShowAttModal(true)} style={{background:`linear-gradient(135deg,${attPct>=80?"#f0fdf4,#dcfce7":attPct>=60?"#fef9c3,#fef3c7":"#fef2f2,#fee2e2"})`,borderRadius:14,padding:"14px 10px",textAlign:"center",cursor:"pointer",border:`1.5px solid ${attPct>=80?"#86efac":attPct>=60?"#fcd34d":"#fca5a5"}`}}>
-            <div style={{fontSize:18,fontWeight:900,color:attPct>=80?"#16a34a":attPct>=60?"#a16207":"#dc2626"}}>{attPct}%</div>
-            <div style={{fontSize:10,color:"#888",fontWeight:700,marginTop:2}}>Attendance 📅</div>
+          <div onClick={()=>setShowAttModal(true)} style={{background:attPct>=80?NP.greenBg:attPct>=60?"#fef9c3":NP.redBg,borderRadius:14,padding:"14px 8px",textAlign:"center",cursor:"pointer"}}>
+            <div style={{fontSize:22,fontWeight:700,color:attPct>=80?NP.green:attPct>=60?"#a16207":NP.red}}>{attPct}%</div>
+            <div style={{fontSize:10,color:attPct>=80?NP.green:attPct>=60?"#a16207":NP.red,marginTop:4,fontWeight:500}}>Attendance 📅</div>
           </div>
         </div>
 
-        {/* Attendance mini bar */}
-        <div style={{padding:"8px 14px 0"}}>
-          <div style={{background:"#f0f4f8",borderRadius:20,height:4,overflow:"hidden"}}>
-            <div style={{width:`${attPct}%`,height:"100%",background:attPct>=80?"#22c55e":attPct>=60?"#f59e0b":"#ef4444",borderRadius:20,transition:"width 0.5s"}}/>
+        {/* Attendance bar */}
+        <div style={{background:NP.white,borderRadius:12,padding:"12px 14px",border:`1px solid ${NP.border}`,marginBottom:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <span style={{fontSize:12,color:NP.green,fontWeight:600}}>● {attendedDays} din present</span>
+            <span style={{fontSize:12,color:NP.red,fontWeight:600}}>{totalDays-attendedDays} din absent ●</span>
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
-            <div style={{fontSize:10,color:"#888"}}>{attendedDays} din present</div>
-            <div style={{fontSize:10,color:"#888"}}>{totalDays-attendedDays} din absent</div>
+          <div style={{height:7,background:"#fee2e2",borderRadius:4,overflow:"hidden"}}>
+            <div style={{width:`${attPct}%`,height:"100%",background:NP.green,borderRadius:4,transition:"width 0.5s"}}/>
           </div>
         </div>
 
-        {/* Work Logs */}
-        <div style={{padding:"14px"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e"}}>Kaam ki Entries</div>
-            <button style={S.addBtn} onClick={onAddLog}>+ Add</button>
+        {/* Action buttons */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
+          <button onClick={()=>{if(staff.phone)window.open(`https://wa.me/91${staff.phone.replace(/\D/g,"")}`)}} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
+            <span style={{fontSize:20}}>💬</span>
+            <span style={{fontSize:12,color:NP.purpleMid,fontWeight:500}}>Message</span>
+          </button>
+          <button onClick={()=>setShowAttModal(true)} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
+            <span style={{fontSize:20}}>📅</span>
+            <span style={{fontSize:12,color:NP.purpleMid,fontWeight:500}}>Attendance</span>
+          </button>
+          <button onClick={()=>setShowRevenueModal(true)} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
+            <span style={{fontSize:20}}>📊</span>
+            <span style={{fontSize:12,color:NP.purpleMid,fontWeight:500}}>Revenue</span>
+          </button>
+        </div>
+
+        {/* Kaam ki Entries */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div style={{fontSize:16,fontWeight:700,color:NP.text}}>Kaam ki Entries</div>
+          <button onClick={onAddLog} style={{background:NP.purpleMid,color:NP.white,border:"none",borderRadius:10,padding:"8px 16px",fontSize:12,fontWeight:600,cursor:"pointer"}}>+ Add Entry</button>
+        </div>
+
+        {filtered.length===0
+          ?<div style={{background:NP.white,borderRadius:14,padding:32,border:`1px solid ${NP.border}`,textAlign:"center"}}>
+            <div style={{fontSize:32,marginBottom:8}}>📋</div>
+            <div style={{fontSize:14,fontWeight:600,color:NP.text,marginBottom:4}}>Koi entry nahi abhi</div>
+            <div style={{fontSize:12,color:NP.light}}>Jab bhi kaam assign hoga, yahan dikhega.</div>
           </div>
-          {filtered.length===0
-            ?<div style={{textAlign:"center",color:"#9ca3af",fontSize:13,padding:"32px 0",background:"white",borderRadius:14,border:"1px dashed #e8edf3"}}>
-              <div style={{fontSize:24,marginBottom:8}}>📋</div>
-              Is period mein koi entry nahi
-            </div>
-            :filtered.map(log=>(
-              <div key={log.id} onClick={()=>setEditingLog(log)}
-                style={{background:"white",borderRadius:12,border:"1px solid #f0f4f8",padding:"12px 14px",display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
-                <div style={{width:38,height:38,borderRadius:10,background:"#f0fdf4",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>✂️</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:"#1a1a2e",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{log.clientName}</div>
-                  <div style={{fontSize:11,color:"#888",marginTop:2}}>{log.service} · {fd(log.date)}</div>
-                </div>
-                <div style={{fontSize:14,fontWeight:800,color:"#16a34a",flexShrink:0}}>{fc(log.amount)}</div>
+          :filtered.map(log=>(
+            <div key={log.id} onClick={()=>setEditingLog(log)} style={{background:NP.white,borderRadius:12,border:`1px solid ${NP.border}`,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
+              <div style={{width:38,height:38,borderRadius:10,background:NP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>✂️</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:700,color:NP.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{log.clientName}</div>
+                <div style={{fontSize:11,color:NP.muted,marginTop:2}}>{log.service} · {fd(log.date)}</div>
               </div>
-            ))
-          }
-        </div>
+              <div style={{fontSize:14,fontWeight:800,color:NP.green,flexShrink:0}}>{fc(log.amount)}</div>
+            </div>
+          ))
+        }
       </div>
 
       {editingLog&&<EditLogModal log={editingLog} onSave={handleEditLog} onDelete={handleDeleteLog} onClose={()=>setEditingLog(null)}/>}
@@ -697,68 +723,97 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
     );
   }
 
+  const NP={purple:"#1e1b4b",purpleMid:"#7c3aed",purpleLight:"#ede9fe",purpleBorder:"#ddd6fe",bg:"#f5f3ff",white:"#ffffff",text:"#1e1b4b",muted:"#6b7280",light:"#9ca3af",border:"#e5e7eb",green:"#16a34a",greenBg:"#f0fdf4",orange:"#f59e0b",red:"#ef4444"};
+
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f5f5f0",fontFamily:"'Segoe UI',sans-serif"}}>
-      <div style={{...S.hdr,flexShrink:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          {onBack&&<button onClick={onBack} style={S.backBtn}>← Back</button>}
-          <div><div style={S.hdrT}>Staff Management</div><div style={S.hdrS}>Owner View</div></div>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:NP.bg,fontFamily:"system-ui,sans-serif"}}>
+
+      {/* Header */}
+      <div style={{padding:"14px 16px 0",background:NP.bg,flexShrink:0}}>
+        {/* Back button */}
+        {onBack&&<button onClick={onBack} style={{display:"flex",alignItems:"center",gap:8,background:"none",border:"none",cursor:"pointer",marginBottom:12,padding:0}}>
+          <div style={{width:34,height:34,borderRadius:10,background:NP.white,border:`1px solid ${NP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:NP.text,fontWeight:600}}>←</div>
+          <span style={{fontSize:13,color:NP.muted,fontWeight:500}}>Back</span>
+        </button>}
+
+        {/* Title + Buttons */}
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:12}}>
+          <div>
+            <div style={{fontSize:20,fontWeight:700,color:NP.text}}>Staff Management</div>
+            <div style={{fontSize:11,color:NP.muted,marginTop:2}}>Manage your team performance</div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            <button onClick={()=>setShowAddStaff(true)} style={{background:NP.purpleMid,color:NP.white,border:"none",borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:600,cursor:"pointer"}}>+ Add Staff</button>
+            <button onClick={()=>setShowSummary(true)} style={{background:NP.white,color:NP.purpleMid,border:`1px solid ${NP.purpleBorder}`,borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:500,cursor:"pointer"}}>📈 Analytics</button>
+          </div>
         </div>
-        <div style={{display:"flex",gap:6}}>
-          <button style={{...S.addBtn,background:"#22c55e",fontSize:11}} onClick={()=>setShowSummary(true)}>📊 Summary</button>
-          <button style={{...S.addBtn,fontSize:11}} onClick={()=>{setLogForStaff(null);setShowAddLog(true);}}>+ Log</button>
+
+        {/* Date filter tabs */}
+        <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
+
+        {/* 3 Stat Cards */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,margin:"12px 0 14px"}}>
+          {[
+            {icon:"👥",value:staffList.length,label:"Active Staff"},
+            {icon:"💰",value:fc(rangeRevenue),label:"Revenue"},
+            {icon:"✂️",value:rangeLogs.length,label:"Services"},
+          ].map(c=>(
+            <div key={c.label} style={{background:NP.white,borderRadius:12,border:`1px solid ${NP.border}`,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
+              <div style={{width:30,height:30,borderRadius:"50%",background:NP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:7,fontSize:14}}>{c.icon}</div>
+              <div style={{fontSize:16,fontWeight:700,color:NP.text}}>{c.value}</div>
+              <div style={{fontSize:10,color:NP.muted,marginTop:2}}>{c.label}</div>
+            </div>
+          ))}
         </div>
       </div>
-      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        <div style={{background:showRevenueToStaff?"#f0fdf4":"#fef2f2",borderBottom:"0.5px solid #e8e8e0",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div>
-            <div style={{fontSize:13,fontWeight:700,color:"#1a1a2e"}}>Staff ko Sales dikhao?</div>
-            <div style={{fontSize:11,color:"#888",marginTop:1}}>{showRevenueToStaff?"ON":"OFF"}</div>
-          </div>
-          <div style={{width:52,height:26,borderRadius:13,background:showRevenueToStaff?"#16a34a":"#d1d5db",position:"relative",cursor:"pointer",flexShrink:0}} onClick={()=>setShowRevenueToStaff(v=>!v)}>
-            <div style={{width:20,height:20,borderRadius:"50%",background:"white",position:"absolute",top:3,left:showRevenueToStaff?29:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
-          </div>
-        </div>
-        <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,padding:"12px 14px 0"}}>
-          <div style={S.sc}><div style={{...S.sn,color:"#16a34a"}}>{presentToday}</div><div style={S.sl}>Present</div></div>
-          <div style={S.sc}><div style={{...S.sn,color:"#dc2626"}}>{staffList.length-presentToday}</div><div style={S.sl}>Absent</div></div>
-          <div style={S.sc}><div style={{...S.sn,color:"#1a1a2e"}}>{rangeLogs.length}</div><div style={S.sl}>Services</div></div>
-          <div style={S.sc}><div style={{...S.sn,color:"#2563eb",fontSize:12}}>{fc(rangeRevenue)}</div><div style={S.sl}>Revenue</div></div>
-        </div>
-        <div style={{padding:"14px"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-            <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e"}}>Staff List</div>
-            <button style={S.addBtn} onClick={()=>setShowAddStaff(true)}>+ Add Staff</button>
-          </div>
-          {staffList.length===0&&<div style={{textAlign:"center",color:"#9ca3af",fontSize:13,padding:"32px 0"}}>Koi staff nahi — Add Staff karo</div>}
-          {staffList.map(s=>{
-            const c=avatarColor(s.id);
-            const isPresent=!!(todayAtt[s.id]);
-            const staffRangeLogs=logs.filter(l=>l.staffId===s.id&&l.date>=fromDate&&l.date<=toDate);
-            const staffRevenue=staffRangeLogs.reduce((a,l)=>a+l.amount,0);
-            return(
-              <div key={s.id} style={{background:"white",borderRadius:14,border:`1.5px solid ${isPresent?"#bbf7d0":"#e8edf3"}`,padding:"13px 14px",display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
-                <div style={{...S.av,background:c.bg,color:c.text}}>{initials(s.name)}</div>
-                <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>{setSelectedStaff(s);setView("detail");}}>
-                  <div style={{fontSize:14,fontWeight:700,color:"#1a1a2e"}}>{s.name}</div>
-                  <div style={{fontSize:11,color:"#888",marginTop:1}}>{s.role}</div>
-                  <div style={{fontSize:11,marginTop:3,color:isPresent?"#2563eb":"#9ca3af"}}>
-                    {isPresent?`${staffRangeLogs.length} clients · ${fc(staffRevenue)} · Detail →`:"Absent today"}
-                    {!isPresent&&attendance[today]?.[s.id+"_reason"]&&<span style={{color:"#ef4444",marginLeft:4}}>· {attendance[today][s.id+"_reason"]}</span>}
-                  </div>
-                </div>
-                <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flexShrink:0}}>
-                  <div style={{width:52,height:26,borderRadius:13,background:isPresent?"#16a34a":"#d1d5db",position:"relative",cursor:"pointer"}} onClick={()=>toggleAttendance(s.id,today)}>
-                    <div style={{width:20,height:20,borderRadius:"50%",background:"white",position:"absolute",top:3,left:isPresent?29:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
-                  </div>
-                  <span style={{fontSize:10,fontWeight:700,color:isPresent?"#16a34a":"#9ca3af"}}>{isPresent?"Present":"Absent"}</span>
+
+      {/* Staff List */}
+      <div style={{flex:1,overflowY:"auto",padding:"0 16px 80px",WebkitOverflowScrolling:"touch"}}>
+        {staffList.length===0&&<div style={{textAlign:"center",color:NP.light,fontSize:13,padding:"40px 0"}}>Koi staff nahi — Add Staff karo</div>}
+        {staffList.map(s=>{
+          const c=avatarColor(s.id);
+          const isPresent=!!(todayAtt[s.id]);
+          const staffRangeLogs=logs.filter(l=>l.staffId===s.id&&l.date>=fromDate&&l.date<=toDate);
+          const staffRevenue=staffRangeLogs.reduce((a,l)=>a+l.amount,0);
+          return(
+            <div key={s.id} style={{background:NP.white,borderRadius:12,padding:12,border:`1px solid ${NP.border}`,display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+              {/* Avatar */}
+              <div style={{position:"relative",flexShrink:0}}>
+                <div style={{width:44,height:44,borderRadius:"50%",background:c.bg,color:c.text,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14}}>{initials(s.name)}</div>
+                <span style={{position:"absolute",bottom:1,right:1,width:11,height:11,borderRadius:"50%",background:isPresent?NP.green:NP.red,border:"2px solid white"}}/>
+              </div>
+              {/* Info — clickable */}
+              <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>{setSelectedStaff(s);setView("detail");}}>
+                <div style={{fontWeight:600,fontSize:13,color:NP.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div>
+                <div style={{fontSize:11,color:NP.muted,margin:"2px 0 3px"}}>{s.role||"Staff"}</div>
+                <span style={{fontSize:11,color:isPresent?NP.green:NP.red,fontWeight:500}}>
+                  <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:isPresent?NP.green:NP.red,marginRight:4}}/>
+                  {isPresent?"Present":"Absent"}
+                </span>
+              </div>
+              {/* Revenue */}
+              <div style={{background:NP.purpleLight,borderRadius:8,padding:"7px 10px",textAlign:"center",flexShrink:0}}>
+                <div style={{fontWeight:700,fontSize:12,color:NP.purpleMid}}>{fc(staffRevenue)}</div>
+                <div style={{fontSize:9,color:NP.muted,marginTop:1}}>Revenue</div>
+              </div>
+              {/* Stats */}
+              <div style={{textAlign:"right",flexShrink:0}}>
+                <div style={{fontWeight:600,fontSize:13,color:NP.text}}>{staffRangeLogs.length}</div>
+                <div style={{fontSize:9,color:NP.muted}}>Services</div>
+              </div>
+              {/* Attendance toggle */}
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flexShrink:0}}>
+                <div style={{width:44,height:24,borderRadius:12,background:isPresent?NP.green:"#d1d5db",position:"relative",cursor:"pointer"}} onClick={()=>toggleAttendance(s.id,today)}>
+                  <div style={{width:18,height:18,borderRadius:"50%",background:"white",position:"absolute",top:3,left:isPresent?23:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
                 </div>
               </div>
-            );
-          })}
-        </div>
+              {/* Chevron */}
+              <span style={{color:NP.light,fontSize:18,cursor:"pointer"}} onClick={()=>{setSelectedStaff(s);setView("detail");}}>›</span>
+            </div>
+          );
+        })}
       </div>
+
       {showAddStaff&&<AddStaffModal onSave={addStaff} onClose={()=>setShowAddStaff(false)}/>}
       {showAddLog&&<WorkLogModal staffList={staffList} preselectedStaffId={logForStaff} onSave={addLog} onClose={()=>setShowAddLog(false)}/>}
     </div>
