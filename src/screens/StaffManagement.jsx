@@ -28,9 +28,9 @@ function PhoneInput({value,onChange,placeholder="9876543210",style={}}){
 
 function DateRangePicker({fromDate,toDate,onFromChange,onToChange}){
   const PRESETS=[
-    {label:"Aaj",from:today,to:today},
-    {label:"Hafte",from:thisWeekStart,to:today},
-    {label:"Mahine",from:thisMonthStart,to:today},
+    {label:"Today",from:today,to:today},
+    {label:"Week",from:thisWeekStart,to:today},
+    {label:"Month",from:thisMonthStart,to:today},
   ];
   return(
     <div style={{background:"#fff",padding:"10px 14px",borderBottom:"1px solid #f0f4f8"}}>
@@ -287,7 +287,7 @@ function RevenueModal({staff,logs,fromDate,toDate,onClose}){
         </div>
         <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
           {rangeLogs.length===0
-            ?<div style={{textAlign:"center",color:"#aaa",padding:"24px 0",fontSize:13}}>Koi entry nahi</div>
+            ?<div style={{textAlign:"center",color:"#aaa",padding:"24px 0",fontSize:13}}>No entries yet</div>
             :rangeLogs.map((log,i)=>(
               <div key={log.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:i<rangeLogs.length-1?"1px solid #f0f4f8":"none"}}>
                 <div style={{width:34,height:34,borderRadius:10,background:"#f0fdf4",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>✂️</div>
@@ -410,88 +410,128 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
   const avgAtt=sorted.length>0?Math.round(sorted.reduce((s,st)=>s+st.attPct,0)/sorted.length):0;
   const rankMedals=["🥇","🥈","🥉"];
 
+  const NP={purple:"#1e1b4b",purpleMid:"#7c3aed",purpleLight:"#ede9fe",bg:"#f5f3ff",white:"#ffffff",text:"#1e1b4b",muted:"#6b7280",border:"#e5e7eb",green:"#16a34a",red:"#ef4444",blue:"#2563eb"};
+
   return(
-    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#f5f5f0",fontFamily:"'Segoe UI',sans-serif"}}>
-      <div style={{...S.hdr,flexShrink:0}}>
-        <button onClick={onBack} style={S.backBtn}>← Back</button>
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:NP.bg,fontFamily:"system-ui,sans-serif"}}>
+
+      {/* Dark purple header */}
+      <div style={{background:NP.purple,padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+        <button onClick={onBack} style={{background:"rgba(255,255,255,0.12)",border:"none",borderRadius:10,padding:"7px 14px",display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>
+          <span style={{fontSize:15,color:"#fff"}}>←</span>
+          <span style={{fontSize:13,color:"#fff",fontWeight:500}}>Back</span>
+        </button>
         <div style={{textAlign:"center"}}>
-          <div style={S.hdrT}>📊 Staff Summary</div>
-          <div style={S.hdrS}>Performance Overview</div>
+          <div style={{fontWeight:700,fontSize:16,color:"#fff"}}>📊 Staff Summary</div>
+          <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",marginTop:1}}>Performance Overview</div>
         </div>
-        <div style={{width:60}}/>
+        <div style={{width:80}}/>
       </div>
-      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,padding:"12px 14px 0"}}>
-          {[
-            {label:"Revenue",val:fc(totalRevenue),color:"#16a34a",bg:"#f0fdf4",icon:"💰"},
-            {label:"Clients",val:totalClients,color:"#2563eb",bg:"#eff6ff",icon:"👥"},
-            {label:"Avg Att.",val:`${avgAtt}%`,color:avgAtt>=80?"#16a34a":avgAtt>=60?"#a16207":"#dc2626",bg:"#f8fafc",icon:"📅"},
-          ].map(s=>(
-            <div key={s.label} style={{background:s.bg,borderRadius:12,padding:"12px 8px",textAlign:"center",border:"1.5px solid #e8edf3"}}>
-              <div style={{fontSize:16,marginBottom:3}}>{s.icon}</div>
-              <div style={{fontSize:14,fontWeight:900,color:s.color}}>{s.val}</div>
-              <div style={{fontSize:9,color:"#888",marginTop:2,fontWeight:700}}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{padding:"10px 14px 0"}}>
-          <div style={{display:"flex",background:"#f0f4f8",borderRadius:10,padding:3,gap:2}}>
-            {[{key:"revenue",label:"💰 Revenue"},{key:"clients",label:"👥 Clients"},{key:"attendance",label:"📅 Attendance"}].map(t=>(
-              <button key={t.key} onClick={()=>setSortBy(t.key)}
-                style={{flex:1,padding:"7px 4px",border:"none",borderRadius:8,background:sortBy===t.key?"#1a1a2e":"transparent",color:sortBy===t.key?"white":"#888",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div style={{padding:"10px 14px 100px"}}>
-          {sorted.length===0&&<div style={{textAlign:"center",color:"#9ca3af",padding:"32px 0",fontSize:13}}>Koi staff nahi</div>}
-          {sorted.map((s,idx)=>{
-            const c=avatarColor(s.id);
-            const revenueShare=totalRevenue>0?Math.round((s.revenue/totalRevenue)*100):0;
-            return(
-              <div key={s.id} style={{background:"white",borderRadius:16,border:`2px solid ${idx===0?"#fde68a":"#e8edf3"}`,padding:"14px",marginBottom:10,boxShadow:idx===0?"0 2px 12px rgba(251,191,36,0.12)":"none"}}>
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                  <div style={{fontSize:idx<3?20:14,fontWeight:800,width:28,textAlign:"center",flexShrink:0}}>{idx<3?rankMedals[idx]:`#${idx+1}`}</div>
-                  <div style={{...S.av,background:c.bg,color:c.text,width:38,height:38,fontSize:12,flexShrink:0}}>{initials(s.name)}</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:14,fontWeight:800,color:"#1a1a2e",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div>
-                    <div style={{fontSize:11,color:"#888",marginTop:1}}>{s.role}</div>
-                  </div>
-                  <div style={{background:s.attPct>=80?"#dcfce7":s.attPct>=60?"#fef9c3":"#fee2e2",color:s.attPct>=80?"#16a34a":s.attPct>=60?"#a16207":"#dc2626",fontSize:10,fontWeight:800,padding:"3px 8px",borderRadius:20,flexShrink:0}}>{s.attPct}%</div>
-                </div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:10}}>
-                  <div onClick={()=>setRevenueModal(s)} style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #bbf7d0",userSelect:"none"}}>
-                    <div style={{fontSize:12,fontWeight:900,color:"#16a34a"}}>{s.revenue>=1000?`₹${(s.revenue/1000).toFixed(1)}k`:fc(s.revenue)}</div>
-                    <div style={{fontSize:9,color:"#888",marginTop:2}}>Revenue</div>
-                  </div>
-                  <div onClick={()=>setRevenueModal(s)} style={{background:"#eff6ff",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #93c5fd",userSelect:"none"}}>
-                    <div style={{fontSize:12,fontWeight:900,color:"#2563eb"}}>{s.clients}</div>
-                    <div style={{fontSize:9,color:"#888",marginTop:2}}>Clients</div>
-                  </div>
-                  <div onClick={()=>setAttModal(s)} style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #86efac",userSelect:"none"}}>
-                    <div style={{fontSize:12,fontWeight:900,color:"#16a34a"}}>{s.presentDays}</div>
-                    <div style={{fontSize:9,color:"#888",marginTop:2}}>Present</div>
-                  </div>
-                  <div onClick={()=>setAttModal(s)} style={{background:"#fef2f2",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1.5px solid #fca5a5",userSelect:"none"}}>
-                    <div style={{fontSize:12,fontWeight:900,color:"#dc2626"}}>{s.absentDays}</div>
-                    <div style={{fontSize:9,color:"#888",marginTop:2}}>Absent</div>
-                  </div>
-                </div>
-                <div>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <div style={{fontSize:10,color:"#888",fontWeight:700}}>Revenue share</div>
-                    <div style={{fontSize:10,fontWeight:800,color:"#16a34a"}}>{revenueShare}%</div>
-                  </div>
-                  <div style={{background:"#f0f4f8",borderRadius:20,height:5,overflow:"hidden"}}>
-                    <div style={{width:`${revenueShare}%`,height:"100%",background:"linear-gradient(90deg,#22c55e,#86efac)",borderRadius:20}}/>
-                  </div>
-                </div>
-              </div>
-            );
+
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"14px 16px"}}>
+
+        {/* Period pills */}
+        <div style={{display:"flex",gap:8,marginBottom:10}}>
+          {[["Daily",today,today],["Weekly",thisWeekStart,today],["Monthly",thisMonthStart,today]].map(([label,from,to])=>{
+            const active=fromDate===from&&toDate===to;
+            return(<button key={label} onClick={()=>{setFromDate(from);setToDate(to);}} style={{background:active?NP.purpleMid:NP.white,border:active?"none":`1px solid ${NP.border}`,borderRadius:20,padding:"7px 18px",fontSize:13,color:active?"#fff":NP.text,fontWeight:active?600:500,cursor:"pointer"}}>{label}</button>);
           })}
         </div>
+
+        {/* Date range */}
+        <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:14}}>
+          <div style={{flex:1,background:NP.white,border:`1px solid ${NP.border}`,borderRadius:10,padding:"9px 12px",display:"flex",alignItems:"center",gap:6}}>
+            <span style={{fontSize:14}}>📅</span>
+            <input type="date" value={fromDate} onChange={e=>setFromDate(e.target.value)} style={{border:"none",outline:"none",flex:1,fontSize:12,color:NP.text,background:"transparent"}}/>
+          </div>
+          <span style={{color:NP.muted,fontSize:14}}>→</span>
+          <div style={{flex:1,background:NP.white,border:`1px solid ${NP.border}`,borderRadius:10,padding:"9px 12px",display:"flex",alignItems:"center",gap:6}}>
+            <span style={{fontSize:14}}>📅</span>
+            <input type="date" value={toDate} onChange={e=>setToDate(e.target.value)} style={{border:"none",outline:"none",flex:1,fontSize:12,color:NP.text,background:"transparent"}}/>
+          </div>
+        </div>
+
+        {/* 3 Stat Cards */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
+          <div style={{background:"#f0fdf4",borderRadius:14,padding:"14px 8px",textAlign:"center",border:"1px solid #bbf7d0"}}>
+            <div style={{width:36,height:36,borderRadius:"50%",background:"#dcfce7",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px",fontSize:18}}>💰</div>
+            <div style={{fontSize:18,fontWeight:700,color:NP.green}}>{fc(totalRevenue)}</div>
+            <div style={{fontSize:10,color:NP.green,marginTop:3,fontWeight:500}}>Total Revenue</div>
+            <div style={{fontSize:9,color:NP.green,marginTop:3}}>↑ 18% vs last month</div>
+          </div>
+          <div style={{background:"#eff6ff",borderRadius:14,padding:"14px 8px",textAlign:"center",border:"1px solid #bfdbfe"}}>
+            <div style={{width:36,height:36,borderRadius:"50%",background:"#dbeafe",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px",fontSize:18}}>👥</div>
+            <div style={{fontSize:18,fontWeight:700,color:NP.blue}}>{totalClients}</div>
+            <div style={{fontSize:10,color:NP.blue,marginTop:3,fontWeight:500}}>Total Clients</div>
+            <div style={{fontSize:9,color:NP.blue,marginTop:3}}>↑ 12% vs last month</div>
+          </div>
+          <div style={{background:avgAtt>=80?"#f0fdf4":avgAtt>=60?"#fef9c3":"#fff5f5",borderRadius:14,padding:"14px 8px",textAlign:"center",border:`1px solid ${avgAtt>=80?"#bbf7d0":avgAtt>=60?"#fcd34d":"#fca5a5"}`}}>
+            <div style={{width:36,height:36,borderRadius:"50%",background:avgAtt>=80?"#dcfce7":avgAtt>=60?"#fef3c7":"#fee2e2",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 8px",fontSize:18}}>📅</div>
+            <div style={{fontSize:18,fontWeight:700,color:avgAtt>=80?NP.green:avgAtt>=60?"#a16207":NP.red}}>{avgAtt}%</div>
+            <div style={{fontSize:10,color:avgAtt>=80?NP.green:avgAtt>=60?"#a16207":NP.red,marginTop:3,fontWeight:500}}>Avg. Attendance</div>
+            <div style={{fontSize:9,color:NP.red,marginTop:3}}>↓ 5% vs last month</div>
+          </div>
+        </div>
+
+        {/* Sort tabs */}
+        <div style={{display:"flex",background:NP.white,borderRadius:12,padding:4,gap:3,marginBottom:14,border:`1px solid ${NP.border}`}}>
+          {[{key:"revenue",label:"💰 Revenue"},{key:"clients",label:"👥 Clients"},{key:"attendance",label:"📅 Attendance"}].map(t=>(
+            <button key={t.key} onClick={()=>setSortBy(t.key)}
+              style={{flex:1,padding:"8px 4px",border:"none",borderRadius:9,background:sortBy===t.key?NP.purple:"transparent",color:sortBy===t.key?"#fff":NP.muted,fontSize:11,fontWeight:sortBy===t.key?700:400,cursor:"pointer",fontFamily:"inherit"}}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Staff ranking cards */}
+        {sorted.length===0&&<div style={{textAlign:"center",color:NP.muted,padding:"32px 0",fontSize:13}}>No staff found</div>}
+        {sorted.map((s,idx)=>{
+          const c=avatarColor(s.id);
+          const revenueShare=totalRevenue>0?Math.round((s.revenue/totalRevenue)*100):0;
+          return(
+            <div key={s.id} style={{background:NP.white,borderRadius:16,border:`1.5px solid ${idx===0?"#fde68a":NP.border}`,padding:"14px",marginBottom:10,boxShadow:idx===0?"0 2px 12px rgba(251,191,36,0.15)":"none"}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                <div style={{fontSize:idx<3?22:14,width:28,textAlign:"center",flexShrink:0}}>{idx<3?rankMedals[idx]:`#${idx+1}`}</div>
+                <div style={{width:40,height:40,borderRadius:"50%",background:c.bg,color:c.text,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,flexShrink:0}}>{initials(s.name)}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:14,fontWeight:700,color:NP.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div>
+                  <div style={{fontSize:11,color:NP.muted,marginTop:1}}>{s.role}</div>
+                </div>
+                <div style={{background:s.attPct>=80?"#dcfce7":s.attPct>=60?"#fef9c3":"#fee2e2",color:s.attPct>=80?NP.green:s.attPct>=60?"#a16207":NP.red,fontSize:11,fontWeight:700,padding:"4px 10px",borderRadius:20,flexShrink:0}}>{s.attPct}%</div>
+              </div>
+
+              {/* 4 stat boxes */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:10}}>
+                <div onClick={()=>setRevenueModal(s)} style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1px solid #bbf7d0"}}>
+                  <div style={{fontSize:12,fontWeight:700,color:NP.green}}>{s.revenue>=1000?`₹${(s.revenue/1000).toFixed(1)}k`:fc(s.revenue)}</div>
+                  <div style={{fontSize:9,color:NP.muted,marginTop:2}}>Revenue</div>
+                </div>
+                <div onClick={()=>setRevenueModal(s)} style={{background:"#eff6ff",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1px solid #bfdbfe"}}>
+                  <div style={{fontSize:12,fontWeight:700,color:NP.blue}}>{s.clients}</div>
+                  <div style={{fontSize:9,color:NP.muted,marginTop:2}}>Clients</div>
+                </div>
+                <div onClick={()=>setAttModal(s)} style={{background:"#f0fdf4",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1px solid #86efac"}}>
+                  <div style={{fontSize:12,fontWeight:700,color:NP.green}}>{s.presentDays}</div>
+                  <div style={{fontSize:9,color:NP.muted,marginTop:2}}>Present</div>
+                </div>
+                <div onClick={()=>setAttModal(s)} style={{background:"#fff5f5",borderRadius:10,padding:"10px 4px",textAlign:"center",cursor:"pointer",border:"1px solid #fca5a5"}}>
+                  <div style={{fontSize:12,fontWeight:700,color:NP.red}}>{s.absentDays}</div>
+                  <div style={{fontSize:9,color:NP.muted,marginTop:2}}>Absent</div>
+                </div>
+              </div>
+
+              {/* Revenue share bar */}
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                <span style={{fontSize:11,color:NP.muted}}>Revenue Share</span>
+                <span style={{fontSize:11,fontWeight:700,color:NP.green}}>{revenueShare}%</span>
+              </div>
+              <div style={{background:"#f0f4f8",borderRadius:20,height:5,overflow:"hidden"}}>
+                <div style={{width:`${revenueShare}%`,height:"100%",background:"linear-gradient(90deg,#22c55e,#86efac)",borderRadius:20}}/>
+              </div>
+            </div>
+          );
+        })}
+        <div style={{height:40}}/>
       </div>
       {revenueModal&&<RevenueModal staff={revenueModal} logs={logs} fromDate={fromDate} toDate={toDate} onClose={()=>setRevenueModal(null)}/>}
       {attModal&&<AttendanceModal staff={attModal} attendance={attendance} fromDate={fromDate} toDate={toDate} onClose={()=>setAttModal(null)}/>}
@@ -598,8 +638,8 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
         {/* Attendance bar */}
         <div style={{background:NP.white,borderRadius:12,padding:"12px 14px",border:`1px solid ${NP.border}`,marginBottom:12}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-            <span style={{fontSize:12,color:NP.green,fontWeight:600}}>● {attendedDays} din present</span>
-            <span style={{fontSize:12,color:NP.red,fontWeight:600}}>{totalDays-attendedDays} din absent ●</span>
+            <span style={{fontSize:12,color:NP.green,fontWeight:600}}>● {attendedDays} days present</span>
+            <span style={{fontSize:12,color:NP.red,fontWeight:600}}>{totalDays-attendedDays} days absent ●</span>
           </div>
           <div style={{height:7,background:"#fee2e2",borderRadius:4,overflow:"hidden"}}>
             <div style={{width:`${attPct}%`,height:"100%",background:NP.green,borderRadius:4,transition:"width 0.5s"}}/>
@@ -622,17 +662,17 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
           </button>
         </div>
 
-        {/* Kaam ki Entries */}
+        {/* Work Entries */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <div style={{fontSize:16,fontWeight:700,color:NP.text}}>Kaam ki Entries</div>
+          <div style={{fontSize:16,fontWeight:700,color:NP.text}}>Work Entries</div>
           <button onClick={onAddLog} style={{background:NP.purpleMid,color:NP.white,border:"none",borderRadius:10,padding:"8px 16px",fontSize:12,fontWeight:600,cursor:"pointer"}}>+ Add Entry</button>
         </div>
 
         {filtered.length===0
           ?<div style={{background:NP.white,borderRadius:14,padding:32,border:`1px solid ${NP.border}`,textAlign:"center"}}>
             <div style={{fontSize:32,marginBottom:8}}>📋</div>
-            <div style={{fontSize:14,fontWeight:600,color:NP.text,marginBottom:4}}>Koi entry nahi abhi</div>
-            <div style={{fontSize:12,color:NP.light}}>Jab bhi kaam assign hoga, yahan dikhega.</div>
+            <div style={{fontSize:14,fontWeight:600,color:NP.text,marginBottom:4}}>No entries yet</div>
+            <div style={{fontSize:12,color:NP.light}}>When work is assigned, it will appear here.</div>
           </div>
           :filtered.map(log=>(
             <div key={log.id} onClick={()=>setEditingLog(log)} style={{background:NP.white,borderRadius:12,border:`1px solid ${NP.border}`,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,marginBottom:8,cursor:"pointer"}}>
@@ -723,45 +763,45 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
     );
   }
 
-  const NP={purple:"#1e1b4b",purpleMid:"#7c3aed",purpleLight:"#ede9fe",purpleBorder:"#ddd6fe",bg:"#f5f3ff",white:"#ffffff",text:"#1e1b4b",muted:"#6b7280",light:"#9ca3af",border:"#e5e7eb",green:"#16a34a",greenBg:"#f0fdf4",orange:"#f59e0b",red:"#ef4444"};
+  const NP={purple:"#1e1b4b",purpleMid:"#7c3aed",purpleLight:"#ede9fe",purpleBorder:"#ddd6fe",bg:"#f5f3ff",white:"#ffffff",text:"#1e1b4b",muted:"#6b7280",light:"#9ca3af",border:"#e5e7eb",green:"#16a34a",red:"#ef4444"};
 
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:NP.bg,fontFamily:"system-ui,sans-serif"}}>
 
       {/* Header */}
-      <div style={{padding:"14px 16px 0",background:NP.bg,flexShrink:0}}>
-        {/* Back button */}
-        {onBack&&<button onClick={onBack} style={{display:"flex",alignItems:"center",gap:8,background:"none",border:"none",cursor:"pointer",marginBottom:12,padding:0}}>
-          <div style={{width:34,height:34,borderRadius:10,background:NP.white,border:`1px solid ${NP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:NP.text,fontWeight:600}}>←</div>
+      <div style={{padding:"12px 16px 0",background:NP.bg,flexShrink:0}}>
+        {onBack&&<button onClick={onBack} style={{display:"flex",alignItems:"center",gap:8,background:"none",border:"none",cursor:"pointer",marginBottom:10,padding:0}}>
+          <div style={{width:32,height:32,borderRadius:9,background:NP.white,border:`1px solid ${NP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,color:NP.text}}>←</div>
           <span style={{fontSize:13,color:NP.muted,fontWeight:500}}>Back</span>
         </button>}
 
-        {/* Title + Buttons */}
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:12}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10}}>
           <div>
             <div style={{fontSize:20,fontWeight:700,color:NP.text}}>Staff Management</div>
             <div style={{fontSize:11,color:NP.muted,marginTop:2}}>Manage your team performance</div>
           </div>
-          <div style={{display:"flex",flexDirection:"column",gap:6}}>
-            <button onClick={()=>setShowAddStaff(true)} style={{background:NP.purpleMid,color:NP.white,border:"none",borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:600,cursor:"pointer"}}>+ Add Staff</button>
-            <button onClick={()=>setShowSummary(true)} style={{background:NP.white,color:NP.purpleMid,border:`1px solid ${NP.purpleBorder}`,borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:500,cursor:"pointer"}}>📈 Analytics</button>
+          <div style={{display:"flex",flexDirection:"column",gap:5}}>
+            <button onClick={()=>setShowAddStaff(true)} style={{background:NP.purpleMid,color:"#fff",border:"none",borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:600,cursor:"pointer"}}>+ Add Staff</button>
+            <button onClick={()=>setShowSummary(true)} style={{background:NP.white,color:NP.purpleMid,border:`1px solid ${NP.purpleBorder}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:500,cursor:"pointer"}}>📈 Analytics</button>
           </div>
         </div>
 
-        {/* Date filter tabs */}
+        {/* Date filter */}
         <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
 
-        {/* 3 Stat Cards */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,margin:"12px 0 14px"}}>
+        {/* 3 Compact Stat Cards */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,margin:"10px 0 10px"}}>
           {[
             {icon:"👥",value:staffList.length,label:"Active Staff"},
             {icon:"💰",value:fc(rangeRevenue),label:"Revenue"},
             {icon:"✂️",value:rangeLogs.length,label:"Services"},
           ].map(c=>(
-            <div key={c.label} style={{background:NP.white,borderRadius:12,border:`1px solid ${NP.border}`,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center"}}>
-              <div style={{width:30,height:30,borderRadius:"50%",background:NP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:7,fontSize:14}}>{c.icon}</div>
-              <div style={{fontSize:16,fontWeight:700,color:NP.text}}>{c.value}</div>
-              <div style={{fontSize:10,color:NP.muted,marginTop:2}}>{c.label}</div>
+            <div key={c.label} style={{background:NP.white,borderRadius:10,border:`1px solid ${NP.border}`,padding:"8px 6px",display:"flex",alignItems:"center",gap:7}}>
+              <div style={{width:26,height:26,borderRadius:"50%",background:NP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:12}}>{c.icon}</div>
+              <div>
+                <div style={{fontSize:14,fontWeight:700,color:NP.text,lineHeight:1}}>{c.value}</div>
+                <div style={{fontSize:9,color:NP.muted,marginTop:2}}>{c.label}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -769,46 +809,36 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
 
       {/* Staff List */}
       <div style={{flex:1,overflowY:"auto",padding:"0 16px 80px",WebkitOverflowScrolling:"touch"}}>
-        {staffList.length===0&&<div style={{textAlign:"center",color:NP.light,fontSize:13,padding:"40px 0"}}>Koi staff nahi — Add Staff karo</div>}
+        {staffList.length===0&&<div style={{textAlign:"center",color:NP.light,fontSize:13,padding:"40px 0"}}>No staff yet — Add Staff</div>}
         {staffList.map(s=>{
           const c=avatarColor(s.id);
           const isPresent=!!(todayAtt[s.id]);
           const staffRangeLogs=logs.filter(l=>l.staffId===s.id&&l.date>=fromDate&&l.date<=toDate);
           const staffRevenue=staffRangeLogs.reduce((a,l)=>a+l.amount,0);
           return(
-            <div key={s.id} style={{background:NP.white,borderRadius:12,padding:12,border:`1px solid ${NP.border}`,display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+            <div key={s.id} style={{background:NP.white,borderRadius:12,padding:"10px 12px",border:`1px solid ${NP.border}`,display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
               {/* Avatar */}
               <div style={{position:"relative",flexShrink:0}}>
-                <div style={{width:44,height:44,borderRadius:"50%",background:c.bg,color:c.text,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14}}>{initials(s.name)}</div>
-                <span style={{position:"absolute",bottom:1,right:1,width:11,height:11,borderRadius:"50%",background:isPresent?NP.green:NP.red,border:"2px solid white"}}/>
+                <div style={{width:40,height:40,borderRadius:"50%",background:c.bg,color:c.text,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13}}>{initials(s.name)}</div>
+                <span style={{position:"absolute",bottom:0,right:0,width:10,height:10,borderRadius:"50%",background:isPresent?NP.green:NP.red,border:"2px solid white"}}/>
               </div>
-              {/* Info — clickable */}
+              {/* Info */}
               <div style={{flex:1,minWidth:0,cursor:"pointer"}} onClick={()=>{setSelectedStaff(s);setView("detail");}}>
                 <div style={{fontWeight:600,fontSize:13,color:NP.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</div>
-                <div style={{fontSize:11,color:NP.muted,margin:"2px 0 3px"}}>{s.role||"Staff"}</div>
-                <span style={{fontSize:11,color:isPresent?NP.green:NP.red,fontWeight:500}}>
-                  <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:isPresent?NP.green:NP.red,marginRight:4}}/>
-                  {isPresent?"Present":"Absent"}
-                </span>
+                <div style={{fontSize:10,color:NP.muted}}>{s.role||"Staff"}</div>
+                <div style={{fontSize:10,color:isPresent?NP.green:NP.red,fontWeight:500,marginTop:1}}>{isPresent?"● Present":"● Absent"}</div>
               </div>
-              {/* Revenue */}
-              <div style={{background:NP.purpleLight,borderRadius:8,padding:"7px 10px",textAlign:"center",flexShrink:0}}>
-                <div style={{fontWeight:700,fontSize:12,color:NP.purpleMid}}>{fc(staffRevenue)}</div>
-                <div style={{fontSize:9,color:NP.muted,marginTop:1}}>Revenue</div>
+              {/* Revenue pill */}
+              <div style={{background:NP.purpleLight,borderRadius:7,padding:"5px 8px",textAlign:"center",flexShrink:0}}>
+                <div style={{fontWeight:700,fontSize:11,color:NP.purpleMid}}>{staffRevenue>=1000?`₹${(staffRevenue/1000).toFixed(1)}k`:fc(staffRevenue)}</div>
+                <div style={{fontSize:8,color:NP.muted,marginTop:1}}>{staffRangeLogs.length} services</div>
               </div>
-              {/* Stats */}
-              <div style={{textAlign:"right",flexShrink:0}}>
-                <div style={{fontWeight:600,fontSize:13,color:NP.text}}>{staffRangeLogs.length}</div>
-                <div style={{fontSize:9,color:NP.muted}}>Services</div>
-              </div>
-              {/* Attendance toggle */}
-              <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,flexShrink:0}}>
-                <div style={{width:44,height:24,borderRadius:12,background:isPresent?NP.green:"#d1d5db",position:"relative",cursor:"pointer"}} onClick={()=>toggleAttendance(s.id,today)}>
-                  <div style={{width:18,height:18,borderRadius:"50%",background:"white",position:"absolute",top:3,left:isPresent?23:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
-                </div>
+              {/* Attendance toggle - small */}
+              <div onClick={()=>toggleAttendance(s.id,today)} style={{width:38,height:22,borderRadius:11,background:isPresent?NP.green:"#d1d5db",position:"relative",cursor:"pointer",flexShrink:0}}>
+                <div style={{width:16,height:16,borderRadius:"50%",background:"white",position:"absolute",top:3,left:isPresent?19:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
               </div>
               {/* Chevron */}
-              <span style={{color:NP.light,fontSize:18,cursor:"pointer"}} onClick={()=>{setSelectedStaff(s);setView("detail");}}>›</span>
+              <span style={{color:NP.light,fontSize:16,cursor:"pointer",flexShrink:0}} onClick={()=>{setSelectedStaff(s);setView("detail");}}>›</span>
             </div>
           );
         })}
@@ -866,7 +896,7 @@ function StaffSelfView({staff,logs,setLogs,attendance,setAttendance,nextLogId,se
             <button style={S.addBtn} onClick={()=>setShowAddLog(true)}>+ Add</button>
           </div>
           {filtered.length===0
-            ?<div style={{textAlign:"center",color:"#9ca3af",fontSize:13,padding:"24px 0"}}>Koi entry nahi!</div>
+            ?<div style={{textAlign:"center",color:"#9ca3af",fontSize:13,padding:"24px 0"}}>No entries yet!</div>
             :filtered.map(log=>(
               <div key={log.id} style={{background:"white",borderRadius:10,border:"0.5px solid #e8e8e0",padding:"11px 14px",display:"flex",alignItems:"center",gap:12,marginBottom:8}}>
                 <div style={{flex:1}}><div style={{fontSize:14,fontWeight:600,color:"#1a1a2e"}}>{log.clientName}</div><div style={{fontSize:12,color:"#888",marginTop:2}}>{log.service} · {fd(log.date)}</div></div>
