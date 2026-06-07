@@ -14,18 +14,18 @@ const TP={
 };
 
 const IS={
-  width:"100%",padding:"11px 13px",border:`2px solid ${TP.border}`,
+  width:"100%",paddaysg:"11px 13px",border:`2px solid ${TP.border}`,
   borderRadius:11,fontSize:14,fontFamily:"inherit",outline:"none",
   background:TP.inp,boxSizing:"border-box",color:TP.text,
 };
 
 const CAMPAIGNS=[
-  {id:"diwali",icon:"\u{1FA94}",name:"Diwali Special",category:"Festival",color:"#f59e0b",colorLight:"#fff7ed",colorBorder:"#fed7aa",desc:"Diwali se pehle salon full rehta hai",template:`\u{1FA94} *Diwali Mubarak, {name}!*\n\n\u2728 *Diwali Special*\n\u{1F487} Haircut + Blowdry — \u20b9299\n\u{1F484} Bridal Makeup — 20% OFF\n\n\u{1F4C5} Reply *BOOK*\n\n_Happy Diwali! \u{1F488}_`},
-  {id:"eid",icon:"\uD83C\uDF19",name:"Eid Mubarak",category:"Festival",color:TP.purpleMid,colorLight:TP.purpleLight,colorBorder:TP.border,desc:"Eid pe special grooming offer",template:`\uD83C\uDF19 *Eid Mubarak, {name}!*\n\n\u2728 *Eid Special*\n\u2702\uFE0F Haircut + Beard — \u20b9349\n\nReply *EID*\n\n_Eid Mubarak! \u{1F488}_`},
-  {id:"newyear",icon:"\uD83C\uDF86",name:"New Year Offer",category:"Festival",color:"#2563eb",colorLight:"#eff6ff",colorBorder:"#93c5fd",desc:"Naye saal mein naya look",template:`\uD83C\uDF86 *Happy New Year, {name}!*\n\n\uD83C\uDF81 Any Haircut — 25% OFF!\n\n_Naya Saal, Naya Look! \u{1F488}_`},
-  {id:"monsoon",icon:"\uD83C\uDF27\uFE0F",name:"Monsoon Hair Care",category:"Seasonal",color:"#0891b2",colorLight:"#ecfeff",colorBorder:"#a5f3fc",desc:"Monsoon mein hair care tips + offer",template:`\uD83C\uDF27\uFE0F *Monsoon Alert, {name}!*\n\n\u2728 Anti-Dandruff Treatment — \u20b9299\n\uD83D\uDC86 Deep Conditioning — \u20b9499\n\nReply *MONSOON*\n\n_Take care! \u{1F488}_`},
-  {id:"referral",icon:"\uD83E\uDD1D",name:"Refer & Earn",category:"Growth",color:"#16a34a",colorLight:"#e8fdf0",colorBorder:"#bbf7d0",desc:"Existing customers se referral",template:`\uD83E\uDD1D *{name} bhai/didi, ek kaam karo!*\n\nApne dost ko refer karo — Dono ko \u20b9100 OFF!\n\n_Thank you! \u{1F488}_`},
-  {id:"review",icon:"\u2B50",name:"Review Request",category:"Growth",color:"#f59e0b",colorLight:"#fef9c3",colorBorder:"#fde68a",desc:"Google/social review maango",template:`\u2B50 *{name}, 2 minute ka kaam hai!*\n\nKya aap humara Google review de sakte hain? \uD83D\uDE4F\n\n_Aap hain toh hum hain! \u{1F488}_`},
+  {id:"diwali",icon:"🪔",name:"Diwali Special",category:"Festival",color:"#f59e0b",colorLight:"#fff7ed",colorBorder:"#fed7aa",desc:"Diwali se pehle salon full rehta hai",template:`🪔 *Diwali Mubarak, {name}!*\n\n\u2728 *Diwali Special*\n💇 Haircut + Blowdry — \u20b9299\n💄 Bridal Makeup — 20% OFF\n\n📅 Reply *BOOK*\n\n_Happy Diwali! 💈_`},
+  {id:"eid",icon:"\uD83C\uDF19",name:"Eid Mubarak",category:"Festival",color:TP.purpleMid,colorLight:TP.purpleLight,colorBorder:TP.border,desc:"Eid pe special grooming offer",template:`\uD83C\uDF19 *Eid Mubarak, {name}!*\n\n\u2728 *Eid Special*\n\u2702\uFE0F Haircut + Beard — \u20b9349\n\nReply *EID*\n\n_Eid Mubarak! 💈_`},
+  {id:"newyear",icon:"\uD83C\uDF86",name:"New Year Offer",category:"Festival",color:"#2563eb",colorLight:"#eff6ff",colorBorder:"#93c5fd",desc:"Naye saal mein naya look",template:`\uD83C\uDF86 *Happy New Year, {name}!*\n\n\uD83C\uDF81 Any Haircut — 25% OFF!\n\n_Naya Saal, Naya Look! 💈_`},
+  {id:"monsoon",icon:"\uD83C\uDF27\uFE0F",name:"Monsoon Hair Care",category:"Seasonal",color:"#0891b2",colorLight:"#ecfeff",colorBorder:"#a5f3fc",desc:"Monsoon mein hair care tips + offer",template:`\uD83C\uDF27\uFE0F *Monsoon Alert, {name}!*\n\n\u2728 Anti-Dandruff Treatment — \u20b9299\n\uD83D\uDC86 Deep Conditioning — \u20b9499\n\nReply *MONSOON*\n\n_Take care! 💈_`},
+  {id:"referral",icon:"\uD83E\uDD1D",name:"Refer & Earn",category:"Growth",color:"#16a34a",colorLight:"#e8fdf0",colorBorder:"#bbf7d0",desc:"Existing customers se referral",template:`\uD83E\uDD1D *{name} bhai/didi, ek kaam karo!*\n\nApne dost ko refer karo — Dono ko \u20b9100 OFF!\n\n_Thank you! 💈_`},
+  {id:"review",icon:"\u2B50",name:"Review Request",category:"Growth",color:"#f59e0b",colorLight:"#fef9c3",colorBorder:"#fde68a",desc:"Google/social review maango",template:`\u2B50 *{name}, 2 minute ka kaam hai!*\n\nKya aap humara Google review de sakte hain? \uD83D\uDE4F\n\n_Aap hain toh hum hain! 💈_`},
 ];
 
 function daysSince(dateStr){if(!dateStr)return 0;const d=new Date(dateStr);if(isNaN(d))return 0;return Math.floor((new Date()-d)/(1000*60*60*24));}
@@ -35,15 +35,15 @@ function getBirthdayInfo(dob){
   const today=new Date();const bday=new Date(dob);if(isNaN(bday))return null;
   bday.setFullYear(today.getFullYear());
   const diff=Math.ceil((bday-today)/(1000*60*60*24));
-  if(diff===0)return{label:"\uD83C\uDF82 Aaj Birthday!",urgency:"today",diff:0};
-  if(diff>0&&diff<=3)return{label:`\uD83C\uDF82 ${diff} din mein`,urgency:"soon",diff};
-  if(diff>3&&diff<=7)return{label:"\uD83C\uDF82 Is hafte",urgency:"week",diff};
-  if(diff>7&&diff<=30)return{label:`\uD83C\uDF82 ${diff} din mein`,urgency:"month",diff};
-  if(diff<0&&diff>=-3)return{label:`\uD83C\uDF82 ${Math.abs(diff)} din pehle tha`,urgency:"passed",diff};
+  if(diff===0)return{label:"\uD83C\uDF82 Today's Birthday!",urgency:"today",diff:0};
+  if(diff>0&&diff<=3)return{label:`\uD83C\uDF82 ${diff} days away`,urgency:"soon",diff};
+  if(diff>3&&diff<=7)return{label:"\uD83C\uDF82 This Week",urgency:"week",diff};
+  if(diff>7&&diff<=30)return{label:`\uD83C\uDF82 ${diff} days away`,urgency:"month",diff};
+  if(diff<0&&diff>=-3)return{label:`\uD83C\uDF82 ${Math.abs(diff)} days ago`,urgency:"passed",diff};
   return null;
 }
 
-const US={today:{bg:"#fff0f0",border:TP.rb,color:TP.rt,badge:"\uD83D\uDD34 Aaj!"},soon:{bg:TP.yellow,border:TP.yb,color:TP.yt,badge:"\uD83D\uDFE1 Jaldi!"},week:{bg:TP.gl,border:TP.gm,color:TP.gd,badge:"\uD83D\uDFE2 Is Hafte"},month:{bg:TP.sub,border:TP.border,color:TP.ts,badge:"\uD83D\uDCC5 Is Mahine"},passed:{bg:TP.sub,border:TP.border,color:TP.tf,badge:"\u2713 Gaya"}};
+const US={today:{bg:"#fff0f0",border:TP.rb,color:TP.rt,badge:"\uD83D\uDD34 Today!"},soon:{bg:TP.yellow,border:TP.yb,color:TP.yt,badge:"\uD83D\uDFE1 Soon!"},week:{bg:TP.gl,border:TP.gm,color:TP.gd,badge:"\uD83D\uDFE2 This Week"},month:{bg:TP.sub,border:TP.border,color:TP.ts,badge:"\uD83D\uDCC5 This Month"},passed:{bg:TP.sub,border:TP.border,color:TP.tf,badge:"\u2713 Passed"}};
 const SL=({children,color})=><div style={{fontSize:10,fontWeight:800,color:color||TP.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>{children}</div>;
 
 async function sendViaAPI(messages){
@@ -55,7 +55,7 @@ function GenderFilter({value,onChange,counts}){
   return(
     <div style={{display:"flex",gap:6,marginBottom:10}}>
       {[{id:"all",label:"\uD83D\uDC65 All",count:counts.all},{id:"male",label:"\uD83D\uDC68 Male",count:counts.male},{id:"female",label:"\uD83D\uDC69 Female",count:counts.female}].map(o=>(
-        <button key={o.id} onClick={()=>onChange(o.id)} style={{flex:1,padding:"8px 4px",borderRadius:20,border:`2px solid ${value===o.id?TP.purpleMid:TP.border}`,background:value===o.id?TP.purpleLight:TP.surface,color:value===o.id?TP.purpleMid:TP.ts,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
+        <button key={o.id} onClick={()=>onChange(o.id)} style={{flex:1,paddaysg:"8px 4px",borderRadius:20,border:`2px solid ${value===o.id?TP.purpleMid:TP.border}`,background:value===o.id?TP.purpleLight:TP.surface,color:value===o.id?TP.purpleMid:TP.ts,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
           {o.label}<br/><span style={{fontSize:10,opacity:0.85}}>({o.count})</span>
         </button>
       ))}
@@ -65,7 +65,7 @@ function GenderFilter({value,onChange,counts}){
 
 function LVFilter({value,onChange,total,match}){
   return(
-    <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:12,padding:"12px 14px",marginBottom:12}}>
+    <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:12,paddaysg:"12px 14px",marginBottom:12}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
         <div style={{fontSize:12,fontWeight:800,color:TP.tm}}>\uD83D\uDCC5 Last Visit Filter</div>
         <div style={{fontSize:10,color:TP.ts}}>{value===0?`Sabko (${total})`:`${match}/${total}`}</div>
@@ -73,13 +73,13 @@ function LVFilter({value,onChange,total,match}){
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:value>0?10:0}}>
         <div style={{flex:1,position:"relative"}}>
           <input type="number" min={0} max={365} value={value===0?"":value} onChange={e=>onChange(parseInt(e.target.value)||0)} placeholder="0 = sabko"
-            style={{width:"100%",padding:"10px 44px 10px 13px",border:`2px solid ${TP.border}`,borderRadius:10,fontSize:15,fontWeight:800,fontFamily:"inherit",outline:"none",boxSizing:"border-box",background:"#fff",color:TP.text}}
+            style={{width:"100%",paddaysg:"10px 44px 10px 13px",border:`2px solid ${TP.border}`,borderRadius:10,fontSize:15,fontWeight:800,fontFamily:"inherit",outline:"none",boxSizing:"border-box",background:"#fff",color:TP.text}}
             onFocus={e=>e.target.style.borderColor=TP.purpleMid} onBlur={e=>e.target.style.borderColor=TP.border}/>
-          <div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:12,fontWeight:700,color:TP.ts}}>din</div>
+          <div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:12,fontWeight:700,color:TP.ts}}>days</div>
         </div>
-        {value>0&&<button onClick={()=>onChange(0)} style={{padding:"10px 14px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:10,fontSize:12,fontWeight:700,color:TP.ts,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>\u2715</button>}
+        {value>0&&<button onClick={()=>onChange(0)} style={{paddaysg:"10px 14px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:10,fontSize:12,fontWeight:700,color:TP.ts,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>\u2715</button>}
       </div>
-      {value>0&&<div style={{background:match>0?TP.gl:TP.red,border:`1.5px solid ${match>0?TP.gm:TP.rb}`,borderRadius:8,padding:"7px 10px",fontSize:11,fontWeight:700,color:match>0?TP.gd:TP.rt}}>{match>0?`\u2705 ${match} customers — ${value}+ din absent`:`\u274C Koi nahi mila`}</div>}
+      {value>0&&<div style={{background:match>0?TP.gl:TP.red,border:`1.5px solid ${match>0?TP.gm:TP.rb}`,borderRadius:8,paddaysg:"7px 10px",fontSize:11,fontWeight:700,color:match>0?TP.gd:TP.rt}}>{match>0?`\u2705 ${match} customers — ${value}+ days absent`:`\u274C No customers found`}</div>}
     </div>
   );
 }
@@ -89,13 +89,13 @@ function WAModal({title,message,phone,name,onClose}){
   const [edit,setEdit]=useState(false);
   const [msg,setMsg]=useState(message.replace(/{name}/g,name));
   async function sendDirect(){
-    setStatus("sending");
+    setStatus("sendaysg");
     try{const result=await sendViaAPI([{phone,name,message:msg}]);if(result.sent>0)setStatus("sent");else setStatus("error");}
     catch(e){setStatus("error");}
   }
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(45,27,105,0.4)",zIndex:800,display:"flex",alignItems:"flex-end"}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:TP.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:TP.surface,borderRadius:"20px 20px 0 0",paddaysg:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 18px"}}/>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
           <div style={{width:42,height:42,borderRadius:12,background:TP.purpleLight,border:`2px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>\uD83D\uDCAC</div>
@@ -103,16 +103,16 @@ function WAModal({title,message,phone,name,onClose}){
             <div style={{fontWeight:900,fontSize:15,color:TP.text}}>{title}</div>
             <div style={{fontSize:12,color:TP.ts}}>+91 {phone}</div>
           </div>
-          {status==="idle"&&<button onClick={()=>setEdit(e=>!e)} style={{padding:"6px 12px",background:edit?TP.purpleMid:TP.sub,border:`1.5px solid ${edit?TP.purpleMid:TP.border}`,borderRadius:20,fontSize:11,fontWeight:800,color:edit?"#fff":TP.ts,cursor:"pointer",fontFamily:"inherit"}}>{edit?"\u2713 Done":"\u270F\uFE0F Edit"}</button>}
+          {status==="idle"&&<button onClick={()=>setEdit(e=>!e)} style={{paddaysg:"6px 12px",background:edit?TP.purpleMid:TP.sub,border:`1.5px solid ${edit?TP.purpleMid:TP.border}`,borderRadius:20,fontSize:11,fontWeight:800,color:edit?"#fff":TP.ts,cursor:"pointer",fontFamily:"inherit"}}>{edit?"\u2713 Done":"\u270F\uFE0F Edit"}</button>}
         </div>
         {edit
-          ?<div style={{marginBottom:16}}><textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={10} autoFocus style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:13,padding:"12px",borderColor:TP.purpleMid,marginBottom:8}}/><button onClick={()=>setEdit(false)} style={{padding:"6px 14px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:9,fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",fontFamily:"inherit"}}>\u2713 Done</button></div>
-          :<div style={{background:"#e5ddd5",borderRadius:14,padding:14,marginBottom:16}}><div style={{background:"#fff",borderRadius:"12px 12px 12px 3px",padding:"12px 14px",maxWidth:"90%"}}><pre style={{margin:0,fontFamily:"inherit",fontSize:12,lineHeight:1.7,color:TP.text,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{msg}</pre></div></div>
+          ?<div style={{marginBottom:16}}><textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={10} autoFocus style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:13,paddaysg:"12px",borderColor:TP.purpleMid,marginBottom:8}}/><button onClick={()=>setEdit(false)} style={{paddaysg:"6px 14px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:9,fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",fontFamily:"inherit"}}>\u2713 Done</button></div>
+          :<div style={{background:"#e5ddd5",borderRadius:14,paddaysg:14,marginBottom:16}}><div style={{background:"#fff",borderRadius:"12px 12px 12px 3px",paddaysg:"12px 14px",maxWidth:"90%"}}><pre style={{margin:0,fontFamily:"inherit",fontSize:12,lineHeight:1.7,color:TP.text,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{msg}</pre></div></div>
         }
-        {status==="idle"&&<div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:13,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button><button onClick={sendDirect} style={{flex:2,padding:13,background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>\uD83D\uDCAC Send Directly</button></div>}
-        {status==="sending"&&<div style={{background:TP.purpleLight,border:`2px solid ${TP.border}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:TP.purpleMid}}>\uD83D\uDCE4 Sending...</div>}
-        {status==="sent"&&<div style={{background:TP.gl,border:`2px solid ${TP.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:TP.gd}}>\u2705 Message bhej diya!</div>}
-        {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:TP.rt,fontWeight:700}}>\u26A0\uFE0F Send nahi hua</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={sendDirect} style={{flex:1,padding:12,background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>\uD83D\uDD04 Retry</button></div></div>}
+        {status==="idle"&&<div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,paddaysg:13,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button><button onClick={sendDirect} style={{flex:2,paddaysg:13,background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>\uD83D\uDCAC Send Directly</button></div>}
+        {status==="sendaysg"&&<div style={{background:TP.purpleLight,border:`2px solid ${TP.border}`,borderRadius:12,paddaysg:14,textAlign:"center",fontWeight:800,color:TP.purpleMid}}>\uD83D\uDCE4 Sendaysg...</div>}
+        {status==="sent"&&<div style={{background:TP.gl,border:`2px solid ${TP.gm}`,borderRadius:12,paddaysg:14,textAlign:"center",fontWeight:800,color:TP.gd}}>\u2705 Message bhej diya!</div>}
+        {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,paddaysg:10,textAlign:"center",fontSize:12,color:TP.rt,fontWeight:700}}>\u26A0\uFE0F Send nahi hua</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,paddaysg:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={sendDirect} style={{flex:1,paddaysg:12,background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>\uD83D\uDD04 Retry</button></div></div>}
       </div>
     </div>
   );
@@ -128,7 +128,7 @@ function BulkSendModal({customers,template,title,onClose}){
   const sc=customers.filter(c=>sel.includes(c.id));
   const allSel=sel.length===customers.length;
   async function sendAll(){
-    setPhase("sending");setStatus("sending");
+    setPhase("sendaysg");setStatus("sendaysg");
     try{
       const messages=sc.map(c=>({phone:c.phone,name:c.name,message:tpl.replace(/{name}/g,c.name)}));
       const result=await sendViaAPI(messages);
@@ -137,43 +137,43 @@ function BulkSendModal({customers,template,title,onClose}){
   }
   return(
     <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(45,27,105,0.4)",zIndex:800,display:"flex",alignItems:"flex-end"}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:TP.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"92vh",overflowY:"auto"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:TP.surface,borderRadius:"20px 20px 0 0",paddaysg:"20px 18px 36px",width:"100%",maxHeight:"92vh",overflowY:"auto"}}>
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 18px"}}/>
         <div style={{fontWeight:900,fontSize:16,marginBottom:2,color:TP.text}}>\uD83D\uDCE4 {title}</div>
         <div style={{fontSize:12,color:TP.ts,marginBottom:16}}>{sc.length} customers ko bhejenge</div>
         {phase==="select"&&(<>
           <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:14,marginBottom:14,overflow:"hidden"}}>
-            <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${TP.border}`}}>
+            <div style={{paddaysg:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${TP.border}`}}>
               <div style={{fontSize:12,fontWeight:800,color:TP.text}}>\uD83D\uDCAC Message</div>
-              <button onClick={()=>setEdit(e=>!e)} style={{padding:"4px 10px",background:edit?TP.purpleMid:TP.surface,border:`1.5px solid ${edit?TP.purpleMid:TP.border}`,borderRadius:20,fontSize:11,fontWeight:700,color:edit?"#fff":TP.ts,cursor:"pointer",fontFamily:"inherit"}}>{edit?"\u2713 Done":"\u270F\uFE0F Edit"}</button>
+              <button onClick={()=>setEdit(e=>!e)} style={{paddaysg:"4px 10px",background:edit?TP.purpleMid:TP.surface,border:`1.5px solid ${edit?TP.purpleMid:TP.border}`,borderRadius:20,fontSize:11,fontWeight:700,color:edit?"#fff":TP.ts,cursor:"pointer",fontFamily:"inherit"}}>{edit?"\u2713 Done":"\u270F\uFE0F Edit"}</button>
             </div>
             {edit
-              ?<div style={{padding:"12px 14px"}}><textarea value={tpl} onChange={e=>setTpl(e.target.value)} rows={8} autoFocus style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:12,padding:"10px",borderColor:TP.purpleMid,marginBottom:8}}/><button onClick={()=>setEdit(false)} style={{padding:"6px 12px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:9,fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",fontFamily:"inherit"}}>\u2713 Save</button></div>
-              :<div style={{padding:"9px 14px",fontSize:11,color:TP.ts,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tpl.split("\n")[0].replace(/{name}/g,customers[0]?.name||"Customer")}…</div>
+              ?<div style={{paddaysg:"12px 14px"}}><textarea value={tpl} onChange={e=>setTpl(e.target.value)} rows={8} autoFocus style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:12,paddaysg:"10px",borderColor:TP.purpleMid,marginBottom:8}}/><button onClick={()=>setEdit(false)} style={{paddaysg:"6px 12px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:9,fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",fontFamily:"inherit"}}>\u2713 Save</button></div>
+              :<div style={{paddaysg:"9px 14px",fontSize:11,color:TP.ts,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{tpl.split("\n")[0].replace(/{name}/g,customers[0]?.name||"Customer")}…</div>
             }
           </div>
-          <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:12,paddaysg:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{fontSize:13,fontWeight:800,color:TP.text}}>{sel.length===0?"Koi select nahi":`${sel.length} selected`}</div>
-            <button onClick={()=>setSel(allSel?[]:customers.map(c=>c.id))} style={{padding:"6px 14px",background:allSel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allSel?"\u2715 Deselect":"\u2713 Select All"}</button>
+            <button onClick={()=>setSel(allSel?[]:customers.map(c=>c.id))} style={{paddaysg:"6px 14px",background:allSel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allSel?"\u2715 Deselect":"\u2713 Select All"}</button>
           </div>
           <div style={{marginBottom:16,background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,overflow:"hidden"}}>
             {customers.map((c,i)=>{const isSel=sel.includes(c.id);const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||TP.purpleMid;return(
-              <div key={c.id} onClick={()=>setSel(p=>p.includes(c.id)?p.filter(x=>x!==c.id):[...p,c.id])} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:i<customers.length-1?`1px solid ${TP.border}`:"none",background:isSel?TP.purpleLight:TP.surface,cursor:"pointer"}}>
+              <div key={c.id} onClick={()=>setSel(p=>p.includes(c.id)?p.filter(x=>x!==c.id):[...p,c.id])} style={{display:"flex",alignItems:"center",gap:12,paddaysg:"12px 14px",borderBottom:i<customers.length-1?`1px solid ${TP.border}`:"none",background:isSel?TP.purpleLight:TP.surface,cursor:"pointer"}}>
                 <div style={{width:22,height:22,borderRadius:7,flexShrink:0,background:isSel?TP.purpleMid:TP.surface,border:`2px solid ${isSel?TP.purpleMid:TP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",fontWeight:900}}>{isSel?"\u2713":""}</div>
                 <div style={{width:38,height:38,borderRadius:11,background:col+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:col,flexShrink:0}}>{av}</div>
                 <div style={{flex:1}}><div style={{fontSize:13,fontWeight:800,color:TP.text}}>{c.name}</div><div style={{fontSize:11,color:TP.ts}}>\uD83D\uDCF1 {c.phone}</div></div>
-                <div style={{fontSize:10,fontWeight:700,color:TP.ts,background:TP.sub,padding:"2px 8px",borderRadius:20,border:`1px solid ${TP.border}`,flexShrink:0}}>{c.tag}</div>
+                <div style={{fontSize:10,fontWeight:700,color:TP.ts,background:TP.sub,paddaysg:"2px 8px",borderRadius:20,border:`1px solid ${TP.border}`,flexShrink:0}}>{c.tag}</div>
               </div>
             );})}
           </div>
           <div style={{display:"flex",gap:10}}>
-            <button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button>
-            <button onClick={()=>{if(sel.length>0)sendAll();}} style={{flex:2,padding:12,background:sel.length>0?TP.wa:"#d1d5db",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:sel.length>0?"pointer":"not-allowed"}}>\uD83D\uDCAC Send to {sel.length} \u2192</button>
+            <button onClick={onClose} style={{flex:1,paddaysg:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button>
+            <button onClick={()=>{if(sel.length>0)sendAll();}} style={{flex:2,paddaysg:12,background:sel.length>0?TP.wa:"#d1d5db",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:sel.length>0?"pointer":"not-allowed"}}>\uD83D\uDCAC Send to {sel.length} \u2192</button>
           </div>
         </>)}
-        {phase==="sending"&&status==="sending"&&<div style={{background:TP.purpleLight,border:`2px solid ${TP.border}`,borderRadius:14,padding:24,textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>\uD83D\uDCE4</div><div style={{fontWeight:900,fontSize:16,color:TP.purpleMid,marginBottom:4}}>Sending {sc.length} messages...</div><div style={{fontSize:12,color:TP.ts}}>Thoda wait karo</div></div>}
-        {status==="done"&&results&&<div style={{background:TP.gl,border:`2px solid ${TP.gm}`,borderRadius:14,padding:24,textAlign:"center"}}><div style={{fontSize:42,marginBottom:10}}>\uD83C\uDF89</div><div style={{fontWeight:900,fontSize:16,color:TP.gd,marginBottom:4}}>Done!</div><div style={{fontSize:13,color:TP.gd,marginBottom:4}}>\u2705 {results.sent} sent · \u274C {results.failed} failed</div><button onClick={onClose} style={{padding:"11px 32px",background:TP.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginTop:8}}>Done \u2713</button></div>}
-        {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:14,textAlign:"center",fontSize:13,color:TP.rt,fontWeight:700}}>\u26A0\uFE0F Error hua</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>{setStatus("idle");setPhase("select");}} style={{flex:1,padding:12,background:TP.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>\uD83D\uDD04 Retry</button></div></div>}
+        {phase==="sendaysg"&&status==="sendaysg"&&<div style={{background:TP.purpleLight,border:`2px solid ${TP.border}`,borderRadius:14,paddaysg:24,textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>\uD83D\uDCE4</div><div style={{fontWeight:900,fontSize:16,color:TP.purpleMid,marginBottom:4}}>Sendaysg {sc.length} messages...</div><div style={{fontSize:12,color:TP.ts}}>Thoda wait karo</div></div>}
+        {status==="done"&&results&&<div style={{background:TP.gl,border:`2px solid ${TP.gm}`,borderRadius:14,paddaysg:24,textAlign:"center"}}><div style={{fontSize:42,marginBottom:10}}>\uD83C\uDF89</div><div style={{fontWeight:900,fontSize:16,color:TP.gd,marginBottom:4}}>Done!</div><div style={{fontSize:13,color:TP.gd,marginBottom:4}}>\u2705 {results.sent} sent · \u274C {results.failed} failed</div><button onClick={onClose} style={{paddaysg:"11px 32px",background:TP.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginTop:8}}>Done \u2713</button></div>}
+        {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,paddaysg:14,textAlign:"center",fontSize:13,color:TP.rt,fontWeight:700}}>\u26A0\uFE0F Error hua</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,paddaysg:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>{setStatus("idle");setPhase("select");}} style={{flex:1,paddaysg:12,background:TP.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>\uD83D\uDD04 Retry</button></div></div>}
       </div>
     </div>
   );
@@ -199,17 +199,17 @@ function ReengagementTab({customers}){
   const getLV=c=>daysSince(c.last_visit||c.lastVisit);
   const lost=customers.map(c=>({...c,days:getLV(c)})).filter(c=>c.days>=filter).filter(c=>gFilter==="all"?true:c.gender===gFilter).sort((a,b)=>b.days-a.days);
   const filtAll=customers.filter(c=>tagFilter==="All"?true:c.tag===tagFilter).filter(c=>aGender==="all"?true:c.gender===aGender).filter(c=>lvFilter===0?true:getLV(c)>=lvFilter).filter(c=>{const q=search.toLowerCase();return !q||c.name.toLowerCase().includes(q)||(c.phone||"").includes(q);});
-  const bulkTpl=`\uD83D\uDE4F *Namaste {name}!*\n\nKaafi dino se aap nahi aaye. Kya sab theek hai? \uD83D\uDC87\n\n\u2728 Next visit pe *15% OFF*!\n\n_Miss you! \uD83D\uDC88_`;
+  const bulkTpl=`\uD83D\uDE4F *Namaste {name}!*\n\nKaafi dayso se aap nahi aaye. Kya sab theek hai? \uD83D\uDC87\n\n\u2728 Next visit pe *15% OFF*!\n\n_Miss you! \uD83D\uDC88_`;
   const iGC={all:customers.filter(c=>getLV(c)>=filter).length,male:customers.filter(c=>getLV(c)>=filter&&c.gender==="male").length,female:customers.filter(c=>getLV(c)>=filter&&c.gender==="female").length};
   const aGC={all:customers.length,male:customers.filter(c=>c.gender==="male").length,female:customers.filter(c=>c.gender==="female").length};
   const allISel=selInactive.length===lost.length&&lost.length>0;
   const allASel=selAll.length===filtAll.length&&filtAll.length>0;
 
   return(
-    <div style={{padding:"16px 16px 80px"}}>
+    <div style={{paddaysg:"16px 16px 80px"}}>
       <div style={{display:"flex",gap:8,marginBottom:16}}>
         {[{id:"inactive",label:"\uD83D\uDCA4 Inactive",desc:"Jo nahi aaye"},{id:"all",label:"\uD83D\uDC65 All Clients",desc:"Broadcast karo"}].map(t=>(
-          <div key={t.id} onClick={()=>setSub(t.id)} style={{flex:1,padding:"12px 10px",borderRadius:12,border:`2px solid ${sub===t.id?TP.purpleMid:TP.border}`,background:sub===t.id?TP.purpleLight:TP.surface,cursor:"pointer",textAlign:"center"}}>
+          <div key={t.id} onClick={()=>setSub(t.id)} style={{flex:1,paddaysg:"12px 10px",borderRadius:12,border:`2px solid ${sub===t.id?TP.purpleMid:TP.border}`,background:sub===t.id?TP.purpleLight:TP.surface,cursor:"pointer",textAlign:"center"}}>
             <div style={{fontSize:13,fontWeight:800,color:sub===t.id?TP.purpleMid:TP.tm}}>{t.label}</div>
             <div style={{fontSize:10,color:sub===t.id?TP.purpleMid:TP.ts,marginTop:2}}>{t.desc}</div>
           </div>
@@ -220,34 +220,34 @@ function ReengagementTab({customers}){
         <GenderFilter value={gFilter} onChange={(g)=>{setGFilter(g);setSelInactive([]);}} counts={iGC}/>
         <LVFilter value={filter} onChange={(v)=>{setFilter(v);setSelInactive([]);}} total={customers.filter(c=>gFilter==="all"?true:c.gender===gFilter).length} match={customers.filter(c=>(gFilter==="all"?true:c.gender===gFilter)&&getLV(c)>=filter).length}/>
         {lost.length>0&&(
-          <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:12,paddaysg:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
             <div style={{fontSize:13,fontWeight:800,color:TP.text}}>{selInactive.length===0?`${lost.length} customers`:`${selInactive.length} selected`}</div>
             <div style={{display:"flex",gap:7}}>
-              <button onClick={()=>setSelInactive(allISel?[]:lost.map(c=>c.id))} style={{padding:"5px 12px",background:allISel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allISel?"\u2715":"\u2713 Select All"}</button>
-              {selInactive.length>0&&<button onClick={()=>setBulkModal(true)} style={{padding:"5px 12px",background:TP.wa,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>\uD83D\uDCAC ({selInactive.length})</button>}
+              <button onClick={()=>setSelInactive(allISel?[]:lost.map(c=>c.id))} style={{paddaysg:"5px 12px",background:allISel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allISel?"\u2715":"\u2713 Select All"}</button>
+              {selInactive.length>0&&<button onClick={()=>setBulkModal(true)} style={{paddaysg:"5px 12px",background:TP.wa,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>\uD83D\uDCAC ({selInactive.length})</button>}
             </div>
           </div>
         )}
         {lost.length===0
-          ?<div style={{background:TP.surface,border:`2px dashed ${TP.border}`,borderRadius:14,padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>\uD83C\uDF89</div><div style={{fontWeight:800,fontSize:15,color:TP.tm}}>Sab active hain!</div></div>
+          ?<div style={{background:TP.surface,border:`2px dashed ${TP.border}`,borderRadius:14,paddaysg:"40px 20px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>\uD83C\uDF89</div><div style={{fontWeight:800,fontSize:15,color:TP.tm}}>All customers are active!</div></div>
           :<div style={{display:"flex",flexDirection:"column",gap:10}}>
             {lost.map(c=>{
               const isSent=sentIds.includes(c.id);const isSel=selInactive.includes(c.id);
               const uC=c.days>=90?TP.rt:c.days>=60?TP.ot:TP.yt;const uB=c.days>=90?TP.red:c.days>=60?TP.orange:TP.yellow;
               const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||TP.purpleMid;
-              const reMsg=`\uD83D\uDE4F *Namaste ${c.name}!*\n\nAapko yaad kar rahe hain hum! \uD83D\uDE0A\n\nKaafi dino se aap nahi aaye — ${c.days} din ho gaye. \uD83D\uDC87\n\n\u2728 Next visit pe *15% OFF*!\n\n_Miss you! \uD83D\uDC88_`;
+              const reMsg=`\uD83D\uDE4F *Namaste ${c.name}!*\n\nAapko yaad kar rahe hain hum! \uD83D\uDE0A\n\nKaafi dayso se aap nahi aaye — ${c.days} days ho gaye. \uD83D\uDC87\n\n\u2728 Next visit pe *15% OFF*!\n\n_Miss you! \uD83D\uDC88_`;
               return(
-                <div key={c.id} style={{background:TP.surface,border:`2px solid ${isSel?TP.purpleMid:isSent?TP.gm:TP.border}`,borderRadius:14,padding:"14px"}}>
+                <div key={c.id} style={{background:TP.surface,border:`2px solid ${isSel?TP.purpleMid:isSent?TP.gm:TP.border}`,borderRadius:14,paddaysg:"14px"}}>
                   <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
                     <div onClick={()=>setSelInactive(p=>p.includes(c.id)?p.filter(x=>x!==c.id):[...p,c.id])} style={{width:22,height:22,borderRadius:7,flexShrink:0,background:isSel?TP.purpleMid:TP.surface,border:`2px solid ${isSel?TP.purpleMid:TP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",fontWeight:900,cursor:"pointer"}}>{isSel?"\u2713":""}</div>
                     <div style={{width:44,height:44,borderRadius:14,background:col+"22",border:`2px solid ${col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:900,color:col,flexShrink:0}}>{av}</div>
                     <div style={{flex:1}}><div style={{fontWeight:800,fontSize:14,color:TP.text}}>{c.name}</div><div style={{fontSize:11,color:TP.ts}}>\uD83D\uDCF1 {c.phone}</div></div>
-                    <div style={{background:uB,color:uC,fontSize:11,fontWeight:800,padding:"4px 10px",borderRadius:20,flexShrink:0}}>{c.days} din</div>
+                    <div style={{background:uB,color:uC,fontSize:11,fontWeight:800,paddaysg:"4px 10px",borderRadius:20,flexShrink:0}}>{c.days} days</div>
                   </div>
-                  <div style={{background:TP.sub,borderRadius:9,padding:"8px 12px",marginBottom:12,fontSize:12,color:TP.tm}}>\uD83D\uDCC5 Last visit: <strong>{c.last_visit||c.lastVisit||"—"}</strong></div>
+                  <div style={{background:TP.sub,borderRadius:9,paddaysg:"8px 12px",marginBottom:12,fontSize:12,color:TP.tm}}>\uD83D\uDCC5 Last visit: <strong>{c.last_visit||c.lastVisit||"—"}</strong></div>
                   {isSent
-                    ?<div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:10,padding:"10px",textAlign:"center",fontSize:12,fontWeight:800,color:TP.gd}}>\u2705 Message bhej diya!</div>
-                    :<button onClick={()=>setWaModal({customer:c,message:reMsg})} style={{width:"100%",padding:"11px",background:TP.wa,border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>\uD83D\uDCAC Wapas bulao</button>
+                    ?<div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:10,paddaysg:"10px",textAlign:"center",fontSize:12,fontWeight:800,color:TP.gd}}>\u2705 Message bhej diya!</div>
+                    :<button onClick={()=>setWaModal({customer:c,message:reMsg})} style={{width:"100%",paddaysg:"11px",background:TP.wa,border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>\uD83D\uDCAC Wapas bulao</button>
                   }
                 </div>
               );
@@ -258,41 +258,41 @@ function ReengagementTab({customers}){
 
       {sub==="all"&&(<>
         <div style={{background:TP.surface,border:`2px solid ${editMsg?TP.purpleMid:TP.border}`,borderRadius:14,marginBottom:14,overflow:"hidden"}}>
-          <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${TP.border}`,background:TP.sub}}>
+          <div style={{paddaysg:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${TP.border}`,background:TP.sub}}>
             <div style={{fontSize:12,fontWeight:800,color:TP.text}}>\uD83D\uDCDD Broadcast Message</div>
-            <button onClick={()=>setEditMsg(e=>!e)} style={{padding:"5px 12px",background:editMsg?TP.purpleMid:TP.surface,border:`1.5px solid ${editMsg?TP.purpleMid:TP.border}`,borderRadius:20,fontSize:11,fontWeight:800,color:editMsg?"#fff":TP.ts,cursor:"pointer",fontFamily:"inherit"}}>{editMsg?"\u2713 Done":"\u270F\uFE0F Edit"}</button>
+            <button onClick={()=>setEditMsg(e=>!e)} style={{paddaysg:"5px 12px",background:editMsg?TP.purpleMid:TP.surface,border:`1.5px solid ${editMsg?TP.purpleMid:TP.border}`,borderRadius:20,fontSize:11,fontWeight:800,color:editMsg?"#fff":TP.ts,cursor:"pointer",fontFamily:"inherit"}}>{editMsg?"\u2713 Done":"\u270F\uFE0F Edit"}</button>
           </div>
           {editMsg
-            ?<div style={{padding:"12px 14px"}}><textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={8} autoFocus style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:12,padding:"10px",borderColor:TP.purpleMid,marginBottom:8}}/><button onClick={()=>setEditMsg(false)} style={{padding:"6px 14px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:9,fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",fontFamily:"inherit"}}>\u2713 Save</button></div>
-            :<div style={{padding:"9px 14px"}}><pre style={{margin:0,fontFamily:"inherit",fontSize:11,lineHeight:1.7,color:TP.tm,whiteSpace:"pre-wrap",wordBreak:"break-word",maxHeight:70,overflow:"hidden"}}>{msg.replace(/{name}/g,customers[0]?.name||"Customer")}</pre></div>
+            ?<div style={{paddaysg:"12px 14px"}}><textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={8} autoFocus style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:12,paddaysg:"10px",borderColor:TP.purpleMid,marginBottom:8}}/><button onClick={()=>setEditMsg(false)} style={{paddaysg:"6px 14px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:9,fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",fontFamily:"inherit"}}>\u2713 Save</button></div>
+            :<div style={{paddaysg:"9px 14px"}}><pre style={{margin:0,fontFamily:"inherit",fontSize:11,lineHeight:1.7,color:TP.tm,whiteSpace:"pre-wrap",wordBreak:"break-word",maxHeight:70,overflow:"hidden"}}>{msg.replace(/{name}/g,customers[0]?.name||"Customer")}</pre></div>
           }
         </div>
         <GenderFilter value={aGender} onChange={(g)=>{setAGender(g);setSelAll([]);}} counts={aGC}/>
         <LVFilter value={lvFilter} onChange={(v)=>{setLvFilter(v);setSelAll([]);}} total={customers.filter(c=>(tagFilter==="All"?true:c.tag===tagFilter)&&(aGender==="all"?true:c.gender===aGender)).length} match={filtAll.length}/>
         <div style={{display:"flex",gap:6,marginBottom:8}}>
           {["All","VIP","Regular","New"].map(f=>(
-            <button key={f} onClick={()=>{setTagFilter(f);setSelAll([]);}} style={{padding:"5px 10px",borderRadius:20,border:`2px solid ${tagFilter===f?TP.purpleMid:TP.border}`,background:tagFilter===f?TP.purpleLight:TP.surface,color:tagFilter===f?TP.purpleMid:TP.ts,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{f}</button>
+            <button key={f} onClick={()=>{setTagFilter(f);setSelAll([]);}} style={{paddaysg:"5px 10px",borderRadius:20,border:`2px solid ${tagFilter===f?TP.purpleMid:TP.border}`,background:tagFilter===f?TP.purpleLight:TP.surface,color:tagFilter===f?TP.purpleMid:TP.ts,fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{f}</button>
           ))}
         </div>
         <div style={{position:"relative",marginBottom:10}}>
           <span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:13,color:TP.tf}}>\uD83D\uDD0D</span>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search\u2026" style={{...IS,padding:"9px 12px 9px 32px",fontSize:13}} onFocus={e=>e.target.style.borderColor=TP.purpleMid} onBlur={e=>e.target.style.borderColor=TP.border}/>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search\u2026" style={{...IS,paddaysg:"9px 12px 9px 32px",fontSize:13}} onFocus={e=>e.target.style.borderColor=TP.purpleMid} onBlur={e=>e.target.style.borderColor=TP.border}/>
         </div>
-        <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:12,paddaysg:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{fontSize:13,fontWeight:800,color:TP.text}}>{selAll.length===0?`${filtAll.length} customers`:`${selAll.length} selected`}</div>
           <div style={{display:"flex",gap:7}}>
-            <button onClick={()=>setSelAll(allASel?[]:filtAll.map(c=>c.id))} style={{padding:"5px 12px",background:allASel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allASel?"\u2715":"\u2713 Select All"}</button>
-            {selAll.length>0&&<button onClick={()=>setAllBulk(true)} style={{padding:"5px 12px",background:TP.wa,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>\uD83D\uDCAC ({selAll.length})</button>}
+            <button onClick={()=>setSelAll(allASel?[]:filtAll.map(c=>c.id))} style={{paddaysg:"5px 12px",background:allASel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allASel?"\u2715":"\u2713 Select All"}</button>
+            {selAll.length>0&&<button onClick={()=>setAllBulk(true)} style={{paddaysg:"5px 12px",background:TP.wa,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>\uD83D\uDCAC ({selAll.length})</button>}
           </div>
         </div>
         <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,overflow:"hidden"}}>
           {filtAll.map((c,i)=>{const isSel=selAll.includes(c.id);const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||TP.purpleMid;return(
-            <div key={c.id} onClick={()=>setSelAll(p=>p.includes(c.id)?p.filter(x=>x!==c.id):[...p,c.id])} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",borderBottom:i<filtAll.length-1?`1px solid ${TP.border}`:"none",background:isSel?TP.purpleLight:TP.surface,cursor:"pointer"}}>
+            <div key={c.id} onClick={()=>setSelAll(p=>p.includes(c.id)?p.filter(x=>x!==c.id):[...p,c.id])} style={{display:"flex",alignItems:"center",gap:12,paddaysg:"12px 14px",borderBottom:i<filtAll.length-1?`1px solid ${TP.border}`:"none",background:isSel?TP.purpleLight:TP.surface,cursor:"pointer"}}>
               <div style={{width:22,height:22,borderRadius:7,flexShrink:0,background:isSel?TP.purpleMid:TP.surface,border:`2px solid ${isSel?TP.purpleMid:TP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",fontWeight:900}}>{isSel?"\u2713":""}</div>
               <div style={{width:40,height:40,borderRadius:12,background:col+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:900,color:col,flexShrink:0}}>{av}</div>
               <div style={{flex:1}}><div style={{fontSize:13,fontWeight:800,color:TP.text}}>{c.name}</div><div style={{fontSize:11,color:TP.ts}}>\uD83D\uDCC5 {c.last_visit||c.lastVisit||"—"}</div></div>
               <div style={{display:"flex",alignItems:"center",gap:6}}>
-                <div style={{fontSize:10,fontWeight:700,color:TP.ts,background:TP.sub,padding:"2px 7px",borderRadius:20,border:`1px solid ${TP.border}`,flexShrink:0}}>{c.tag}</div>
+                <div style={{fontSize:10,fontWeight:700,color:TP.ts,background:TP.sub,paddaysg:"2px 7px",borderRadius:20,border:`1px solid ${TP.border}`,flexShrink:0}}>{c.tag}</div>
                 <div onClick={e=>{e.stopPropagation();setWaModal({customer:c,message:msg});}} style={{width:32,height:32,background:TP.wa,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,cursor:"pointer",flexShrink:0}}>\uD83D\uDCAC</div>
               </div>
             </div>
@@ -313,18 +313,18 @@ function BirthdayTab({customers}){
   const [gf,setGf]=useState("all");
   const wb=customers.map(c=>({...c,bdayInfo:getBirthdayInfo(c.dob||c.birthday)})).filter(c=>c.bdayInfo).filter(c=>gf==="all"?true:c.gender===gf).sort((a,b)=>a.bdayInfo.diff-b.bdayInfo.diff);
   const bc={all:customers.filter(c=>getBirthdayInfo(c.dob||c.birthday)).length,male:customers.filter(c=>getBirthdayInfo(c.dob||c.birthday)&&c.gender==="male").length,female:customers.filter(c=>getBirthdayInfo(c.dob||c.birthday)&&c.gender==="female").length};
-  function bdayMsg(c){if(c.bdayInfo.urgency==="passed")return `\uD83C\uDF82 *Belated Birthday, ${c.name}!*\n\nThodi der se sahi, par dil se! \uD83D\uDE4F\n\n\uD83C\uDF81 Next visit pe *20% OFF*!\n\n_With love! \uD83D\uDC88_`;return `\uD83C\uDF82 *Happy Birthday, ${c.name}!* \uD83C\uDF89\n\nAaj ka din aapka hai! \uD83E\uDD73\n\n\uD83C\uDF81 Free Haircut OR 25% OFF!\nSirf birthday month mein!\n\nReply *BDAY*\n\n_Khush raho! \uD83D\uDC88_`;}
+  function bdayMsg(c){if(c.bdayInfo.urgency==="passed")return `\uD83C\uDF82 *Belated Birthday, ${c.name}!*\n\nThodi der se sahi, par dil se! \uD83D\uDE4F\n\n\uD83C\uDF81 Next visit pe *20% OFF*!\n\n_With love! \uD83D\uDC88_`;return `\uD83C\uDF82 *Happy Birthday, ${c.name}!* \uD83C\uDF89\n\nAaj ka days aapka hai! \uD83E\uDD73\n\n\uD83C\uDF81 Free Haircut OR 25% OFF!\nSirf birthday month mein!\n\nReply *BDAY*\n\n_Khush raho! \uD83D\uDC88_`;}
   return(
-    <div style={{padding:"16px 16px 80px"}}>
+    <div style={{paddaysg:"16px 16px 80px"}}>
       <GenderFilter value={gf} onChange={setGf} counts={bc}/>
-      <div style={{background:`linear-gradient(135deg,${TP.purpleLight},${TP.border})`,border:`2px solid ${TP.border}`,borderRadius:14,padding:"16px",marginBottom:16}}>
+      <div style={{background:`linear-gradient(135deg,${TP.purpleLight},${TP.border})`,border:`2px solid ${TP.border}`,borderRadius:14,paddaysg:"16px",marginBottom:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
           <div style={{fontWeight:900,fontSize:15,color:TP.purpleMid}}>\uD83C\uDF82 Birthday Calendar</div>
-          <div style={{background:TP.purpleMid,color:"#fff",fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:20}}>{wb.length} upcoming</div>
+          <div style={{background:TP.purpleMid,color:"#fff",fontSize:11,fontWeight:800,paddaysg:"3px 10px",borderRadius:20}}>{wb.length} upcoming</div>
         </div>
         <div style={{display:"flex",gap:8}}>
-          {[{l:"Aaj",u:"today",c:TP.rt},{l:"3 Din",u:"soon",c:TP.ot},{l:"Is Hafte",u:"week",c:TP.gd},{l:"Is Mahine",u:"month",c:TP.purpleMid}].map(s=>(
-            <div key={s.l} style={{flex:1,background:"rgba(255,255,255,0.7)",borderRadius:10,padding:"8px 4px",textAlign:"center"}}>
+          {[{l:"Aaj",u:"today",c:TP.rt},{l:"3 Din",u:"soon",c:TP.ot},{l:"This Week",u:"week",c:TP.gd},{l:"This Month",u:"month",c:TP.purpleMid}].map(s=>(
+            <div key={s.l} style={{flex:1,background:"rgba(255,255,255,0.7)",borderRadius:10,paddaysg:"8px 4px",textAlign:"center"}}>
               <div style={{fontWeight:900,fontSize:18,color:s.c}}>{wb.filter(c=>c.bdayInfo.urgency===s.u).length}</div>
               <div style={{fontSize:9,color:TP.tm,fontWeight:700,marginTop:2}}>{s.l}</div>
             </div>
@@ -332,21 +332,21 @@ function BirthdayTab({customers}){
         </div>
       </div>
       {wb.length===0
-        ?<div style={{background:TP.surface,border:`2px dashed ${TP.border}`,borderRadius:14,padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>\uD83C\uDF82</div><div style={{fontWeight:800,fontSize:15,color:TP.tm}}>Abhi koi birthday nahi</div><div style={{fontSize:12,color:TP.ts,marginTop:4}}>Customers ka DOB add karo</div></div>
+        ?<div style={{background:TP.surface,border:`2px dashed ${TP.border}`,borderRadius:14,paddaysg:"40px 20px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>\uD83C\uDF82</div><div style={{fontWeight:800,fontSize:15,color:TP.tm}}>No birthdays yet</div><div style={{fontSize:12,color:TP.ts,marginTop:4}}>Add customer date of birth</div></div>
         :<div style={{display:"flex",flexDirection:"column",gap:10}}>
           {wb.map(c=>{const us=US[c.bdayInfo.urgency];const isSent=sentIds.includes(c.id);const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||TP.purpleMid;return(
-            <div key={c.id} style={{background:TP.surface,border:`2px solid ${isSent?TP.gm:us.border}`,borderRadius:14,padding:"14px"}}>
+            <div key={c.id} style={{background:TP.surface,border:`2px solid ${isSent?TP.gm:us.border}`,borderRadius:14,paddaysg:"14px"}}>
               <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
                 <div style={{position:"relative"}}>
                   <div style={{width:46,height:46,borderRadius:14,background:col+"22",border:`2px solid ${col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:900,color:col}}>{av}</div>
                   <div style={{position:"absolute",bottom:-4,right:-4,fontSize:14}}>\uD83C\uDF82</div>
                 </div>
                 <div style={{flex:1}}><div style={{fontWeight:800,fontSize:14,color:TP.text}}>{c.name}</div><div style={{fontSize:11,color:TP.ts}}>{c.bdayInfo.label}</div></div>
-                <div style={{background:us.bg,color:us.color,border:`1.5px solid ${us.border}`,fontSize:10,fontWeight:800,padding:"3px 9px",borderRadius:20,flexShrink:0}}>{us.badge}</div>
+                <div style={{background:us.bg,color:us.color,border:`1.5px solid ${us.border}`,fontSize:10,fontWeight:800,paddaysg:"3px 9px",borderRadius:20,flexShrink:0}}>{us.badge}</div>
               </div>
               {isSent
-                ?<div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:10,padding:"10px",textAlign:"center",fontSize:12,fontWeight:800,color:TP.gd}}>\u2705 Birthday wish bhej diya!</div>
-                :<button onClick={()=>setWaModal({customer:c,message:bdayMsg(c)})} style={{width:"100%",padding:"11px",background:c.bdayInfo.urgency==="today"?"linear-gradient(135deg,#f59e0b,#ef4444)":TP.wa,border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>{c.bdayInfo.urgency==="today"?"\uD83C\uDF82 Aaj ZAROOR Wish Karo!":"\uD83D\uDCAC Birthday Wish + Offer Bhejo"}</button>
+                ?<div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:10,paddaysg:"10px",textAlign:"center",fontSize:12,fontWeight:800,color:TP.gd}}>\u2705 Birthday wish bhej diya!</div>
+                :<button onClick={()=>setWaModal({customer:c,message:bdayMsg(c)})} style={{width:"100%",paddaysg:"11px",background:c.bdayInfo.urgency==="today"?"linear-gradient(135deg,#f59e0b,#ef4444)":TP.wa,border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>{c.bdayInfo.urgency==="today"?"\uD83C\uDF82 Aaj ZAROOR Wish Karo!":"\uD83D\uDCAC Birthday Wish + Offer Bhejo"}</button>
               }
             </div>
           );})}
@@ -369,7 +369,7 @@ function CampaignsTab({customers}){
   const gC={all:customers.filter(c=>(tTag==="All"?true:c.tag===tTag)&&(lvF===0?true:getLV(c)>=lvF)).length,male:customers.filter(c=>(tTag==="All"?true:c.tag===tTag)&&c.gender==="male"&&(lvF===0?true:getLV(c)>=lvF)).length,female:customers.filter(c=>(tTag==="All"?true:c.tag===tTag)&&c.gender==="female"&&(lvF===0?true:getLV(c)>=lvF)).length};
   const cats=[...new Set(CAMPAIGNS.map(c=>c.category))];
   return(
-    <div style={{padding:"16px 16px 80px"}}>
+    <div style={{paddaysg:"16px 16px 80px"}}>
       {!sel
         ?(<>
           <div style={{fontWeight:800,fontSize:14,color:TP.tm,marginBottom:4}}>Ready-made Templates</div>
@@ -378,7 +378,7 @@ function CampaignsTab({customers}){
             <div style={{fontSize:10,fontWeight:800,color:TP.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>{cat}</div>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {CAMPAIGNS.filter(c=>c.category===cat).map(camp=>(
-                <div key={camp.id} onClick={()=>{setSel(camp);setCMsg(camp.template);}} style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,padding:"14px",cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
+                <div key={camp.id} onClick={()=>{setSel(camp);setCMsg(camp.template);}} style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,paddaysg:"14px",cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
                   <div style={{width:48,height:48,borderRadius:14,background:camp.colorLight,border:`2px solid ${camp.colorBorder}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{camp.icon}</div>
                   <div style={{flex:1}}><div style={{fontWeight:800,fontSize:14,color:TP.text}}>{camp.name}</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>{camp.desc}</div></div>
                   <div style={{color:TP.tf,fontSize:18}}>›</div>
@@ -387,15 +387,15 @@ function CampaignsTab({customers}){
             </div>
           </div>))}
           <div style={{fontSize:10,fontWeight:800,color:TP.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>Custom</div>
-          <div style={{background:TP.surface,border:`2px dashed ${TP.border}`,borderRadius:14,padding:"20px",textAlign:"center"}}>
+          <div style={{background:TP.surface,border:`2px dashed ${TP.border}`,borderRadius:14,paddaysg:"20px",textAlign:"center"}}>
             <div style={{fontSize:28,marginBottom:8}}>\u270D\uFE0F</div>
-            <div style={{fontWeight:800,fontSize:14,color:TP.tm,marginBottom:4}}>Apna message likho</div>
-            <button onClick={()=>{const d=`\uD83D\uDE4F *Namaste {name}!*\n\n[Message yahan]\n\n\uD83D\uDCC5 Reply *BOOK*\n\n_\uD83D\uDC88_`;setSel({id:"custom",name:"Custom Campaign",icon:"\u270D\uFE0F",color:TP.purpleMid,colorLight:TP.purpleLight,colorBorder:TP.border,template:d,desc:"Custom"});setCMsg(d);}} style={{padding:"10px 24px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>\u270D\uFE0F Custom Message Likho</button>
+            <div style={{fontWeight:800,fontSize:14,color:TP.tm,marginBottom:4}}>Write your message</div>
+            <button onClick={()=>{const d=`\uD83D\uDE4F *Namaste {name}!*\n\n[Message yahan]\n\n\uD83D\uDCC5 Reply *BOOK*\n\n_\uD83D\uDC88_`;setSel({id:"custom",name:"Custom Campaign",icon:"\u270D\uFE0F",color:TP.purpleMid,colorLight:TP.purpleLight,colorBorder:TP.border,template:d,desc:"Custom"});setCMsg(d);}} style={{paddaysg:"10px 24px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>\u270D\uFE0F Write Custom Message</button>
           </div>
         </>)
         :(<>
-          <button onClick={()=>setSel(null)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:`1.5px solid ${TP.border}`,borderRadius:10,padding:"7px 12px",fontFamily:"inherit",fontSize:12,fontWeight:700,color:TP.ts,cursor:"pointer",marginBottom:16}}>\u2190 Back</button>
-          <div style={{background:sel.colorLight,border:`2px solid ${sel.colorBorder}`,borderRadius:14,padding:"14px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSel(null)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:`1.5px solid ${TP.border}`,borderRadius:10,paddaysg:"7px 12px",fontFamily:"inherit",fontSize:12,fontWeight:700,color:TP.ts,cursor:"pointer",marginBottom:16}}>\u2190 Back</button>
+          <div style={{background:sel.colorLight,border:`2px solid ${sel.colorBorder}`,borderRadius:14,paddaysg:"14px",marginBottom:16,display:"flex",alignItems:"center",gap:12}}>
             <div style={{fontSize:28}}>{sel.icon}</div>
             <div><div style={{fontWeight:900,fontSize:15,color:TP.text}}>{sel.name}</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>{sel.desc}</div></div>
           </div>
@@ -403,7 +403,7 @@ function CampaignsTab({customers}){
             <div style={{fontSize:10,fontWeight:800,color:TP.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>Target Audience</div>
             <div style={{display:"flex",gap:7,marginBottom:8}}>
               {["All","VIP","Regular","New"].map(opt=>(
-                <button key={opt} onClick={()=>setTTag(opt)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:`2px solid ${tTag===opt?TP.purpleMid:TP.border}`,background:tTag===opt?TP.purpleLight:TP.surface,color:tTag===opt?TP.purpleMid:TP.ts,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>
+                <button key={opt} onClick={()=>setTTag(opt)} style={{flex:1,paddaysg:"9px 4px",borderRadius:10,border:`2px solid ${tTag===opt?TP.purpleMid:TP.border}`,background:tTag===opt?TP.purpleLight:TP.surface,color:tTag===opt?TP.purpleMid:TP.ts,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>
                   {opt}<br/><span style={{fontSize:10}}>{opt==="All"?customers.length:customers.filter(c=>c.tag===opt).length} log</span>
                 </button>
               ))}
@@ -417,22 +417,22 @@ function CampaignsTab({customers}){
               <div style={{fontSize:10,fontWeight:800,color:TP.tf,letterSpacing:1.2,textTransform:"uppercase"}}>Message</div>
               <div style={{fontSize:11,color:TP.ts}}><span style={{color:TP.purpleMid,fontWeight:700}}>{"{name}"}</span> \u2192 replace</div>
             </div>
-            <textarea value={cMsg||sel.template} onChange={e=>setCMsg(e.target.value)} rows={10} style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:13,padding:"12px"}} onFocus={e=>e.target.style.borderColor=TP.purpleMid} onBlur={e=>e.target.style.borderColor=TP.border}/>
+            <textarea value={cMsg||sel.template} onChange={e=>setCMsg(e.target.value)} rows={10} style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:13,paddaysg:"12px"}} onFocus={e=>e.target.style.borderColor=TP.purpleMid} onBlur={e=>e.target.style.borderColor=TP.border}/>
           </div>
           <div style={{marginBottom:16}}>
             <div style={{fontSize:10,fontWeight:800,color:TP.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>Preview</div>
-            <div style={{background:"#e5ddd5",borderRadius:14,padding:14}}>
-              <div style={{background:"#fff",borderRadius:"10px 10px 10px 3px",padding:"10px 12px",maxWidth:"90%"}}>
+            <div style={{background:"#e5ddd5",borderRadius:14,paddaysg:14}}>
+              <div style={{background:"#fff",borderRadius:"10px 10px 10px 3px",paddaysg:"10px 12px",maxWidth:"90%"}}>
                 <pre style={{margin:0,fontFamily:"inherit",fontSize:11,lineHeight:1.7,color:TP.text,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{(cMsg||sel.template).replace(/{name}/g,customers[0]?.name||"Customer")}</pre>
               </div>
             </div>
           </div>
-          <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,padding:"14px"}}>
+          <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,paddaysg:"14px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div style={{fontWeight:800,fontSize:13,color:TP.text}}>{filtered.length} customers milenge</div>
               <div style={{fontSize:11,color:TP.ts}}>{tTag}</div>
             </div>
-            <button onClick={()=>setBulk(true)} style={{width:"100%",padding:"13px",background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>\uD83D\uDCAC Directly Send — {filtered.length} customers</button>
+            <button onClick={()=>setBulk(true)} style={{width:"100%",paddaysg:"13px",background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>\uD83D\uDCAC Directly Send — {filtered.length} customers</button>
           </div>
         </>)
       }
@@ -445,15 +445,15 @@ function CampaignsTab({customers}){
 export default function EngagementCenter({currentUser}){
   const [tab,setTab]=useState("reengagement");
   const [customers,setCustomers]=useState([]);
-  const [loading,setLoading]=useState(true);
+  const [loadaysg,setLoadaysg]=useState(true);
 
   useEffect(()=>{
     async function load(){
-      if(!currentUser?.id){setLoading(false);return;}
+      if(!currentUser?.id){setLoadaysg(false);return;}
       const salonId=currentUser.salon_id||currentUser.id;
-      const{data}=await supabase.from("customers").select("*").eq("salon_id",salonId).order("created_at",{ascending:false});
+      const{data}=await supabase.from("customers").select("*").eq("salon_id",salonId).order("created_at",{ascendaysg:false});
       if(data){setCustomers(data.map(c=>({...c,avatar:(c.name?.slice(0,2)||"??").toUpperCase(),color:[TP.purpleMid,"#3b82f6","#16a34a","#f59e0b","#14b8a6","#ec4899"][Math.floor(Math.random()*6)]})));}
-      setLoading(false);
+      setLoadaysg(false);
     }
     load();
   },[currentUser?.id]);
@@ -467,12 +467,12 @@ export default function EngagementCenter({currentUser}){
     {id:"campaigns",label:"Campaigns",icon:"\uD83D\uDCE2"},
   ];
 
-  if(loading){
+  if(loadaysg){
     return(
       <div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:TP.bg}}>
         <div style={{textAlign:"center"}}>
           <div style={{fontSize:32,marginBottom:12}}>\uD83D\uDCAB</div>
-          <div style={{fontSize:14,color:TP.ts,fontWeight:700}}>Loading...</div>
+          <div style={{fontSize:14,color:TP.ts,fontWeight:700}}>Loadaysg...</div>
         </div>
       </div>
     );
@@ -481,25 +481,25 @@ export default function EngagementCenter({currentUser}){
   return(
     <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"system-ui,-apple-system,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
       {/* White Header */}
-      <div style={{background:"#fff",padding:"13px 18px 11px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
+      <div style={{background:"#fff",paddaysg:"13px 18px 11px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
         <div>
           <div style={{fontWeight:800,fontSize:15,color:"#1a0a4a"}}>Engagement</div>
           <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>Campaigns & re-engage</div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
-          {lostCount>0&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:20,border:"1px solid #fde68a"}}>{lostCount} inactive</div>}
-          {bdayCount>0&&<div style={{background:"#fff0f0",color:"#dc2626",fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:20,border:"1px solid #fca5a5"}}>{bdayCount} bdays</div>}
+          {lostCount>0&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:11,fontWeight:800,paddaysg:"3px 10px",borderRadius:20,border:"1px solid #fde68a"}}>{lostCount} inactive</div>}
+          {bdayCount>0&&<div style={{background:"#fff0f0",color:"#dc2626",fontSize:11,fontWeight:800,paddaysg:"3px 10px",borderRadius:20,border:"1px solid #fca5a5"}}>{bdayCount} bdays</div>}
         </div>
       </div>
 
       {/* Tab bar */}
       <div style={{background:"#fff",borderBottom:"0.5px solid #e0d8ff",display:"flex",flexShrink:0}}>
         {TABS.map(t=>(
-          <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`3px solid ${tab===t.id?TP.purpleMid:"transparent"}`,background:tab===t.id?TP.purpleLight:"transparent",transition:"background 0.15s"}}>
+          <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,paddaysg:"10px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`3px solid ${tab===t.id?TP.purpleMid:"transparent"}`,background:tab===t.id?TP.purpleLight:"transparent",transition:"background 0.15s"}}>
             <span style={{fontSize:18}}>{t.icon}</span>
             <span style={{fontSize:11,fontWeight:800,color:tab===t.id?TP.purpleMid:TP.tf}}>{t.label}</span>
-            {t.id==="reengagement"&&lostCount>0&&<span style={{fontSize:9,background:TP.yellow,color:TP.yt,padding:"1px 6px",borderRadius:20,fontWeight:800}}>{lostCount}</span>}
-            {t.id==="birthday"&&bdayCount>0&&<span style={{fontSize:9,background:TP.red,color:TP.rt,padding:"1px 6px",borderRadius:20,fontWeight:800}}>{bdayCount}</span>}
+            {t.id==="reengagement"&&lostCount>0&&<span style={{fontSize:9,background:TP.yellow,color:TP.yt,paddaysg:"1px 6px",borderRadius:20,fontWeight:800}}>{lostCount}</span>}
+            {t.id==="birthday"&&bdayCount>0&&<span style={{fontSize:9,background:TP.red,color:TP.rt,paddaysg:"1px 6px",borderRadius:20,fontWeight:800}}>{bdayCount}</span>}
           </div>
         ))}
       </div>
