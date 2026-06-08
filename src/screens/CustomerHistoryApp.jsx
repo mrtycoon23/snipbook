@@ -101,9 +101,7 @@ function OwnerDashboard({customers}){
             <span style={{fontSize:13,fontWeight:600,color:"#5b3fc4",flex:1}}>{label}</span>
             <span style={{fontSize:11,color:"#9b8ec4"}}>▾</span>
           </div>
-          <button style={{display:"flex",alignItems:"center",gap:5,padding:"8px 14px",background:N.white,border:`1px solid ${N.border}`,borderRadius:10,fontSize:12,fontWeight:600,color:N.muted,cursor:"pointer",flexShrink:0}}>
-            ↓ Export
-          </button>
+
         </div>
         {showCustom&&(
           <div style={{marginTop:10}}>
@@ -283,7 +281,7 @@ function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
             <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:14,color:N.muted}}>🔍</span>
             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or number..." style={{width:"100%",padding:"10px 12px 10px 36px",border:`1px solid ${N.border}`,borderRadius:12,fontSize:13,fontFamily:"inherit",outline:"none",background:N.white,boxSizing:"border-box",color:N.text}}/>
           </div>
-          <div style={{width:40,height:40,background:N.white,border:`1px solid ${N.border}`,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,cursor:"pointer",flexShrink:0}}>⚙️</div>
+
         </div>
       </div>
       <div style={{padding:"2px 18px 6px",fontSize:11,color:N.muted,fontWeight:500,flexShrink:0}}>Showing all customers</div>
