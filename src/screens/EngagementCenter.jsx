@@ -510,7 +510,7 @@ function CampaignsTab({customers}){
 }
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
-export default function EngagementCenter({currentUser}){
+export default function EngagementCenter({currentUser,onBack}){
   const [tab,setTab]=useState("reengagement");
   const [customers,setCustomers]=useState([]);
   const [loading,setLoading]=useState(true);
@@ -550,9 +550,12 @@ export default function EngagementCenter({currentUser}){
     <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
       {/* White Header */}
       <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
-        <div>
-          <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Engagement</div>
-          <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Campaigns & Re-engage</div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <button onClick={onBack} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600,flexShrink:0}}>←</button>
+          <div>
+            <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Engagement</div>
+            <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Campaigns & Re-engage</div>
+          </div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
           {lostCount>0&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #fde68a"}}>{lostCount} inactive</div>}
