@@ -301,16 +301,82 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const inputStyle={...is,marginTop:5};const F=SF;const Card=SCard;const Toggle=SToggle;
   const rawNum=(wa.number||"").replace(/[^0-9]/g,"");
   const bookingLink=`https://wa.me/${rawNum.startsWith("91")?rawNum:"91"+rawNum}?text=${encodeURIComponent(`Namaste! Main ${profile.salonName} mein appointment book karna chahta hoon 🙏`)}`;
+  const C={purple:"#2d1b69",purpleMid:"#5b3fc4",purpleLight:"#ede9fe",bg:"#f8f7ff",white:"#ffffff",text:"#0f0a2e",muted:"#6b7280",border:"#e5e7eb",green:"#16a34a"};
+  const inp={width:"100%",padding:"10px 13px",border:"1.5px solid #e5e7eb",borderRadius:10,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fff",boxSizing:"border-box",color:"#0f0a2e"};
+  const sectionTitle=(icon,title)=>(<div style={{display:"flex",alignItems:"center",gap:10,padding:"14px 16px 10px"}}><div style={{width:32,height:32,borderRadius:9,background:"#f0eeff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{icon}</div><div style={{fontWeight:700,fontSize:15,color:"#0f0a2e",letterSpacing:"-0.2px"}}>{title}</div></div>);
+  const Divider=()=><div style={{height:1,background:"#f1f0f5",margin:"0 16px"}}/>;
+  const FieldLabel=({children})=><div style={{fontSize:12,fontWeight:600,color:"#6b7280",marginBottom:5}}>{children}</div>;
+
   if(loading)return<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:TP.ts}}>Loading...</div>;
-  return(<div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-    <div style={{background:"#fff",borderBottom:`2px solid ${TP.border}`,display:"flex",overflowX:"auto",flexShrink:0}}>{SETTING_TABS.map(t=>(<div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,minWidth:60,padding:"10px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`3px solid ${tab===t.id?TP.purple:"transparent"}`}}><span style={{fontSize:17}}>{t.icon}</span><span style={{fontSize:10,fontWeight:800,color:tab===t.id?TP.purple:"#aaa"}}>{t.label}</span></div>))}</div>
+  return(<div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",background:"#f8f7ff"}}>
+    {/* Tab bar — reference style */}
+    <div style={{background:"#fff",borderBottom:"1px solid #f1f0f5",display:"flex",flexShrink:0}}>
+      {SETTING_TABS.map(t=>(
+        <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 2px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`}}>
+          <span style={{fontSize:18}}>{t.icon}</span>
+          <span style={{fontSize:10,fontWeight:tab===t.id?700:500,color:tab===t.id?"#5b3fc4":"#9ca3af",letterSpacing:"-0.1px"}}>{t.label}</span>
+        </div>
+      ))}
+    </div>
     <div style={{flex:1,overflowY:"auto",padding:"14px 14px 80px"}}>
-      {tab==="profile"&&(<>
-        <Card title="Salon Logo" icon="🖼️"><input ref={logoFileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleLogoUpload}/><div style={{display:"flex",alignItems:"center",gap:14}}><div style={{width:72,height:72,borderRadius:16,overflow:"hidden",border:`2px solid ${TP.border}`,background:TP.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{logoUrl?<img src={logoUrl} alt="logo" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:28}}>✂️</span>}</div><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,marginBottom:4,color:TP.text}}>{logoUrl?"Logo uploaded ✅":"No logo yet"}</div><button onClick={()=>logoFileRef.current?.click()} style={{padding:"8px 14px",background:logoUploading?TP.bg:TP.purpleLight,border:`2px solid #c4b8f0`,borderRadius:10,color:TP.purple,fontFamily:"inherit",fontSize:12,fontWeight:800,cursor:"pointer"}}>{logoUploading?"Uploading...":"📷 Upload Logo"}</button></div></div></Card>
-        <Card title="Salon Details" icon="🏪"><F label="Salon Name"><input value={profile.salonName} onChange={e=>setProfile(p=>({...p,salonName:e.target.value}))} style={inputStyle}/></F><F label="Owner Name"><input value={profile.ownerName} onChange={e=>setProfile(p=>({...p,ownerName:e.target.value}))} style={inputStyle}/></F><F label="City"><input value={profile.city} onChange={e=>setProfile(p=>({...p,city:e.target.value}))} style={inputStyle}/></F><F label="Address" hint="Customers ko dikhega"><input value={profile.address} onChange={e=>setProfile(p=>({...p,address:e.target.value}))} placeholder="e.g. Shop 12, MG Road" style={inputStyle}/></F><F label="Google Maps Link"><input value={profile.mapsLink} onChange={e=>setProfile(p=>({...p,mapsLink:e.target.value}))} placeholder="https://maps.google.com/..." style={inputStyle}/></F><F label="Notification Number"><input value={profile.notifNumber||""} onChange={e=>setProfile(p=>({...p,notifNumber:e.target.value}))} placeholder="919876543210" style={inputStyle}/></F><F label="Notification Email"><input value={profile.notifEmail||""} onChange={e=>setProfile(p=>({...p,notifEmail:e.target.value}))} placeholder="owner@gmail.com" type="email" style={inputStyle}/></F></Card>
-        <Card title="Staff Settings" icon="👨‍💼"><div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}><div><div style={{fontWeight:800,fontSize:13,color:TP.text}}>Staff ko Revenue dikhao?</div><div style={{fontSize:11,color:TP.ts,marginTop:2}}>{showRevenue?"Staff apni earnings dekh sakta hai":"Staff ko ₹ hidden hai"}</div></div><Toggle val={showRevenue} onChange={()=>setShowRevenue(v=>!v)}/></div></Card>
-      </>)}
-      {tab==="services"&&(<>{["male","female"].map(gs=>{
+      {tab==="profile"&&(
+        <div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
+          <input ref={logoFileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleLogoUpload}/>
+          {/* Salon Logo */}
+          <div style={{background:"#fff",borderRadius:14,margin:"12px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
+            {sectionTitle("🖼️","Salon Logo")}
+            <Divider/>
+            <div style={{padding:"14px 16px",display:"flex",alignItems:"center",gap:14}}>
+              <div style={{width:64,height:64,borderRadius:14,overflow:"hidden",border:"1.5px solid #e5e7eb",background:"#f8f7ff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                {logoUrl?<img src={logoUrl} alt="logo" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:26}}>✂️</span>}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:600,fontSize:13,color:"#0f0a2e",marginBottom:8}}>{logoUrl?"Logo uploaded ✅":"No logo yet"}</div>
+                <button onClick={()=>logoFileRef.current?.click()} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:"#f0eeff",border:"1.5px solid #ddd6fe",borderRadius:10,color:"#5b3fc4",fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+                  📤 {logoUploading?"Uploading...":"Upload Logo"}
+                </button>
+              </div>
+            </div>
+          </div>
+          {/* Salon Details */}
+          <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
+            {sectionTitle("🏪","Salon Details")}
+            <Divider/>
+            <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}>
+              {[
+                {label:"Salon Name",key:"salonName",placeholder:"e.g. Style Adda"},
+                {label:"Owner Name",key:"ownerName",placeholder:"e.g. Rahul Sharma"},
+                {label:"Phone Number",key:"phone",placeholder:"+91 98765 43210"},
+                {label:"City",key:"city",placeholder:"e.g. Delhi"},
+                {label:"Address",key:"address",placeholder:"e.g. Shop 12, MG Road"},
+                {label:"Google Maps Link",key:"mapsLink",placeholder:"https://maps.google.com/..."},
+                {label:"Notification Number",key:"notifNumber",placeholder:"919876543210"},
+              ].map(f=>(
+                <div key={f.key}>
+                  <FieldLabel>{f.label}</FieldLabel>
+                  <input value={profile[f.key]||""} onChange={e=>setProfile(p=>({...p,[f.key]:e.target.value}))} placeholder={f.placeholder} style={inp}
+                    onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Staff Settings */}
+          <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
+            {sectionTitle("👨‍💼","Staff Settings")}
+            <Divider/>
+            <div style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:13,color:"#0f0a2e"}}>Show Revenue to Staff?</div>
+                <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{showRevenue?"Staff can see their earnings":"Revenue hidden from staff"}</div>
+              </div>
+              <Toggle val={showRevenue} onChange={()=>setShowRevenue(v=>!v)}/>
+            </div>
+          </div>
+        </div>
+      )}
+      {tab==="services"&&(
+        <div style={{flex:1,overflowY:"auto",padding:"12px 16px 80px"}}>
+          {["male","female"].map(gs=>{
         const sectionSvcs=services.filter(s=>(s.gender||"both")===gs||(s.gender||"both")==="both");
         const sc=gs==="male"?TP.purpleMid:"#db2777";const sb=gs==="male"?TP.purpleLight:"#fff0f6";const sbd=gs==="male"?"#c4b8f0":"#f9a8d4";
         const sl=gs==="male"?"👨 Male Services":"👩 Female Services";
@@ -323,12 +389,133 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
           </div>
           {isOpen&&<>{sectionSvcs.map(s=>(<div key={s.id}>{editId===s.id?(<div style={{padding:"13px 14px",borderBottom:`2px solid ${TP.bg}`,background:TP.bg}}><div style={{fontWeight:800,fontSize:13,color:sc,marginBottom:9}}>✏️ {s.name}</div><div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}><select value={s.emoji} onChange={e=>updSvc(s.id,"emoji",e.target.value)} style={{...is,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select><input value={s.name} onChange={e=>updSvc(s.id,"name",e.target.value)} style={{...is,height:44}}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:11}}><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Price (₹)</div><input type="number" value={s.price} onChange={e=>updSvc(s.id,"price",parseInt(e.target.value)||0)} style={is}/></div><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Duration</div><select value={s.duration} onChange={e=>updSvc(s.id,"duration",parseInt(e.target.value))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div></div><div style={{display:"flex",gap:8}}><button onClick={()=>setEditId(null)} style={{flex:1,padding:"10px",background:sc,border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>✓ Done</button><button onClick={()=>delSvc(s.id)} style={{padding:"10px 14px",background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:10,color:TP.rt,fontFamily:"inherit",fontSize:13,cursor:"pointer"}}>🗑</button></div></div>):(<div style={{display:"flex",alignItems:"center",gap:11,padding:"12px 14px",borderBottom:`2px solid ${TP.bg}`,background:s.active?"#fff":TP.bg}}><button onClick={()=>toggleSvc(s.id)} style={{width:22,height:22,borderRadius:"50%",border:"none",background:s.active?sc:TP.border,color:"#fff",fontSize:10,fontWeight:800,cursor:"pointer",flexShrink:0}}>{s.active?"✓":""}</button><span style={{fontSize:18,flexShrink:0}}>{s.emoji}</span><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:s.active?TP.text:"#aaa"}}>{s.name}</div><div style={{fontSize:11,color:"#aaa"}}>{s.duration} min</div></div><div style={{fontWeight:800,fontSize:13,color:s.active?sc:"#ccc"}}>₹{s.price}</div><button onClick={()=>setEditId(s.id)} style={{width:30,height:30,border:`2px solid ${TP.border}`,borderRadius:8,background:"#fff",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>✏️</button></div>)}</div>))}
           {isAdding?(<div style={{padding:"13px 14px",background:sb}}><div style={{fontWeight:800,fontSize:13,color:sc,marginBottom:9}}>➕ New Service</div><div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}><select value={newSvc.emoji} onChange={e=>setNewSvc(p=>({...p,emoji:e.target.value}))} style={{...is,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select><input value={newSvc.name} onChange={e=>setNewSvc(p=>({...p,name:e.target.value}))} placeholder="Service name" style={{...is,height:44}}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:11}}><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Price (₹)</div><input type="number" value={newSvc.price} onChange={e=>setNewSvc(p=>({...p,price:e.target.value}))} placeholder="450" style={is}/></div><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Duration</div><select value={newSvc.duration} onChange={e=>setNewSvc(p=>({...p,duration:parseInt(e.target.value)}))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div></div><div style={{display:"flex",gap:8}}><button onClick={()=>{if(!newSvc.name.trim())return;setServices(p=>[...p,{id:Date.now(),emoji:newSvc.emoji,name:newSvc.name.trim(),price:parseInt(newSvc.price)||0,duration:newSvc.duration,active:true,gender:gs}]);setNewSvc({emoji:"✂️",name:"",price:"",duration:30,gender:"both"});setShowAdd(false);}} style={{flex:1,padding:"10px",background:sc,border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>➕ Add</button><button onClick={()=>setShowAdd(false)} style={{padding:"10px 14px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:10,fontFamily:"inherit",fontSize:13,cursor:"pointer",color:"#888"}}>Cancel</button></div></div>):(<div style={{padding:"11px 14px"}}><button onClick={()=>{setShowAdd(gs);setNewSvc({emoji:"✂️",name:"",price:"",duration:30,gender:gs});}} style={{width:"100%",padding:"10px",background:sb,border:`2px dashed ${sbd}`,borderRadius:11,color:sc,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>➕ Add Service</button></div>)}</>}
-        </div>);})}</>)}
-      {tab==="hours"&&(<><Card title="Working Days" icon="📅"><div style={{display:"flex",flexWrap:"wrap",gap:7}}>{WEEK_DAYS.map(d=>{const a=hours.workDays.includes(d);return(<button key={d} onClick={()=>toggleDay(d)} style={{padding:"7px 14px",borderRadius:20,border:`2px solid ${a?TP.purple:TP.border}`,background:a?TP.purpleLight:"#fff",color:a?TP.purple:"#888",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{d}</button>);})}</div></Card><Card title="Timings" icon="🕐"><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}><F label="Opens At"><select value={hours.openTime} onChange={e=>setHours(p=>({...p,openTime:parseInt(e.target.value)}))} style={{...inputStyle,cursor:"pointer"}}>{HOURS_LIST.filter(h=>h.val<=14).map(h=><option key={h.val} value={h.val}>{h.label}</option>)}</select></F><F label="Closes At"><select value={hours.closeTime} onChange={e=>setHours(p=>({...p,closeTime:parseInt(e.target.value)}))} style={{...inputStyle,cursor:"pointer"}}>{HOURS_LIST.filter(h=>h.val>=12).map(h=><option key={h.val} value={h.val}>{h.label}</option>)}</select></F></div><div style={{background:TP.purpleLight,border:`2px solid #c4b8f0`,borderRadius:11,padding:"10px 12px",fontSize:12,color:TP.purple,fontWeight:700}}>📅 {hours.openTime}:00 → {hours.closeTime>12?hours.closeTime-12:hours.closeTime}:00</div></Card></>)}
-      {tab==="whatsapp"&&(<><Card title="WhatsApp Number" icon="📱"><F label="WhatsApp Business Number"><input value={wa.number} onChange={e=>setWa(p=>({...p,number:e.target.value}))} style={inputStyle}/></F><button style={{width:"100%",padding:"11px",background:TP.purpleLight,border:`2px solid #c4b8f0`,borderRadius:11,color:TP.purple,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📲 Send Test Message</button></Card><Card title="Booking Link & QR" icon="🔗"><div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:4}}>Bot Keyword</div><input value={wa.botKeyword||""} onChange={e=>setWa(p=>({...p,botKeyword:e.target.value}))} placeholder="e.g. snipsalon" style={inputStyle}/></div><div style={{background:TP.bg,border:`2px solid ${TP.border}`,borderRadius:11,padding:"10px 12px",fontSize:11,color:TP.text,fontWeight:700,wordBreak:"break-all",marginBottom:8,lineHeight:1.5}}>{bookingLink}</div><div style={{display:"flex",gap:8}}><button onClick={()=>navigator.clipboard.writeText(bookingLink)} style={{flex:1,padding:"10px",background:TP.purpleLight,border:`2px solid #c4b8f0`,borderRadius:10,color:TP.purple,fontFamily:"inherit",fontSize:12,fontWeight:800,cursor:"pointer"}}>📋 Copy Link</button><button onClick={()=>window.open(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(bookingLink)}`,"_blank")} style={{flex:1,padding:"10px",background:TP.blue,border:`2px solid ${TP.bb}`,borderRadius:10,color:TP.bt,fontFamily:"inherit",fontSize:12,fontWeight:800,cursor:"pointer"}}>📷 QR Code</button></div></Card></>)}
-      {tab==="account"&&(<><div style={{background:TP.purple,borderRadius:16,padding:"18px",marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div><div style={{fontSize:12,color:"rgba(255,255,255,0.5)"}}>Current Plan</div><div style={{fontWeight:900,fontSize:20,color:"#fff",marginTop:2}}>⚡ Early Access</div></div><div style={{fontWeight:700,fontSize:13,color:"#c4b8f0"}}>Beta User 🎉</div></div><button style={{width:"100%",padding:"10px",background:"rgba(255,255,255,0.15)",border:"2px solid rgba(255,255,255,0.2)",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📩 Contact for Pricing</button></div><div style={{background:"#fff",border:`2px solid ${TP.border}`,borderRadius:14,padding:"14px",marginBottom:12}}><div style={{fontWeight:800,fontSize:13,marginBottom:4,color:TP.text}}>Account Info</div><div style={{fontSize:12,color:TP.ts}}>Email: {user.email}</div><div style={{fontSize:12,color:TP.ts,marginTop:4}}>Salon: {user.salon}</div></div><button onClick={handleLogout} style={{width:"100%",padding:"14px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:14,color:TP.rt,fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:12}}>🚪 Logout</button></>)}
+        </div>);        })}
+        </div>
+      )}
+      {tab==="hours"&&(
+        <div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
+          {/* Working Days */}
+          <div style={{background:"#fff",borderRadius:14,margin:"12px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
+            {sectionTitle("📅","Working Days")}
+            <Divider/>
+            <div style={{padding:"14px 16px",display:"flex",flexWrap:"wrap",gap:8}}>
+              {WEEK_DAYS.map(d=>{const a=hours.workDays.includes(d);return(
+                <button key={d} onClick={()=>toggleDay(d)} style={{padding:"8px 16px",borderRadius:20,border:`1.5px solid ${a?"#5b3fc4":"#e5e7eb"}`,background:a?"#5b3fc4":"#fff",color:a?"#fff":"#374151",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{d}</button>
+              );})}
+            </div>
+          </div>
+          {/* Timings */}
+          <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
+            {sectionTitle("🕐","Timings")}
+            <Divider/>
+            <div style={{padding:"14px 16px"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+                <div>
+                  <FieldLabel>Opens At</FieldLabel>
+                  <select value={hours.openTime} onChange={e=>setHours(p=>({...p,openTime:parseInt(e.target.value)}))} style={{...inp,cursor:"pointer"}}>
+                    {HOURS_LIST.filter(h=>h.val<=14).map(h=><option key={h.val} value={h.val}>{h.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <FieldLabel>Closes At</FieldLabel>
+                  <select value={hours.closeTime} onChange={e=>setHours(p=>({...p,closeTime:parseInt(e.target.value)}))} style={{...inp,cursor:"pointer"}}>
+                    {HOURS_LIST.filter(h=>h.val>=12).map(h=><option key={h.val} value={h.val}>{h.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{background:"#f0eeff",border:"1px solid #ddd6fe",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#5b3fc4",fontWeight:600}}>
+                🕐 {hours.openTime}:00 AM → {hours.closeTime>12?hours.closeTime-12:hours.closeTime}:00 PM
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {tab==="whatsapp"&&(
+        <div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
+          {/* WhatsApp Number */}
+          <div style={{background:"#fff",borderRadius:14,margin:"12px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
+            {sectionTitle("💬","WhatsApp Number")}
+            <Divider/>
+            <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}>
+              <div>
+                <FieldLabel>WhatsApp Business Number</FieldLabel>
+                <input value={wa.number} onChange={e=>setWa(p=>({...p,number:e.target.value}))} placeholder="8307340281" style={inp}
+                  onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/>
+              </div>
+              <button style={{width:"100%",padding:"11px",background:"#f0eeff",border:"1.5px solid #ddd6fe",borderRadius:10,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                🚀 Send Test Message
+              </button>
+            </div>
+          </div>
+          {/* Booking Link & QR */}
+          <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
+            {sectionTitle("🔗","Booking Link & QR")}
+            <Divider/>
+            <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}>
+              <div>
+                <FieldLabel>Bot Keyword</FieldLabel>
+                <input value={wa.botKeyword||""} onChange={e=>setWa(p=>({...p,botKeyword:e.target.value}))} placeholder="e.g. snipsalon" style={inp}
+                  onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/>
+              </div>
+              <div>
+                <FieldLabel>Booking Link</FieldLabel>
+                <div style={{display:"flex",alignItems:"center",gap:8,background:"#f8f7ff",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 12px"}}>
+                  <span style={{flex:1,fontSize:11,color:"#6b7280",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bookingLink}</span>
+                  <button onClick={()=>navigator.clipboard.writeText(bookingLink)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,flexShrink:0}}>📋</button>
+                </div>
+              </div>
+              <button onClick={()=>window.open(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(bookingLink)}`,"_blank")}
+                style={{width:"100%",padding:"11px",background:"#5b3fc4",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                📷 Generate QR Code
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {tab==="account"&&(
+        <div style={{flex:1,overflowY:"auto",padding:"12px 16px 80px"}}>
+          {/* Current Plan */}
+          <div style={{background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",borderRadius:16,padding:"18px",marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+              <div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",fontWeight:500,marginBottom:4}}>Current Plan</div>
+                <div style={{fontWeight:800,fontSize:22,color:"#fff",letterSpacing:"-0.4px"}}>⚡ Early Access</div>
+              </div>
+              <div style={{background:"rgba(255,255,255,0.15)",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#c4b8f0",fontWeight:600}}>Beta User 🎉</div>
+            </div>
+            <button style={{width:"100%",padding:"11px",background:"rgba(255,255,255,0.15)",border:"1.5px solid rgba(255,255,255,0.25)",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+              ✉️ Contact for Pricing
+            </button>
+          </div>
+          {/* Account Info */}
+          <div style={{background:"#fff",borderRadius:14,border:"1px solid #f1f0f5",overflow:"hidden",marginBottom:10}}>
+            {sectionTitle("👤","Account Info")}
+            <Divider/>
+            <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:14}}>📧</span>
+                <span style={{fontSize:13,color:"#374151"}}>{user.email}</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:14}}>🏪</span>
+                <span style={{fontSize:13,color:"#374151"}}>{user.salon}</span>
+              </div>
+            </div>
+          </div>
+          {/* Logout */}
+          <button onClick={handleLogout} style={{width:"100%",padding:"14px",background:"#fff",border:"1.5px solid #fca5a5",borderRadius:14,color:"#dc2626",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+            🚪 Logout
+          </button>
+        </div>
+      )}
     </div>
-    {tab!=="account"&&(<div style={{position:"sticky",bottom:0,background:"#fff",borderTop:`2px solid ${TP.border}`,padding:"11px 16px",boxShadow:"0 -4px 14px rgba(45,27,105,0.08)"}}><button onClick={save} style={{width:"100%",padding:"13px",background:saved?TP.purpleLight:TP.purple,border:saved?`2px solid #c4b8f0`:"none",borderRadius:12,color:saved?TP.purple:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>{saved?"✅ Saved!":"💾 Save Changes"}</button></div>)}
+    {tab!=="account"&&(
+      <div style={{background:"#fff",borderTop:"1px solid #f1f0f5",padding:"12px 16px",flexShrink:0,boxShadow:"0 -2px 12px rgba(0,0,0,0.04)"}}>
+        <button onClick={save} style={{width:"100%",padding:"14px",background:saved?"#f0eeff":"#5b3fc4",border:saved?"1.5px solid #ddd6fe":"none",borderRadius:12,color:saved?"#5b3fc4":"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,letterSpacing:"-0.1px"}}>
+          {saved?"✅ Saved!":"💾 Save Changes"}
+        </button>
+      </div>
+    )}
   </div>);
 }
 
