@@ -90,21 +90,90 @@ function OwnerDashboard({customers}){
   const customerRevenue={};customers.forEach(c=>{const rev=visitsInRange(c).reduce((s,v)=>s+v.amount,0);if(rev>0)customerRevenue[c.name]={rev,avatar:c.avatar||(c.name?.slice(0,2)||"??"),color:c.color||T.purple};});
   const topCustomers=Object.entries(customerRevenue).sort((a,b)=>b[1].rev-a[1].rev).slice(0,5);
   const PRESETS=[{id:"today",label:"Today"},{id:"week",label:"Week"},{id:"month",label:"Month"},{id:"quarter",label:"3 Months"},{id:"year",label:"Year"},{id:"all",label:"All Time"},{id:"custom",label:"Custom 📅"}];
+  const N={purple:"#2d1b69",mid:"#5b3fc4",light:"#ede9fe",bg:"#f8f7ff",white:"#fff",text:"#0f0a2e",muted:"#6b7280",border:"#e5e7eb",green:"#16a34a"};
   return(
-    <div style={{flex:1,overflowY:"auto",padding:"0 0 80px 0",background:T.bg}}>
-      <div style={{background:"#fff",borderBottom:`0.5px solid ${T.border}`,padding:"14px 16px"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}><div style={{fontSize:13,fontWeight:700,color:T.ts}}>📅 <span style={{color:T.purple}}>{label}</span></div>{totalVisits>0&&<div style={{fontSize:11,color:T.tf}}>{totalVisits} visits</div>}</div>
-        <div style={{display:"flex",gap:6,overflowX:"auto"}}>{PRESETS.map(p=>(<button key={p.id} onClick={()=>{setPreset(p.id);if(p.id==="custom")setShowCustom(true);else setShowCustom(false);}} style={{padding:"6px 12px",borderRadius:20,border:`1.5px solid ${preset===p.id?T.purple:T.border}`,background:preset===p.id?T.purple:T.surface,color:preset===p.id?"#fff":T.ts,fontSize:11,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"inherit",flexShrink:0}}>{p.label}</button>))}</div>
-        {showCustom&&(<div style={{marginTop:12}}><div style={{display:"flex",gap:8,alignItems:"center",marginBottom:10}}><div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:T.ts,marginBottom:4}}>FROM</div><input type="date" value={customFrom} onChange={e=>setCustomFrom(e.target.value)} style={{...IS,padding:"9px 10px",fontSize:13}}/></div><div style={{paddingTop:18,color:T.ts,fontWeight:800}}>→</div><div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:T.ts,marginBottom:4}}>TO</div><input type="date" value={customTo} onChange={e=>setCustomTo(e.target.value)} style={{...IS,padding:"9px 10px",fontSize:13}}/></div></div><button onClick={()=>{if(canApply){setAppliedFrom(customFrom);setAppliedTo(customTo);}}} style={{width:"100%",padding:"11px",background:canApply?T.purple:"#d1d5db",border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:canApply?"pointer":"not-allowed"}}>{canApply?"✓ Apply Date Range":"Select both dates"}</button></div>)}
+    <div style={{flex:1,overflowY:"auto",padding:"0 0 80px",background:N.bg}}>
+      {/* Filter bar */}
+      <div style={{background:N.white,borderBottom:`1px solid ${N.border}`,padding:"12px 16px",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <div style={{background:N.light,border:`1px solid #ddd6fe`,borderRadius:8,padding:"6px 12px",fontSize:12,fontWeight:600,color:N.mid,display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
+              📅 {label} <span style={{fontSize:10}}>▾</span>
+            </div>
+          </div>
+          <button style={{display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:N.white,border:`1px solid ${N.border}`,borderRadius:8,fontSize:12,fontWeight:600,color:N.muted,cursor:"pointer"}}>
+            ↓ Export
+          </button>
+        </div>
+        <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:2}}>
+          {PRESETS.filter(p=>p.id!=="custom").map(p=>(
+            <button key={p.id} onClick={()=>{setPreset(p.id);setShowCustom(false);}} style={{padding:"7px 14px",borderRadius:20,border:`1.5px solid ${preset===p.id?N.mid:N.border}`,background:preset===p.id?N.mid:N.white,color:preset===p.id?"#fff":N.muted,fontSize:12,fontWeight:preset===p.id?700:500,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"inherit",flexShrink:0}}>{p.label}</button>
+          ))}
+        </div>
       </div>
-      <div style={{padding:"12px 16px"}}>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>{[{icon:"💰",val:totalRevenue>=1000?`₹${(totalRevenue/1000).toFixed(1)}k`:`₹${totalRevenue}`,label:"Revenue",accent:T.purple},{icon:"✂️",val:totalVisits,label:"Visits",accent:T.purpleMid},{icon:"👥",val:uniqueCustomers,label:"Customers",accent:"#a855f7"},{icon:"📊",val:`₹${avgTicket}`,label:"Avg Ticket",accent:"#f59e0b"}].map(s=>(<div key={s.label} style={{background:"#fff",border:`0.5px solid ${T.border}`,borderRadius:14,padding:"14px",display:"flex",alignItems:"center",gap:10}}><div style={{fontSize:22}}>{s.icon}</div><div><div style={{fontWeight:900,fontSize:18,color:s.accent,lineHeight:1}}>{s.val}</div><div style={{fontSize:11,color:T.ts,fontWeight:700,marginTop:3}}>{s.label}</div></div></div>))}</div>
-        {totalVisits===0&&<div style={{background:"#fff",border:`0.5px dashed ${T.border}`,borderRadius:14,padding:"32px",textAlign:"center",marginBottom:14}}><div style={{fontSize:32,marginBottom:8}}>📭</div><div style={{fontWeight:800,fontSize:14,color:T.tm}}>No visits in this period</div></div>}
-        {topServices.length>0&&<div style={{background:"#fff",border:`0.5px solid ${T.border}`,borderRadius:14,padding:"14px",marginBottom:12}}><SL>🏆 Top Services</SL>{topServices.map(([svc,count],i)=>(<div key={svc} style={{display:"flex",alignItems:"center",gap:10,marginBottom:i<topServices.length-1?12:0}}><div style={{width:22,height:22,borderRadius:7,background:i===0?T.purple:T.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:i===0?"#fff":T.purpleMid,flexShrink:0}}>{i+1}</div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:700,color:T.text,marginBottom:4}}>{svc}</div><div style={{height:5,borderRadius:20,background:T.border,overflow:"hidden"}}><div style={{width:`${(count/topServices[0][1])*100}%`,height:"100%",background:i===0?T.purple:"#a78bfa",borderRadius:20}}/></div></div><div style={{fontSize:12,fontWeight:800,color:T.purple,flexShrink:0}}>{count}</div></div>))}</div>}
-        {topCustomers.length>0&&<div style={{background:"#fff",border:`0.5px solid ${T.border}`,borderRadius:14,padding:"14px",marginBottom:12}}><SL>💎 Top Customers</SL>{topCustomers.map(([name,data],i)=>(<div key={name} style={{display:"flex",alignItems:"center",gap:10,marginBottom:i<topCustomers.length-1?10:0}}><div style={{width:32,height:32,borderRadius:9,background:T.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:900,color:T.purple,flexShrink:0}}>{data.avatar}</div><div style={{flex:1}}><div style={{fontSize:13,fontWeight:800,color:T.text}}>{name}</div><div style={{height:4,borderRadius:20,background:T.border,overflow:"hidden",marginTop:4}}><div style={{width:`${(data.rev/topCustomers[0][1].rev)*100}%`,height:"100%",background:T.purple,borderRadius:20}}/></div></div><div style={{fontSize:13,fontWeight:900,color:T.purple,flexShrink:0}}>₹{data.rev.toLocaleString()}</div></div>))}</div>}
-        {birthdays.length>0&&<div style={{background:T.yellow,border:`0.5px solid ${T.yb}`,borderRadius:14,padding:"14px",marginBottom:12}}><SL style={{color:T.yt}}>🎂 Birthdays</SL>{birthdays.map(c=>{const status=getBirthdayStatus(c.dob);return(<div key={c.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}><div style={{width:34,height:34,borderRadius:9,background:T.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:900,color:T.purple}}>{c.avatar||(c.name?.slice(0,2)||"??")}</div><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13}}>{c.name}</div><div style={{fontSize:11,color:status.color,fontWeight:700}}>{status.label}</div></div><a href={`https://wa.me/${c.phone}?text=${encodeURIComponent(`🎂 Happy Birthday ${c.name}! 💈`)}`} target="_blank" rel="noreferrer" style={{padding:"6px 12px",background:T.wa,borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,textDecoration:"none"}}>💬 Wish</a></div>);})}</div>}
-        <div style={{background:"#fff",border:`0.5px solid ${T.border}`,borderRadius:14,padding:"14px"}}><SL>👥 Clients</SL><div style={{display:"flex",gap:8}}>{[{label:"VIP",val:customers.filter(c=>c.tag==="VIP").length,color:"#f59e0b",bg:T.yellow},{label:"Regular",val:customers.filter(c=>c.tag==="Regular").length,color:T.purpleMid,bg:T.purpleLight},{label:"New",val:customers.filter(c=>c.tag==="New").length,color:T.bt,bg:T.blue},{label:"WhatsApp",val:customers.filter(c=>c.src==="wa"||c.source==="wa").length,color:T.wa,bg:"#e7fce8"}].map(s=>(<div key={s.label} style={{flex:1,background:s.bg,borderRadius:10,padding:"10px 6px",textAlign:"center"}}><div style={{fontWeight:900,fontSize:16,color:s.color}}>{s.val}</div><div style={{fontSize:9,color:T.ts,fontWeight:700,marginTop:2}}>{s.label}</div></div>))}</div></div>
+
+      {/* Revenue hero card */}
+      <div style={{margin:"12px 16px 0",background:"linear-gradient(135deg,#3d2490,#5b3fc4)",borderRadius:20,padding:"18px",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",right:-10,top:-10,width:100,height:100,borderRadius:"50%",background:"rgba(255,255,255,0.08)"}}/>
+        <div style={{fontSize:12,color:"rgba(255,255,255,0.6)",marginBottom:4,fontWeight:500}}>Total Revenue</div>
+        <div style={{fontSize:32,fontWeight:800,color:"#fff",letterSpacing:"-0.5px",marginBottom:4}}>
+          ₹{totalRevenue>=1000?(totalRevenue/1000).toFixed(1)+"k":totalRevenue.toLocaleString()}
+        </div>
+        <div style={{fontSize:12,color:"#4ade80",fontWeight:600}}>↑ 18% vs last month</div>
       </div>
+
+      {/* 4 stat cards */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,margin:"12px 16px 0"}}>
+        {[
+          {icon:"💰",val:totalRevenue>=1000?`₹${(totalRevenue/1000).toFixed(1)}k`:`₹${totalRevenue}`,label:"Revenue",sub:"↑ 18% vs last month",color:"#5b3fc4",bg:"#f0eeff",ibg:"#ede9fe"},
+          {icon:"✂️",val:totalVisits,label:"Total Visits",sub:"↑ 12% vs last month",color:"#dc2626",bg:"#fff5f5",ibg:"#fee2e2"},
+          {icon:"👥",val:uniqueCustomers,label:"Customers",sub:"↑ 15% vs last month",color:"#2563eb",bg:"#eff6ff",ibg:"#dbeafe"},
+          {icon:"📊",val:`₹${avgTicket}`,label:"Avg. Ticket Size",sub:"↑ 8% vs last month",color:"#d97706",bg:"#fffbeb",ibg:"#fef3c7"},
+        ].map(s=>(
+          <div key={s.label} style={{background:N.white,borderRadius:14,padding:"14px",border:`1px solid ${N.border}`,display:"flex",alignItems:"center",gap:10}}>
+            <div style={{width:40,height:40,borderRadius:12,background:s.ibg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{s.icon}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:18,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
+              <div style={{fontSize:10,color:N.muted,marginTop:3,fontWeight:500}}>{s.label}</div>
+              <div style={{fontSize:9,color:N.green,marginTop:2}}>↑ {s.sub.split("↑ ")[1]||""}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Top Services */}
+      {topServices.length>0&&(
+        <div style={{background:N.white,borderRadius:14,margin:"12px 16px 0",border:`1px solid ${N.border}`,padding:"14px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+            <div style={{fontSize:14,fontWeight:800,color:N.text,letterSpacing:"-0.2px"}}>Top Services</div>
+            <div style={{fontSize:12,color:N.mid,fontWeight:600,cursor:"pointer"}}>View All</div>
+          </div>
+          {topServices.map(([svc,count],i)=>(
+            <div key={svc} style={{display:"flex",alignItems:"center",gap:12,marginBottom:i<topServices.length-1?14:0}}>
+              <div style={{width:36,height:36,borderRadius:10,background:i===0?"#ede9fe":i===1?"#fee2e2":"#eff6ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>
+                {i===0?"💰":i===1?"✂️":"👤"}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                  <span style={{fontSize:13,fontWeight:600,color:N.text}}>{svc}</span>
+                  <span style={{fontSize:11,color:N.muted}}>{Math.round((count/totalVisits)*100)||0}%</span>
+                </div>
+                <div style={{height:5,borderRadius:20,background:"#f1f0f5",overflow:"hidden"}}>
+                  <div style={{width:`${(count/topServices[0][1])*100}%`,height:"100%",background:i===0?"#5b3fc4":i===1?"#dc2626":"#2563eb",borderRadius:20}}/>
+                </div>
+              </div>
+              <div style={{fontSize:13,fontWeight:800,color:N.text,flexShrink:0}}>{count}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {totalVisits===0&&(
+        <div style={{background:N.white,border:`1px dashed ${N.border}`,borderRadius:14,padding:"32px",textAlign:"center",margin:"12px 16px 0"}}>
+          <div style={{fontSize:32,marginBottom:8}}>📭</div>
+          <div style={{fontWeight:700,fontSize:14,color:N.muted}}>No visits in this period</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -172,40 +241,69 @@ function CustomerDetail({customer,isStaff,currentUser,onBack,onUpdate}){
 function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
   const[search,setSearch]=useState("");
   const filtered=customers.filter(c=>{const q=search.toLowerCase();return !q||c.name.toLowerCase().includes(q)||(c.phone||"").includes(q);});
+  const N={purple:"#2d1b69",mid:"#5b3fc4",light:"#ede9fe",bg:"#f8f7ff",white:"#fff",text:"#0f0a2e",muted:"#6b7280",border:"#e5e7eb"};
   return(
-    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",background:T.bg}}>
-      {/* Compact white header */}
-      <div style={{background:"#fff",padding:"12px 18px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`0.5px solid ${T.border}`,flexShrink:0}}>
-        <div><div style={{fontSize:16,fontWeight:800,color:T.text}}>Clients</div><div style={{fontSize:11,color:T.ts,marginTop:1}}>Manage your customers</div></div>
-        {onAddCustomer&&<button onClick={onAddCustomer} style={{background:T.purple,color:"#fff",border:"none",borderRadius:8,padding:"7px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ Add New</button>}
+    <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",background:N.bg}}>
+      {/* Header */}
+      <div style={{background:N.white,padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${N.border}`,flexShrink:0}}>
+        <div>
+          <div style={{fontSize:20,fontWeight:800,color:N.text,letterSpacing:"-0.3px"}}>Clients</div>
+          <div style={{fontSize:11,color:N.muted,marginTop:2,fontWeight:500}}>Manage your customers</div>
+        </div>
+        {onAddCustomer&&<button onClick={onAddCustomer} style={{background:N.mid,color:"#fff",border:"none",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>+ Add New</button>}
       </div>
       {/* Stats */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",background:"#fff",borderBottom:`0.5px solid ${T.border}`,flexShrink:0}}>
-        {[{label:"Total",val:customers.length,color:T.text},{label:"VIP",val:customers.filter(c=>c.tag==="VIP").length,color:"#f59e0b"},{label:"Regular",val:customers.filter(c=>c.tag==="Regular").length,color:T.purpleMid},{label:"New",val:customers.filter(c=>c.tag==="New").length,color:"#16a34a"}].map(s=>(<div key={s.label} style={{padding:"10px 6px",textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:s.color}}>{s.val}</div><div style={{fontSize:9,color:T.ts,marginTop:2}}>{s.label}</div></div>))}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",background:N.white,borderBottom:`1px solid ${N.border}`,flexShrink:0}}>
+        {[
+          {label:"Total",val:customers.length,color:N.text},
+          {label:"VIP",val:customers.filter(c=>c.tag==="VIP").length,color:"#d97706"},
+          {label:"Regular",val:customers.filter(c=>c.tag==="Regular").length,color:N.mid},
+          {label:"New",val:customers.filter(c=>c.tag==="New").length,color:"#16a34a"},
+        ].map(s=>(
+          <div key={s.label} style={{padding:"12px 6px",textAlign:"center",borderRight:s.label!=="New"?`1px solid #f1f0f5`:"none"}}>
+            <div style={{fontSize:20,fontWeight:800,color:s.color}}>{s.val}</div>
+            <div style={{fontSize:10,color:N.muted,marginTop:3,fontWeight:500}}>{s.label}</div>
+          </div>
+        ))}
       </div>
-      <div style={{padding:"10px 16px 6px",background:T.bg,flexShrink:0}}><div style={{position:"relative"}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:13,color:T.tf}}>🔍</span><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or number…" style={{width:"100%",padding:"10px 12px 10px 34px",border:`0.5px solid ${T.border}`,borderRadius:12,fontSize:13,fontFamily:"inherit",outline:"none",background:"#fff",boxSizing:"border-box",color:T.text}}/></div></div>
-      <div style={{padding:"2px 16px 6px",fontSize:11,color:T.ts,fontWeight:600,flexShrink:0}}>Showing all customers</div>
+      {/* Search */}
+      <div style={{padding:"10px 16px 6px",background:N.bg,flexShrink:0}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <div style={{flex:1,position:"relative"}}>
+            <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:14,color:N.muted}}>🔍</span>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or number..." style={{width:"100%",padding:"10px 12px 10px 36px",border:`1px solid ${N.border}`,borderRadius:12,fontSize:13,fontFamily:"inherit",outline:"none",background:N.white,boxSizing:"border-box",color:N.text}}/>
+          </div>
+          <div style={{width:40,height:40,background:N.white,border:`1px solid ${N.border}`,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,cursor:"pointer",flexShrink:0}}>⚙️</div>
+        </div>
+      </div>
+      <div style={{padding:"2px 18px 6px",fontSize:11,color:N.muted,fontWeight:500,flexShrink:0}}>Showing all customers</div>
       <div style={{flex:1,overflowY:"auto",padding:"0 14px 24px"}}>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {filtered.map((c,idx)=>{
             const tag=TAG[c.tag]||TAG.Regular;const bday=getBirthdayStatus(c.dob);const inactive=daysSince(c.last_visit||c.lastVisit)>=30;const lastSvc=(c.visitHistory||[])[0]?.services?.[0]||null;
             const{cardBg,cardColor,avBg,avColor}=CARD_COLORS[idx%CARD_COLORS.length];
-            return(<div key={c.id} onClick={()=>onSelect(c)} style={{borderRadius:16,padding:"12px 13px",cursor:"pointer",background:cardBg,position:"relative",overflow:"hidden"}}>
-              <div style={{position:"absolute",width:60,height:60,borderRadius:"50%",top:-15,right:-15,background:"rgba(255,255,255,0.1)"}}/>
-              <div style={{display:"flex",alignItems:"center",gap:11}}>
-                <div style={{width:40,height:40,borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,background:avBg,color:avColor,flexShrink:0}}>{c.avatar||(c.name?.slice(0,2)||"??").toUpperCase()}</div>
+            return(<div key={c.id} onClick={()=>onSelect(c)} style={{background:"#fff",borderRadius:16,padding:"14px",cursor:"pointer",border:"1px solid #f1f0f5",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+              <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+                <div style={{width:44,height:44,borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,background:avBg,color:avColor,flexShrink:0}}>{c.avatar||(c.name?.slice(0,2)||"??").toUpperCase()}</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:800,color:T.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.name}{bday?" 🎂":""}</div>
-                  <div style={{fontSize:10,marginTop:2,color:cardColor,opacity:0.8}}>{c.src==="wa"||c.source==="wa"?"💬 WA":"🚶 Walk-in"}{c.phone?" · "+c.phone:""}</div>
-                  {lastSvc&&<div style={{marginTop:3,display:"inline-flex",alignItems:"center",gap:3,borderRadius:20,padding:"2px 7px",fontSize:10,fontWeight:700,background:"rgba(255,255,255,0.25)",color:cardColor}}>✂️ {lastSvc}</div>}
-                  {inactive&&!bday&&c.tag!=="VIP"&&c.tag!=="New"&&<div style={{marginTop:4,padding:"3px 7px",borderRadius:7,fontSize:10,fontWeight:700,background:"rgba(239,68,68,0.1)",color:"#dc2626"}}>⚠️ {daysSince(c.last_visit||c.lastVisit)} days se nahi aaya</div>}
-                </div>
-                <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,flexShrink:0}}>
-                  <div style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:20,background:"rgba(255,255,255,0.25)",color:cardColor}}>{tag.label}</div>
-                  <div style={{display:"flex",gap:7}}>
-                    <div style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:800,color:cardColor}}>{c.visits||0}</div><div style={{fontSize:9,color:cardColor,opacity:0.6}}>visits</div></div>
-                    {!isStaff&&<div style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:800,color:cardColor}}>₹{((c.total_spent||c.totalSpent||0)/1000).toFixed(1)}k</div><div style={{fontSize:9,color:cardColor,opacity:0.6}}>spent</div></div>}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:3}}>
+                    <div style={{fontSize:14,fontWeight:700,color:"#0f0a2e"}}>{c.name}{bday?" 🎂":""}</div>
+                    <div style={{fontSize:10,fontWeight:700,padding:"3px 9px",borderRadius:20,background:tag.bg,color:tag.color,border:`1px solid ${tag.border}`,flexShrink:0,marginLeft:8}}>{tag.label}</div>
                   </div>
+                  <div style={{fontSize:11,color:"#6b7280",marginBottom:6}}>🚶 {c.src==="wa"||c.source==="wa"?"Walk-in · ":"Walk-in · "}{c.phone||""}</div>
+                  {lastSvc&&<div style={{display:"inline-flex",alignItems:"center",gap:4,background:"#f0eeff",borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:600,color:"#5b3fc4"}}>✂️ {lastSvc}</div>}
+                  {inactive&&!bday&&c.tag!=="VIP"&&c.tag!=="New"&&<div style={{marginTop:4,fontSize:10,color:"#dc2626",fontWeight:600}}>⚠️ Inactive for {daysSince(c.last_visit||c.lastVisit)} days</div>}
+                </div>
+                <div style={{display:"flex",gap:12,alignItems:"center",flexShrink:0}}>
+                  <div style={{textAlign:"center"}}>
+                    <div style={{fontSize:14,fontWeight:800,color:"#0f0a2e"}}>{c.visits||0}</div>
+                    <div style={{fontSize:9,color:"#6b7280",marginTop:1}}>Visits</div>
+                  </div>
+                  {!isStaff&&<div style={{textAlign:"center"}}>
+                    <div style={{fontSize:14,fontWeight:800,color:"#5b3fc4"}}>₹{((c.total_spent||c.totalSpent||0)/1000).toFixed(1)}k</div>
+                    <div style={{fontSize:9,color:"#6b7280",marginTop:1}}>Spent</div>
+                  </div>}
+                  <div style={{color:"#9ca3af",fontSize:16}}>›</div>
                 </div>
               </div>
             </div>);
@@ -228,8 +326,13 @@ export default function CustomerHistory({currentUser}){
   return(
     <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"system-ui,-apple-system,sans-serif",color:T.text,background:T.bg,overflow:"hidden"}}>
       {isOwner&&!selected&&(
-        <div style={{background:"#fff",borderBottom:`0.5px solid ${T.border}`,display:"flex",flexShrink:0}}>
-          {[{id:"dashboard",icon:"📊",label:"Dashboard"},{id:"customers",icon:"👥",label:"Customers"}].map(t=>(<div key={t.id} onClick={()=>setOwnerTab(t.id)} style={{flex:1,padding:"10px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer",borderBottom:`2px solid ${ownerTab===t.id?T.purple:"transparent"}`}}><span style={{fontSize:17}}>{t.icon}</span><span style={{fontSize:11,fontWeight:800,color:ownerTab===t.id?T.purple:T.tf}}>{t.label}</span></div>))}
+        <div style={{background:"#fff",borderBottom:"1px solid #f1f0f5",display:"flex",flexShrink:0}}>
+          {[{id:"dashboard",icon:"📊",label:"Dashboard"},{id:"customers",icon:"👥",label:"Customers"}].map(t=>(
+            <div key={t.id} onClick={()=>setOwnerTab(t.id)} style={{flex:1,padding:"11px 4px 9px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`2.5px solid ${ownerTab===t.id?"#5b3fc4":"transparent"}`}}>
+              <span style={{fontSize:18}}>{t.icon}</span>
+              <span style={{fontSize:11,fontWeight:ownerTab===t.id?700:500,color:ownerTab===t.id?"#5b3fc4":"#9ca3af"}}>{t.label}</span>
+            </div>
+          ))}
         </div>
       )}
       {selected?<CustomerDetail customer={selected} isStaff={isStaff} currentUser={currentUser} onBack={()=>setSelectedId(null)} onUpdate={handleUpdate}/>:isOwner&&ownerTab==="dashboard"?<OwnerDashboard customers={customers}/>:<CustomerList customers={customers} isStaff={isStaff} onSelect={c=>setSelectedId(c.id)} onAddCustomer={()=>setShowAddCustomer(true)}/>}
