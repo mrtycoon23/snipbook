@@ -210,19 +210,24 @@ function ReengagementTab({customers}){
 
   return(
     <div style={{padding:"16px 16px 80px",background:TP.bg}}>
-      {/* Hero Banner */}
-      <div style={{background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:20,padding:"20px",marginBottom:18,position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",right:-10,top:"50%",transform:"translateY(-50%)",fontSize:80,opacity:0.15,pointerEvents:"none"}}>🧲</div>
-        <div style={{fontSize:18,fontWeight:800,color:"#fff",letterSpacing:"-0.4px",marginBottom:5}}>Re-engagement Center</div>
-        <div style={{fontSize:12,color:"rgba(255,255,255,0.75)",lineHeight:1.6,marginBottom:16}}>Bring inactive clients back and grow your business.</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <div style={{background:"rgba(255,255,255,0.12)",borderRadius:14,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:20}}>👥</span>
-            <div><div style={{fontSize:20,fontWeight:800,color:"#fff",lineHeight:1}}>{lostCount}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.65)",marginTop:2,fontWeight:500}}>Inactive Clients</div></div>
+      {/* Hero Banner — light purple professional */}
+      <div style={{background:"linear-gradient(135deg,#f0eeff 0%,#e4dcff 100%)",borderRadius:16,padding:"16px",marginBottom:14,position:"relative",overflow:"hidden",border:"1px solid #ddd6fe"}}>
+        <div style={{position:"absolute",right:-8,top:"50%",transform:"translateY(-50%)",fontSize:60,opacity:0.12,pointerEvents:"none"}}>🧲</div>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+          <div style={{width:36,height:36,borderRadius:10,background:"#5b3fc4",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>💫</div>
+          <div>
+            <div style={{fontSize:15,fontWeight:800,color:"#2d1b69",letterSpacing:"-0.3px"}}>Re-engagement Center</div>
+            <div style={{fontSize:11,color:"#6b5fa0",marginTop:1}}>Bring inactive clients back and grow your business.</div>
           </div>
-          <div style={{background:"rgba(255,255,255,0.12)",borderRadius:14,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:20}}>📈</span>
-            <div><div style={{fontSize:18,fontWeight:800,color:"#4ade80",lineHeight:1}}>₹{potentialRevenue>=1000?(potentialRevenue/1000).toFixed(0)+"k":potentialRevenue}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.65)",marginTop:2,fontWeight:500}}>Potential Revenue</div></div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <div style={{background:"#fff",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:8,border:"1px solid #ede9fe"}}>
+            <span style={{fontSize:18}}>👥</span>
+            <div><div style={{fontSize:18,fontWeight:800,color:"#2d1b69",lineHeight:1}}>{lostCount}</div><div style={{fontSize:10,color:"#9b8ec4",marginTop:2}}>Inactive Clients</div></div>
+          </div>
+          <div style={{background:"#fff",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:8,border:"1px solid #ede9fe"}}>
+            <span style={{fontSize:18}}>📈</span>
+            <div><div style={{fontSize:16,fontWeight:800,color:"#16a34a",lineHeight:1}}>₹{potentialRevenue>=1000?(potentialRevenue/1000).toFixed(0)+"k":potentialRevenue}</div><div style={{fontSize:10,color:"#9b8ec4",marginTop:2}}>Potential Revenue</div></div>
           </div>
         </div>
       </div>
@@ -341,12 +346,17 @@ function BirthdayTab({customers}){
   function bdayMsg(c){if(c.bdayInfo.urgency==="passed")return `🎂 *Belated Birthday, ${c.name}!*\n\nThodi der se sahi, par dil se! 🙏\n\n🎁 Next visit pe *20% OFF*!\n\n_With love! 💈_`;return `🎂 *Happy Birthday, ${c.name}!* 🎉\n\nAaj ka din aapka hai! 🥳\n\n🎁 Free Haircut OR 25% OFF!\nSirf birthday month mein!\n\nReply *BDAY*\n\n_Khush raho! 💈_`;}
   return(
     <div style={{padding:"16px 16px 80px",background:TP.bg}}>
-      {/* Hero Banner */}
-      <div style={{background:"linear-gradient(135deg,#f0eeff,#e4dcff)",border:"1px solid #ddd6fe",borderRadius:20,padding:"18px",marginBottom:18,position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",fontSize:80,opacity:0.25,pointerEvents:"none"}}>🎂</div>
-        <div style={{fontSize:17,fontWeight:800,color:"#2d1b69",letterSpacing:"-0.3px",marginBottom:5}}>Birthday Campaigns</div>
-        <div style={{fontSize:12,color:"#6b5fa0",lineHeight:1.6,marginBottom:14}}>Celebrate your clients' special days and build stronger relationships.</div>
-        <div onClick={()=>{}} style={{background:"#5b3fc4",color:"#fff",borderRadius:24,padding:"9px 20px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:6,cursor:"pointer"}}>Create Birthday Offer ›</div>
+      {/* Hero Banner — Birthday compact */}
+      <div style={{background:"linear-gradient(135deg,#f0eeff,#e4dcff)",border:"1px solid #ddd6fe",borderRadius:16,padding:"14px 16px",marginBottom:14,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",fontSize:56,opacity:0.2,pointerEvents:"none"}}>🎂</div>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+          <div style={{width:36,height:36,borderRadius:10,background:"#5b3fc4",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>🎂</div>
+          <div>
+            <div style={{fontSize:15,fontWeight:800,color:"#2d1b69",letterSpacing:"-0.3px"}}>Birthday Campaigns</div>
+            <div style={{fontSize:11,color:"#6b5fa0",marginTop:1}}>Celebrate clients' special days.</div>
+          </div>
+        </div>
+        <div onClick={()=>{}} style={{background:"#5b3fc4",color:"#fff",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5,cursor:"pointer"}}>Create Birthday Offer ›</div>
       </div>
 
       {/* Upcoming header */}
@@ -421,12 +431,17 @@ function CampaignsTab({customers}){
     <div style={{padding:"16px 16px 80px",background:TP.bg}}>
       {!sel
         ?(<>
-          {/* Hero Banner */}
-          <div style={{background:"linear-gradient(135deg,#f0fdf4,#d1fae5)",border:"1px solid #a7f3d0",borderRadius:20,padding:"18px",marginBottom:18,position:"relative",overflow:"hidden"}}>
-            <div style={{position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",fontSize:80,opacity:0.2,pointerEvents:"none"}}>📣</div>
-            <div style={{fontSize:17,fontWeight:800,color:"#064e3b",letterSpacing:"-0.3px",marginBottom:5}}>Campaign Center</div>
-            <div style={{fontSize:12,color:"#065f46",lineHeight:1.6,marginBottom:14}}>Create and send WhatsApp campaigns<br/>to engage clients and boost bookings.</div>
-            <div style={{background:"#5b3fc4",color:"#fff",borderRadius:24,padding:"9px 20px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:6,cursor:"pointer",boxShadow:"0 4px 12px rgba(91,63,196,0.3)"}}>New Campaign +</div>
+          {/* Hero Banner — Campaign compact */}
+          <div style={{background:"linear-gradient(135deg,#f0fdf4,#d1fae5)",border:"1px solid #a7f3d0",borderRadius:16,padding:"14px 16px",marginBottom:14,position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",fontSize:56,opacity:0.18,pointerEvents:"none"}}>📣</div>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+              <div style={{width:36,height:36,borderRadius:10,background:"#059669",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>📢</div>
+              <div>
+                <div style={{fontSize:15,fontWeight:800,color:"#064e3b",letterSpacing:"-0.3px"}}>Campaign Center</div>
+                <div style={{fontSize:11,color:"#065f46",marginTop:1}}>Send WhatsApp campaigns & boost bookings.</div>
+              </div>
+            </div>
+            <div style={{background:"#5b3fc4",color:"#fff",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5,cursor:"pointer"}}>New Campaign +</div>
           </div>
 
           {/* Category filter */}
