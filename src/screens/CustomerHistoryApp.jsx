@@ -260,8 +260,8 @@ function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
         </div>
         {onAddCustomer&&<button onClick={onAddCustomer} style={{background:N.mid,color:"#fff",border:"none",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:5}}>+ Add New</button>}
       </div>
-      {/* Stats */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",background:N.white,borderBottom:`1px solid ${N.border}`,flexShrink:0}}>
+      {/* Stats — only for owner */}
+      {!isStaff&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",background:N.white,borderBottom:`1px solid ${N.border}`,flexShrink:0}}>
         {[
           {label:"Total",val:customers.length,color:N.text},
           {label:"VIP",val:customers.filter(c=>c.tag==="VIP").length,color:"#d97706"},
@@ -273,7 +273,7 @@ function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
             <div style={{fontSize:10,color:N.muted,marginTop:3,fontWeight:500}}>{s.label}</div>
           </div>
         ))}
-      </div>
+      </div>}
       {/* Search */}
       <div style={{padding:"10px 16px 6px",background:N.bg,flexShrink:0}}>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
@@ -333,8 +333,8 @@ export default function CustomerHistory({currentUser,onBack}){
   if(loading){return(<div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:T.bg}}><div style={{textAlign:"center"}}><div style={{fontSize:32,marginBottom:12}}>💈</div><div style={{fontSize:14,color:T.ts,fontWeight:700}}>Loading...</div></div></div>);}
   return(
     <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"system-ui,-apple-system,sans-serif",color:T.text,background:T.bg,overflow:"hidden"}}>
-      {/* White Header */}
-      {!selected&&<div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
+      {/* White Header — owner only */}
+      {!selected&&isOwner&&<div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <button onClick={onBack} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600}}>←</button>
           <div>

@@ -35,7 +35,7 @@ const thisMonthStart=new Date().toISOString().slice(0,8)+"01";
 
 function initials(name){return name.split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();}
 function avc(id){const n=typeof id==="string"?id.charCodeAt(0):(id||1);return CARD_COLORS[Math.abs(n)%CARD_COLORS.length];}
-function fc(n){return "\u20b9"+Number(n).toLocaleString("en-IN");}
+function fc(n){return "₹"+Number(n).toLocaleString("en-IN");}
 function fd(d){return new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"});}
 
 // ─── Add Work Log Modal ───────────────────────────────────────────────────────
@@ -58,10 +58,10 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
         <div style={{background:TP.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%"}}>
           <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
           <div style={{textAlign:"center",padding:"20px 0"}}>
-            <div style={{fontSize:48,marginBottom:12}}>\u26A0\uFE0F</div>
+            <div style={{fontSize:48,marginBottom:12}}>⚠️</div>
             <div style={{fontWeight:900,fontSize:18,color:TP.rt,marginBottom:8}}>Pehle Present Mark Karo!</div>
             <div style={{fontSize:13,color:TP.ts,marginBottom:24}}>Aap abhi absent hain. Work log add karne se pehle attendance mark karo.</div>
-            <button onClick={onClose} style={{padding:"12px 32px",background:TP.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Okay, Mark Karta Hoon</button>
+            <button onClick={onClose} style={{padding:"12px 32px",background:TP.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Okay, Got it</button>
           </div>
         </div>
       </div>
@@ -128,16 +128,16 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
         <div style={{background:TP.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
           <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
-            <div style={{width:44,height:44,borderRadius:14,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>\uD83C\uDD95</div>
-            <div><div style={{fontWeight:900,fontSize:16,color:TP.text}}>Naya Customer!</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>{pendingLogData.clientName} pehle kabhi nahi aaya</div></div>
+            <div style={{width:44,height:44,borderRadius:14,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>🆕</div>
+            <div><div style={{fontWeight:900,fontSize:16,color:TP.text}}>New Customer!</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>{pendingLogData.clientName} first time visit</div></div>
           </div>
           <div style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Phone Number *</div><input style={IS} type="tel" placeholder="9876543210" value={newCustPhone} onChange={e=>setNewCustPhone(e.target.value.replace(/\D/g,"").slice(0,10))} autoFocus/></div>
           <div style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Date of Birth (optional)</div><input style={IS} type="date" value={newCustDob} onChange={e=>setNewCustDob(e.target.value)}/></div>
           <div style={{marginBottom:16}}><div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:8}}>Gender</div>
-            <div style={{display:"flex",gap:8}}>{[{id:"male",label:"\uD83D\uDC68 Male"},{id:"female",label:"\uD83D\uDC69 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewCustGender(g.id)} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustGender===g.id?TP.purpleMid:TP.border}`,background:newCustGender===g.id?TP.purpleLight:TP.surface,color:newCustGender===g.id?TP.purpleMid:TP.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div>
+            <div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewCustGender(g.id)} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustGender===g.id?TP.purpleMid:TP.border}`,background:newCustGender===g.id?TP.purpleLight:TP.surface,color:newCustGender===g.id?TP.purpleMid:TP.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div>
           </div>
           <button onClick={saveNewCustomer} disabled={savingCustomer||!newCustPhone||newCustPhone.length<10} style={{width:"100%",padding:13,background:savingCustomer||!newCustPhone||newCustPhone.length<10?"#d1d5db":`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:newCustPhone.length===10?"pointer":"not-allowed"}}>
-            {savingCustomer?"Saving...":"\u2713 Customer + Log Save Karo"}
+            {savingCustomer?"Saving...":"✓ Customer + Log Save Karo"}
           </button>
         </div>
       </div>
@@ -148,17 +148,17 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(45,27,105,0.4)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
       <div style={{background:TP.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto"}}>
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
-        <div style={{fontWeight:900,fontSize:16,marginBottom:16,color:TP.text}}>\u2795 Work Log Add Karo</div>
+        <div style={{fontWeight:900,fontSize:16,marginBottom:16,color:TP.text}}>➕ Work Log Add Karo</div>
         <div style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Client Naam *</div><input style={IS} placeholder="e.g. Anjali Mehta" value={clientName} onChange={e=>setClientName(e.target.value)} autoFocus/></div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
           <div><div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Service</div><select style={{...IS,cursor:"pointer"}} value={service} onChange={e=>setService(e.target.value)}>{SERVICES.map(s=><option key={s}>{s}</option>)}</select></div>
           <div><div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Date</div><input style={IS} type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
         </div>
-        <div style={{marginBottom:18}}><div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Amount (\u20b9) *</div><input style={IS} type="number" placeholder="500" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
+        <div style={{marginBottom:18}}><div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Amount (₹) *</div><input style={IS} type="number" placeholder="500" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
         <div style={{display:"flex",gap:10}}>
           <button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button>
           <button onClick={save} disabled={saving} style={{flex:2,padding:12,border:"none",borderRadius:12,background:clientName.trim()&&amount?`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`:"#d1d5db",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>
-            {saving?"Saving...":"\u2713 Save Karo"}
+            {saving?"Saving...":"✓ Save Karo"}
           </button>
         </div>
       </div>
@@ -199,7 +199,7 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
       <div style={{background:isPresent?TP.gl:TP.red,border:`2px solid ${isPresent?TP.gm:TP.rb}`,borderRadius:16,padding:"16px",marginBottom:14}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div>
-            <div style={{fontWeight:900,fontSize:15,color:isPresent?TP.gd:TP.rt}}>{isPresent?"\u2705 Present Hai Aaj!":"\u274C Absent Ho Aaj"}</div>
+            <div style={{fontWeight:900,fontSize:15,color:isPresent?TP.gd:TP.rt}}>{isPresent?"✅ Present Today!":"❌ Absent Today"}</div>
             <div style={{fontSize:12,color:isPresent?TP.gd:TP.rt,marginTop:3}}>{new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</div>
           </div>
           <div onClick={toggleAttendance} style={{width:56,height:28,borderRadius:14,background:isPresent?TP.green:"#d1d5db",position:"relative",cursor:"pointer",transition:"background 0.2s",flexShrink:0}}>
@@ -210,21 +210,21 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
 
       {/* Monthly stats */}
       <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,padding:"14px",marginBottom:14}}>
-        <div style={{fontWeight:800,fontSize:13,color:TP.text,marginBottom:10}}>\uD83D\uDCC5 Is Mahine ki Attendance</div>
+        <div style={{fontWeight:800,fontSize:13,color:TP.text,marginBottom:10}}>📅 This Month's Attendance</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           <div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:11,padding:"12px",textAlign:"center"}}>
             <div style={{fontSize:28,fontWeight:900,color:TP.gd}}>{monthPresent}</div>
-            <div style={{fontSize:11,fontWeight:700,color:TP.gd,marginTop:2}}>Present Din</div>
+            <div style={{fontSize:11,fontWeight:700,color:TP.gd,marginTop:2}}>Present Days</div>
           </div>
           <div style={{background:TP.red,border:`1.5px solid ${TP.rb}`,borderRadius:11,padding:"12px",textAlign:"center"}}>
             <div style={{fontSize:28,fontWeight:900,color:TP.rt}}>{monthAbsent}</div>
-            <div style={{fontSize:11,fontWeight:700,color:TP.rt,marginTop:2}}>Absent Din</div>
+            <div style={{fontSize:11,fontWeight:700,color:TP.rt,marginTop:2}}>Absent Days</div>
           </div>
         </div>
         {!isPresent&&(
           <div style={{marginTop:12}}>
-            <div style={{fontSize:12,fontWeight:800,color:TP.ts,marginBottom:6}}>\uD83D\uDD12 Aaj ki absence ka reason (sirf aap dekhoge):</div>
-            <input style={{...IS,background:TP.purpleLight,borderColor:TP.border}} placeholder="Reason likho — owner ko nahi dikhega..." value={(absentNotes||{})[today]||""} onChange={async e=>{
+            <div style={{fontSize:12,fontWeight:800,color:TP.ts,marginBottom:6}}>🔒 Reason for absence (only you can see):</div>
+            <input style={{...IS,background:TP.purpleLight,borderColor:TP.border}} placeholder="Add reason — owner won't see this..." value={(absentNotes||{})[today]||""} onChange={async e=>{
               setAbsentNotes(prev=>({...prev,[today]:e.target.value}));
               if(salonId)await supabase.from("attendance").upsert({
                 salon_id:salonId,staff_id:staff.id,date:today,is_present:false,absent_reason:e.target.value
@@ -238,7 +238,7 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
       <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,overflow:"hidden"}}>
         {/* Tab bar */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",background:TP.sub,borderBottom:`2px solid ${TP.border}`}}>
-          {[{k:"today",l:"Aaj"},{k:"week",l:"Is Hafte"},{k:"month",l:"Is Mahine"}].map(t=>(
+          {[{k:"today",l:"Today"},{k:"week",l:"This Week"},{k:"month",l:"This Month"}].map(t=>(
             <button key={t.k} onClick={()=>setWorkTab(t.k)} style={{padding:"10px 0",border:"none",background:workTab===t.k?TP.purple:"transparent",color:workTab===t.k?"#fff":TP.ts,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>
           ))}
         </div>
@@ -314,15 +314,15 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
   },[salonId,staff?.id]);
 
   const TABS=[
-    {id:"attendance",icon:"\uD83D\uDCCB",label:"Attendance"},
-    {id:"customers",icon:"\uD83D\uDC65",label:"Customers"},
+    {id:"attendance",icon:"📋",label:"Attendance"},
+    {id:"customers",icon:"👥",label:"Customers"},
   ];
 
   if(loading){
     return(
       <div style={{height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:TP.bg,fontFamily:"system-ui,sans-serif"}}>
         <div style={{textAlign:"center"}}>
-          <div style={{fontSize:32,marginBottom:12}}>\u2702\uFE0F</div>
+          <div style={{fontSize:32,marginBottom:12}}>✂️</div>
           <div style={{fontSize:14,color:TP.ts,fontWeight:700}}>Loading...</div>
         </div>
       </div>
@@ -342,11 +342,6 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          {/* Online dot */}
-          <div style={{display:"flex",alignItems:"center",gap:4,background:TP.gl,border:`1px solid ${TP.gm}`,borderRadius:20,padding:"4px 10px"}}>
-            <div style={{width:7,height:7,borderRadius:"50%",background:TP.green}}/>
-            <span style={{fontSize:10,fontWeight:700,color:TP.gd}}>Online</span>
-          </div>
           <button onClick={onLogout} style={{background:TP.purpleLight,border:`1px solid ${TP.border}`,color:TP.purpleMid,borderRadius:8,padding:"6px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Logout</button>
         </div>
       </div>
@@ -428,7 +423,7 @@ export function StaffLoginPage({salonId,onLogin,onBack}){
     return(
       <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif"}}>
         <div style={{textAlign:"center",color:"#fff"}}>
-          <div style={{fontSize:32,marginBottom:12}}>\u2702\uFE0F</div>
+          <div style={{fontSize:32,marginBottom:12}}>✂️</div>
           <div style={{fontSize:14,color:"#c4b8f0"}}>Staff load ho raha hai...</div>
         </div>
       </div>
@@ -438,11 +433,11 @@ export function StaffLoginPage({salonId,onLogin,onBack}){
   if(!salonId||staffList.length===0){
     return(
       <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"system-ui,sans-serif"}}>
-        <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>\u2702\uFE0F SnipBook</div>
+        <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>✂️ SnipBook</div>
         <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:360,marginTop:24}}>
           <div style={{fontWeight:900,fontSize:17,marginBottom:8,color:TP.text}}>Koi staff nahi mila</div>
           <div style={{fontSize:13,color:TP.ts,marginBottom:20}}>Is salon mein koi staff registered nahi hai.</div>
-          <button onClick={onBack} style={{width:"100%",padding:"13px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>\u2190 Back to Login</button>
+          <button onClick={onBack} style={{width:"100%",padding:"13px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>← Back to Login</button>
         </div>
       </div>
     );
@@ -450,7 +445,7 @@ export function StaffLoginPage({salonId,onLogin,onBack}){
 
   return(
     <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"system-ui,sans-serif"}}>
-      <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>\u2702\uFE0F SnipBook</div>
+      <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>✂️ SnipBook</div>
       <div style={{fontSize:13,color:"#c4b8f0",marginBottom:32}}>Staff Portal</div>
       <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:360,boxShadow:"0 16px 48px rgba(45,27,105,0.3)"}}>
         <div style={{fontWeight:900,fontSize:17,marginBottom:3,color:TP.text}}>Staff Login</div>
@@ -463,14 +458,15 @@ export function StaffLoginPage({salonId,onLogin,onBack}){
         </div>
         <div style={{marginBottom:18}}>
           <div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:6}}>4-digit PIN</div>
-          <input style={IS} type="password" placeholder="\u2022\u2022\u2022\u2022" maxLength={4} value={pin} onChange={e=>{setPin(e.target.value);setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
+          <input style={IS} type="password" placeholder="••••" maxLength={4} value={pin} onChange={e=>{setPin(e.target.value);setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
         </div>
-        {error&&<div style={{background:TP.red,border:`1.5px solid ${TP.rb}`,borderRadius:9,padding:"9px 12px",marginBottom:14,fontSize:12,color:TP.rt,fontWeight:600}}>\u26A0\uFE0F {error}</div>}
+        {error&&<div style={{background:TP.red,border:`1.5px solid ${TP.rb}`,borderRadius:9,padding:"9px 12px",marginBottom:14,fontSize:12,color:TP.rt,fontWeight:600}}>⚠️ {error}</div>}
         <button onClick={handleLogin} disabled={loading} style={{width:"100%",padding:"13px",background:loading?"#c4b8f0":`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer",marginBottom:12}}>
-          {loading?"Logging in...":"Login Karo \u2192"}
+          {loading?"Logging in...":"Login Karo →"}
         </button>
-        <button onClick={onBack} style={{width:"100%",background:"none",border:"none",color:TP.ts,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>\u2190 Back to Login</button>
+        <button onClick={onBack} style={{width:"100%",background:"none",border:"none",color:TP.ts,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>← Back to Login</button>
       </div>
     </div>
   );
 }
+  
