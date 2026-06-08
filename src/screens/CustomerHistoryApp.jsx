@@ -93,23 +93,33 @@ function OwnerDashboard({customers}){
   const N={purple:"#2d1b69",mid:"#5b3fc4",light:"#ede9fe",bg:"#f8f7ff",white:"#fff",text:"#0f0a2e",muted:"#6b7280",border:"#e5e7eb",green:"#16a34a"};
   return(
     <div style={{flex:1,overflowY:"auto",padding:"0 0 80px",background:N.bg}}>
-      {/* Filter bar */}
+      {/* Filter bar — clean date range only */}
       <div style={{background:N.white,borderBottom:`1px solid ${N.border}`,padding:"12px 16px",flexShrink:0}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <div style={{background:N.light,border:`1px solid #ddd6fe`,borderRadius:8,padding:"6px 12px",fontSize:12,fontWeight:600,color:N.mid,display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
-              📅 {label} <span style={{fontSize:10}}>▾</span>
-            </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div style={{flex:1,display:"flex",alignItems:"center",gap:6,background:"#f8f7ff",border:`1px solid #ddd6fe`,borderRadius:10,padding:"8px 12px",cursor:"pointer"}} onClick={()=>setShowCustom(!showCustom)}>
+            <span style={{fontSize:14}}>📅</span>
+            <span style={{fontSize:13,fontWeight:600,color:"#5b3fc4",flex:1}}>{label}</span>
+            <span style={{fontSize:11,color:"#9b8ec4"}}>▾</span>
           </div>
-          <button style={{display:"flex",alignItems:"center",gap:5,padding:"6px 12px",background:N.white,border:`1px solid ${N.border}`,borderRadius:8,fontSize:12,fontWeight:600,color:N.muted,cursor:"pointer"}}>
+          <button style={{display:"flex",alignItems:"center",gap:5,padding:"8px 14px",background:N.white,border:`1px solid ${N.border}`,borderRadius:10,fontSize:12,fontWeight:600,color:N.muted,cursor:"pointer",flexShrink:0}}>
             ↓ Export
           </button>
         </div>
-        <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:2}}>
-          {PRESETS.filter(p=>p.id!=="custom").map(p=>(
-            <button key={p.id} onClick={()=>{setPreset(p.id);setShowCustom(false);}} style={{padding:"7px 14px",borderRadius:20,border:`1.5px solid ${preset===p.id?N.mid:N.border}`,background:preset===p.id?N.mid:N.white,color:preset===p.id?"#fff":N.muted,fontSize:12,fontWeight:preset===p.id?700:500,cursor:"pointer",whiteSpace:"nowrap",fontFamily:"inherit",flexShrink:0}}>{p.label}</button>
-          ))}
-        </div>
+        {showCustom&&(
+          <div style={{marginTop:10}}>
+            <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
+              <input type="date" value={customFrom} onChange={e=>setCustomFrom(e.target.value)}
+                style={{flex:1,padding:"9px 12px",border:`1px solid ${N.border}`,borderRadius:10,fontSize:13,fontFamily:"inherit",outline:"none",background:N.white,color:N.text}}/>
+              <span style={{color:N.muted,fontSize:14,fontWeight:500}}>→</span>
+              <input type="date" value={customTo} onChange={e=>setCustomTo(e.target.value)}
+                style={{flex:1,padding:"9px 12px",border:`1px solid ${N.border}`,borderRadius:10,fontSize:13,fontFamily:"inherit",outline:"none",background:N.white,color:N.text}}/>
+            </div>
+            <button onClick={()=>{if(canApply){setAppliedFrom(customFrom);setAppliedTo(customTo);setPreset("custom");setShowCustom(false);}}}
+              style={{width:"100%",padding:"10px",background:canApply?"#5b3fc4":"#d1d5db",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:canApply?"pointer":"not-allowed"}}>
+              {canApply?"✓ Apply Range":"Select both dates"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Revenue hero card */}
