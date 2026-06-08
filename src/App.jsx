@@ -700,6 +700,16 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         }
         {screen==="calendar"&&(
           <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+            {/* White top header */}
+            <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <button onClick={()=>setScreen("dashboard")} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600}}>←</button>
+                <div>
+                  <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Calendar</div>
+                  <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Appointments & bookings</div>
+                </div>
+              </div>
+            </div>
             {/* Calendar Header */}
             <div style={{background:"#fff",borderBottom:"0.5px solid #e0d8ff",padding:"12px 16px",flexShrink:0}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>

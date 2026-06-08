@@ -758,25 +758,23 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
   return(
     <div style={{display:"flex",flexDirection:"column",height:"100%",background:NP.bg,fontFamily:"system-ui,sans-serif"}}>
 
-      {/* Header */}
-      <div style={{padding:"12px 16px 0",background:NP.bg,flexShrink:0}}>
-        {onBack&&<button onClick={onBack} style={{display:"flex",alignItems:"center",gap:8,background:"none",border:"none",cursor:"pointer",marginBottom:10,padding:0}}>
-          <div style={{width:32,height:32,borderRadius:9,background:NP.white,border:`1px solid ${NP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,color:NP.text}}>←</div>
-          <span style={{fontSize:13,color:NP.muted,fontWeight:500}}>Back</span>
-        </button>}
-
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10}}>
+      {/* White Header — same style as other pages */}
+      <div style={{background:NP.white,padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          {onBack&&<button onClick={onBack} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600}}>←</button>}
           <div>
-            <div style={{fontSize:20,fontWeight:700,color:NP.text}}>Staff Management</div>
-            <div style={{fontSize:11,color:NP.muted,marginTop:2}}>Manage your team performance</div>
-          </div>
-          <div style={{display:"flex",flexDirection:"column",gap:5}}>
-            <button onClick={()=>setShowAddStaff(true)} style={{background:NP.purpleMid,color:"#fff",border:"none",borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:600,cursor:"pointer"}}>+ Add Staff</button>
-            <button onClick={()=>setShowSummary(true)} style={{background:NP.white,color:NP.purpleMid,border:`1px solid ${NP.purpleBorder}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:500,cursor:"pointer"}}>📈 Analytics</button>
+            <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Staff Management</div>
+            <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Manage your team performance</div>
           </div>
         </div>
+        <div style={{display:"flex",gap:6}}>
+          <button onClick={()=>setShowAddStaff(true)} style={{background:NP.purpleMid,color:"#fff",border:"none",borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:600,cursor:"pointer"}}>+ Add Staff</button>
+          <button onClick={()=>setShowSummary(true)} style={{background:NP.white,color:NP.purpleMid,border:`1px solid ${NP.purpleBorder}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:500,cursor:"pointer"}}>📈 Analytics</button>
+        </div>
+      </div>
 
-        {/* Date filter */}
+      {/* Sub header — date filter + stats */}
+      <div style={{padding:"10px 16px 0",background:NP.bg,flexShrink:0}}>
         <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
 
         {/* 3 Compact Stat Cards */}
