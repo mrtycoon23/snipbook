@@ -281,7 +281,7 @@ function ChatHistory({salonId}){
   return(<div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}><div style={{background:"#fff",padding:"12px 14px",borderBottom:`2px solid ${TP.border}`,flexShrink:0}}><div style={{fontWeight:900,fontSize:15,color:TP.text}}>💬 Bot Conversations</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>{conversations.length} customers ne bot se baat ki</div></div><div style={{flex:1,overflowY:"auto"}}>{loading?<div style={{padding:32,textAlign:"center",color:TP.ts}}>Loading...</div>:conversations.length===0?(<div style={{padding:32,textAlign:"center",color:TP.ts}}><div style={{fontSize:40,marginBottom:12}}>💬</div><div style={{fontWeight:800,fontSize:14,color:TP.tm}}>Koi chat nahi abhi</div></div>):conversations.map((c,i)=>(<div key={i} onClick={()=>loadMessages(c.phone)} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",borderBottom:`2px solid ${TP.bg}`,background:"#fff",cursor:"pointer"}}><div style={{width:44,height:44,borderRadius:14,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:900,color:TP.purple,flexShrink:0}}>{(c.name||"?")[0].toUpperCase()}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:14,marginBottom:2,color:TP.text}}>{c.name||c.phone}</div><div style={{fontSize:12,color:TP.ts,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.direction==="inbound"?"👤":"🤖"} {c.lastMsg}</div></div><div style={{fontSize:10,color:TP.ts,fontWeight:700,flexShrink:0,textAlign:"right"}}><div>{fmtDate(c.lastTime)}</div><div style={{marginTop:4,fontSize:14,color:TP.tg}}>›</div></div></div>))}</div></div>);
 }
 
-function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
+function Settings({user,onBack,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
   const [tab,setTab]=useState("profile");const [saved,setSaved]=useState(false);const [loading,setLoading]=useState(true);
   const [profile,setProfile]=useState({salonName:user.salon,ownerName:user.name,phone:"",email:user.email,city:user.city||"",salonType:"unisex",address:"",mapsLink:"",notifNumber:"",notifEmail:""});
   const [logoUrl,setLogoUrl]=useState(user.logo_url||null);const [logoUploading,setLogoUploading]=useState(false);const logoFileRef=useRef(null);
@@ -309,6 +309,16 @@ function Settings({user,onLogout,onSalonUpdate,showRevenue,setShowRevenue}){
 
   if(loading)return<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:TP.ts}}>Loading...</div>;
   return(<div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",background:"#f8f7ff"}}>
+    {/* White Header */}
+    <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <button onClick={onBack} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600}}>←</button>
+        <div>
+          <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Settings</div>
+          <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Manage your salon</div>
+        </div>
+      </div>
+    </div>
     {/* Tab bar — reference style */}
     <div style={{background:"#fff",borderBottom:"1px solid #f1f0f5",display:"flex",flexShrink:0}}>
       {SETTING_TABS.map(t=>(
@@ -566,7 +576,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const weekDays=Array.from({length:6},(_,i)=>addDays(weekStart,i));
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
-      {["history","chats","settings"].includes(screen)&&<SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>}
+      {["history","chats"].includes(screen)&&<SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
         {screen==="dashboard"&&(
           <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff"}}> 
@@ -839,7 +849,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         {screen==="history"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><CustomerHistory key={screen} currentUser={{...user,role:"owner"}} onBookAppointment={()=>setScreen("calendar")}/></div>)}
         {screen==="chats"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><ChatHistory salonId={user.id}/></div>)}
         {screen==="engage"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><EngagementCenter currentUser={user} onBack={()=>setScreen("dashboard")}/></div>)}
-        {screen==="settings"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><Settings user={user} onLogout={onLogout} onSalonUpdate={(newName,newLogoUrl)=>setUser(prev=>({...prev,salon:newName,logo_url:newLogoUrl||prev.logo_url}))} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/></div>)}
+        {screen==="settings"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><Settings user={user} onBack={()=>setScreen("dashboard")} onLogout={onLogout} onSalonUpdate={(newName,newLogoUrl)=>setUser(prev=>({...prev,salon:newName,logo_url:newLogoUrl||prev.logo_url}))} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/></div>)}
       </div>
       {/* Bottom Nav — Home, Calendar, [+], Staff, Settings */}
       <div style={{background:"#fff",borderTop:"0.5px solid #e0d8ff",paddingBottom:"env(safe-area-inset-bottom,0px)",display:"flex",alignItems:"center",flexShrink:0,boxShadow:"0 -4px 20px rgba(45,27,105,0.07)",position:"relative",height:62}}>
