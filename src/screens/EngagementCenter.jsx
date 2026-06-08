@@ -214,8 +214,7 @@ function ReengagementTab({customers}){
       <div style={{background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:20,padding:"20px",marginBottom:18,position:"relative",overflow:"hidden"}}>
         <div style={{position:"absolute",right:-10,top:"50%",transform:"translateY(-50%)",fontSize:80,opacity:0.15,pointerEvents:"none"}}>🧲</div>
         <div style={{fontSize:18,fontWeight:800,color:"#fff",letterSpacing:"-0.4px",marginBottom:5}}>Re-engagement Center</div>
-        <div style={{fontSize:12,color:"rgba(255,255,255,0.75)",lineHeight:1.6,marginBottom:16}}>Bring inactive clients back{"
-"}and grow your business.</div>
+        <div style={{fontSize:12,color:"rgba(255,255,255,0.75)",lineHeight:1.6,marginBottom:16}}>Bring inactive clients back and grow your business.</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           <div style={{background:"rgba(255,255,255,0.12)",borderRadius:14,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
             <span style={{fontSize:20}}>👥</span>
@@ -346,8 +345,7 @@ function BirthdayTab({customers}){
       <div style={{background:"linear-gradient(135deg,#f0eeff,#e4dcff)",border:"1px solid #ddd6fe",borderRadius:20,padding:"18px",marginBottom:18,position:"relative",overflow:"hidden"}}>
         <div style={{position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",fontSize:80,opacity:0.25,pointerEvents:"none"}}>🎂</div>
         <div style={{fontSize:17,fontWeight:800,color:"#2d1b69",letterSpacing:"-0.3px",marginBottom:5}}>Birthday Campaigns</div>
-        <div style={{fontSize:12,color:"#6b5fa0",lineHeight:1.6,marginBottom:14}}>Celebrate your clients' special days{"
-"}and build stronger relationships.</div>
+        <div style={{fontSize:12,color:"#6b5fa0",lineHeight:1.6,marginBottom:14}}>Celebrate your clients' special days and build stronger relationships.</div>
         <div onClick={()=>{}} style={{background:"#5b3fc4",color:"#fff",borderRadius:24,padding:"9px 20px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:6,cursor:"pointer"}}>Create Birthday Offer ›</div>
       </div>
 
@@ -412,11 +410,10 @@ function CampaignsTab({customers}){
   const [tGender,setTGender]=useState("all");
   const [lvF,setLvF]=useState(0);
   const [bulk,setBulk]=useState(null);
+  const [catFilter,setCatFilter]=useState("All");
   const getLV=c=>daysSince(c.last_visit||c.lastVisit);
   const filtered=customers.filter(c=>tTag==="All"?true:c.tag===tTag).filter(c=>tGender==="all"?true:c.gender===tGender).filter(c=>lvF===0?true:getLV(c)>=lvF);
   const gC={all:customers.filter(c=>(tTag==="All"?true:c.tag===tTag)&&(lvF===0?true:getLV(c)>=lvF)).length,male:customers.filter(c=>(tTag==="All"?true:c.tag===tTag)&&c.gender==="male"&&(lvF===0?true:getLV(c)>=lvF)).length,female:customers.filter(c=>(tTag==="All"?true:c.tag===tTag)&&c.gender==="female"&&(lvF===0?true:getLV(c)>=lvF)).length};
-  const cats=[...new Set(CAMPAIGNS.map(c=>c.category))];
-  const [catFilter,setCatFilter]=useState("All");
   const allCats=["All",...new Set(CAMPAIGNS.map(c=>c.category))];
   const filteredCamps=catFilter==="All"?CAMPAIGNS:CAMPAIGNS.filter(c=>c.category===catFilter);
 
@@ -584,4 +581,3 @@ export default function EngagementCenter({currentUser}){
     </div>
   );
 }
- 
