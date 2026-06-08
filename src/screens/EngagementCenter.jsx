@@ -210,24 +210,24 @@ function ReengagementTab({customers}){
 
   return(
     <div style={{padding:"16px 16px 80px",background:TP.bg}}>
-      {/* Hero Banner — light yellow warm professional */}
-      <div style={{background:"linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%)",borderRadius:16,padding:"16px",marginBottom:14,position:"relative",overflow:"hidden",border:"1px solid #fde68a"}}>
-        <div style={{position:"absolute",right:-8,top:"50%",transform:"translateY(-50%)",fontSize:60,opacity:0.12,pointerEvents:"none"}}>🧲</div>
+      {/* Hero Banner — Periwinkle Blue */}
+      <div style={{background:"linear-gradient(135deg,#eff6ff,#dbeafe)",borderRadius:16,padding:"16px",marginBottom:14,position:"relative",overflow:"hidden",border:"1px solid #93c5fd"}}>
+        <div style={{position:"absolute",right:-8,top:"50%",transform:"translateY(-50%)",fontSize:60,opacity:0.1,pointerEvents:"none"}}>🧲</div>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-          <div style={{width:36,height:36,borderRadius:10,background:"#f59e0b",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>💫</div>
+          <div style={{width:36,height:36,borderRadius:10,background:"#2563eb",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>💫</div>
           <div>
-            <div style={{fontSize:15,fontWeight:800,color:"#78350f",letterSpacing:"-0.3px"}}>Re-engagement Center</div>
-            <div style={{fontSize:11,color:"#92400e",marginTop:1}}>Bring inactive clients back and grow your business.</div>
+            <div style={{fontSize:15,fontWeight:800,color:"#1e3a8a",letterSpacing:"-0.3px"}}>Re-engagement Center</div>
+            <div style={{fontSize:11,color:"#1e40af",marginTop:1}}>Bring inactive clients back and grow your business.</div>
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-          <div style={{background:"#fff",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:8,border:"1px solid #fde68a"}}>
+          <div style={{background:"#fff",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:8,border:"1px solid #93c5fd"}}>
             <span style={{fontSize:18}}>👥</span>
-            <div><div style={{fontSize:18,fontWeight:800,color:"#78350f",lineHeight:1}}>{lostCount}</div><div style={{fontSize:10,color:"#a16207",marginTop:2}}>Inactive Clients</div></div>
+            <div><div style={{fontSize:18,fontWeight:800,color:"#1e3a8a",lineHeight:1}}>{lostCount}</div><div style={{fontSize:10,color:"#1e40af",marginTop:2}}>Inactive Clients</div></div>
           </div>
-          <div style={{background:"#fff",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:8,border:"1px solid #fde68a"}}>
+          <div style={{background:"#fff",borderRadius:12,padding:"10px 12px",display:"flex",alignItems:"center",gap:8,border:"1px solid #93c5fd"}}>
             <span style={{fontSize:18}}>📈</span>
-            <div><div style={{fontSize:16,fontWeight:800,color:"#16a34a",lineHeight:1}}>₹{potentialRevenue>=1000?(potentialRevenue/1000).toFixed(0)+"k":potentialRevenue}</div><div style={{fontSize:10,color:"#a16207",marginTop:2}}>Potential Revenue</div></div>
+            <div><div style={{fontSize:16,fontWeight:800,color:"#16a34a",lineHeight:1}}>₹{potentialRevenue>=1000?(potentialRevenue/1000).toFixed(0)+"k":potentialRevenue}</div><div style={{fontSize:10,color:"#1e40af",marginTop:2}}>Potential Revenue</div></div>
           </div>
         </div>
       </div>
