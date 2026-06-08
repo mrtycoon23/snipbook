@@ -548,19 +548,7 @@ export default function EngagementCenter({currentUser}){
 
   return(
     <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
-      {/* Header */}
-      <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
-        <div>
-          <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Engagement</div>
-          <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Campaigns & Re-engage</div>
-        </div>
-        <div style={{display:"flex",gap:6,alignItems:"center"}}>
-          {lostCount>0&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #fde68a"}}>{lostCount} inactive</div>}
-          {bdayCount>0&&<div style={{background:"#fff5f5",color:"#dc2626",fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #fca5a5"}}>{bdayCount} bdays</div>}
-        </div>
-      </div>
-
-      {/* Premium Tab bar */}
+      {/* Tab bar only - no duplicate header */}
       <div style={{background:"#fff",borderBottom:"1px solid #f1f0f5",display:"flex",padding:"0 8px",flexShrink:0}}>
         {TABS.map(t=>(
           <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"11px 4px 9px",display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`,transition:"all 0.2s"}}>
