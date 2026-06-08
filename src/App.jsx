@@ -777,17 +777,21 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         }
         {screen==="clients"&&(
           <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-            {/* Header — white with back button */}
-            <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
+            {/* Header — same style as staff/engagement */}
+            <div style={{background:"#fff",padding:"14px 20px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <button onClick={()=>setScreen("dashboard")} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600}}>←</button>
+                <div style={{display:"flex",flexDirection:"column",gap:4,justifyContent:"center",cursor:"pointer"}} onClick={()=>setScreen("dashboard")}>
+                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:22}}/>
+                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:16}}/>
+                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:22}}/>
+                </div>
                 <div>
-                  <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Clients</div>
-                  <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Manage your customers</div>
+                  <div style={{fontSize:17,fontWeight:800,color:"#1a0a4a"}}>Clients</div>
+                  <div style={{fontSize:11,color:"#9b8ec4"}}>Manage your customers</div>
                 </div>
               </div>
-              <button onClick={()=>setShowAddClient(true)} style={{background:"#5b3fc4",color:"#fff",border:"none",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ Add New</button>
-            </div>
+              <div onClick={()=>setShowAddClient(true)} style={{background:"#5b3fc4",color:"#fff",border:"none",borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add New</div>
+            </div> 
 
             {/* Stats Row */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",background:"#fff",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
@@ -914,8 +918,12 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             })}
           </div>
           {/* Drawer footer */}
-          <div style={{padding:"10px 16px",borderTop:"0.5px solid #f0eeff"}}>
-            <div style={{fontSize:10,color:"#c4b8f0",textAlign:"center"}}>SnipBook · {user?.salon}</div>
+          <div style={{padding:"12px 16px",borderTop:"1px solid #f1f0f5"}}>
+            <button onClick={()=>{setShowDrawer(false);onLogout();}} style={{width:"100%",padding:"11px 16px",background:"#fff5f5",border:"1px solid #fca5a5",borderRadius:12,display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontFamily:"inherit"}}>
+              <div style={{width:32,height:32,borderRadius:9,background:"#fee2e2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🚪</div>
+              <span style={{fontSize:14,fontWeight:700,color:"#dc2626"}}>Logout</span>
+            </button>
+            <div style={{fontSize:10,color:"#c4b8f0",textAlign:"center",marginTop:10}}>SnipBook · {user?.salon}</div>
           </div>
         </div>
       </>)}
