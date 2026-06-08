@@ -314,7 +314,7 @@ function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
   );
 }
 
-export default function CustomerHistory({currentUser}){
+export default function CustomerHistory({currentUser,onBack}){
   const[customers,setCustomers]=useState([]);const[selectedId,setSelectedId]=useState(null);const[ownerTab,setOwnerTab]=useState("customers");const[loading,setLoading]=useState(true);const[showAddCustomer,setShowAddCustomer]=useState(false);const[newCustomer,setNewCustomer]=useState({name:"",phone:"",dob:"",gender:"male",email:""});const[savingCustomer,setSavingCustomer]=useState(false);
   const isStaff=currentUser?.role==="staff";const isOwner=currentUser?.role==="owner";
   async function loadData(){setLoading(true);const salonId=currentUser?.salon_id||currentUser?.id;const{data:cData}=await supabase.from("customers").select("*").eq("salon_id",salonId);const{data:vData}=await supabase.from("visit_history").select("*").eq("salon_id",salonId);if(cData&&cData.length>0){const grouped={};if(vData){vData.forEach(v=>{if(!grouped[v.customer_id])grouped[v.customer_id]=[];grouped[v.customer_id].push({id:v.id,date:v.date,services:v.services||[],stylist:v.stylist,amount:v.amount,notes:v.notes||"",photos:Array.isArray(v.photos)?v.photos:[]});});}setCustomers(cData.map(c=>({...c,avatar:c.avatar||(c.name?.slice(0,2)||"??").toUpperCase(),color:c.color||T.purple,visitHistory:grouped[c.id]||[],totalSpent:c.total_spent||0,lastVisit:c.last_visit||"-",favServices:c.fav_services||[],tag:c.tag||"New",src:c.source||"wa",email:c.email||""})));}else{setCustomers([]);}setLoading(false);}
@@ -325,6 +325,16 @@ export default function CustomerHistory({currentUser}){
   if(loading){return(<div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",background:T.bg}}><div style={{textAlign:"center"}}><div style={{fontSize:32,marginBottom:12}}>💈</div><div style={{fontSize:14,color:T.ts,fontWeight:700}}>Loading...</div></div></div>);}
   return(
     <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"system-ui,-apple-system,sans-serif",color:T.text,background:T.bg,overflow:"hidden"}}>
+      {/* White Header */}
+      {!selected&&<div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <button onClick={onBack} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600}}>←</button>
+          <div>
+            <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Customer History</div>
+            <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Visit records & analytics</div>
+          </div>
+        </div>
+      </div>}
       {isOwner&&!selected&&(
         <div style={{background:"#fff",borderBottom:"1px solid #f1f0f5",display:"flex",flexShrink:0}}>
           {[{id:"dashboard",icon:"📊",label:"Dashboard"},{id:"customers",icon:"👥",label:"Customers"}].map(t=>(
