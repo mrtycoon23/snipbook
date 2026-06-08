@@ -2,15 +2,15 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 const TP={
-  bg:"#f4f2ff",surface:"#ffffff",border:"#e0d8ff",
-  purple:"#2d1b69",purpleLight:"#ede9fe",purpleMid:"#5b3fc4",
-  text:"#1a0a4a",tm:"#4a3580",ts:"#9b8ec4",tf:"#c4b8f0",tg:"#e0d8ff",
-  green:"#22c55e",gl:"#e8fdf0",gm:"#bbf7d0",gd:"#16a34a",
+  bg:"#f8f9ff",surface:"#ffffff",border:"#e5e7eb",
+  purple:"#2d1b69",purpleLight:"#f0eeff",purpleMid:"#5b3fc4",
+  text:"#0f0a2e",tm:"#374151",ts:"#6b7280",tf:"#9ca3af",tg:"#e5e7eb",
+  green:"#22c55e",gl:"#f0fdf4",gm:"#bbf7d0",gd:"#16a34a",
   yellow:"#fef9c3",yb:"#fde68a",yt:"#a16207",
   blue:"#eff6ff",bb:"#93c5fd",bt:"#2563eb",
-  red:"#fff0f0",rb:"#fca5a5",rt:"#dc2626",
+  red:"#fff5f5",rb:"#fca5a5",rt:"#dc2626",
   orange:"#fff7ed",ob:"#fed7aa",ot:"#ea580c",
-  sub:"#f4f2ff",inp:"#fafbff",wa:"#25d366",
+  sub:"#f8f9ff",inp:"#ffffff",wa:"#25d366",
 };
 
 const IS={
@@ -68,18 +68,18 @@ function LVFilter({value,onChange,total,match}){
     <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:12,padding:"12px 14px",marginBottom:12}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
         <div style={{fontSize:12,fontWeight:800,color:TP.tm}}>📅 Last Visit Filter</div>
-        <div style={{fontSize:10,color:TP.ts}}>{value===0?`Sabko (${total})`:`${match}/${total}`}</div>
+        <div style={{fontSize:10,color:TP.ts}}>{value===0?`All (${total})`:`${match}/${total}`}</div>
       </div>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:value>0?10:0}}>
         <div style={{flex:1,position:"relative"}}>
-          <input type="number" min={0} max={365} value={value===0?"":value} onChange={e=>onChange(parseInt(e.target.value)||0)} placeholder="0 = sabko"
+          <input type="number" min={0} max={365} value={value===0?"":value} onChange={e=>onChange(parseInt(e.target.value)||0)} placeholder="0 = show all"
             style={{width:"100%",padding:"10px 44px 10px 13px",border:`2px solid ${TP.border}`,borderRadius:10,fontSize:15,fontWeight:800,fontFamily:"inherit",outline:"none",boxSizing:"border-box",background:"#fff",color:TP.text}}
             onFocus={e=>e.target.style.borderColor=TP.purpleMid} onBlur={e=>e.target.style.borderColor=TP.border}/>
           <div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:12,fontWeight:700,color:TP.ts}}>din</div>
         </div>
         {value>0&&<button onClick={()=>onChange(0)} style={{padding:"10px 14px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:10,fontSize:12,fontWeight:700,color:TP.ts,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>✕</button>}
       </div>
-      {value>0&&<div style={{background:match>0?TP.gl:TP.red,border:`1.5px solid ${match>0?TP.gm:TP.rb}`,borderRadius:8,padding:"7px 10px",fontSize:11,fontWeight:700,color:match>0?TP.gd:TP.rt}}>{match>0?`✅ ${match} customers — ${value}+ din absent`:`❌ Koi nahi mila`}</div>}
+      {value>0&&<div style={{background:match>0?TP.gl:TP.red,border:`1.5px solid ${match>0?TP.gm:TP.rb}`,borderRadius:8,padding:"7px 10px",fontSize:11,fontWeight:700,color:match>0?TP.gd:TP.rt}}>{match>0?`✅ ${match} customers — ${value}+ din absent`:`❌ No clients found`}</div>}
     </div>
   );
 }
@@ -205,11 +205,33 @@ function ReengagementTab({customers}){
   const allISel=selInactive.length===lost.length&&lost.length>0;
   const allASel=selAll.length===filtAll.length&&filtAll.length>0;
 
+  const lostCount=customers.map(c=>({...c,days:getLV(c)})).filter(c=>c.days>=30).length;
+  const potentialRevenue=lostCount*350;
+
   return(
-    <div style={{padding:"16px 16px 80px"}}>
+    <div style={{padding:"16px 16px 80px",background:TP.bg}}>
+      {/* Hero Banner */}
+      <div style={{background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:20,padding:"20px",marginBottom:18,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",right:-10,top:"50%",transform:"translateY(-50%)",fontSize:80,opacity:0.15,pointerEvents:"none"}}>🧲</div>
+        <div style={{fontSize:18,fontWeight:800,color:"#fff",letterSpacing:"-0.4px",marginBottom:5}}>Re-engagement Center</div>
+        <div style={{fontSize:12,color:"rgba(255,255,255,0.75)",lineHeight:1.6,marginBottom:16}}>Bring inactive clients back{"
+"}and grow your business.</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <div style={{background:"rgba(255,255,255,0.12)",borderRadius:14,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:20}}>👥</span>
+            <div><div style={{fontSize:20,fontWeight:800,color:"#fff",lineHeight:1}}>{lostCount}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.65)",marginTop:2,fontWeight:500}}>Inactive Clients</div></div>
+          </div>
+          <div style={{background:"rgba(255,255,255,0.12)",borderRadius:14,padding:"12px 14px",display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:20}}>📈</span>
+            <div><div style={{fontSize:18,fontWeight:800,color:"#4ade80",lineHeight:1}}>₹{potentialRevenue>=1000?(potentialRevenue/1000).toFixed(0)+"k":potentialRevenue}</div><div style={{fontSize:10,color:"rgba(255,255,255,0.65)",marginTop:2,fontWeight:500}}>Potential Revenue</div></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Sub tabs */}
       <div style={{display:"flex",gap:8,marginBottom:16}}>
-        {[{id:"inactive",label:"💤 Inactive",desc:"Jo nahi aaye"},{id:"all",label:"👥 All Clients",desc:"Broadcast karo"}].map(t=>(
-          <div key={t.id} onClick={()=>setSub(t.id)} style={{flex:1,padding:"12px 10px",borderRadius:12,border:`2px solid ${sub===t.id?TP.purpleMid:TP.border}`,background:sub===t.id?TP.purpleLight:TP.surface,cursor:"pointer",textAlign:"center"}}>
+        {[{id:"inactive",label:"💤 Inactive",desc:"Not visited recently"},{id:"all",label:"👥 All Clients",desc:"Broadcast to all"}].map(t=>(
+          <div key={t.id} onClick={()=>setSub(t.id)} style={{flex:1,padding:"11px 10px",borderRadius:14,border:`1.5px solid ${sub===t.id?TP.purpleMid:TP.border}`,background:sub===t.id?TP.purpleLight:TP.surface,cursor:"pointer",textAlign:"center",boxShadow:sub===t.id?"0 2px 8px rgba(91,63,196,0.15)":"0 1px 3px rgba(0,0,0,0.04)"}}>
             <div style={{fontSize:13,fontWeight:800,color:sub===t.id?TP.purpleMid:TP.tm}}>{t.label}</div>
             <div style={{fontSize:10,color:sub===t.id?TP.purpleMid:TP.ts,marginTop:2}}>{t.desc}</div>
           </div>
@@ -229,7 +251,11 @@ function ReengagementTab({customers}){
           </div>
         )}
         {lost.length===0
-          ?<div style={{background:TP.surface,border:`2px dashed ${TP.border}`,borderRadius:14,padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>🎉</div><div style={{fontWeight:800,fontSize:15,color:TP.tm}}>Sab active hain!</div></div>
+          ?<div style={{background:"#fff",border:"1.5px dashed #ddd6fe",borderRadius:20,padding:"36px 20px",textAlign:"center"}}>
+          <div style={{fontSize:52,marginBottom:12}}>🎉</div>
+          <div style={{fontSize:15,fontWeight:800,color:TP.text,marginBottom:4,letterSpacing:"-0.2px"}}>Great News!</div>
+          <div style={{fontSize:12,color:TP.ts,lineHeight:1.6}}>No inactive clients found.<br/>Your client retention is excellent.</div>
+        </div>
           :<div style={{display:"flex",flexDirection:"column",gap:10}}>
             {lost.map(c=>{
               const isSent=sentIds.includes(c.id);const isSel=selInactive.includes(c.id);
@@ -315,24 +341,46 @@ function BirthdayTab({customers}){
   const bc={all:customers.filter(c=>getBirthdayInfo(c.dob||c.birthday)).length,male:customers.filter(c=>getBirthdayInfo(c.dob||c.birthday)&&c.gender==="male").length,female:customers.filter(c=>getBirthdayInfo(c.dob||c.birthday)&&c.gender==="female").length};
   function bdayMsg(c){if(c.bdayInfo.urgency==="passed")return `🎂 *Belated Birthday, ${c.name}!*\n\nThodi der se sahi, par dil se! 🙏\n\n🎁 Next visit pe *20% OFF*!\n\n_With love! 💈_`;return `🎂 *Happy Birthday, ${c.name}!* 🎉\n\nAaj ka din aapka hai! 🥳\n\n🎁 Free Haircut OR 25% OFF!\nSirf birthday month mein!\n\nReply *BDAY*\n\n_Khush raho! 💈_`;}
   return(
-    <div style={{padding:"16px 16px 80px"}}>
-      <GenderFilter value={gf} onChange={setGf} counts={bc}/>
-      <div style={{background:`linear-gradient(135deg,${TP.purpleLight},${TP.border})`,border:`2px solid ${TP.border}`,borderRadius:14,padding:"16px",marginBottom:16}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <div style={{fontWeight:900,fontSize:15,color:TP.purpleMid}}>🎂 Birthday Calendar</div>
-          <div style={{background:TP.purpleMid,color:"#fff",fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:20}}>{wb.length} upcoming</div>
-        </div>
-        <div style={{display:"flex",gap:8}}>
-          {[{l:"Aaj",u:"today",c:TP.rt},{l:"3 Din",u:"soon",c:TP.ot},{l:"Is Hafte",u:"week",c:TP.gd},{l:"Is Mahine",u:"month",c:TP.purpleMid}].map(s=>(
-            <div key={s.l} style={{flex:1,background:"rgba(255,255,255,0.7)",borderRadius:10,padding:"8px 4px",textAlign:"center"}}>
-              <div style={{fontWeight:900,fontSize:18,color:s.c}}>{wb.filter(c=>c.bdayInfo.urgency===s.u).length}</div>
-              <div style={{fontSize:9,color:TP.tm,fontWeight:700,marginTop:2}}>{s.l}</div>
-            </div>
-          ))}
-        </div>
+    <div style={{padding:"16px 16px 80px",background:TP.bg}}>
+      {/* Hero Banner */}
+      <div style={{background:"linear-gradient(135deg,#f0eeff,#e4dcff)",border:"1px solid #ddd6fe",borderRadius:20,padding:"18px",marginBottom:18,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",fontSize:80,opacity:0.25,pointerEvents:"none"}}>🎂</div>
+        <div style={{fontSize:17,fontWeight:800,color:"#2d1b69",letterSpacing:"-0.3px",marginBottom:5}}>Birthday Campaigns</div>
+        <div style={{fontSize:12,color:"#6b5fa0",lineHeight:1.6,marginBottom:14}}>Celebrate your clients' special days{"
+"}and build stronger relationships.</div>
+        <div onClick={()=>{}} style={{background:"#5b3fc4",color:"#fff",borderRadius:24,padding:"9px 20px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:6,cursor:"pointer"}}>Create Birthday Offer ›</div>
       </div>
+
+      {/* Upcoming header */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{fontSize:14,fontWeight:800,color:TP.text,letterSpacing:"-0.2px"}}>Upcoming Birthdays</div>
+        <div style={{fontSize:12,color:TP.purpleMid,fontWeight:600,cursor:"pointer"}}>View All</div>
+      </div>
+
+      {/* 4 stat boxes */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:7,marginBottom:16}}>
+        {[
+          {l:"Today",u:"today",bg:"#f0fdf4",border:"#bbf7d0",icon:"🎁"},
+          {l:"Next 3 Days",u:"soon",bg:"#fff7ed",border:"#fed7aa",icon:"📅"},
+          {l:"This Week",u:"week",bg:"#eff6ff",border:"#bfdbfe",icon:"📅"},
+          {l:"This Month",u:"month",bg:"#f5f3ff",border:"#ddd6fe",icon:"📅"},
+        ].map(s=>(
+          <div key={s.l} style={{background:s.bg,borderRadius:12,padding:"10px 4px",textAlign:"center",border:`1px solid ${s.border}`}}>
+            <div style={{fontSize:16,marginBottom:5}}>{s.icon}</div>
+            <div style={{fontSize:18,fontWeight:800,color:TP.text,lineHeight:1}}>{wb.filter(c=>c.bdayInfo.urgency===s.u).length}</div>
+            <div style={{fontSize:8,color:TP.ts,marginTop:4,fontWeight:600,lineHeight:1.2}}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      <GenderFilter value={gf} onChange={setGf} counts={bc}/>
       {wb.length===0
-        ?<div style={{background:TP.surface,border:`2px dashed ${TP.border}`,borderRadius:14,padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>🎂</div><div style={{fontWeight:800,fontSize:15,color:TP.tm}}>Abhi koi birthday nahi</div><div style={{fontSize:12,color:TP.ts,marginTop:4}}>Customers ka DOB add karo</div></div>
+        ?<div style={{background:TP.surface,border:"1.5px dashed #ddd6fe",borderRadius:20,padding:"36px 20px",textAlign:"center"}}>
+          <div style={{fontSize:52,marginBottom:12}}>🎁</div>
+          <div style={{fontSize:15,fontWeight:800,color:TP.text,marginBottom:6,letterSpacing:"-0.2px"}}>No Upcoming Birthdays</div>
+          <div style={{fontSize:12,color:TP.ts,lineHeight:1.6,marginBottom:16}}>Add customer birth dates to start<br/>automatic birthday campaigns.</div>
+          <div style={{display:"inline-flex",alignItems:"center",gap:6,border:"1.5px solid #ddd6fe",borderRadius:24,padding:"10px 22px",fontSize:13,fontWeight:700,color:TP.purpleMid,cursor:"pointer",background:"#fff"}}>➕ Add Birthday</div>
+        </div>
         :<div style={{display:"flex",flexDirection:"column",gap:10}}>
           {wb.map(c=>{const us=US[c.bdayInfo.urgency];const isSent=sentIds.includes(c.id);const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||TP.purpleMid;return(
             <div key={c.id} style={{background:TP.surface,border:`2px solid ${isSent?TP.gm:us.border}`,borderRadius:14,padding:"14px"}}>
@@ -346,7 +394,7 @@ function BirthdayTab({customers}){
               </div>
               {isSent
                 ?<div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:10,padding:"10px",textAlign:"center",fontSize:12,fontWeight:800,color:TP.gd}}>✅ Birthday wish bhej diya!</div>
-                :<button onClick={()=>setWaModal({customer:c,message:bdayMsg(c)})} style={{width:"100%",padding:"11px",background:c.bdayInfo.urgency==="today"?"linear-gradient(135deg,#f59e0b,#ef4444)":TP.wa,border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>{c.bdayInfo.urgency==="today"?"🎂 Aaj ZAROOR Wish Karo!":"💬 Birthday Wish + Offer Bhejo"}</button>
+                :<button onClick={()=>setWaModal({customer:c,message:bdayMsg(c)})} style={{width:"100%",padding:"11px",background:c.bdayInfo.urgency==="today"?"linear-gradient(135deg,#f59e0b,#ef4444)":TP.wa,border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>{c.bdayInfo.urgency==="today"?"🎂 Wish Today!":"💬 Send Birthday Wish + Offer"}</button>
               }
             </div>
           );})}
@@ -368,29 +416,52 @@ function CampaignsTab({customers}){
   const filtered=customers.filter(c=>tTag==="All"?true:c.tag===tTag).filter(c=>tGender==="all"?true:c.gender===tGender).filter(c=>lvF===0?true:getLV(c)>=lvF);
   const gC={all:customers.filter(c=>(tTag==="All"?true:c.tag===tTag)&&(lvF===0?true:getLV(c)>=lvF)).length,male:customers.filter(c=>(tTag==="All"?true:c.tag===tTag)&&c.gender==="male"&&(lvF===0?true:getLV(c)>=lvF)).length,female:customers.filter(c=>(tTag==="All"?true:c.tag===tTag)&&c.gender==="female"&&(lvF===0?true:getLV(c)>=lvF)).length};
   const cats=[...new Set(CAMPAIGNS.map(c=>c.category))];
+  const [catFilter,setCatFilter]=useState("All");
+  const allCats=["All",...new Set(CAMPAIGNS.map(c=>c.category))];
+  const filteredCamps=catFilter==="All"?CAMPAIGNS:CAMPAIGNS.filter(c=>c.category===catFilter);
+
   return(
-    <div style={{padding:"16px 16px 80px"}}>
+    <div style={{padding:"16px 16px 80px",background:TP.bg}}>
       {!sel
         ?(<>
-          <div style={{fontWeight:800,fontSize:14,color:TP.tm,marginBottom:4}}>Ready-made Templates</div>
-          <div style={{fontSize:12,color:TP.ts,marginBottom:16}}>Ek tap mein festival offers bhejo</div>
-          {cats.map(cat=>(<div key={cat} style={{marginBottom:20}}>
-            <div style={{fontSize:10,fontWeight:800,color:TP.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>{cat}</div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {CAMPAIGNS.filter(c=>c.category===cat).map(camp=>(
-                <div key={camp.id} onClick={()=>{setSel(camp);setCMsg(camp.template);}} style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,padding:"14px",cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
-                  <div style={{width:48,height:48,borderRadius:14,background:camp.colorLight,border:`2px solid ${camp.colorBorder}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{camp.icon}</div>
-                  <div style={{flex:1}}><div style={{fontWeight:800,fontSize:14,color:TP.text}}>{camp.name}</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>{camp.desc}</div></div>
-                  <div style={{color:TP.tf,fontSize:18}}>›</div>
+          {/* Hero Banner */}
+          <div style={{background:"linear-gradient(135deg,#f0fdf4,#d1fae5)",border:"1px solid #a7f3d0",borderRadius:20,padding:"18px",marginBottom:18,position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",fontSize:80,opacity:0.2,pointerEvents:"none"}}>📣</div>
+            <div style={{fontSize:17,fontWeight:800,color:"#064e3b",letterSpacing:"-0.3px",marginBottom:5}}>Campaign Center</div>
+            <div style={{fontSize:12,color:"#065f46",lineHeight:1.6,marginBottom:14}}>Create and send WhatsApp campaigns<br/>to engage clients and boost bookings.</div>
+            <div style={{background:"#5b3fc4",color:"#fff",borderRadius:24,padding:"9px 20px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:6,cursor:"pointer",boxShadow:"0 4px 12px rgba(91,63,196,0.3)"}}>New Campaign +</div>
+          </div>
+
+          {/* Category filter */}
+          <div style={{fontSize:14,fontWeight:800,color:TP.text,marginBottom:10,letterSpacing:"-0.2px"}}>Campaign Categories</div>
+          <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:6,marginBottom:16,WebkitOverflowScrolling:"touch"}}>
+            {allCats.map(c=>(
+              <button key={c} onClick={()=>setCatFilter(c)} style={{background:catFilter===c?"#5b3fc4":"#fff",color:catFilter===c?"#fff":"#374151",border:`1.5px solid ${catFilter===c?"#5b3fc4":"#e5e7eb"}`,borderRadius:20,padding:"7px 14px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0}}>{c}</button>
+            ))}
+          </div>
+
+          {/* Templates */}
+          <div style={{fontSize:14,fontWeight:800,color:TP.text,marginBottom:10,letterSpacing:"-0.2px"}}>Ready-made Templates</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {filteredCamps.map(camp=>(
+              <div key={camp.id} onClick={()=>{setSel(camp);setCMsg(camp.template);}} style={{background:TP.surface,border:"1.5px solid #f1f0f5",borderRadius:16,padding:"14px",cursor:"pointer",display:"flex",alignItems:"center",gap:12,boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+                <div style={{width:48,height:48,borderRadius:14,background:camp.colorLight,border:`1px solid ${camp.colorBorder}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{camp.icon}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontWeight:800,fontSize:13,color:TP.text,letterSpacing:"-0.2px"}}>{camp.name}</div>
+                  <div style={{fontSize:11,color:TP.ts,marginTop:3,lineHeight:1.4}}>{camp.desc}</div>
+                  <div style={{fontSize:10,color:TP.purpleMid,fontWeight:700,marginTop:5}}>Reach: {customers.length} Clients</div>
                 </div>
-              ))}
-            </div>
-          </div>))}
-          <div style={{fontSize:10,fontWeight:800,color:TP.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>Custom</div>
-          <div style={{background:TP.surface,border:`2px dashed ${TP.border}`,borderRadius:14,padding:"20px",textAlign:"center"}}>
-            <div style={{fontSize:28,marginBottom:8}}>✍️</div>
-            <div style={{fontWeight:800,fontSize:14,color:TP.tm,marginBottom:4}}>Apna message likho</div>
-            <button onClick={()=>{const d=`🙏 *Namaste {name}!*\n\n[Message yahan]\n\n📅 Reply *BOOK*\n\n_💈_`;setSel({id:"custom",name:"Custom Campaign",icon:"✍️",color:TP.purpleMid,colorLight:TP.purpleLight,colorBorder:TP.border,template:d,desc:"Custom"});setCMsg(d);}} style={{padding:"10px 24px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>✍️ Custom Message Likho</button>
+                <div style={{background:"#f5f3ff",border:"1.5px solid #ddd6fe",borderRadius:10,padding:"7px 10px",fontSize:11,fontWeight:700,color:"#5b3fc4",flexShrink:0}}>Use ›</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Custom */}
+          <div style={{background:TP.surface,border:"2px dashed #ddd6fe",borderRadius:18,padding:"24px 20px",textAlign:"center",marginTop:12}}>
+            <div style={{width:48,height:48,borderRadius:14,background:"#f5f3ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,margin:"0 auto 12px"}}>✍️</div>
+            <div style={{fontSize:14,fontWeight:800,color:TP.text,marginBottom:4,letterSpacing:"-0.2px"}}>Write Your Own</div>
+            <div style={{fontSize:11,color:TP.ts,marginBottom:16,lineHeight:1.5}}>Create a custom message for any occasion</div>
+            <button onClick={()=>{const d=`🙏 *Hello {name}!*\n\n[Your message here]\n\n📅 Reply *BOOK*\n\n_See you soon! 💈_`;setSel({id:"custom",name:"Custom Campaign",icon:"✍️",color:TP.purpleMid,colorLight:TP.purpleLight,colorBorder:TP.border,template:d,desc:"Custom"});setCMsg(d);}} style={{background:"linear-gradient(135deg,#3d2490,#5b3fc4)",color:"#fff",border:"none",borderRadius:14,padding:"12px 28px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",letterSpacing:"-0.1px"}}>✍️ Write Custom Message</button>
           </div>
         </>)
         :(<>
@@ -479,33 +550,33 @@ export default function EngagementCenter({currentUser}){
   }
 
   return(
-    <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"system-ui,-apple-system,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
-      {/* White Header */}
-      <div style={{background:"#fff",padding:"13px 18px 11px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
+    <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
+      {/* Header */}
+      <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
         <div>
-          <div style={{fontWeight:800,fontSize:15,color:"#1a0a4a"}}>Engagement</div>
-          <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>Campaigns & re-engage</div>
+          <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Engagement</div>
+          <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Campaigns & Re-engage</div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
-          {lostCount>0&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:20,border:"1px solid #fde68a"}}>{lostCount} inactive</div>}
-          {bdayCount>0&&<div style={{background:"#fff0f0",color:"#dc2626",fontSize:11,fontWeight:800,padding:"3px 10px",borderRadius:20,border:"1px solid #fca5a5"}}>{bdayCount} bdays</div>}
+          {lostCount>0&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #fde68a"}}>{lostCount} inactive</div>}
+          {bdayCount>0&&<div style={{background:"#fff5f5",color:"#dc2626",fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #fca5a5"}}>{bdayCount} bdays</div>}
         </div>
       </div>
 
-      {/* Tab bar */}
-      <div style={{background:"#fff",borderBottom:"0.5px solid #e0d8ff",display:"flex",flexShrink:0}}>
+      {/* Premium Tab bar */}
+      <div style={{background:"#fff",borderBottom:"1px solid #f1f0f5",display:"flex",padding:"0 8px",flexShrink:0}}>
         {TABS.map(t=>(
-          <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`3px solid ${tab===t.id?TP.purpleMid:"transparent"}`,background:tab===t.id?TP.purpleLight:"transparent",transition:"background 0.15s"}}>
+          <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"11px 4px 9px",display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`,transition:"all 0.2s"}}>
             <span style={{fontSize:18}}>{t.icon}</span>
-            <span style={{fontSize:11,fontWeight:800,color:tab===t.id?TP.purpleMid:TP.tf}}>{t.label}</span>
-            {t.id==="reengagement"&&lostCount>0&&<span style={{fontSize:9,background:TP.yellow,color:TP.yt,padding:"1px 6px",borderRadius:20,fontWeight:800}}>{lostCount}</span>}
-            {t.id==="birthday"&&bdayCount>0&&<span style={{fontSize:9,background:TP.red,color:TP.rt,padding:"1px 6px",borderRadius:20,fontWeight:800}}>{bdayCount}</span>}
+            <span style={{fontSize:11,fontWeight:tab===t.id?800:600,color:tab===t.id?"#5b3fc4":"#9ca3af",letterSpacing:"-0.1px"}}>{t.label}</span>
+            {t.id==="reengagement"&&lostCount>0&&<span style={{fontSize:8,background:"#fef9c3",color:"#a16207",padding:"1px 6px",borderRadius:20,fontWeight:800,marginTop:-2}}>{lostCount}</span>}
+            {t.id==="birthday"&&bdayCount>0&&<span style={{fontSize:8,background:"#fff5f5",color:"#dc2626",padding:"1px 6px",borderRadius:20,fontWeight:800,marginTop:-2}}>{bdayCount}</span>}
           </div>
         ))}
       </div>
 
       {/* Content */}
-      <div style={{flex:1,overflowY:"auto"}}>
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
         {tab==="reengagement"&&<ReengagementTab customers={customers}/>}
         {tab==="birthday"&&<BirthdayTab customers={customers}/>}
         {tab==="campaigns"&&<CampaignsTab customers={customers}/>}
@@ -513,3 +584,4 @@ export default function EngagementCenter({currentUser}){
     </div>
   );
 }
+ 
