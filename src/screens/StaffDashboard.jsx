@@ -255,13 +255,13 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
         </div>
         {/* Header */}
         <div style={{padding:"10px 14px",borderBottom:`1px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{fontSize:13,fontWeight:800,color:TP.text}}>Mera Kaam</div>
+          <div style={{fontSize:13,fontWeight:800,color:TP.text}}>Work Entries</div>
           <button onClick={()=>setShowAddLog(true)} style={{background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add Entry</button>
         </div>
         {/* Entries */}
         <div style={{padding:"8px 0"}}>
           {filtered.length===0
-            ?<div style={{textAlign:"center",color:TP.ts,fontSize:13,padding:"24px 0"}}>Koi entry nahi — add karo!</div>
+            ?<div style={{textAlign:"center",color:TP.ts,fontSize:13,padding:"24px 0"}}>No entries yet</div>
             :filtered.map((log,i)=>{
               const cc=CARD_COLORS[i%CARD_COLORS.length];
               return(
