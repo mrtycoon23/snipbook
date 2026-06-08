@@ -75,7 +75,7 @@ function LVFilter({value,onChange,total,match}){
           <input type="number" min={0} max={365} value={value===0?"":value} onChange={e=>onChange(parseInt(e.target.value)||0)} placeholder="0 = show all"
             style={{width:"100%",padding:"10px 44px 10px 13px",border:`2px solid ${TP.border}`,borderRadius:10,fontSize:15,fontWeight:800,fontFamily:"inherit",outline:"none",boxSizing:"border-box",background:"#fff",color:TP.text}}
             onFocus={e=>e.target.style.borderColor=TP.purpleMid} onBlur={e=>e.target.style.borderColor=TP.border}/>
-          <div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:12,fontWeight:700,color:TP.ts}}>din</div>
+          <div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:12,fontWeight:700,color:TP.ts}}>days</div>
         </div>
         {value>0&&<button onClick={()=>onChange(0)} style={{padding:"10px 14px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:10,fontSize:12,fontWeight:700,color:TP.ts,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>✕</button>}
       </div>
@@ -548,7 +548,19 @@ export default function EngagementCenter({currentUser}){
 
   return(
     <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
-      {/* Tab bar only - no duplicate header */}
+      {/* White Header */}
+      <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
+        <div>
+          <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Engagement</div>
+          <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Campaigns & Re-engage</div>
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          {lostCount>0&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #fde68a"}}>{lostCount} inactive</div>}
+          {bdayCount>0&&<div style={{background:"#fff5f5",color:"#dc2626",fontSize:10,fontWeight:700,padding:"4px 10px",borderRadius:20,border:"1px solid #fca5a5"}}>{bdayCount} bdays</div>}
+        </div>
+      </div>
+
+      {/* Premium Tab bar */}
       <div style={{background:"#fff",borderBottom:"1px solid #f1f0f5",display:"flex",padding:"0 8px",flexShrink:0}}>
         {TABS.map(t=>(
           <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"11px 4px 9px",display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`,transition:"all 0.2s"}}>
