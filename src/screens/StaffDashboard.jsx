@@ -193,85 +193,128 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
   const monthPresent=Object.entries(attendance).filter(([d,m])=>d>=thisMonthStart&&m[staff.id]).length;
   const monthAbsent=new Date().getDate()-monthPresent;
 
+  const N={white:"#fff",bg:"#f8f7ff",border:"#f1f0f5",text:"#0f0a2e",muted:"#6b7280",mid:"#5b3fc4"};
+  const attRate=monthPresent+monthAbsent>0?Math.round((monthPresent/(monthPresent+monthAbsent))*100):0;
+  const monthClients=useMemo(()=>new Set(logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).map(l=>l.clientName)).size,[logs,staff.id]);
+  const monthLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).length;
+  const monthRevenue=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).reduce((s,l)=>s+l.amount,0);
+  const heatDays=[];
+  for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);heatDays.push({ds,present:!!(attendance[ds]||{})[staff.id],future:ds>today});}
+
   return(
-    <div style={{padding:"14px 16px 80px"}}>
-      {/* Attendance card */}
-      <div style={{background:isPresent?TP.gl:TP.red,border:`2px solid ${isPresent?TP.gm:TP.rb}`,borderRadius:16,padding:"16px",marginBottom:14}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+    <div style={{padding:"12px 14px 80px",background:N.bg}}>
+      {/* White Hero Card */}
+      <div style={{background:N.white,borderRadius:18,padding:"14px",border:"1px solid #e5e7eb",boxShadow:"0 2px 12px rgba(0,0,0,0.05)",marginBottom:10,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:-18,right:-18,width:80,height:80,borderRadius:"50%",background:"#f5f3ff",opacity:0.8}}/>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
           <div>
-            <div style={{fontWeight:900,fontSize:15,color:isPresent?TP.gd:TP.rt}}>{isPresent?"✅ Present Today!":"❌ Absent Today"}</div>
-            <div style={{fontSize:12,color:isPresent?TP.gd:TP.rt,marginTop:3}}>{new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</div>
+            <div style={{fontSize:10,color:"#9b8ec4",letterSpacing:"0.5px"}}>{new Date().toLocaleDateString("en-IN",{month:"long",year:"numeric"}).toUpperCase()}</div>
+            <div style={{fontSize:14,fontWeight:800,color:N.text,marginTop:2}}>Attendance Overview</div>
           </div>
-          <div onClick={toggleAttendance} style={{width:56,height:28,borderRadius:14,background:isPresent?TP.green:"#d1d5db",position:"relative",cursor:"pointer",transition:"background 0.2s",flexShrink:0}}>
-            <div style={{width:22,height:22,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:isPresent?31:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:24,fontWeight:800,color:attRate>=80?"#16a34a":attRate>=60?"#d97706":"#dc2626",lineHeight:1}}>{attRate}%</div>
+            <div style={{fontSize:9,color:"#9ca3af",marginTop:2}}>att. rate</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:12,marginBottom:12}}>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,gap:6}}>
+            <svg width="76" height="76" viewBox="0 0 76 76">
+              <circle cx="38" cy="38" r="28" fill="none" stroke="#f1f0f5" strokeWidth="9"/>
+              <circle cx="38" cy="38" r="28" fill="none" stroke="#22c55e" strokeWidth="9"
+                strokeDasharray={`${(monthPresent/Math.max(monthPresent+monthAbsent,1))*176} 176`}
+                strokeLinecap="round" transform="rotate(-90 38 38)"/>
+              <circle cx="38" cy="38" r="28" fill="none" stroke="#f87171" strokeWidth="9"
+                strokeDasharray={`${(monthAbsent/Math.max(monthPresent+monthAbsent,1))*176} 176`}
+                strokeDashoffset={`-${(monthPresent/Math.max(monthPresent+monthAbsent,1))*176}`}
+                strokeLinecap="round" transform="rotate(-90 38 38)"/>
+              <text x="38" y="34" textAnchor="middle" fill={N.text} fontSize="10" fontWeight="800" fontFamily="system-ui">{monthPresent}/{monthAbsent}</text>
+              <text x="38" y="46" textAnchor="middle" fill="#9ca3af" fontSize="7" fontFamily="system-ui">P / A</text>
+            </svg>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,width:86}}>
+              {[{bg:"#f0fdf4",c:"#16a34a",v:monthPresent,l:"Present"},{bg:"#fff5f5",c:"#dc2626",v:monthAbsent,l:"Absent"},{bg:"#eff6ff",c:"#2563eb",v:monthClients,l:"Clients"},{bg:"#f5f3ff",c:N.mid,v:monthLogs,l:"Logs"}].map(s=>(
+                <div key={s.l} style={{background:s.bg,borderRadius:7,padding:"5px 4px",textAlign:"center"}}>
+                  <div style={{fontSize:12,fontWeight:800,color:s.c,lineHeight:1}}>{s.v}</div>
+                  <div style={{fontSize:7,color:"#6b7280",marginTop:2}}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{flex:1,display:"flex",flexDirection:"column",gap:8}}>
+            <div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:3}}>
+                {["M","T","W","T","F","S","S"].map((l,i)=><div key={i} style={{fontSize:7,color:"#9ca3af",textAlign:"center"}}>{l}</div>)}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+                {heatDays.map((d,i)=>(
+                  <div key={i} style={{height:16,borderRadius:4,background:d.future?"#f1f0f5":d.present?"#bbf7d0":"#fca5a5"}}/>
+                ))}
+              </div>
+            </div>
+            <div style={{height:1,background:"#f1f0f5"}}/>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
+              <div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:9,padding:"8px"}}>
+                <div style={{fontSize:13,fontWeight:800,color:"#16a34a",lineHeight:1}}>{fc(monthRevenue)}</div>
+                <div style={{fontSize:9,color:"#6b7280",marginTop:2}}>Revenue</div>
+              </div>
+              <div style={{background:"#f5f3ff",border:"1px solid #ddd6fe",borderRadius:9,padding:"8px"}}>
+                <div style={{fontSize:13,fontWeight:800,color:N.mid,lineHeight:1}}>{monthLogs} logs</div>
+                <div style={{fontSize:9,color:"#6b7280",marginTop:2}}>Work Entries</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Monthly stats */}
-      <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,padding:"14px",marginBottom:14}}>
-        <div style={{fontWeight:800,fontSize:13,color:TP.text,marginBottom:10}}>📅 This Month's Attendance</div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          <div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:11,padding:"12px",textAlign:"center"}}>
-            <div style={{fontSize:28,fontWeight:900,color:TP.gd}}>{monthPresent}</div>
-            <div style={{fontSize:11,fontWeight:700,color:TP.gd,marginTop:2}}>Present Days</div>
-          </div>
-          <div style={{background:TP.red,border:`1.5px solid ${TP.rb}`,borderRadius:11,padding:"12px",textAlign:"center"}}>
-            <div style={{fontSize:28,fontWeight:900,color:TP.rt}}>{monthAbsent}</div>
-            <div style={{fontSize:11,fontWeight:700,color:TP.rt,marginTop:2}}>Absent Days</div>
+      {/* Present/Absent toggle */}
+      <div style={{background:isPresent?"#f0fdf4":"#fff5f5",border:`1px solid ${isPresent?"#bbf7d0":"#fca5a5"}`,borderRadius:12,padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"center",gap:9}}>
+          <div style={{width:28,height:28,borderRadius:"50%",background:isPresent?"#22c55e":"#f87171",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",flexShrink:0}}>{isPresent?"✓":"✗"}</div>
+          <div>
+            <div style={{fontSize:12,fontWeight:800,color:isPresent?"#15803d":"#b91c1c"}}>{isPresent?"Present Today 🎉":"Absent Today"}</div>
+            <div style={{fontSize:9,color:isPresent?"#16a34a":"#dc2626",marginTop:1}}>{new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</div>
           </div>
         </div>
-        {!isPresent&&(
-          <div style={{marginTop:12}}>
-            <div style={{fontSize:12,fontWeight:800,color:TP.ts,marginBottom:6}}>🔒 Reason for absence (only you can see):</div>
-            <input style={{...IS,background:TP.purpleLight,borderColor:TP.border}} placeholder="Add reason — owner won't see this..." value={(absentNotes||{})[today]||""} onChange={async e=>{
-              setAbsentNotes(prev=>({...prev,[today]:e.target.value}));
-              if(salonId)await supabase.from("attendance").upsert({
-                salon_id:salonId,staff_id:staff.id,date:today,is_present:false,absent_reason:e.target.value
-              },{onConflict:"salon_id,staff_id,date"});
-            }}/>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{fontSize:9,color:"#6b7280"}}>Mark Absent</span>
+          <div onClick={toggleAttendance} style={{width:34,height:19,borderRadius:10,background:isPresent?"#22c55e":"#d1d5db",position:"relative",cursor:"pointer",flexShrink:0}}>
+            <div style={{width:13,height:13,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:isPresent?18:3,transition:"left 0.2s",boxShadow:"0 1px 2px rgba(0,0,0,0.15)"}}/>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Work log section */}
-      <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,overflow:"hidden"}}>
-        {/* Tab bar */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",background:TP.sub,borderBottom:`2px solid ${TP.border}`}}>
+      {!isPresent&&(
+        <div style={{background:N.white,border:"1px solid #f1f0f5",borderRadius:12,padding:"12px 14px",marginBottom:10}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#6b7280",marginBottom:6}}>🔒 Reason for absence (only you can see):</div>
+          <input style={{...IS,background:"#f8f7ff",borderColor:"#e0d8ff"}} placeholder="Add reason — owner won't see this..." value={(absentNotes||{})[today]||""} onChange={async e=>{
+            setAbsentNotes(prev=>({...prev,[today]:e.target.value}));
+            if(salonId)await supabase.from("attendance").upsert({salon_id:salonId,staff_id:staff.id,date:today,is_present:false,absent_reason:e.target.value},{onConflict:"salon_id,staff_id,date"});
+          }}/>
+        </div>
+      )}
+
+      {/* Work Entries */}
+      <div style={{background:N.white,borderRadius:12,border:"1px solid #f1f0f5",overflow:"hidden"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",background:"#f8f7ff",borderBottom:"1px solid #f1f0f5"}}>
           {[{k:"today",l:"Today"},{k:"week",l:"This Week"},{k:"month",l:"This Month"}].map(t=>(
-            <button key={t.k} onClick={()=>setWorkTab(t.k)} style={{padding:"10px 0",border:"none",background:workTab===t.k?TP.purple:"transparent",color:workTab===t.k?"#fff":TP.ts,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>
+            <button key={t.k} onClick={()=>setWorkTab(t.k)} style={{padding:"7px 0",border:"none",background:workTab===t.k?"#5b3fc4":"transparent",color:workTab===t.k?"#fff":"#9ca3af",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>
           ))}
         </div>
-        {/* Stats */}
-        <div style={{display:"grid",gridTemplateColumns:showRevenue?"1fr 1fr":"1fr",borderBottom:`2px solid ${TP.border}`}}>
-          <div style={{padding:"12px",textAlign:"center",borderRight:showRevenue?`1px solid ${TP.border}`:"none"}}>
-            <div style={{fontSize:24,fontWeight:900,color:TP.purpleMid}}>{filtered.length}</div>
-            <div style={{fontSize:11,fontWeight:700,color:TP.ts,marginTop:2}}>Clients</div>
-          </div>
-          {showRevenue&&<div style={{padding:"12px",textAlign:"center"}}>
-            <div style={{fontSize:22,fontWeight:900,color:TP.gd}}>{fc(filtered.reduce((s,l)=>s+l.amount,0))}</div>
-            <div style={{fontSize:11,fontWeight:700,color:TP.ts,marginTop:2}}>Revenue</div>
-          </div>}
+        <div style={{padding:"9px 12px",borderBottom:"1px solid #f1f0f5"}}>
+          <div style={{fontSize:12,fontWeight:800,color:N.text}}>Work Entries</div>
         </div>
-        {/* Header */}
-        <div style={{padding:"10px 14px",borderBottom:`1px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{fontSize:13,fontWeight:800,color:TP.text}}>Work Entries</div>
-          <button onClick={()=>setShowAddLog(true)} style={{background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,color:"#fff",border:"none",borderRadius:8,padding:"6px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add Entry</button>
-        </div>
-        {/* Entries */}
-        <div style={{padding:"8px 0"}}>
+        <div>
           {filtered.length===0
-            ?<div style={{textAlign:"center",color:TP.ts,fontSize:13,padding:"24px 0"}}>No entries yet</div>
+            ?<div style={{textAlign:"center",color:"#9ca3af",fontSize:12,padding:"20px 0"}}>No entries yet</div>
             :filtered.map((log,i)=>{
               const cc=CARD_COLORS[i%CARD_COLORS.length];
               return(
-                <div key={log.id} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 14px",borderBottom:`1px solid ${TP.border}`,background:cc.cardBg}}>
-                  <div style={{width:36,height:36,borderRadius:10,background:cc.avBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:cc.avColor,flexShrink:0}}>✂️</div>
+                <div key={log.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderBottom:"1px solid #f9f9f9"}}>
+                  <div style={{width:30,height:30,borderRadius:8,background:cc.avBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>✂️</div>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:14,fontWeight:700,color:TP.text}}>{log.clientName}</div>
-                    <div style={{fontSize:11,color:cc.avColor,opacity:0.8,marginTop:2}}>{log.service} · {fd(log.date)}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:N.text}}>{log.clientName}</div>
+                    <div style={{fontSize:10,color:"#9b8ec4",marginTop:1}}>{log.service} · {fd(log.date)}</div>
                   </div>
-                  {showRevenue&&<div style={{fontSize:14,fontWeight:700,color:TP.gd}}>{fc(log.amount)}</div>}
+                  {showRevenue&&<div style={{fontSize:12,fontWeight:700,color:"#16a34a"}}>{fc(log.amount)}</div>}
                 </div>
               );
             })
