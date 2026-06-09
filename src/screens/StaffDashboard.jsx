@@ -194,12 +194,26 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
   const monthAbsent=new Date().getDate()-monthPresent;
 
   const N={white:"#fff",bg:"#f8f7ff",border:"#f1f0f5",text:"#0f0a2e",muted:"#6b7280",mid:"#5b3fc4"};
+  function svcIcon(svc){
+    const s=(svc||"").toLowerCase();
+    if(s.includes("color")||s.includes("colour"))return{icon:"🎨",bg:"#fff7ed",border:"#fed7aa",color:"#ea580c"};
+    if(s.includes("beard")||s.includes("shave"))return{icon:"🪒",bg:"#f0fdf4",border:"#bbf7d0",color:"#16a34a"};
+    if(s.includes("facial")||s.includes("face"))return{icon:"💆",bg:"#fdf4ff",border:"#e9d5ff",color:"#9333ea"};
+    if(s.includes("manicure")||s.includes("pedicure")||s.includes("nail"))return{icon:"💅",bg:"#fff1f2",border:"#fecdd3",color:"#e11d48"};
+    if(s.includes("massage"))return{icon:"🤲",bg:"#fffbeb",border:"#fde68a",color:"#d97706"};
+    if(s.includes("hair"))return{icon:"✂️",bg:"#f0eeff",border:"#ddd6fe",color:"#5b3fc4"};
+    return{icon:"✂️",bg:"#f0eeff",border:"#ddd6fe",color:"#5b3fc4"};
+  }
   const attRate=monthPresent+monthAbsent>0?Math.round((monthPresent/(monthPresent+monthAbsent))*100):0;
   const monthClients=useMemo(()=>new Set(logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).map(l=>l.clientName)).size,[logs,staff.id]);
   const monthLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).length;
   const monthRevenue=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).reduce((s,l)=>s+l.amount,0);
   const heatDays=[];
   for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);heatDays.push({ds,present:!!(attendance[ds]||{})[staff.id],future:ds>today});}
+  // Streak calculation
+  let streak=0;
+  for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);if((attendance[ds]||{})[staff.id])streak++;else if(i>0)break;}
+  const streakDays=["M","T","W","T","F","S","S"];
 
 
   return(
@@ -302,6 +316,24 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
         </div>
       </div>
 
+      {/* 🔥 Streak Banner */}
+      {streak>=3&&(
+        <div style={{background:"linear-gradient(135deg,#fff7ed,#fef3c7)",border:"1px solid #fde68a",borderRadius:14,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{fontSize:24}}>🔥</div>
+            <div>
+              <div style={{fontSize:13,fontWeight:800,color:"#78350f"}}>{streak} Day Streak!</div>
+              <div style={{fontSize:10,color:"#a16207",marginTop:1}}>Keep it up — you're on a roll!</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:4}}>
+            {Array.from({length:Math.min(streak,5)}).map((_,i)=>(
+              <div key={i} style={{width:22,height:22,borderRadius:"50%",background:"#22c55e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:"#fff",fontWeight:700}}>{streakDays[i]}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!isPresent&&(
         <div style={{background:N.white,border:"1px solid #f1f0f5",borderRadius:12,padding:"12px 14px",marginBottom:10}}>
           <div style={{fontSize:11,fontWeight:700,color:"#6b7280",marginBottom:6}}>🔒 Reason for absence (only you can see):</div>
@@ -324,17 +356,22 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
         </div>
         <div>
           {filtered.length===0
-            ?<div style={{textAlign:"center",color:"#9ca3af",fontSize:12,padding:"20px 0"}}>No entries yet</div>
+            ?<div style={{textAlign:"center",padding:"24px 16px"}}>
+              <div style={{width:52px,height:52px,borderRadius:16,background:"linear-gradient(135deg,#f0eeff,#e4dcff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,margin:"0 auto 10px"}}>✂️</div>
+              <div style={{fontSize:13,fontWeight:800,color:N.text,marginBottom:4}}>Start your day!</div>
+              <div style={{fontSize:11,color:"#9b8ec4",lineHeight:1.5}}>No work entries yet.<br/>Add your first service.</div>
+            </div>
             :filtered.map((log,i)=>{
-              const cc=CARD_COLORS[i%CARD_COLORS.length];
+              const si=svcIcon(log.service);
               return(
-                <div key={log.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderBottom:"1px solid #f9f9f9"}}>
-                  <div style={{width:30,height:30,borderRadius:8,background:cc.avBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>✂️</div>
-                  <div style={{flex:1}}>
+                <div key={log.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:"1px solid #f9f9f9",cursor:"pointer"}}>
+                  <div style={{width:32,height:32,borderRadius:9,background:si.bg,border:`1px solid ${si.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{si.icon}</div>
+                  <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:700,color:N.text}}>{log.clientName}</div>
-                    <div style={{fontSize:10,color:"#9b8ec4",marginTop:1}}>{log.service} · {fd(log.date)}</div>
+                    <div style={{fontSize:10,color:si.color,fontWeight:600,marginTop:1}}>{log.service} · {fd(log.date)}</div>
                   </div>
-                  {showRevenue&&<div style={{fontSize:12,fontWeight:700,color:"#16a34a"}}>{fc(log.amount)}</div>}
+                  {showRevenue&&<div style={{fontSize:12,fontWeight:700,color:"#16a34a",flexShrink:0}}>{fc(log.amount)}</div>}
+                  <span style={{color:"#9ca3af",fontSize:14,flexShrink:0}}>›</span>
                 </div>
               );
             })
