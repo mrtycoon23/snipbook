@@ -452,3 +452,88 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
     </div>
   );
 }
+
+export function StaffLoginPage({salonId, onLogin, onBack}){
+  const [staffList,setStaffList]=useState([]);
+  const [selectedId,setSelectedId]=useState("");
+  const [pin,setPin]=useState("");
+  const [error,setError]=useState("");
+  const [loading,setLoading]=useState(false);
+  const [loadingStaff,setLoadingStaff]=useState(true);
+
+  useEffect(()=>{
+    async function loadStaff(){
+      if(!salonId){setLoadingStaff(false);return;}
+      const {data}=await supabase.from("staff").select("*").eq("salon_id",salonId);
+      if(data&&data.length>0){
+        setStaffList(data);
+        setSelectedId(data[0].id);
+      }
+      setLoadingStaff(false);
+    }
+    loadStaff();
+  },[salonId]);
+
+  function handleLogin(){
+    if(!selectedId){setError("Staff select karo!");return;}
+    setLoading(true);setError("");
+    setTimeout(()=>{
+      const staff=staffList.find(s=>String(s.id)===String(selectedId));
+      if(staff&&staff.pin===pin){
+        onLogin({...staff,salon_id:salonId});
+      }else{
+        setError("PIN galat hai! Dobara try karo.");
+        setPin("");setLoading(false);
+      }
+    },800);
+  }
+
+  if(loadingStaff){
+    return(<div style={{minHeight:"100vh",background:"linear-gradient(135deg,#1a1a2e,#16213e)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif"}}><div style={{textAlign:"center",color:"#fff"}}><div style={{fontSize:32,marginBottom:12}}>✂️</div><div style={{fontSize:14,color:"#a0a0c0"}}>Staff load ho raha hai...</div></div></div>);
+  }
+
+  if(!salonId||staffList.length===0){
+    return(
+      <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#1a1a2e,#16213e)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"system-ui,sans-serif"}}>
+        <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>✂️ SnipBook</div>
+        <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:360,marginTop:24}}>
+          <div style={{fontWeight:900,fontSize:17,marginBottom:8,color:T.text}}>Koi staff nahi mila</div>
+          <div style={{fontSize:13,color:T.ts,marginBottom:20}}>Is salon mein koi staff registered nahi hai.</div>
+          <button onClick={onBack} style={{width:"100%",padding:"13px",background:T.dark,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>← Back to Login</button>
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#1a1a2e,#16213e)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"system-ui,sans-serif"}}>
+      <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>✂️ SnipBook</div>
+      <div style={{fontSize:13,color:"#a0a0c0",marginBottom:32}}>Staff Portal</div>
+
+      <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:360,boxShadow:"0 16px 48px rgba(0,0,0,0.3)"}}>
+        <div style={{fontWeight:900,fontSize:17,marginBottom:3,color:T.text}}>Staff Login</div>
+        <div style={{fontSize:13,color:T.ts,marginBottom:20}}>Apna naam aur PIN daalo</div>
+
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:13,fontWeight:800,color:T.tm,marginBottom:6}}>Apna Naam</div>
+          <select style={{...IS,cursor:"pointer"}} value={selectedId} onChange={e=>{setSelectedId(e.target.value);setError("");}}>
+            {staffList.map(s=><option key={s.id} value={s.id}>{s.name} — {s.role}</option>)}
+          </select>
+        </div>
+
+        <div style={{marginBottom:18}}>
+          <div style={{fontSize:13,fontWeight:800,color:T.tm,marginBottom:6}}>4-digit PIN</div>
+          <input style={IS} type="password" placeholder="••••" maxLength={4} value={pin} onChange={e=>{setPin(e.target.value);setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
+        </div>
+
+        {error&&<div style={{background:T.red,border:`1.5px solid ${T.rb}`,borderRadius:9,padding:"9px 12px",marginBottom:14,fontSize:12,color:T.rt,fontWeight:600}}>⚠️ {error}</div>}
+
+        <button onClick={handleLogin} disabled={loading} style={{width:"100%",padding:"13px",background:loading?"#86efac":T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer",marginBottom:12}}>
+          {loading?"Logging in...":"Login Karo →"}
+        </button>
+
+        <button onClick={onBack} style={{width:"100%",background:"none",border:"none",color:T.ts,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>← Back to Login</button>
+      </div>
+    </div>
+  );
+}
