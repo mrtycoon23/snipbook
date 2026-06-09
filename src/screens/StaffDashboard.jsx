@@ -167,9 +167,249 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
 }
 
 // ─── Attendance Tab ───────────────────────────────────────────────────────────
+
 function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,absentNotes,setAbsentNotes,salonId}){
   const [workTab,setWorkTab]=useState("today");
   const [showAddLog,setShowAddLog]=useState(false);
+  const [selectedLog,setSelectedLog]=useState(null);
+  const isPresent=!!(attendance[today]||{})[staff.id];
+
+  async function toggleAttendance(){
+    const newVal=!isPresent;
+    setAttendance(prev=>{const dm={...(prev[today]||{})};dm[staff.id]=newVal;return{...prev,[today]:dm};});
+    if(salonId){
+      await supabase.from("attendance").upsert({
+        salon_id:salonId,staff_id:staff.id,date:today,is_present:newVal,
+        absent_reason:newVal?null:((absentNotes||{})[today]||null)
+      },{onConflict:"salon_id,staff_id,date"});
+    }
+  }
+
+  function addLog(data){setLogs(prev=>[...prev,data]);}
+
+  const filtered=useMemo(()=>{
+    const cutoff=workTab==="today"?today:workTab==="week"?thisWeekStart:thisMonthStart;
+    return logs.filter(l=>l.staffId===staff.id&&l.date>=cutoff).sort((a,b)=>b.date.localeCompare(a.date));
+  },[logs,workTab,staff.id]);
+
+  const monthPresent=Object.entries(attendance).filter(([d,m])=>d>=thisMonthStart&&m[staff.id]).length;
+  const monthAbsent=new Date().getDate()-monthPresent;
+  let streak=0;
+  for(let i=0;i<30;i++){const dd=new Date();dd.setDate(dd.getDate()-i);const ds=dd.toISOString().slice(0,10);if((attendance[ds]||{})[staff.id])streak++;else if(i>0)break;}
+  const attRate=monthPresent+monthAbsent>0?Math.round((monthPresent/(monthPresent+monthAbsent))*100):0;
+  const monthClients=useMemo(()=>new Set(logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).map(l=>l.clientName)).size,[logs,staff.id]);
+  const monthLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).length;
+  const monthRevenue=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).reduce((s,l)=>s+l.amount,0);
+  const heatDays=[];
+  for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);heatDays.push({ds,present:!!(attendance[ds]||{})[staff.id],future:ds>today});}
+  const N={white:"#fff",bg:"#f8f7ff",border:"#f1f0f5",text:"#0f0a2e",muted:"#6b7280",mid:"#5b3fc4"};
+  function svcIcon(svc){const s=(svc||"").toLowerCase();if(s.includes("color")||s.includes("colour"))return{icon:"🎨",bg:"#fff7ed",border:"#fed7aa",color:"#ea580c"};if(s.includes("beard")||s.includes("shave"))return{icon:"🪒",bg:"#f0fdf4",border:"#bbf7d0",color:"#16a34a"};if(s.includes("facial")||s.includes("face"))return{icon:"💆",bg:"#fdf4ff",border:"#e9d5ff",color:"#9333ea"};return{icon:"✂️",bg:"#f0eeff",border:"#ddd6fe",color:"#5b3fc4"};}
+
+  const N={white:"#fff",bg:"#f8f7ff",border:"#f1f0f5",text:"#0f0a2e",muted:"#6b7280",mid:"#5b3fc4"};
+  const attRate=monthPresent+monthAbsent>0?Math.round((monthPresent/(monthPresent+monthAbsent))*100):0;
+  const monthClients=useMemo(()=>new Set(logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).map(l=>l.clientName)).size,[logs,staff.id]);
+  const monthLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).length;
+  const monthRevenue=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).reduce((s,l)=>s+l.amount,0);
+  const heatDays=[];
+  for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);heatDays.push({ds,present:!!(attendance[ds]||{})[staff.id],future:ds>today});}
+
+
+  return(
+    <div style={{padding:"12px 14px 80px",background:N.bg}}>
+      {/* White Hero Card */}
+      <div style={{background:N.white,borderRadius:18,padding:"14px",border:"1px solid #e5e7eb",boxShadow:"0 2px 12px rgba(0,0,0,0.05)",marginBottom:10}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+          <div>
+            <div style={{fontSize:10,color:"#9b8ec4",letterSpacing:"0.5px"}}>{new Date().toLocaleDateString("en-IN",{month:"long",year:"numeric"}).toUpperCase()}</div>
+            <div style={{fontSize:15,fontWeight:800,color:N.text,marginTop:2}}>Attendance Overview</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:24,fontWeight:800,color:attRate>=80?"#16a34a":attRate>=60?"#d97706":"#dc2626",lineHeight:1}}>{attRate}%</div>
+            <div style={{fontSize:9,color:"#9ca3af",marginTop:1}}>att. rate</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:10,marginBottom:10}}>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0,width:90}}>
+            <svg width="74" height="74" viewBox="0 0 74 74">
+              <circle cx="37" cy="37" r="27" fill="none" stroke="#f1f0f5" strokeWidth="9"/>
+              <circle cx="37" cy="37" r="27" fill="none" stroke="#22c55e" strokeWidth="9"
+                strokeDasharray={`${(monthPresent/Math.max(monthPresent+monthAbsent,1))*170} 170`}
+                strokeLinecap="round" transform="rotate(-90 37 37)"/>
+              <circle cx="37" cy="37" r="27" fill="none" stroke="#f87171" strokeWidth="9"
+                strokeDasharray={`${(monthAbsent/Math.max(monthPresent+monthAbsent,1))*170} 170`}
+                strokeDashoffset={`-${(monthPresent/Math.max(monthPresent+monthAbsent,1))*170}`}
+                strokeLinecap="round" transform="rotate(-90 37 37)"/>
+              <text x="37" y="33" textAnchor="middle" fill={N.text} fontSize="10" fontWeight="800" fontFamily="system-ui">{monthPresent}/{monthAbsent}</text>
+              <text x="37" y="45" textAnchor="middle" fill="#9ca3af" fontSize="7" fontFamily="system-ui">P / A</text>
+            </svg>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,width:"100%"}}>
+              {[{bg:"#f0fdf4",c:"#16a34a",v:monthPresent,l:"Present"},{bg:"#fff5f5",c:"#dc2626",v:monthAbsent,l:"Absent"},{bg:"#eff6ff",c:"#2563eb",v:monthClients,l:"Clients"},{bg:"#f5f3ff",c:N.mid,v:monthLogs,l:"Logs"}].map(s=>(
+                <div key={s.l} style={{background:s.bg,borderRadius:7,padding:"5px 3px",textAlign:"center"}}>
+                  <div style={{fontSize:12,fontWeight:800,color:s.c,lineHeight:1}}>{s.v}</div>
+                  <div style={{fontSize:7,color:"#6b7280",marginTop:2}}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{flex:1,display:"flex",flexDirection:"column",gap:7}}>
+            <div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:3}}>
+                {["M","T","W","T","F","S","S"].map((l,i)=><div key={i} style={{fontSize:7,color:"#9ca3af",textAlign:"center"}}>{l}</div>)}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
+                {heatDays.map((d,i)=>(<div key={i} style={{height:15,borderRadius:4,background:d.future?"#f1f0f5":d.present?"#bbf7d0":"#fca5a5"}}/>))}
+              </div>
+            </div>
+            <div style={{height:1,background:"#f1f0f5"}}/>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
+              <div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:9,padding:"8px"}}>
+                <div style={{fontSize:13,fontWeight:800,color:"#16a34a",lineHeight:1}}>{fc(monthRevenue)}</div>
+                <div style={{fontSize:9,color:"#6b7280",marginTop:2}}>Revenue</div>
+              </div>
+              <div style={{background:"#f5f3ff",border:"1px solid #ddd6fe",borderRadius:9,padding:"8px"}}>
+                <div style={{fontSize:13,fontWeight:800,color:N.mid,lineHeight:1}}>{monthLogs} logs</div>
+                <div style={{fontSize:9,color:"#6b7280",marginTop:2}}>Work Entries</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Streak Banner */}
+      {streak>=3&&(
+        <div style={{background:"linear-gradient(135deg,#fff7ed,#fef3c7)",border:"1px solid #fde68a",borderRadius:14,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{fontSize:24}}>🔥</div>
+            <div>
+              <div style={{fontSize:13,fontWeight:800,color:"#78350f"}}>{streak} Day Streak!</div>
+              <div style={{fontSize:10,color:"#a16207",marginTop:1}}>Keep it up!</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:4}}>{["M","T","W","T","F"].slice(0,Math.min(streak,5)).map((l,i)=>(<div key={i} style={{width:22,height:22,borderRadius:"50%",background:"#22c55e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:"#fff",fontWeight:700}}>{l}</div>))}</div>
+        </div>
+      )}
+
+      {/* Present/Absent toggle */}
+      <div style={{background:isPresent?"#f0fdf4":"#fff5f5",border:`1px solid ${isPresent?"#bbf7d0":"#fca5a5"}`,borderRadius:12,padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"center",gap:9}}>
+          <div style={{width:28,height:28,borderRadius:"50%",background:isPresent?"#22c55e":"#f87171",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",flexShrink:0}}>{isPresent?"✓":"✗"}</div>
+          <div>
+            <div style={{fontSize:12,fontWeight:800,color:isPresent?"#15803d":"#b91c1c"}}>{isPresent?"Present Today 🎉":"Absent Today"}</div>
+            <div style={{fontSize:9,color:isPresent?"#16a34a":"#dc2626",marginTop:1}}>{new Date().toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</div>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{fontSize:9,color:"#6b7280"}}>Mark Absent</span>
+          <div onClick={toggleAttendance} style={{width:34,height:19,borderRadius:10,background:isPresent?"#22c55e":"#d1d5db",position:"relative",cursor:"pointer",flexShrink:0}}>
+            <div style={{width:13,height:13,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:isPresent?18:3,transition:"left 0.2s",boxShadow:"0 1px 2px rgba(0,0,0,0.15)"}}/>
+          </div>
+        </div>
+      </div>
+
+      {!isPresent&&(
+        <div style={{background:N.white,border:"1px solid #f1f0f5",borderRadius:12,padding:"12px 14px",marginBottom:10}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#6b7280",marginBottom:6}}>🔒 Reason for absence (only you can see):</div>
+          <input style={{...IS,background:"#f8f7ff",borderColor:"#e0d8ff"}} placeholder="Add reason — owner won't see this..." value={(absentNotes||{})[today]||""} onChange={async e=>{
+            setAbsentNotes(prev=>({...prev,[today]:e.target.value}));
+            if(salonId)await supabase.from("attendance").upsert({salon_id:salonId,staff_id:staff.id,date:today,is_present:false,absent_reason:e.target.value},{onConflict:"salon_id,staff_id,date"});
+          }}/>
+        </div>
+      )}
+
+      {/* Work Entries */}
+      <div style={{background:N.white,borderRadius:12,border:"1px solid #f1f0f5",overflow:"hidden"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",background:"#f8f7ff",borderBottom:"1px solid #f1f0f5"}}>
+          {[{k:"today",l:"Today"},{k:"week",l:"This Week"},{k:"month",l:"This Month"}].map(t=>(
+            <button key={t.k} onClick={()=>setWorkTab(t.k)} style={{padding:"7px 0",border:"none",background:workTab===t.k?"#5b3fc4":"transparent",color:workTab===t.k?"#fff":"#9ca3af",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>
+          ))}
+        </div>
+        <div style={{padding:"9px 12px",borderBottom:"1px solid #f1f0f5"}}>
+          <div style={{fontSize:12,fontWeight:800,color:N.text}}>Work Entries</div>
+        </div>
+        <div>
+          {filtered.length===0
+            ?<div style={{textAlign:"center",padding:"22px 16px"}}>
+              <div style={{width:46,height:46,borderRadius:14,background:"linear-gradient(135deg,#f0eeff,#e4dcff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,margin:"0 auto 10px"}}>✂️</div>
+              <div style={{fontSize:13,fontWeight:800,color:N.text,marginBottom:4}}>Start your day!</div>
+              <div style={{fontSize:11,color:"#9b8ec4",lineHeight:1.5}}>No work entries yet.<br/>Add your first service.</div>
+            </div>
+            :filtered.map((log,i)=>{
+              const si=svcIcon(log.service);
+              return(
+                <div key={log.id} onClick={()=>setSelectedLog(log)} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:"1px solid #f9f9f9",cursor:"pointer"}}>
+                  <div style={{width:32,height:32,borderRadius:9,background:si.bg,border:`1px solid ${si.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{si.icon}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:700,color:N.text}}>{log.clientName}</div>
+                    <div style={{fontSize:10,color:si.color,fontWeight:600,marginTop:1}}>{log.service} · {fd(log.date)}</div>
+                  </div>
+                  {showRevenue&&<div style={{fontSize:12,fontWeight:700,color:"#16a34a",flexShrink:0}}>{fc(log.amount)}</div>}
+                  <span style={{color:"#9ca3af",fontSize:14,flexShrink:0}}>›</span>
+                </div>
+              );
+            })
+          }
+        </div>
+      </div>
+      {showAddLog&&<AddLogModal staffId={staff.id} salonId={salonId} isPresent={isPresent} onSave={addLog} onClose={()=>setShowAddLog(false)}/>}
+      {selectedLog&&<EntryDetailModal log={selectedLog} onClose={()=>setSelectedLog(null)}/>}
+    </div>
+  );
+}
+
+function EntryDetailModal({log,onClose}){
+  function svcIcon(svc){const s=(svc||"").toLowerCase();if(s.includes("color")||s.includes("colour"))return{icon:"🎨",bg:"#fff7ed",border:"#fed7aa",color:"#ea580c"};if(s.includes("beard")||s.includes("shave"))return{icon:"🪒",bg:"#f0fdf4",border:"#bbf7d0",color:"#16a34a"};if(s.includes("facial")||s.includes("face"))return{icon:"💆",bg:"#fdf4ff",border:"#e9d5ff",color:"#9333ea"};return{icon:"✂️",bg:"#f0eeff",border:"#ddd6fe",color:"#5b3fc4"};}
+  const si=svcIcon(log.service);
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"flex-end",justifyContent:"center",zIndex:999,padding:"0 0 0"}} onClick={onClose}>
+      <div style={{background:"#fff",borderRadius:"22px 22px 0 0",width:"100%",maxWidth:480,padding:"0 0 32px"}} onClick={e=>e.stopPropagation()}>
+        {/* Handle */}
+        <div style={{width:36,height:4,background:"#e5e7eb",borderRadius:2,margin:"12px auto 0"}}/>
+        {/* Header */}
+        <div style={{background:"linear-gradient(135deg,#3d2490,#5b3fc4)",padding:"16px 18px 14px",margin:"12px 0 0"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.6)"}}>Work Entry</div>
+              <div style={{fontSize:16,fontWeight:800,color:"#fff",marginTop:2}}>Service Details</div>
+            </div>
+            <div onClick={onClose} style={{width:32,height:32,borderRadius:"50%",background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",fontSize:14,color:"#fff"}}>✕</div>
+          </div>
+        </div>
+        {/* Content */}
+        <div style={{padding:"16px 18px"}}>
+          {/* Client */}
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,padding:"12px",background:"#f8f7ff",borderRadius:12}}>
+            <div style={{width:44,height:44,borderRadius:14,background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:"#fff",flexShrink:0}}>{(log.clientName||"?").slice(0,2).toUpperCase()}</div>
+            <div>
+              <div style={{fontSize:14,fontWeight:800,color:"#0f0a2e"}}>{log.clientName}</div>
+              <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>Client</div>
+            </div>
+          </div>
+          {/* Details */}
+          <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 14px",background:si.bg,borderRadius:11,border:`1px solid ${si.border}`}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:16}}>{si.icon}</span><span style={{fontSize:13,color:"#374151"}}>Service</span></div>
+              <span style={{fontSize:13,fontWeight:700,color:si.color}}>{log.service}</span>
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 14px",background:"#f0fdf4",borderRadius:11,border:"1px solid #bbf7d0"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:16}}>💰</span><span style={{fontSize:13,color:"#374151"}}>Amount</span></div>
+              <span style={{fontSize:13,fontWeight:700,color:"#16a34a"}}>₹{Number(log.amount||0).toLocaleString("en-IN")}</span>
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"11px 14px",background:"#f8f7ff",borderRadius:11,border:"1px solid #e5e7eb"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:16}}>📅</span><span style={{fontSize:13,color:"#374151"}}>Date</span></div>
+              <span style={{fontSize:13,fontWeight:700,color:"#0f0a2e"}}>{new Date(log.date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})}</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer"}}>Done</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+  const [workTab,setWorkTab]=useState("today");
+  const [showAddLog,setShowAddLog]=useState(false);
+  const [selectedLog,setSelectedLog]=useState(null);
   const isPresent=!!(attendance[today]||{})[staff.id];
 
   async function toggleAttendance(){
@@ -348,11 +588,11 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
             :filtered.map((log,i)=>{
               const cc=CARD_COLORS[i%CARD_COLORS.length];
               return(
-                <div key={log.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:"1px solid #f9f9f9",cursor:"pointer"}}>
-                  <div style={{width:32,height:32,borderRadius:9,background:svcIcon(log.service).bg,border:`1px solid ${svcIcon(log.service).border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{svcIcon(log.service).icon}</div>
+                <div key={log.id} onClick={()=>setSelectedLog(log)} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:"1px solid #f9f9f9",cursor:"pointer"}}>
+                  <div style={{width:32,height:32,borderRadius:9,background:svcIconHelper(log.service).bg,border:`1px solid ${svcIconHelper(log.service).border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{svcIconHelper(log.service).icon}</div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:700,color:N.text}}>{log.clientName}</div>
-                    <div style={{fontSize:10,color:svcIcon(log.service).color,fontWeight:600,marginTop:1}}>{log.service} · {fd(log.date)}</div>
+                    <div style={{fontSize:10,color:svcIconHelper(log.service).color,fontWeight:600,marginTop:1}}>{log.service} · {fd(log.date)}</div>
                   </div>
                   {showRevenue&&<div style={{fontSize:12,fontWeight:700,color:"#16a34a",flexShrink:0}}>{fc(log.amount)}</div>}
                   <span style={{color:"#9ca3af",fontSize:14,flexShrink:0}}>›</span>
@@ -363,9 +603,9 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
         </div>
       </div>
       {showAddLog&&<AddLogModal staffId={staff.id} salonId={salonId} isPresent={isPresent} onSave={addLog} onClose={()=>setShowAddLog(false)}/>}
+      {selectedLog&&<EntryDetailModal log={selectedLog} onClose={()=>setSelectedLog(null)}/>}
     </div>
   );
-}
 
 // ─── Main Staff Dashboard ─────────────────────────────────────────────────────
 export default function StaffDashboard({staff,showRevenue=false,onLogout}){
@@ -448,91 +688,6 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
             <span style={{fontSize:10,fontWeight:tab===t.id?800:600,color:tab===t.id?"#5b3fc4":"#9ca3af"}}>{t.label}</span>
           </div>
         ))}
-      </div>
-    </div>
-  );
-}
-
-export function StaffLoginPage({salonId, onLogin, onBack}){
-  const [staffList,setStaffList]=useState([]);
-  const [selectedId,setSelectedId]=useState("");
-  const [pin,setPin]=useState("");
-  const [error,setError]=useState("");
-  const [loading,setLoading]=useState(false);
-  const [loadingStaff,setLoadingStaff]=useState(true);
-
-  useEffect(()=>{
-    async function loadStaff(){
-      if(!salonId){setLoadingStaff(false);return;}
-      const {data}=await supabase.from("staff").select("*").eq("salon_id",salonId);
-      if(data&&data.length>0){
-        setStaffList(data);
-        setSelectedId(data[0].id);
-      }
-      setLoadingStaff(false);
-    }
-    loadStaff();
-  },[salonId]);
-
-  function handleLogin(){
-    if(!selectedId){setError("Staff select karo!");return;}
-    setLoading(true);setError("");
-    setTimeout(()=>{
-      const staff=staffList.find(s=>String(s.id)===String(selectedId));
-      if(staff&&staff.pin===pin){
-        onLogin({...staff,salon_id:salonId});
-      }else{
-        setError("PIN galat hai! Dobara try karo.");
-        setPin("");setLoading(false);
-      }
-    },800);
-  }
-
-  if(loadingStaff){
-    return(<div style={{minHeight:"100vh",background:"linear-gradient(135deg,#1a1a2e,#16213e)",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif"}}><div style={{textAlign:"center",color:"#fff"}}><div style={{fontSize:32,marginBottom:12}}>✂️</div><div style={{fontSize:14,color:"#a0a0c0"}}>Staff load ho raha hai...</div></div></div>);
-  }
-
-  if(!salonId||staffList.length===0){
-    return(
-      <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#1a1a2e,#16213e)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"system-ui,sans-serif"}}>
-        <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>✂️ SnipBook</div>
-        <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:360,marginTop:24}}>
-          <div style={{fontWeight:900,fontSize:17,marginBottom:8,color:T.text}}>Koi staff nahi mila</div>
-          <div style={{fontSize:13,color:T.ts,marginBottom:20}}>Is salon mein koi staff registered nahi hai.</div>
-          <button onClick={onBack} style={{width:"100%",padding:"13px",background:T.dark,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>← Back to Login</button>
-        </div>
-      </div>
-    );
-  }
-
-  return(
-    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#1a1a2e,#16213e)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"system-ui,sans-serif"}}>
-      <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>✂️ SnipBook</div>
-      <div style={{fontSize:13,color:"#a0a0c0",marginBottom:32}}>Staff Portal</div>
-
-      <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:360,boxShadow:"0 16px 48px rgba(0,0,0,0.3)"}}>
-        <div style={{fontWeight:900,fontSize:17,marginBottom:3,color:T.text}}>Staff Login</div>
-        <div style={{fontSize:13,color:T.ts,marginBottom:20}}>Apna naam aur PIN daalo</div>
-
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:13,fontWeight:800,color:T.tm,marginBottom:6}}>Apna Naam</div>
-          <select style={{...IS,cursor:"pointer"}} value={selectedId} onChange={e=>{setSelectedId(e.target.value);setError("");}}>
-            {staffList.map(s=><option key={s.id} value={s.id}>{s.name} — {s.role}</option>)}
-          </select>
-        </div>
-
-        <div style={{marginBottom:18}}>
-          <div style={{fontSize:13,fontWeight:800,color:T.tm,marginBottom:6}}>4-digit PIN</div>
-          <input style={IS} type="password" placeholder="••••" maxLength={4} value={pin} onChange={e=>{setPin(e.target.value);setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
-        </div>
-
-        {error&&<div style={{background:T.red,border:`1.5px solid ${T.rb}`,borderRadius:9,padding:"9px 12px",marginBottom:14,fontSize:12,color:T.rt,fontWeight:600}}>⚠️ {error}</div>}
-
-        <button onClick={handleLogin} disabled={loading} style={{width:"100%",padding:"13px",background:loading?"#86efac":T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer",marginBottom:12}}>
-          {loading?"Logging in...":"Login Karo →"}
-        </button>
-
-        <button onClick={onBack} style={{width:"100%",background:"none",border:"none",color:T.ts,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>← Back to Login</button>
       </div>
     </div>
   );
