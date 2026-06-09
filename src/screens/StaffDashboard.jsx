@@ -203,9 +203,6 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
 
   const N={white:"#fff",bg:"#f8f7ff",border:"#f1f0f5",text:"#0f0a2e",muted:"#6b7280",mid:"#5b3fc4"};
   const attRate=monthPresent+monthAbsent>0?Math.round((monthPresent/(monthPresent+monthAbsent))*100):0;
-  const monthClients=useMemo(()=>new Set(logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).map(l=>l.clientName)).size,[logs,staff.id]);
-  const monthLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).length;
-  const monthRevenue=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).reduce((s,l)=>s+l.amount,0);
   const heatDays=[];
   for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);heatDays.push({ds,present:!!(attendance[ds]||{})[staff.id],future:ds>today});}
 
