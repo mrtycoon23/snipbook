@@ -201,64 +201,91 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
   const heatDays=[];
   for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);heatDays.push({ds,present:!!(attendance[ds]||{})[staff.id],future:ds>today});}
 
+  const N={white:"#fff",bg:"#f8f7ff",border:"#f1f0f5",text:"#0f0a2e",muted:"#6b7280",mid:"#5b3fc4"};
+  const attRate=monthPresent+monthAbsent>0?Math.round((monthPresent/(monthPresent+monthAbsent))*100):0;
+  const monthClients=useMemo(()=>new Set(logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).map(l=>l.clientName)).size,[logs,staff.id]);
+  const monthLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).length;
+  const monthRevenue=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).reduce((s,l)=>s+l.amount,0);
+  const heatDays=[];
+  for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);heatDays.push({ds,present:!!(attendance[ds]||{})[staff.id],future:ds>today});}
+
   return(
     <div style={{padding:"12px 14px 80px",background:N.bg}}>
-      {/* White Hero Card */}
+
+      {/* WHITE HERO CARD */}
       <div style={{background:N.white,borderRadius:18,padding:"14px",border:"1px solid #e5e7eb",boxShadow:"0 2px 12px rgba(0,0,0,0.05)",marginBottom:10,position:"relative",overflow:"hidden"}}>
         <div style={{position:"absolute",top:-18,right:-18,width:80,height:80,borderRadius:"50%",background:"#f5f3ff",opacity:0.8}}/>
+
+        {/* Title + Rate */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
           <div>
             <div style={{fontSize:10,color:"#9b8ec4",letterSpacing:"0.5px"}}>{new Date().toLocaleDateString("en-IN",{month:"long",year:"numeric"}).toUpperCase()}</div>
-            <div style={{fontSize:14,fontWeight:800,color:N.text,marginTop:2}}>Attendance Overview</div>
+            <div style={{fontSize:15,fontWeight:800,color:N.text,marginTop:2}}>Attendance Overview</div>
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:24,fontWeight:800,color:attRate>=80?"#16a34a":attRate>=60?"#d97706":"#dc2626",lineHeight:1}}>{attRate}%</div>
-            <div style={{fontSize:9,color:"#9ca3af",marginTop:2}}>att. rate</div>
+            <div style={{fontSize:22,fontWeight:800,color:attRate>=80?"#16a34a":attRate>=60?"#d97706":"#dc2626",lineHeight:1,opacity:0.3}}>{attRate}%</div>
+            <div style={{fontSize:9,color:"#9ca3af",marginTop:1}}>att. rate</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:12,marginBottom:12}}>
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",flexShrink:0,gap:6}}>
-            <svg width="76" height="76" viewBox="0 0 76 76">
-              <circle cx="38" cy="38" r="28" fill="none" stroke="#f1f0f5" strokeWidth="9"/>
-              <circle cx="38" cy="38" r="28" fill="none" stroke="#22c55e" strokeWidth="9"
-                strokeDasharray={`${(monthPresent/Math.max(monthPresent+monthAbsent,1))*176} 176`}
-                strokeLinecap="round" transform="rotate(-90 38 38)"/>
-              <circle cx="38" cy="38" r="28" fill="none" stroke="#f87171" strokeWidth="9"
-                strokeDasharray={`${(monthAbsent/Math.max(monthPresent+monthAbsent,1))*176} 176`}
-                strokeDashoffset={`-${(monthPresent/Math.max(monthPresent+monthAbsent,1))*176}`}
-                strokeLinecap="round" transform="rotate(-90 38 38)"/>
-              <text x="38" y="34" textAnchor="middle" fill={N.text} fontSize="10" fontWeight="800" fontFamily="system-ui">{monthPresent}/{monthAbsent}</text>
-              <text x="38" y="46" textAnchor="middle" fill="#9ca3af" fontSize="7" fontFamily="system-ui">P / A</text>
+
+        {/* Row: Donut left, Heatmap right */}
+        <div style={{display:"flex",gap:10,marginBottom:10,alignItems:"flex-start"}}>
+
+          {/* Left col: donut + 4 pills */}
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,flexShrink:0,width:90}}>
+            <svg width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="26" fill="none" stroke="#f1f0f5" strokeWidth="9"/>
+              <circle cx="36" cy="36" r="26" fill="none" stroke="#22c55e" strokeWidth="9"
+                strokeDasharray={`${(monthPresent/Math.max(monthPresent+monthAbsent,1))*163} 163`}
+                strokeLinecap="round" transform="rotate(-90 36 36)"/>
+              <circle cx="36" cy="36" r="26" fill="none" stroke="#f87171" strokeWidth="9"
+                strokeDasharray={`${(monthAbsent/Math.max(monthPresent+monthAbsent,1))*163} 163`}
+                strokeDashoffset={`-${(monthPresent/Math.max(monthPresent+monthAbsent,1))*163}`}
+                strokeLinecap="round" transform="rotate(-90 36 36)"/>
+              <text x="36" y="32" textAnchor="middle" fill={N.text} fontSize="10" fontWeight="800" fontFamily="system-ui">{monthPresent}/{monthAbsent}</text>
+              <text x="36" y="44" textAnchor="middle" fill="#9ca3af" fontSize="7" fontFamily="system-ui">P / A</text>
             </svg>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,width:86}}>
-              {[{bg:"#f0fdf4",c:"#16a34a",v:monthPresent,l:"Present"},{bg:"#fff5f5",c:"#dc2626",v:monthAbsent,l:"Absent"},{bg:"#eff6ff",c:"#2563eb",v:monthClients,l:"Clients"},{bg:"#f5f3ff",c:N.mid,v:monthLogs,l:"Logs"}].map(s=>(
-                <div key={s.l} style={{background:s.bg,borderRadius:7,padding:"5px 4px",textAlign:"center"}}>
-                  <div style={{fontSize:12,fontWeight:800,color:s.c,lineHeight:1}}>{s.v}</div>
+            {/* 4 mini pills 2x2 */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,width:"100%"}}>
+              {[
+                {bg:"#f0fdf4",c:"#16a34a",v:monthPresent,l:"Present"},
+                {bg:"#fff5f5",c:"#dc2626",v:monthAbsent,l:"Absent"},
+                {bg:"#eff6ff",c:"#2563eb",v:monthClients,l:"Clients"},
+                {bg:"#f5f3ff",c:N.mid,v:monthLogs,l:"Logs"},
+              ].map(s=>(
+                <div key={s.l} style={{background:s.bg,borderRadius:7,padding:"5px 3px",textAlign:"center"}}>
+                  <div style={{fontSize:13,fontWeight:800,color:s.c,lineHeight:1}}>{s.v}</div>
                   <div style={{fontSize:7,color:"#6b7280",marginTop:2}}>{s.l}</div>
                 </div>
               ))}
             </div>
           </div>
-          <div style={{flex:1,display:"flex",flexDirection:"column",gap:8}}>
+
+          {/* Right col: heatmap + revenue/logs */}
+          <div style={{flex:1,minWidth:0,display:"flex",flexDirection:"column",gap:8}}>
+            {/* Heatmap */}
             <div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:3}}>
                 {["M","T","W","T","F","S","S"].map((l,i)=><div key={i} style={{fontSize:7,color:"#9ca3af",textAlign:"center"}}>{l}</div>)}
               </div>
               <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3}}>
                 {heatDays.map((d,i)=>(
-                  <div key={i} style={{height:16,borderRadius:4,background:d.future?"#f1f0f5":d.present?"#bbf7d0":"#fca5a5"}}/>
+                  <div key={i} style={{height:15,borderRadius:4,background:d.future?"#f1f0f5":d.present?"#bbf7d0":"#fca5a5"}}/>
                 ))}
               </div>
             </div>
             <div style={{height:1,background:"#f1f0f5"}}/>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
-              <div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:9,padding:"8px"}}>
-                <div style={{fontSize:13,fontWeight:800,color:"#16a34a",lineHeight:1}}>{fc(monthRevenue)}</div>
-                <div style={{fontSize:9,color:"#6b7280",marginTop:2}}>Revenue</div>
+            {/* Revenue + logs */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+              <div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,padding:"9px 10px"}}>
+                <div style={{fontSize:14,fontWeight:800,color:"#16a34a",lineHeight:1}}>{fc(monthRevenue)}</div>
+                <div style={{fontSize:9,color:"#6b7280",marginTop:3}}>Revenue</div>
+                <div style={{fontSize:8,color:"#16a34a",marginTop:2}}>↑ 25% vs last</div>
               </div>
-              <div style={{background:"#f5f3ff",border:"1px solid #ddd6fe",borderRadius:9,padding:"8px"}}>
-                <div style={{fontSize:13,fontWeight:800,color:N.mid,lineHeight:1}}>{monthLogs} logs</div>
-                <div style={{fontSize:9,color:"#6b7280",marginTop:2}}>Work Entries</div>
+              <div style={{background:"#f5f3ff",border:"1px solid #ddd6fe",borderRadius:10,padding:"9px 10px"}}>
+                <div style={{fontSize:14,fontWeight:800,color:N.mid,lineHeight:1}}>{monthLogs} logs</div>
+                <div style={{fontSize:9,color:"#6b7280",marginTop:3}}>Work Entries</div>
+                <div style={{fontSize:8,color:N.mid,marginTop:2}}>This Month</div>
               </div>
             </div>
           </div>
@@ -329,6 +356,7 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
 // ─── Main Staff Dashboard ─────────────────────────────────────────────────────
 export default function StaffDashboard({staff,showRevenue=false,onLogout}){
   const [tab,setTab]=useState("attendance");
+  const [showAddLogFab,setShowAddLogFab]=useState(false);
   const [logs,setLogs]=useState([]);
   const [attendance,setAttendance]=useState({});
   const [absentNotes,setAbsentNotes]=useState({});
@@ -385,24 +413,14 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <button onClick={onLogout} style={{background:TP.purpleLight,border:`1px solid ${TP.border}`,color:TP.purpleMid,borderRadius:8,padding:"6px 12px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>Logout</button>
+          <button onClick={onLogout} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"#fff5f5",border:"1.5px solid #fca5a5",borderRadius:9,fontSize:11,fontWeight:700,color:"#dc2626",cursor:"pointer",fontFamily:"inherit"}}>🚪 Logout</button>
         </div>
       </div>
 
-      {/* Tab bar */}
-      <div style={{background:TP.surface,borderBottom:`0.5px solid ${TP.border}`,display:"flex",flexShrink:0}}>
-        {TABS.map(t=>(
-          <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"11px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`3px solid ${tab===t.id?TP.purpleMid:"transparent"}`,background:tab===t.id?TP.purpleLight:"transparent",transition:"background 0.15s"}}>
-            <span style={{fontSize:19}}>{t.icon}</span>
-            <span style={{fontSize:11,fontWeight:800,color:tab===t.id?TP.purpleMid:TP.tf}}>{t.label}</span>
-          </div>
-        ))}
-      </div>
-
       {/* Content */}
-      <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+      <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",position:"relative"}}>
         {tab==="attendance"&&(
-          <div style={{flex:1,overflowY:"auto"}}>
+          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
             <AttendanceTab
               staff={staff}
               logs={logs}
@@ -424,6 +442,24 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
             }}
           />
         )}
+        {/* FAB — bottom right */}
+        {tab==="attendance"&&(
+          <div style={{position:"absolute",right:14,bottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:3,zIndex:10}}>
+            <div onClick={()=>setShowAddLogFab(true)} style={{width:46,height:46,borderRadius:"50%",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,color:"#fff",boxShadow:"0 4px 14px rgba(91,63,196,0.4)",cursor:"pointer"}}>+</div>
+            <span style={{fontSize:9,fontWeight:700,color:"#5b3fc4",background:"#fff",padding:"1px 5px",borderRadius:4,boxShadow:"0 1px 4px rgba(0,0,0,0.08)"}}>Add Log</span>
+          </div>
+        )}
+      </div>
+
+      {showAddLogFab&&<AddLogModal staffId={staff.id} salonId={salonId} isPresent={!!(attendance[today]||{})[staff.id]} onSave={log=>{setLogs(prev=>[...prev,log]);setShowAddLogFab(false);}} onClose={()=>setShowAddLogFab(false)}/>}
+      {/* Bottom Tab Bar */}
+      <div style={{background:"#fff",borderTop:"1px solid #f1f0f5",display:"flex",flexShrink:0,padding:"6px 0 8px"}}>
+        {[{id:"attendance",icon:"📅",label:"Attendance"},{id:"customers",icon:"👥",label:"Customers"}].map(t=>(
+          <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",paddingBottom:4,borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`}}>
+            <span style={{fontSize:17}}>{t.icon}</span>
+            <span style={{fontSize:10,fontWeight:tab===t.id?800:600,color:tab===t.id?"#5b3fc4":"#9ca3af"}}>{t.label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
