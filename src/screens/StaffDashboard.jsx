@@ -216,7 +216,7 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
             <div style={{fontSize:15,fontWeight:800,color:N.text,marginTop:2}}>Attendance Overview</div>
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:22,fontWeight:800,color:attRate>=80?"#16a34a":attRate>=60?"#d97706":"#dc2626",lineHeight:1,opacity:0.3}}>{attRate}%</div>
+            <div style={{fontSize:22,fontWeight:800,color:attRate>=80?"#16a34a":attRate>=60?"#d97706":"#dc2626",lineHeight:1}}>{attRate}%</div>
             <div style={{fontSize:9,color:"#9ca3af",marginTop:1}}>att. rate</div>
           </div>
         </div>
@@ -438,7 +438,7 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
         {/* FAB — bottom right */}
         {tab==="attendance"&&(
           <div style={{position:"absolute",right:14,bottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:3,zIndex:10}}>
-            <div onClick={()=>setShowAddLogFab(true)} style={{width:46,height:46,borderRadius:"50%",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,color:"#fff",boxShadow:"0 4px 14px rgba(91,63,196,0.4)",cursor:"pointer"}}>+</div>
+            <div onClick={()=>setShowAddLogFab(true)} style={{width:54,height:54,borderRadius:"50%",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,color:"#fff",boxShadow:"0 4px 18px rgba(91,63,196,0.45)",cursor:"pointer"}}>+</div>
             <span style={{fontSize:9,fontWeight:700,color:"#5b3fc4",background:"#fff",padding:"1px 5px",borderRadius:4,boxShadow:"0 1px 4px rgba(0,0,0,0.08)"}}>Add Log</span>
           </div>
         )}
