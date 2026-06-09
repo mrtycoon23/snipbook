@@ -207,7 +207,7 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
 
       {/* WHITE HERO CARD */}
       <div style={{background:N.white,borderRadius:18,padding:"14px",border:"1px solid #e5e7eb",boxShadow:"0 2px 12px rgba(0,0,0,0.05)",marginBottom:10,position:"relative",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:-18,right:-18,width:80,height:80,borderRadius:"50%",background:"#f5f3ff",opacity:0.8}}/>
+
 
         {/* Title + Rate */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
