@@ -192,28 +192,17 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
 
   const monthPresent=Object.entries(attendance).filter(([d,m])=>d>=thisMonthStart&&m[staff.id]).length;
   const monthAbsent=new Date().getDate()-monthPresent;
+  let streak=0;
+  for(let i=0;i<30;i++){const dd=new Date();dd.setDate(dd.getDate()-i);const ds=dd.toISOString().slice(0,10);if((attendance[ds]||{})[staff.id])streak++;else if(i>0)break;}
 
+  function svcIcon(svc){const s=(svc||"").toLowerCase();if(s.includes("color")||s.includes("colour"))return{icon:"🎨",bg:"#fff7ed",border:"#fed7aa",color:"#ea580c"};if(s.includes("beard")||s.includes("shave"))return{icon:"🪒",bg:"#f0fdf4",border:"#bbf7d0",color:"#16a34a"};if(s.includes("facial")||s.includes("face"))return{icon:"💆",bg:"#fdf4ff",border:"#e9d5ff",color:"#9333ea"};return{icon:"✂️",bg:"#f0eeff",border:"#ddd6fe",color:"#5b3fc4"};}
   const N={white:"#fff",bg:"#f8f7ff",border:"#f1f0f5",text:"#0f0a2e",muted:"#6b7280",mid:"#5b3fc4"};
-  function svcIcon(svc){
-    const s=(svc||"").toLowerCase();
-    if(s.includes("color")||s.includes("colour"))return{icon:"🎨",bg:"#fff7ed",border:"#fed7aa",color:"#ea580c"};
-    if(s.includes("beard")||s.includes("shave"))return{icon:"🪒",bg:"#f0fdf4",border:"#bbf7d0",color:"#16a34a"};
-    if(s.includes("facial")||s.includes("face"))return{icon:"💆",bg:"#fdf4ff",border:"#e9d5ff",color:"#9333ea"};
-    if(s.includes("manicure")||s.includes("pedicure")||s.includes("nail"))return{icon:"💅",bg:"#fff1f2",border:"#fecdd3",color:"#e11d48"};
-    if(s.includes("massage"))return{icon:"🤲",bg:"#fffbeb",border:"#fde68a",color:"#d97706"};
-    if(s.includes("hair"))return{icon:"✂️",bg:"#f0eeff",border:"#ddd6fe",color:"#5b3fc4"};
-    return{icon:"✂️",bg:"#f0eeff",border:"#ddd6fe",color:"#5b3fc4"};
-  }
   const attRate=monthPresent+monthAbsent>0?Math.round((monthPresent/(monthPresent+monthAbsent))*100):0;
   const monthClients=useMemo(()=>new Set(logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).map(l=>l.clientName)).size,[logs,staff.id]);
   const monthLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).length;
   const monthRevenue=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).reduce((s,l)=>s+l.amount,0);
   const heatDays=[];
   for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);heatDays.push({ds,present:!!(attendance[ds]||{})[staff.id],future:ds>today});}
-  // Streak calculation
-  let streak=0;
-  for(let i=0;i<30;i++){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);if((attendance[ds]||{})[staff.id])streak++;else if(i>0)break;}
-  const streakDays=["M","T","W","T","F","S","S"];
 
 
   return(
@@ -316,21 +305,16 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
         </div>
       </div>
 
-      {/* 🔥 Streak Banner */}
       {streak>=3&&(
         <div style={{background:"linear-gradient(135deg,#fff7ed,#fef3c7)",border:"1px solid #fde68a",borderRadius:14,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{fontSize:24}}>🔥</div>
             <div>
               <div style={{fontSize:13,fontWeight:800,color:"#78350f"}}>{streak} Day Streak!</div>
-              <div style={{fontSize:10,color:"#a16207",marginTop:1}}>Keep it up — you're on a roll!</div>
+              <div style={{fontSize:10,color:"#a16207",marginTop:1}}>Keep it up — on a roll!</div>
             </div>
           </div>
-          <div style={{display:"flex",gap:4}}>
-            {Array.from({length:Math.min(streak,5)}).map((_,i)=>(
-              <div key={i} style={{width:22,height:22,borderRadius:"50%",background:"#22c55e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:"#fff",fontWeight:700}}>{streakDays[i]}</div>
-            ))}
-          </div>
+          <div style={{display:"flex",gap:4}}>{["M","T","W","T","F"].slice(0,Math.min(streak,5)).map((l,i)=>(<div key={i} style={{width:22,height:22,borderRadius:"50%",background:"#22c55e",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:"#fff",fontWeight:700}}>{l}</div>))}</div>
         </div>
       )}
 
@@ -356,19 +340,19 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
         </div>
         <div>
           {filtered.length===0
-            ?<div style={{textAlign:"center",padding:"24px 16px"}}>
-              <div style={{width:52px,height:52px,borderRadius:16,background:"linear-gradient(135deg,#f0eeff,#e4dcff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,margin:"0 auto 10px"}}>✂️</div>
-              <div style={{fontSize:13,fontWeight:800,color:N.text,marginBottom:4}}>Start your day!</div>
-              <div style={{fontSize:11,color:"#9b8ec4",lineHeight:1.5}}>No work entries yet.<br/>Add your first service.</div>
-            </div>
+            ?<div style={{textAlign:"center",padding:"22px 16px"}}>
+                <div style={{width:46,height:46,borderRadius:14,background:"linear-gradient(135deg,#f0eeff,#e4dcff)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,margin:"0 auto 10px"}}>✂️</div>
+                <div style={{fontSize:13,fontWeight:800,color:"#0f0a2e",marginBottom:4}}>Start your day!</div>
+                <div style={{fontSize:11,color:"#9b8ec4",lineHeight:1.5}}>No work entries yet.<br/>Add your first service.</div>
+              </div>
             :filtered.map((log,i)=>{
-              const si=svcIcon(log.service);
+              const cc=CARD_COLORS[i%CARD_COLORS.length];
               return(
                 <div key={log.id} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderBottom:"1px solid #f9f9f9",cursor:"pointer"}}>
-                  <div style={{width:32,height:32,borderRadius:9,background:si.bg,border:`1px solid ${si.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{si.icon}</div>
+                  <div style={{width:32,height:32,borderRadius:9,background:svcIcon(log.service).bg,border:`1px solid ${svcIcon(log.service).border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>{svcIcon(log.service).icon}</div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{fontSize:13,fontWeight:700,color:N.text}}>{log.clientName}</div>
-                    <div style={{fontSize:10,color:si.color,fontWeight:600,marginTop:1}}>{log.service} · {fd(log.date)}</div>
+                    <div style={{fontSize:10,color:svcIcon(log.service).color,fontWeight:600,marginTop:1}}>{log.service} · {fd(log.date)}</div>
                   </div>
                   {showRevenue&&<div style={{fontSize:12,fontWeight:700,color:"#16a34a",flexShrink:0}}>{fc(log.amount)}</div>}
                   <span style={{color:"#9ca3af",fontSize:14,flexShrink:0}}>›</span>
@@ -433,54 +417,28 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
 
-      {/* White compact header */}
-      <div style={{background:"#fff",padding:"13px 18px 11px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
+      {/* White Header */}
+      <div style={{background:"#fff",padding:"12px 16px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:38,height:38,borderRadius:11,background:c.avBg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:c.avColor,flexShrink:0}}>{initials(staff?.name||"ST")}</div>
+          <div style={{width:38,height:38,borderRadius:12,background:c.avBg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:c.avColor,flexShrink:0}}>{initials(staff?.name||"ST")}</div>
           <div>
-            <div style={{fontWeight:800,fontSize:14,color:TP.text}}>{staff?.name}</div>
-            <div style={{fontSize:11,color:TP.ts,marginTop:1}}>{staff?.role} · Staff Portal</div>
+            <div style={{fontWeight:800,fontSize:14,color:"#0f0a2e"}}>{staff?.name}</div>
+            <div style={{fontSize:10,color:"#9b8ec4",marginTop:1}}>{staff?.role} · Staff Portal</div>
           </div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <button onClick={onLogout} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"#fff5f5",border:"1.5px solid #fca5a5",borderRadius:9,fontSize:11,fontWeight:700,color:"#dc2626",cursor:"pointer",fontFamily:"inherit"}}>🚪 Logout</button>
-        </div>
+        <button onClick={onLogout} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"#fff5f5",border:"1.5px solid #fca5a5",borderRadius:9,fontSize:11,fontWeight:700,color:"#dc2626",cursor:"pointer",fontFamily:"inherit"}}>🚪 Logout</button>
       </div>
-
       {/* Content */}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",position:"relative"}}>
-        {tab==="attendance"&&(
-          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-            <AttendanceTab
-              staff={staff}
-              logs={logs}
-              setLogs={setLogs}
-              attendance={attendance}
-              setAttendance={setAttendance}
-              showRevenue={showRevenue}
-              absentNotes={absentNotes}
-              setAbsentNotes={setAbsentNotes}
-              salonId={salonId}
-            />
-          </div>
-        )}
-        {tab==="customers"&&salonId&&(
-          <CustomerHistory
-            key={salonId}
-            currentUser={{
-              id:salonId,salon_id:salonId,role:"staff",name:staff?.name||"Staff",
-            }}
-          />
-        )}
-        {/* FAB — bottom right */}
+        {tab==="attendance"&&(<div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}><AttendanceTab staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance} showRevenue={showRevenue} absentNotes={absentNotes} setAbsentNotes={setAbsentNotes} salonId={salonId}/></div>)}
+        {tab==="customers"&&salonId&&(<CustomerHistory key={salonId} currentUser={{id:salonId,salon_id:salonId,role:"staff",name:staff?.name||"Staff"}}/>)}
         {tab==="attendance"&&(
           <div style={{position:"absolute",right:14,bottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:3,zIndex:10}}>
             <div onClick={()=>setShowAddLogFab(true)} style={{width:54,height:54,borderRadius:"50%",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,color:"#fff",boxShadow:"0 4px 18px rgba(91,63,196,0.45)",cursor:"pointer"}}>+</div>
-            <span style={{fontSize:9,fontWeight:700,color:"#5b3fc4",background:"#fff",padding:"1px 5px",borderRadius:4,boxShadow:"0 1px 4px rgba(0,0,0,0.08)"}}>Add Log</span>
+            <span style={{fontSize:9,fontWeight:700,color:"#5b3fc4",background:"#fff",padding:"1px 5px",borderRadius:4}}>Add Log</span>
           </div>
         )}
       </div>
-
       {showAddLogFab&&<AddLogModal staffId={staff.id} salonId={salonId} isPresent={!!(attendance[today]||{})[staff.id]} onSave={log=>{setLogs(prev=>[...prev,log]);setShowAddLogFab(false);}} onClose={()=>setShowAddLogFab(false)}/>}
       {/* Bottom Tab Bar */}
       <div style={{background:"#fff",borderTop:"1px solid #f1f0f5",display:"flex",flexShrink:0,padding:"6px 0 8px"}}>
@@ -494,88 +452,3 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
     </div>
   );
 }
-
-// ─── Staff Login Page ─────────────────────────────────────────────────────────
-export function StaffLoginPage({salonId,onLogin,onBack}){
-  const [staffList,setStaffList]=useState([]);
-  const [selectedId,setSelectedId]=useState("");
-  const [pin,setPin]=useState("");
-  const [error,setError]=useState("");
-  const [loading,setLoading]=useState(false);
-  const [loadingStaff,setLoadingStaff]=useState(true);
-
-  useEffect(()=>{
-    async function loadStaff(){
-      if(!salonId){setLoadingStaff(false);return;}
-      const{data}=await supabase.from("staff").select("*").eq("salon_id",salonId);
-      if(data&&data.length>0){setStaffList(data);setSelectedId(data[0].id);}
-      setLoadingStaff(false);
-    }
-    loadStaff();
-  },[salonId]);
-
-  function handleLogin(){
-    if(!selectedId){setError("Staff select karo!");return;}
-    setLoading(true);setError("");
-    setTimeout(()=>{
-      const staff=staffList.find(s=>String(s.id)===String(selectedId));
-      if(staff&&staff.pin===pin){
-        onLogin({...staff,salon_id:salonId});
-      }else{
-        setError("PIN galat hai! Dobara try karo.");
-        setPin("");setLoading(false);
-      }
-    },800);
-  }
-
-  if(loadingStaff){
-    return(
-      <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif"}}>
-        <div style={{textAlign:"center",color:"#fff"}}>
-          <div style={{fontSize:32,marginBottom:12}}>✂️</div>
-          <div style={{fontSize:14,color:"#c4b8f0"}}>Staff load ho raha hai...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if(!salonId||staffList.length===0){
-    return(
-      <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"system-ui,sans-serif"}}>
-        <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>✂️ SnipBook</div>
-        <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:360,marginTop:24}}>
-          <div style={{fontWeight:900,fontSize:17,marginBottom:8,color:TP.text}}>Koi staff nahi mila</div>
-          <div style={{fontSize:13,color:TP.ts,marginBottom:20}}>Is salon mein koi staff registered nahi hai.</div>
-          <button onClick={onBack} style={{width:"100%",padding:"13px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>← Back to Login</button>
-        </div>
-      </div>
-    );
-  }
-
-  return(
-    <div style={{minHeight:"100vh",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"24px 20px",fontFamily:"system-ui,sans-serif"}}>
-      <div style={{fontSize:28,fontWeight:900,color:"#fff",marginBottom:4}}>✂️ SnipBook</div>
-      <div style={{fontSize:13,color:"#c4b8f0",marginBottom:32}}>Staff Portal</div>
-      <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:360,boxShadow:"0 16px 48px rgba(45,27,105,0.3)"}}>
-        <div style={{fontWeight:900,fontSize:17,marginBottom:3,color:TP.text}}>Staff Login</div>
-        <div style={{fontSize:13,color:TP.ts,marginBottom:20}}>Apna naam aur PIN daalo</div>
-        <div style={{marginBottom:14}}>
-          <div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:6}}>Apna Naam</div>
-          <select style={{...IS,cursor:"pointer"}} value={selectedId} onChange={e=>{setSelectedId(e.target.value);setError("");}}>
-            {staffList.map(s=><option key={s.id} value={s.id}>{s.name} — {s.role}</option>)}
-          </select>
-        </div>
-        <div style={{marginBottom:18}}>
-          <div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:6}}>4-digit PIN</div>
-          <input style={IS} type="password" placeholder="••••" maxLength={4} value={pin} onChange={e=>{setPin(e.target.value);setError("");}} onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
-        </div>
-        {error&&<div style={{background:TP.red,border:`1.5px solid ${TP.rb}`,borderRadius:9,padding:"9px 12px",marginBottom:14,fontSize:12,color:TP.rt,fontWeight:600}}>⚠️ {error}</div>}
-        <button onClick={handleLogin} disabled={loading} style={{width:"100%",padding:"13px",background:loading?"#c4b8f0":`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer",marginBottom:12}}>
-          {loading?"Logging in...":"Login Karo →"}
-        </button>
-        <button onClick={onBack} style={{width:"100%",background:"none",border:"none",color:TP.ts,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>← Back to Login</button>
-      </div>
-    </div>
-  );
-}
-  
