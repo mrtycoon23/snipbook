@@ -419,55 +419,41 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
   }
 
   return(
-    <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:T.text,background:T.bg,overflow:"hidden"}}>
-      <div style={{background:T.dark,padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0}}>
+    <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"-apple-system,system-ui,sans-serif",color:"#0f0a2e",background:"#f8f7ff",overflow:"hidden"}}>
+      {/* White Header */}
+      <div style={{background:"#fff",padding:"12px 16px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:40,height:40,borderRadius:12,background:c.bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:900,color:c.text,flexShrink:0}}>{initials(staff?.name||"ST")}</div>
+          <div style={{width:38,height:38,borderRadius:12,background:c.bg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:c.text,flexShrink:0}}>{initials(staff?.name||"ST")}</div>
           <div>
-            <div style={{fontWeight:900,fontSize:14,color:"#fff"}}>{staff?.name}</div>
-            <div style={{fontSize:11,color:"#a0a0c0",marginTop:1}}>{staff?.role} · 👨‍💼 Staff Portal</div>
+            <div style={{fontWeight:800,fontSize:14,color:"#0f0a2e"}}>{staff?.name}</div>
+            <div style={{fontSize:10,color:"#9b8ec4",marginTop:1}}>{staff?.role} · Staff Portal</div>
           </div>
         </div>
-        <button onClick={onLogout} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.3)",color:"#fff",borderRadius:8,padding:"6px 12px",fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>Logout</button>
+        <button onClick={onLogout} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"#fff5f5",border:"1.5px solid #fca5a5",borderRadius:9,fontSize:11,fontWeight:700,color:"#dc2626",cursor:"pointer",fontFamily:"inherit"}}>🚪 Logout</button>
       </div>
 
-      <div style={{background:T.surface,borderBottom:`2px solid ${T.border}`,display:"flex",flexShrink:0}}>
-        {TABS.map(t=>(
-          <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"11px 4px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`3px solid ${tab===t.id?T.green:"transparent"}`}}>
-            <span style={{fontSize:19}}>{t.icon}</span>
-            <span style={{fontSize:11,fontWeight:800,color:tab===t.id?T.green:T.tf}}>{t.label}</span>
+      {/* Content */}
+      <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",position:"relative"}}>
+        {tab==="attendance"&&(<div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}><AttendanceTab staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance} showRevenue={showRevenue} absentNotes={absentNotes} setAbsentNotes={setAbsentNotes} salonId={salonId}/></div>)}
+        {tab==="customers"&&salonId&&(<CustomerHistory key={salonId} currentUser={{id:salonId,salon_id:salonId,role:"staff",name:staff?.name||"Staff"}}/>)}
+        {tab==="attendance"&&(
+          <div style={{position:"absolute",right:14,bottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:3,zIndex:10}}>
+            <div onClick={()=>setShowAddLogFab(true)} style={{width:54,height:54,borderRadius:"50%",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,color:"#fff",boxShadow:"0 4px 18px rgba(91,63,196,0.45)",cursor:"pointer"}}>+</div>
+            <span style={{fontSize:9,fontWeight:700,color:"#5b3fc4",background:"#fff",padding:"1px 5px",borderRadius:4}}>Add Log</span>
+          </div>
+        )}
+      </div>
+
+      {showAddLogFab&&<AddLogModal staffId={staff.id} salonId={salonId} isPresent={!!(attendance[today]||{})[staff.id]} onSave={log=>{setLogs(prev=>[...prev,log]);setShowAddLogFab(false);}} onClose={()=>setShowAddLogFab(false)}/>}
+
+      {/* Bottom Tab Bar */}
+      <div style={{background:"#fff",borderTop:"1px solid #f1f0f5",display:"flex",flexShrink:0,padding:"6px 0 8px"}}>
+        {[{id:"attendance",icon:"📅",label:"Attendance"},{id:"customers",icon:"👥",label:"Customers"}].map(t=>(
+          <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",paddingBottom:4,borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`}}>
+            <span style={{fontSize:17}}>{t.icon}</span>
+            <span style={{fontSize:10,fontWeight:tab===t.id?800:600,color:tab===t.id?"#5b3fc4":"#9ca3af"}}>{t.label}</span>
           </div>
         ))}
-      </div>
-
-      <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
-        {tab==="attendance"&&(
-          <div style={{flex:1,overflowY:"auto"}}>
-            <AttendanceTab
-              staff={staff}
-              logs={logs}
-              setLogs={setLogs}
-              attendance={attendance}
-              setAttendance={setAttendance}
-              showRevenue={showRevenue}
-              absentNotes={absentNotes}
-              setAbsentNotes={setAbsentNotes}
-              salonId={salonId}
-            />
-          </div>
-        )}
-        {/* ✅ FIX: CustomerHistory same component as owner — photos + visits fully working */}
-        {tab==="customers"&&salonId&&(
-          <CustomerHistory
-            key={salonId}
-            currentUser={{
-              id: salonId,
-              salon_id: salonId,
-              role: "staff",
-              name: staff?.name || "Staff",
-            }}
-          />
-        )}
       </div>
     </div>
   );
