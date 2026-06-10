@@ -436,6 +436,7 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
 // ─── Main Staff Dashboard ─────────────────────────────────────────────────────
 export default function StaffDashboard({staff, showRevenue=false, onLogout}){
   const [tab,setTab]=useState("attendance");
+  const [showAddLogFab,setShowAddLogFab]=useState(false);
   const [logs,setLogs]=useState([]);
   const [attendance,setAttendance]=useState({});
   const [absentNotes,setAbsentNotes]=useState({});
