@@ -460,7 +460,7 @@ export default function LandingPage({ onStart, onLogin }) {
   };
 
   return (
-    <div>
+    <div style={{minHeight:"100vh",overflowY:"auto",overflowX:"hidden"}}>
       <style>{CSS}</style>
 
       {/* ══ NAVBAR ══ */}
@@ -672,5 +672,4 @@ export default function LandingPage({ onStart, onLogin }) {
 
     </div>
   );
-} 
-   
+}
