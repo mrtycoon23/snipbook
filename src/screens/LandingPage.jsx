@@ -37,17 +37,21 @@ export default function LandingPage({ onStart, onLogin }) {
       {/* Salon photo */}
       <div style={{
         position:"absolute", top:0,
-        left: isMobile ? -16 : -10,
-        width: isMobile ? "78%" : "72%",
-        height: isMobile ? 470 : 490,
+        left: isMobile ? -16 : "5%",
+        right: isMobile ? undefined : 0,
+        width: isMobile ? "78%" : "95%",
+        height: isMobile ? 470 : 540,
         backgroundImage:`url(${HERO_IMG})`,
         backgroundSize:"cover",
-        backgroundPosition:"center top",
+        backgroundPosition: isMobile ? "center top" : "60% top",
         zIndex:1,
       }}>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,#f8f7ff 0%,rgba(248,247,255,.55) 5%,transparent 18%)",zIndex:2}}/>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to left,#f8f7ff 0%,rgba(248,247,255,.4) 4%,transparent 14%)",zIndex:2}}/>
-        <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 80%,#f8f7ff 100%)",zIndex:2}}/>
+        {/* Left fade — stronger on desktop to protect text */}
+        <div style={{position:"absolute",inset:0,background:isMobile
+          ? "linear-gradient(to right,#f8f7ff 0%,rgba(248,247,255,.55) 5%,transparent 18%)"
+          : "linear-gradient(to right,#eeeaff 0%,rgba(238,234,255,.98) 5%,rgba(238,234,255,.85) 30%,rgba(238,234,255,.3) 55%,transparent 75%)",
+          zIndex:2}}/>
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 80%,#eeeaff 100%)",zIndex:2}}/>
       </div>
 
       {/* iPhone mockup */}
