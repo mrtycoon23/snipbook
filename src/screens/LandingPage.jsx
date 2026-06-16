@@ -119,16 +119,16 @@ export default function LandingPage({ onStart, onLogin }) {
   );
 
   const HeroText = () => (
-    <>
+    <div style={{textAlign:"left"}}>
       <div style={{display:"inline-flex",alignItems:"center",gap:7,padding:"6px 14px",background:"#fff",border:"1px solid #c4b8f0",borderRadius:20,fontSize:12,fontWeight:700,color:S.purpleDark,marginBottom:18}}>
         <span style={{width:6,height:6,background:S.green,borderRadius:"50%",display:"inline-block"}}/>
         Early Access — Beta
       </div>
-      <h1 style={{fontSize:isMobile?28:36,fontWeight:800,lineHeight:1.22,letterSpacing:"-0.4px",marginBottom:16}}>
+      <h1 style={{fontSize:isMobile?28:36,fontWeight:800,lineHeight:1.22,letterSpacing:"-0.4px",marginBottom:16,textAlign:"left"}}>
         Apne Salon Ki Bookings{" "}
         <span style={{color:S.purple}}>WhatsApp Pe Auto-Pilot Karo</span>
       </h1>
-      <p style={{fontSize:14,color:S.muted,lineHeight:1.9,marginBottom:22}}>
+      <p style={{fontSize:14,color:S.muted,lineHeight:1.9,marginBottom:22,textAlign:"left"}}>
         Client WhatsApp karta hai.<br/>
         SnipBook booking confirm karta hai.<br/>
         Aap bas customers serve karo.
@@ -144,7 +144,7 @@ export default function LandingPage({ onStart, onLogin }) {
         </div>
         <span style={{fontSize:12.5,color:S.muted,fontWeight:600,maxWidth:180,lineHeight:1.5}}>Trusted by salon owners across India</span>
       </div>
-    </>
+    </div>
   );
 
   return (
@@ -182,12 +182,74 @@ export default function LandingPage({ onStart, onLogin }) {
           </div>
         ) : (
           <div style={{position:"relative",minHeight:580,background:"#eeeaff",margin:"0 -24px",overflow:"hidden"}}>
-            <div style={{maxWidth:980,margin:"0 auto",padding:"36px 24px 28px",display:"flex",alignItems:"flex-start"}}>
-              <div style={{flex:"0 0 42%",paddingTop:24,position:"relative",zIndex:3}}>
-                <HeroText/>
+            {/* Photo as full bg */}
+            <div style={{
+              position:"absolute",top:0,right:0,
+              width:"65%",height:"100%",
+              backgroundImage:`url(${HERO_IMG})`,
+              backgroundSize:"cover",
+              backgroundPosition:"center top",
+              zIndex:1,
+            }}>
+              <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,#eeeaff 0%,rgba(238,234,255,.95) 10%,rgba(238,234,255,.6) 40%,rgba(238,234,255,.1) 65%,transparent 85%)",zIndex:2}}/>
+              <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,#eeeaff 0%,transparent 20%)",zIndex:2}}/>
+            </div>
+            {/* Phone mockup absolute right */}
+            <div style={{
+              position:"absolute",
+              top:30,right:-8,
+              zIndex:5,width:200,
+              filter:"drop-shadow(0 14px 22px rgba(0,0,0,.18)) drop-shadow(0 34px 60px rgba(0,0,0,.22))"
+            }}>
+              <div style={{background:"linear-gradient(145deg,#5a5a60 0%,#3a3a40 18%,#6b6b72 38%,#2e2e34 60%,#56565c 82%,#3a3a40 100%)",borderRadius:42,padding:3,position:"relative"}}>
+                {[{left:"-1.5px",top:"82px",width:"1.5px",height:"18px"},{left:"-1.5px",top:"114px",width:"1.5px",height:"30px"},{left:"-1.5px",top:"152px",width:"1.5px",height:"30px"},{right:"-1.5px",top:"128px",width:"1.5px",height:"44px"}].map((b,i)=>(
+                  <div key={i} style={{position:"absolute",background:"linear-gradient(to right,#4a4a50,#2c2c32)",borderRadius:1,...b}}/>
+                ))}
+                <div style={{background:"#050507",borderRadius:39,padding:8}}>
+                  <div style={{background:"#f6f5fa",borderRadius:31,overflow:"hidden",position:"relative"}}>
+                    <div style={{position:"absolute",top:8,left:"50%",transform:"translateX(-50%)",width:60,height:17,background:"#050507",borderRadius:11,zIndex:40}}/>
+                    <div style={{display:"flex",justifyContent:"space-between",padding:"16px 18px 3px",fontSize:9,fontWeight:700}}>
+                      <span>9:41</span><span>▮▮▮ 🛜 🔋</span>
+                    </div>
+                    <div style={{background:"#f7f6f4",padding:"6px 10px",display:"flex",alignItems:"center",gap:7,borderBottom:"1px solid #e4e2dd"}}>
+                      <span style={{fontSize:12,color:"#007aff",fontWeight:600}}>‹</span>
+                      <div style={{width:24,height:24,background:"#cfe5f5",borderRadius:"50%",display:"grid",placeItems:"center",fontSize:11,flexShrink:0}}>👤</div>
+                      <div><div style={{fontSize:11,fontWeight:700,color:"#111"}}>SnipBook Bot</div><div style={{fontSize:8,color:"#8696a0"}}>online</div></div>
+                    </div>
+                    <div style={{padding:"10px 9px",display:"flex",flexDirection:"column",gap:9,minHeight:256,background:"#efeae2"}}>
+                      {[
+                        {t:"Haircut booking karni hai",out:true,time:"10:21"},
+                        {t:"Namaste! Kaun si service? 💇",out:false,time:"10:21"},
+                        {t:"Haircut",out:true,time:"10:22"},
+                        {t:"Kal 11:00 AM chalega?",out:false,time:"10:22"},
+                        {t:"Haan, confirm karo",out:true,time:"10:22"},
+                      ].map((m,i)=>(
+                        <div key={i} style={{display:"flex",justifyContent:m.out?"flex-end":"flex-start"}}>
+                          <div style={{background:m.out?"#d9fdd3":"#fff",borderRadius:m.out?"9px 9px 0 9px":"9px 9px 9px 0",padding:"6px 9px 4px",fontSize:11,lineHeight:1.4,color:"#111b21",maxWidth:"82%",boxShadow:"0 1px 1px rgba(0,0,0,.08)"}}>
+                            {m.t}<div style={{fontSize:7,color:"#8696a0",textAlign:"right",marginTop:2}}>{m.time}{m.out&&<span style={{color:"#53bdeb",marginLeft:2}}>✓✓</span>}</div>
+                          </div>
+                        </div>
+                      ))}
+                      <div style={{background:"#fff",borderRadius:"9px 9px 9px 0",padding:"7px 10px 5px",maxWidth:"88%",boxShadow:"0 1px 1px rgba(0,0,0,.08)"}}>
+                        <div style={{fontWeight:700,fontSize:11}}>✅ Booking Confirmed!</div>
+                        <div style={{fontSize:10,marginTop:2,color:"#333"}}>📅 4 June, 11:00 AM</div>
+                        <div style={{fontSize:7,color:"#8696a0",textAlign:"right",marginTop:2}}>10:23</div>
+                      </div>
+                    </div>
+                    <div style={{background:"#f7f6f4",padding:"5px 8px",display:"flex",alignItems:"center",gap:5,borderTop:"1px solid #e4e2dd"}}>
+                      <span style={{fontSize:13,color:"#007aff"}}>＋</span>
+                      <div style={{flex:1,background:"#fff",border:"1px solid #e0ded8",borderRadius:12,padding:"5px 8px",fontSize:8,color:"#b3b1ab"}}>🏷</div>
+                      <span style={{fontSize:11}}>📷</span><span style={{fontSize:11}}>🎙</span>
+                    </div>
+                    <div style={{width:68,height:3,background:"#1c1c20",borderRadius:3,margin:"4px auto 5px",opacity:0.3}}/>
+                  </div>
+                </div>
               </div>
-              <div style={{flex:"0 0 58%",position:"relative",minHeight:500}}>
-                <PhoneAndPhoto/>
+            </div>
+            {/* Left text — above everything */}
+            <div style={{position:"relative",zIndex:3,maxWidth:980,margin:"0 auto",padding:"36px 24px 40px"}}>
+              <div style={{maxWidth:"44%"}}>
+                <HeroText/>
               </div>
             </div>
           </div>
