@@ -153,10 +153,18 @@ export default function LandingPage({ onStart, onLogin }) {
             <div style={{width:36,height:36,background:S.purpleDark,borderRadius:10,display:"grid",placeItems:"center",fontSize:16,color:"#fff"}}>✂</div>
             <span style={{fontSize:18,fontWeight:800,color:S.text}}>SnipBook</span>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <button onClick={onLogin} style={{fontSize:14,fontWeight:600,color:S.purpleDark,background:"none",border:"1.5px solid #c4b8f0",borderRadius:9,padding:"8px 16px",cursor:"pointer",fontFamily:"inherit"}}>Login</button>
-            <button onClick={()=>{if(onStart)onStart();}} style={{fontSize:14,fontWeight:700,color:"#fff",background:S.purpleDark,border:"none",padding:"9px 18px",borderRadius:9,cursor:"pointer",fontFamily:"inherit"}}>Get Started →</button>
-          </div>
+          {isMobile ? (
+            <div style={{display:"flex",flexDirection:"column",gap:4,cursor:"pointer"}} onClick={()=>{if(onStart)onStart();}}>
+              <div style={{width:20,height:2,background:S.purpleDark,borderRadius:2}}/>
+              <div style={{width:20,height:2,background:S.purpleDark,borderRadius:2}}/>
+              <div style={{width:20,height:2,background:S.purpleDark,borderRadius:2}}/>
+            </div>
+          ) : (
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <button onClick={onLogin} style={{fontSize:14,fontWeight:600,color:S.purpleDark,background:"none",border:"1.5px solid #c4b8f0",borderRadius:9,padding:"8px 16px",cursor:"pointer",fontFamily:"inherit"}}>Login</button>
+              <button onClick={()=>{if(onStart)onStart();}} style={{fontSize:14,fontWeight:700,color:"#fff",background:S.purpleDark,border:"none",padding:"9px 18px",borderRadius:9,cursor:"pointer",fontFamily:"inherit"}}>Get Started →</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -169,18 +177,20 @@ export default function LandingPage({ onStart, onLogin }) {
             <div style={{position:"relative",minHeight:500,marginTop:10}}><PhoneAndPhoto/></div>
           </div>
         ) : (
-          <div style={{display:"flex",alignItems:"flex-start",position:"relative",minHeight:"520px",background:"#eeeaff",margin:"0 -24px",padding:"36px 24px 28px"}}>
-            <div style={{flex:"0 0 42%",paddingTop:24,position:"relative",zIndex:3}}>
-              <HeroText/>
-            </div>
-            <div style={{flex:"0 0 58%",position:"relative",minHeight:500}}>
-              <PhoneAndPhoto/>
+          <div style={{position:"relative",minHeight:520,background:"#eeeaff",margin:"0 -24px",overflow:"hidden"}}>
+            <div style={{maxWidth:980,margin:"0 auto",padding:"36px 24px 28px",display:"flex",alignItems:"flex-start"}}>
+              <div style={{flex:"0 0 42%",paddingTop:24,position:"relative",zIndex:3}}>
+                <HeroText/>
+              </div>
+              <div style={{flex:"0 0 58%",position:"relative",minHeight:500}}>
+                <PhoneAndPhoto/>
+              </div>
             </div>
           </div>
         )}
 
         {/* FEATURES CARD */}
-        <div style={{background:"#fff",borderRadius:20,padding:"26px 12px",display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(5,1fr)",gap:isMobile?"26px 0":0,boxShadow:"0 2px 8px rgba(45,27,105,.06),0 12px 32px rgba(45,27,105,.08)",marginBottom:48,marginTop:isMobile?80:0,border:"1px solid #e8e3ff"}}>
+        <div style={{background:"#fff",borderRadius:20,padding:"26px 12px",display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(5,1fr)",gap:isMobile?"26px 0":0,boxShadow:"0 2px 8px rgba(45,27,105,.06),0 12px 32px rgba(45,27,105,.08)",marginBottom:48,marginTop:isMobile?80:32,border:"1px solid #e8e3ff"}}>
           {[["💬","WhatsApp First","Clients book via WhatsApp"],["📵","Zero Missed Calls","Never miss a booking again"],["📲","No App Download","Works inside WhatsApp itself"],["🕐","24/7 Booking","Bot works round the clock"],["⚡","3 Minute Setup","Get started in just 3 minutes"]].map(([icon,title,desc])=>(
             <div key={title} style={{textAlign:"center",padding:"0 8px"}}>
               <div style={{width:50,height:50,background:S.purpleSoft,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:20,margin:"0 auto 12px"}}>{icon}</div>
