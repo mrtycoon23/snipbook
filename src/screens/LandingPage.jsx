@@ -254,10 +254,10 @@ export default function LandingPage({ onStart, onLogin }) {
               width:"55%",height:"100%",
               backgroundImage:`url(${HERO_IMG})`,
               backgroundSize:"cover",
-              backgroundPosition:"center top",
-              zIndex:1,
+              backgroundPosition:"20% top",
+              zIndex:1,filter:"brightness(1.08) contrast(1.04)"
             }}>
-              <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,#eeeaff 0%,rgba(238,234,255,.85) 15%,rgba(238,234,255,.25) 45%,transparent 70%)",zIndex:2}}/>
+              <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,#eeeaff 0%,rgba(238,234,255,.75) 12%,rgba(238,234,255,.15) 38%,transparent 60%)",zIndex:2}}/>
               <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,#eeeaff 0%,transparent 20%)",zIndex:2}}/>
             </div>
             {/* Phone mockup absolute right */}
