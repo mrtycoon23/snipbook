@@ -180,7 +180,7 @@ export default function LandingPage({ onStart, onLogin }) {
             <div style={{position:"relative",minHeight:500,marginTop:10}}><PhoneAndPhoto/></div>
           </div>
         ) : (
-          <div style={{position:"relative",minHeight:640,background:"#eeeaff",margin:"0 -24px",overflow:"hidden"}}>
+          <div style={{position:"relative",minHeight:560,background:"#eeeaff",margin:"0 -24px",overflow:"hidden"}}>
             {/* Photo as right-side bg */}
             <div style={{
               position:"absolute",top:0,right:0,
@@ -196,8 +196,8 @@ export default function LandingPage({ onStart, onLogin }) {
             {/* Phone mockup absolute right */}
             <div style={{
               position:"absolute",
-              top:10,right:16,
-              zIndex:5,width:185,
+              top:20,right:24,
+              zIndex:5,width:160,
               filter:"drop-shadow(0 14px 22px rgba(0,0,0,.18)) drop-shadow(0 34px 60px rgba(0,0,0,.22))"
             }}>
               <div style={{background:"linear-gradient(145deg,#5a5a60 0%,#3a3a40 18%,#6b6b72 38%,#2e2e34 60%,#56565c 82%,#3a3a40 100%)",borderRadius:42,padding:3,position:"relative"}}>
