@@ -180,7 +180,7 @@ export default function LandingPage({ onStart, onLogin }) {
             <div style={{position:"relative",minHeight:500,marginTop:10}}><PhoneAndPhoto/></div>
           </div>
         ) : (
-          <div style={{position:"relative",minHeight:560,background:"#eeeaff",margin:"0 -24px",overflow:"visible"}}>
+          <div style={{position:"relative",minHeight:620,background:"#eeeaff",margin:"0 -24px",overflow:"visible"}}>
             {/* Photo as right-side bg */}
             <div style={{
               position:"absolute",top:0,right:0,
@@ -338,4 +338,3 @@ export default function LandingPage({ onStart, onLogin }) {
     </div>
   );
 }
- 
