@@ -177,7 +177,56 @@ export default function LandingPage({ onStart, onLogin }) {
         {isMobile ? (
           <div style={{padding:"28px 0 0"}}>
             <div style={{paddingBottom:24}}><HeroText/></div>
-            <div style={{position:"relative",minHeight:500,marginTop:10}}><PhoneAndPhoto/></div>
+            <div style={{position:"relative",height:460,marginTop:10,overflow:"hidden"}}>
+              {/* Mobile photo */}
+              <div style={{
+                position:"absolute",top:0,left:-16,
+                width:"72%",height:460,
+                backgroundImage:`url(${HERO_IMG})`,
+                backgroundSize:"cover",backgroundPosition:"center top",zIndex:1
+              }}>
+                <div style={{position:"absolute",inset:0,background:"linear-gradient(to right,#f8f7ff 0%,transparent 30%),linear-gradient(to left,#f8f7ff 0%,transparent 20%),linear-gradient(to bottom,transparent 70%,#f8f7ff 100%)",zIndex:2}}/>
+              </div>
+              {/* Mobile phone - small, right aligned, fully visible */}
+              <div style={{position:"absolute",top:10,right:4,zIndex:5,width:165,filter:"drop-shadow(0 8px 16px rgba(0,0,0,.2))"}}>
+                <div style={{background:"linear-gradient(145deg,#5a5a60,#3a3a40)",borderRadius:32,padding:3,position:"relative"}}>
+                  {[{left:"-1.5px",top:"62px",width:"1.5px",height:"14px"},{left:"-1.5px",top:"85px",width:"1.5px",height:"22px"},{left:"-1.5px",top:"115px",width:"1.5px",height:"22px"},{right:"-1.5px",top:"96px",width:"1.5px",height:"32px"}].map((b,i)=>(
+                    <div key={i} style={{position:"absolute",background:"#3a3a40",borderRadius:1,...b}}/>
+                  ))}
+                  <div style={{background:"#050507",borderRadius:29,padding:6}}>
+                    <div style={{background:"#f6f5fa",borderRadius:23,overflow:"hidden"}}>
+                      <div style={{position:"relative",width:44,height:12,background:"#050507",borderRadius:6,margin:"5px auto 2px"}}/>
+                      <div style={{display:"flex",justifyContent:"space-between",padding:"0 12px 2px",fontSize:7.5,fontWeight:700}}><span>9:41</span><span>▮▮▮🛜🔋</span></div>
+                      <div style={{background:"#f7f6f4",padding:"4px 8px",display:"flex",alignItems:"center",gap:5,borderBottom:"1px solid #e4e2dd"}}>
+                        <span style={{fontSize:10,color:"#007aff",fontWeight:600}}>‹</span>
+                        <div style={{width:18,height:18,background:"#cfe5f5",borderRadius:"50%",display:"grid",placeItems:"center",fontSize:9,flexShrink:0}}>👤</div>
+                        <div><div style={{fontSize:8.5,fontWeight:700,color:"#111"}}>SnipBook Bot</div><div style={{fontSize:6.5,color:"#8696a0"}}>online</div></div>
+                      </div>
+                      <div style={{padding:"6px 7px",display:"flex",flexDirection:"column",gap:6,background:"#efeae2",minHeight:195}}>
+                        {[{t:"Haircut booking karni hai",out:true,time:"10:21"},{t:"Namaste! Kaun si service? 💇",out:false,time:"10:21"},{t:"Haircut",out:true,time:"10:22"},{t:"Kal 11:00 AM chalega?",out:false,time:"10:22"},{t:"Haan, confirm karo",out:true,time:"10:22"}].map((m,i)=>(
+                          <div key={i} style={{display:"flex",justifyContent:m.out?"flex-end":"flex-start"}}>
+                            <div style={{background:m.out?"#d9fdd3":"#fff",borderRadius:m.out?"7px 7px 0 7px":"7px 7px 7px 0",padding:"4px 7px 3px",fontSize:8.5,lineHeight:1.35,color:"#111b21",maxWidth:"82%"}}>
+                              {m.t}<div style={{fontSize:5.5,color:"#8696a0",textAlign:"right",marginTop:1}}>{m.time}{m.out&&<span style={{color:"#53bdeb",marginLeft:1}}>✓✓</span>}</div>
+                            </div>
+                          </div>
+                        ))}
+                        <div style={{background:"#fff",borderRadius:"7px 7px 7px 0",padding:"5px 7px 4px",maxWidth:"88%"}}>
+                          <div style={{fontWeight:700,fontSize:8.5}}>✅ Booking Confirmed!</div>
+                          <div style={{fontSize:7.5,marginTop:1,color:"#333"}}>📅 4 June, 11:00 AM</div>
+                          <div style={{fontSize:5.5,color:"#8696a0",textAlign:"right",marginTop:1}}>10:23</div>
+                        </div>
+                      </div>
+                      <div style={{background:"#f7f6f4",padding:"3px 6px",display:"flex",alignItems:"center",gap:4,borderTop:"1px solid #e4e2dd"}}>
+                        <span style={{fontSize:10,color:"#007aff"}}>＋</span>
+                        <div style={{flex:1,background:"#fff",border:"1px solid #e0ded8",borderRadius:9,padding:"3px 6px",fontSize:6.5,color:"#b3b1ab"}}>🏷</div>
+                        <span style={{fontSize:9}}>📷</span><span style={{fontSize:9}}>🎙</span>
+                      </div>
+                      <div style={{width:44,height:2.5,background:"#1c1c20",borderRadius:2,margin:"3px auto 3px",opacity:0.3}}/>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div style={{position:"relative",minHeight:620,background:"#eeeaff",margin:"0 -24px",overflow:"visible"}}>
@@ -255,7 +304,7 @@ export default function LandingPage({ onStart, onLogin }) {
         )}
 
         {/* FEATURES CARD */}
-        <div style={{background:"#fff",borderRadius:20,padding:"26px 12px",display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(5,1fr)",gap:isMobile?"26px 0":0,boxShadow:"0 2px 8px rgba(45,27,105,.06),0 12px 32px rgba(45,27,105,.08)",marginBottom:48,marginTop:isMobile?80:48,border:"1px solid #e8e3ff"}}>
+        <div style={{background:"#fff",borderRadius:20,padding:"26px 12px",display:"grid",gridTemplateColumns:isMobile?"1fr 1fr":"repeat(5,1fr)",gap:isMobile?"26px 0":0,boxShadow:"0 2px 8px rgba(45,27,105,.06),0 12px 32px rgba(45,27,105,.08)",marginBottom:48,marginTop:isMobile?24:48,border:"1px solid #e8e3ff"}}>
           {[["💬","WhatsApp First","Clients book via WhatsApp"],["📵","Zero Missed Calls","Never miss a booking again"],["📲","No App Download","Works inside WhatsApp itself"],["🕐","24/7 Booking","Bot works round the clock"],["⚡","3 Minute Setup","Get started in just 3 minutes"]].map(([icon,title,desc])=>(
             <div key={title} style={{textAlign:"center",padding:"0 8px"}}>
               <div style={{width:50,height:50,background:S.purpleSoft,borderRadius:"50%",display:"grid",placeItems:"center",fontSize:20,margin:"0 auto 12px"}}>{icon}</div>
