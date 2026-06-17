@@ -5,7 +5,7 @@ import CustomerHistory from "./screens/CustomerHistoryApp";
 import EngagementCenter from "./screens/EngagementCenter";
 import StaffDashboard, { StaffLoginPage } from "./screens/StaffDashboard";
 import SuperAdmin from "./screens/SuperAdmin";
-import LandingPage from "./screens/LandingPage"; 
+import LandingPage from "./screens/LandingPage";
 
 const TP={bg:"#f4f2ff",surface:"#ffffff",border:"#e0d8ff",purple:"#2d1b69",purpleLight:"#ede9fe",purpleMid:"#5b3fc4",text:"#1a0a4a",tm:"#4a3580",ts:"#9b8ec4",tf:"#c4b8f0",tg:"#e0d8ff",green:"#22c55e",gl:"#e8fdf0",gm:"#bbf7d0",gd:"#16a34a",yellow:"#fef9c3",yb:"#fde68a",yt:"#a16207",blue:"#eff6ff",bb:"#93c5fd",bt:"#2563eb",red:"#fff0f0",rb:"#fca5a5",rt:"#dc2626",sub:"#f4f2ff",inp:"#fafbff"};
 function pad(n){return String(n).padStart(2,"0");}
@@ -83,7 +83,6 @@ function Onboarding({onComplete,onBack}){
   <div style={{padding:"16px 20px"}}>{error&&<div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:10,padding:"9px 12px",fontSize:12,color:TP.rt,fontWeight:700,marginBottom:14}}>{error}</div>}{step===1&&(<><F label="Full Name"><input value={data.ownerName} onChange={e=>setData(p=>({...p,ownerName:e.target.value}))} placeholder="e.g. Rahul Sharma" style={obIs}/></F><F label="Mobile"><input value={data.phone} onChange={e=>setData(p=>({...p,phone:e.target.value.replace(/\D/g,"").slice(0,10)}))} maxLength={10} inputMode="numeric" placeholder="+91 98765 43210" style={obIs}/></F><F label="Email"><input value={data.email} onChange={e=>setData(p=>({...p,email:e.target.value}))} placeholder="rahul@gmail.com" type="email" style={obIs}/></F><F label="Password"><input value={data.password} onChange={e=>setData(p=>({...p,password:e.target.value}))} placeholder="Min 6 characters" type="password" style={obIs}/></F></>)}{step===2&&(<><F label="Salon Name"><input value={data.salonName} onChange={e=>setData(p=>({...p,salonName:e.target.value}))} placeholder="e.g. Sharma's Salon" style={obIs}/></F><F label="City"><input value={data.city} onChange={e=>setData(p=>({...p,city:e.target.value}))} placeholder="e.g. Delhi" style={obIs}/></F><F label="Salon Type"><select value={data.salonType} onChange={e=>setData(p=>({...p,salonType:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}><option value="unisex">💇 Unisex</option><option value="mens">💈 Men's Salon</option><option value="ladies">💄 Ladies Parlour</option><option value="bridal">👰 Bridal Studio</option></select></F></>)}{step===3&&(<><div style={{marginBottom:14}}><div style={{fontSize:13,fontWeight:800,color:TP.tm,marginBottom:8}}>Working Days</div><div style={{display:"flex",flexWrap:"wrap",gap:7}}>{WEEK_DAYS.map(d=>{const a=data.workDays.includes(d);return(<button key={d} onClick={()=>setData(p=>({...p,workDays:a?p.workDays.filter(x=>x!==d):[...p.workDays,d]}))} style={{padding:"6px 12px",borderRadius:20,border:`2px solid ${a?TP.purple:TP.border}`,background:a?TP.purpleLight:"#fff",color:a?TP.purple:"#888",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{d}</button>);})}</div></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><F label="Opens At"><select value={data.openTime} onChange={e=>setData(p=>({...p,openTime:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}>{[6,7,8,9,10,11].map(h=><option key={h} value={h}>{h<=12?h:h-12}:00 {h<12?"AM":"PM"}</option>)}</select></F><F label="Closes At"><select value={data.closeTime} onChange={e=>setData(p=>({...p,closeTime:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}>{[18,19,20,21,22].map(h=><option key={h} value={h}>{h-12}:00 PM</option>)}</select></F></div></>)}{step===4&&(<div style={{display:"flex",flexDirection:"column",gap:8,maxHeight:"42vh",overflowY:"auto",WebkitOverflowScrolling:"touch",paddingBottom:"8px"}}>{svcs.filter(s=>data.salonType==="mens"?s.gender==="male":data.salonType==="ladies"?s.gender==="female":true).map(s=>(<div key={s.id} style={{background:s.active?TP.purpleLight:"#fafbfc",border:`2px solid ${s.active?"#c4b8f0":TP.border}`,borderRadius:12,padding:"11px 13px",display:"flex",alignItems:"center",gap:10}}><button onClick={()=>setSvcs(prev=>prev.map(sv=>sv.id===s.id?{...sv,active:!sv.active}:sv))} style={{width:24,height:24,borderRadius:"50%",border:"none",background:s.active?TP.purple:TP.border,color:"#fff",fontSize:11,cursor:"pointer",flexShrink:0,fontWeight:800}}>{s.active?"✓":""}</button><span style={{fontSize:17}}>{s.emoji}</span><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:s.active?TP.text:"#bbb"}}>{s.name}</div><div style={{fontSize:11,color:"#aaa"}}>{s.duration} min</div></div>{s.active&&<div style={{fontWeight:800,fontSize:14,color:TP.purple}}>₹{s.price}</div>}</div>))}</div>)}{step===5&&(<><div style={{background:TP.purpleLight,border:`2px solid #c4b8f0`,borderRadius:12,padding:"14px",marginBottom:14,textAlign:"center"}}><div style={{fontSize:28,marginBottom:4}}>💬</div><div style={{fontWeight:900,fontSize:13,color:TP.purple}}>Connect WhatsApp Business</div></div><F label="WhatsApp Number"><input value={data.waNumber} onChange={e=>setData(p=>({...p,waNumber:e.target.value.replace(/\D/g,"").slice(0,10)}))} maxLength={10} inputMode="numeric" placeholder="+91 98765 43210" style={obIs}/></F></>)}{step===6&&(<div style={{textAlign:"center"}}><div style={{fontSize:50,marginBottom:10}}>🎉</div><div style={{fontWeight:900,fontSize:19,marginBottom:6,color:TP.text}}>You're all set!</div><div style={{fontSize:13,color:TP.ts,lineHeight:1.7,marginBottom:18}}>{data.salonName||"Your salon"} is now live!</div><div style={{background:TP.purpleLight,border:`2px solid #c4b8f0`,borderRadius:10,padding:"10px",fontSize:12,color:TP.purple,fontWeight:700}}>✅ Account create ho raha hai...</div></div>)}</div>
   {step<6?(<div style={{padding:"0 20px 20px",display:"flex",gap:10}}><button onClick={()=>step>1?setStep(s=>s-1):onBack()} style={{flex:1,padding:"12px",border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:TP.tm}}>← Back</button><button onClick={()=>{if(canNext())setStep(s=>s+1);}} style={{flex:2,padding:"12px",background:canNext()?TP.purple:"#d1d5db",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:canNext()?"pointer":"not-allowed"}}>{step===5?"Finish →":"Continue →"}</button></div>):(<div style={{padding:"0 20px 20px"}}><button onClick={handleComplete} disabled={loading} style={{width:"100%",padding:"14px",background:loading?"#c4b8f0":TP.purple,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:loading?"not-allowed":"pointer"}}>{loading?"Account ban raha hai...":"🚀 Go to Dashboard"}</button></div>)}</div></div>);
 }
-
 const SF=({label,hint,children})=>(<div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#444",marginBottom:hint?3:5}}>{label}</div>{hint&&<div style={{fontSize:11,color:"#aaa",marginBottom:5}}>{hint}</div>}{children}</div>);
 const SCard=({title,icon,children,np})=>(<div style={{background:"#fff",border:`2px solid ${TP.border}`,borderRadius:16,overflow:"hidden",marginBottom:12}}><div style={{padding:"12px 16px",borderBottom:`2px solid ${TP.bg}`,display:"flex",alignItems:"center",gap:9,background:TP.purpleLight}}><div style={{width:32,height:32,borderRadius:10,background:"rgba(45,27,105,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{icon}</div><div style={{fontWeight:900,fontSize:14,color:TP.text}}>{title}</div></div><div style={np?{}:{padding:"14px 16px"}}>{children}</div></div>);
 const SToggle=({val,onChange})=>(<div onClick={onChange} style={{width:44,height:24,borderRadius:12,cursor:"pointer",background:val?TP.purple:TP.border,position:"relative",transition:"background 0.2s",flexShrink:0}}><div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:3,transition:"left 0.2s",left:val?"23px":"3px",boxShadow:"0 1px 4px rgba(0,0,0,0.15)"}}/></div>);
@@ -123,226 +122,30 @@ function Settings({user,onBack,onLogout,onSalonUpdate,showRevenue,setShowRevenue
   const sectionTitle=(icon,title)=>(<div style={{display:"flex",alignItems:"center",gap:10,padding:"14px 16px 10px"}}><div style={{width:32,height:32,borderRadius:9,background:"#f0eeff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{icon}</div><div style={{fontWeight:700,fontSize:15,color:"#0f0a2e",letterSpacing:"-0.2px"}}>{title}</div></div>);
   const Divider=()=><div style={{height:1,background:"#f1f0f5",margin:"0 16px"}}/>;
   const FieldLabel=({children})=><div style={{fontSize:12,fontWeight:600,color:"#6b7280",marginBottom:5}}>{children}</div>;
-
   if(loading)return<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:TP.ts}}>Loading...</div>;
   return(<div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",background:"#f8f7ff"}}>
-    {/* White Header */}
     <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
       <div style={{display:"flex",alignItems:"center",gap:10}}>
         <button onClick={onBack} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600}}>←</button>
-        <div>
-          <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Settings</div>
-          <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Manage your salon</div>
-        </div>
+        <div><div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Settings</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Manage your salon</div></div>
       </div>
     </div>
-    {/* Tab bar — reference style */}
     <div style={{background:"#fff",borderBottom:"1px solid #f1f0f5",display:"flex",flexShrink:0}}>
-      {SETTING_TABS.map(t=>(
-        <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 2px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`}}>
-          <span style={{fontSize:18}}>{t.icon}</span>
-          <span style={{fontSize:10,fontWeight:tab===t.id?700:500,color:tab===t.id?"#5b3fc4":"#9ca3af",letterSpacing:"-0.1px"}}>{t.label}</span>
-        </div>
-      ))}
+      {SETTING_TABS.map(t=>(<div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"10px 2px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`}}><span style={{fontSize:18}}>{t.icon}</span><span style={{fontSize:10,fontWeight:tab===t.id?700:500,color:tab===t.id?"#5b3fc4":"#9ca3af",letterSpacing:"-0.1px"}}>{t.label}</span></div>))}
     </div>
     <div style={{flex:1,overflowY:"auto",padding:"14px 14px 80px"}}>
-      {tab==="profile"&&(
-        <div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
-          <input ref={logoFileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleLogoUpload}/>
-          {/* Salon Logo */}
-          <div style={{background:"#fff",borderRadius:14,margin:"12px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
-            {sectionTitle("🖼️","Salon Logo")}
-            <Divider/>
-            <div style={{padding:"14px 16px",display:"flex",alignItems:"center",gap:14}}>
-              <div style={{width:64,height:64,borderRadius:14,overflow:"hidden",border:"1.5px solid #e5e7eb",background:"#f8f7ff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                {logoUrl?<img src={logoUrl} alt="logo" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:26}}>✂️</span>}
-              </div>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:600,fontSize:13,color:"#0f0a2e",marginBottom:8}}>{logoUrl?"Logo uploaded ✅":"No logo yet"}</div>
-                <button onClick={()=>logoFileRef.current?.click()} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:"#f0eeff",border:"1.5px solid #ddd6fe",borderRadius:10,color:"#5b3fc4",fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                  📤 {logoUploading?"Uploading...":"Upload Logo"}
-                </button>
-              </div>
-            </div>
-          </div>
-          {/* Salon Details */}
-          <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
-            {sectionTitle("🏪","Salon Details")}
-            <Divider/>
-            <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}>
-              {[
-                {label:"Salon Name",key:"salonName",placeholder:"e.g. Style Adda"},
-                {label:"Owner Name",key:"ownerName",placeholder:"e.g. Rahul Sharma"},
-                {label:"Phone Number",key:"phone",placeholder:"+91 98765 43210"},
-                {label:"City",key:"city",placeholder:"e.g. Delhi"},
-                {label:"Address",key:"address",placeholder:"e.g. Shop 12, MG Road"},
-                {label:"Google Maps Link",key:"mapsLink",placeholder:"https://maps.google.com/..."},
-                {label:"Notification Number",key:"notifNumber",placeholder:"919876543210"},
-              ].map(f=>(
-                <div key={f.key}>
-                  <FieldLabel>{f.label}</FieldLabel>
-                  <input value={profile[f.key]||""} onChange={e=>setProfile(p=>({...p,[f.key]:e.target.value}))} placeholder={f.placeholder} style={inp}
-                    onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Staff Settings */}
-          <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
-            {sectionTitle("👨‍💼","Staff Settings")}
-            <Divider/>
-            <div style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              <div>
-                <div style={{fontWeight:600,fontSize:13,color:"#0f0a2e"}}>Show Revenue to Staff?</div>
-                <div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{showRevenue?"Staff can see their earnings":"Revenue hidden from staff"}</div>
-              </div>
-              <Toggle val={showRevenue} onChange={()=>setShowRevenue(v=>!v)}/>
-            </div>
-          </div>
-        </div>
-      )}
-      {tab==="services"&&(
-        <div style={{flex:1,overflowY:"auto",padding:"12px 16px 80px"}}>
-          {["male","female"].map(gs=>{
-        const sectionSvcs=services.filter(s=>(s.gender||"both")===gs||(s.gender||"both")==="both");
-        const sc=gs==="male"?TP.purpleMid:"#db2777";const sb=gs==="male"?TP.purpleLight:"#fff0f6";const sbd=gs==="male"?"#c4b8f0":"#f9a8d4";
-        const sl=gs==="male"?"👨 Male Services":"👩 Female Services";
-        if(profile.salonType==="mens"&&gs==="female")return null;if(profile.salonType==="ladies"&&gs==="male")return null;
-        const isOpen=openSection===gs;const isAdding=showAdd===gs;
-        return(<div key={gs} style={{background:"#fff",border:`2px solid ${isOpen?sc:sbd}`,borderRadius:16,overflow:"hidden",marginBottom:12}}>
-          <div onClick={()=>{setOpenSection(isOpen?null:gs);setShowAdd(false);setEditId(null);}} style={{padding:"14px 16px",background:isOpen?sb:"#fff",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{fontWeight:900,fontSize:14,color:isOpen?sc:TP.text}}>{sl}</div><div style={{background:isOpen?sc+"22":TP.bg,color:isOpen?sc:TP.ts,fontSize:11,fontWeight:800,padding:"2px 8px",borderRadius:20}}>{sectionSvcs.filter(s=>s.active).length} services</div></div>
-            <div style={{fontSize:16,color:isOpen?sc:"#aaa",transform:isOpen?"rotate(180deg)":"none"}}>⌄</div>
-          </div>
-          {isOpen&&<>{sectionSvcs.map(s=>(<div key={s.id}>{editId===s.id?(<div style={{padding:"13px 14px",borderBottom:`2px solid ${TP.bg}`,background:TP.bg}}><div style={{fontWeight:800,fontSize:13,color:sc,marginBottom:9}}>✏️ {s.name}</div><div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}><select value={s.emoji} onChange={e=>updSvc(s.id,"emoji",e.target.value)} style={{...is,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select><input value={s.name} onChange={e=>updSvc(s.id,"name",e.target.value)} style={{...is,height:44}}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:11}}><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Price (₹)</div><input type="number" value={s.price} onChange={e=>updSvc(s.id,"price",parseInt(e.target.value)||0)} style={is}/></div><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Duration</div><select value={s.duration} onChange={e=>updSvc(s.id,"duration",parseInt(e.target.value))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div></div><div style={{display:"flex",gap:8}}><button onClick={()=>setEditId(null)} style={{flex:1,padding:"10px",background:sc,border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>✓ Done</button><button onClick={()=>delSvc(s.id)} style={{padding:"10px 14px",background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:10,color:TP.rt,fontFamily:"inherit",fontSize:13,cursor:"pointer"}}>🗑</button></div></div>):(<div style={{display:"flex",alignItems:"center",gap:11,padding:"12px 14px",borderBottom:`2px solid ${TP.bg}`,background:s.active?"#fff":TP.bg}}><button onClick={()=>toggleSvc(s.id)} style={{width:22,height:22,borderRadius:"50%",border:"none",background:s.active?sc:TP.border,color:"#fff",fontSize:10,fontWeight:800,cursor:"pointer",flexShrink:0}}>{s.active?"✓":""}</button><span style={{fontSize:18,flexShrink:0}}>{s.emoji}</span><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:s.active?TP.text:"#aaa"}}>{s.name}</div><div style={{fontSize:11,color:"#aaa"}}>{s.duration} min</div></div><div style={{fontWeight:800,fontSize:13,color:s.active?sc:"#ccc"}}>₹{s.price}</div><button onClick={()=>setEditId(s.id)} style={{width:30,height:30,border:`2px solid ${TP.border}`,borderRadius:8,background:"#fff",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>✏️</button></div>)}</div>))}
-          {isAdding?(<div style={{padding:"13px 14px",background:sb}}><div style={{fontWeight:800,fontSize:13,color:sc,marginBottom:9}}>➕ New Service</div><div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}><select value={newSvc.emoji} onChange={e=>setNewSvc(p=>({...p,emoji:e.target.value}))} style={{...is,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select><input value={newSvc.name} onChange={e=>setNewSvc(p=>({...p,name:e.target.value}))} placeholder="Service name" style={{...is,height:44}}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:11}}><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Price (₹)</div><input type="number" value={newSvc.price} onChange={e=>setNewSvc(p=>({...p,price:e.target.value}))} placeholder="450" style={is}/></div><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Duration</div><select value={newSvc.duration} onChange={e=>setNewSvc(p=>({...p,duration:parseInt(e.target.value)}))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div></div><div style={{display:"flex",gap:8}}><button onClick={()=>{if(!newSvc.name.trim())return;setServices(p=>[...p,{id:Date.now(),emoji:newSvc.emoji,name:newSvc.name.trim(),price:parseInt(newSvc.price)||0,duration:newSvc.duration,active:true,gender:gs}]);setNewSvc({emoji:"✂️",name:"",price:"",duration:30,gender:"both"});setShowAdd(false);}} style={{flex:1,padding:"10px",background:sc,border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>➕ Add</button><button onClick={()=>setShowAdd(false)} style={{padding:"10px 14px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:10,fontFamily:"inherit",fontSize:13,cursor:"pointer",color:"#888"}}>Cancel</button></div></div>):(<div style={{padding:"11px 14px"}}><button onClick={()=>{setShowAdd(gs);setNewSvc({emoji:"✂️",name:"",price:"",duration:30,gender:gs});}} style={{width:"100%",padding:"10px",background:sb,border:`2px dashed ${sbd}`,borderRadius:11,color:sc,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>➕ Add Service</button></div>)}</>}
-        </div>);        })}
-        </div>
-      )}
-      {tab==="hours"&&(
-        <div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
-          {/* Working Days */}
-          <div style={{background:"#fff",borderRadius:14,margin:"12px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
-            {sectionTitle("📅","Working Days")}
-            <Divider/>
-            <div style={{padding:"14px 16px",display:"flex",flexWrap:"wrap",gap:8}}>
-              {WEEK_DAYS.map(d=>{const a=hours.workDays.includes(d);return(
-                <button key={d} onClick={()=>toggleDay(d)} style={{padding:"8px 16px",borderRadius:20,border:`1.5px solid ${a?"#5b3fc4":"#e5e7eb"}`,background:a?"#5b3fc4":"#fff",color:a?"#fff":"#374151",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{d}</button>
-              );})}
-            </div>
-          </div>
-          {/* Timings */}
-          <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
-            {sectionTitle("🕐","Timings")}
-            <Divider/>
-            <div style={{padding:"14px 16px"}}>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
-                <div>
-                  <FieldLabel>Opens At</FieldLabel>
-                  <select value={hours.openTime} onChange={e=>setHours(p=>({...p,openTime:parseInt(e.target.value)}))} style={{...inp,cursor:"pointer"}}>
-                    {HOURS_LIST.filter(h=>h.val<=14).map(h=><option key={h.val} value={h.val}>{h.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <FieldLabel>Closes At</FieldLabel>
-                  <select value={hours.closeTime} onChange={e=>setHours(p=>({...p,closeTime:parseInt(e.target.value)}))} style={{...inp,cursor:"pointer"}}>
-                    {HOURS_LIST.filter(h=>h.val>=12).map(h=><option key={h.val} value={h.val}>{h.label}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div style={{background:"#f0eeff",border:"1px solid #ddd6fe",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#5b3fc4",fontWeight:600}}>
-                🕐 {hours.openTime}:00 AM → {hours.closeTime>12?hours.closeTime-12:hours.closeTime}:00 PM
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {tab==="whatsapp"&&(
-        <div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
-          {/* WhatsApp Number */}
-          <div style={{background:"#fff",borderRadius:14,margin:"12px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
-            {sectionTitle("💬","WhatsApp Number")}
-            <Divider/>
-            <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}>
-              <div>
-                <FieldLabel>WhatsApp Business Number</FieldLabel>
-                <input value={wa.number} onChange={e=>setWa(p=>({...p,number:e.target.value}))} placeholder="8307340281" style={inp}
-                  onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/>
-              </div>
-              <button style={{width:"100%",padding:"11px",background:"#f0eeff",border:"1.5px solid #ddd6fe",borderRadius:10,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-                🚀 Send Test Message
-              </button>
-            </div>
-          </div>
-          {/* Booking Link & QR */}
-          <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>
-            {sectionTitle("🔗","Booking Link & QR")}
-            <Divider/>
-            <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}>
-              <div>
-                <FieldLabel>Bot Keyword</FieldLabel>
-                <input value={wa.botKeyword||""} onChange={e=>setWa(p=>({...p,botKeyword:e.target.value}))} placeholder="e.g. snipsalon" style={inp}
-                  onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/>
-              </div>
-              <div>
-                <FieldLabel>Booking Link</FieldLabel>
-                <div style={{display:"flex",alignItems:"center",gap:8,background:"#f8f7ff",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 12px"}}>
-                  <span style={{flex:1,fontSize:11,color:"#6b7280",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bookingLink}</span>
-                  <button onClick={()=>navigator.clipboard.writeText(bookingLink)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,flexShrink:0}}>📋</button>
-                </div>
-              </div>
-              <button onClick={()=>window.open(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(bookingLink)}`,"_blank")}
-                style={{width:"100%",padding:"11px",background:"#5b3fc4",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-                📷 Generate QR Code
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {tab==="account"&&(
-        <div style={{flex:1,overflowY:"auto",padding:"12px 16px 80px"}}>
-          {/* Current Plan */}
-          <div style={{background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",borderRadius:16,padding:"18px",marginBottom:10}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
-              <div>
-                <div style={{fontSize:11,color:"rgba(255,255,255,0.55)",fontWeight:500,marginBottom:4}}>Current Plan</div>
-                <div style={{fontWeight:800,fontSize:22,color:"#fff",letterSpacing:"-0.4px"}}>⚡ Early Access</div>
-              </div>
-              <div style={{background:"rgba(255,255,255,0.15)",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#c4b8f0",fontWeight:600}}>Beta User 🎉</div>
-            </div>
-            <button style={{width:"100%",padding:"11px",background:"rgba(255,255,255,0.15)",border:"1.5px solid rgba(255,255,255,0.25)",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-              ✉️ Contact for Pricing
-            </button>
-          </div>
-          {/* Account Info */}
-          <div style={{background:"#fff",borderRadius:14,border:"1px solid #f1f0f5",overflow:"hidden",marginBottom:10}}>
-            {sectionTitle("👤","Account Info")}
-            <Divider/>
-            <div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}>
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <span style={{fontSize:14}}>📧</span>
-                <span style={{fontSize:13,color:"#374151"}}>{user.email}</span>
-              </div>
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <span style={{fontSize:14}}>🏪</span>
-                <span style={{fontSize:13,color:"#374151"}}>{user.salon}</span>
-              </div>
-            </div>
-          </div>
-          {/* Logout */}
-          <button onClick={handleLogout} style={{width:"100%",padding:"14px",background:"#fff",border:"1.5px solid #fca5a5",borderRadius:14,color:"#dc2626",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
-            🚪 Logout
-          </button>
-        </div>
-      )}
+      {tab==="profile"&&(<div style={{flex:1,overflowY:"auto",paddingBottom:80}}>
+        <input ref={logoFileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleLogoUpload}/>
+        <div style={{background:"#fff",borderRadius:14,margin:"12px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>{sectionTitle("🖼️","Salon Logo")}<Divider/><div style={{padding:"14px 16px",display:"flex",alignItems:"center",gap:14}}><div style={{width:64,height:64,borderRadius:14,overflow:"hidden",border:"1.5px solid #e5e7eb",background:"#f8f7ff",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{logoUrl?<img src={logoUrl} alt="logo" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:26}}>✂️</span>}</div><div style={{flex:1}}><div style={{fontWeight:600,fontSize:13,color:"#0f0a2e",marginBottom:8}}>{logoUrl?"Logo uploaded ✅":"No logo yet"}</div><button onClick={()=>logoFileRef.current?.click()} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 16px",background:"#f0eeff",border:"1.5px solid #ddd6fe",borderRadius:10,color:"#5b3fc4",fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer"}}>📤 {logoUploading?"Uploading...":"Upload Logo"}</button></div></div></div>
+        <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>{sectionTitle("🏪","Salon Details")}<Divider/><div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}>{[{label:"Salon Name",key:"salonName",placeholder:"e.g. Style Adda"},{label:"Owner Name",key:"ownerName",placeholder:"e.g. Rahul Sharma"},{label:"Phone Number",key:"phone",placeholder:"+91 98765 43210"},{label:"City",key:"city",placeholder:"e.g. Delhi"},{label:"Address",key:"address",placeholder:"e.g. Shop 12, MG Road"},{label:"Google Maps Link",key:"mapsLink",placeholder:"https://maps.google.com/..."},{label:"Notification Number",key:"notifNumber",placeholder:"919876543210"}].map(f=>(<div key={f.key}><FieldLabel>{f.label}</FieldLabel><input value={profile[f.key]||""} onChange={e=>setProfile(p=>({...p,[f.key]:e.target.value}))} placeholder={f.placeholder} style={inp} onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/></div>))}</div></div>
+        <div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>{sectionTitle("👨‍💼","Staff Settings")}<Divider/><div style={{padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div><div style={{fontWeight:600,fontSize:13,color:"#0f0a2e"}}>Show Revenue to Staff?</div><div style={{fontSize:11,color:"#6b7280",marginTop:2}}>{showRevenue?"Staff can see their earnings":"Revenue hidden from staff"}</div></div><Toggle val={showRevenue} onChange={()=>setShowRevenue(v=>!v)}/></div></div>
+      </div>)}
+      {tab==="services"&&(<div style={{flex:1,overflowY:"auto",padding:"12px 16px 80px"}}>{["male","female"].map(gs=>{const sectionSvcs=services.filter(s=>(s.gender||"both")===gs||(s.gender||"both")==="both");const sc=gs==="male"?TP.purpleMid:"#db2777";const sb=gs==="male"?TP.purpleLight:"#fff0f6";const sbd=gs==="male"?"#c4b8f0":"#f9a8d4";const sl=gs==="male"?"👨 Male Services":"👩 Female Services";if(profile.salonType==="mens"&&gs==="female")return null;if(profile.salonType==="ladies"&&gs==="male")return null;const isOpen=openSection===gs;const isAdding=showAdd===gs;return(<div key={gs} style={{background:"#fff",border:`2px solid ${isOpen?sc:sbd}`,borderRadius:16,overflow:"hidden",marginBottom:12}}><div onClick={()=>{setOpenSection(isOpen?null:gs);setShowAdd(false);setEditId(null);}} style={{padding:"14px 16px",background:isOpen?sb:"#fff",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{fontWeight:900,fontSize:14,color:isOpen?sc:TP.text}}>{sl}</div><div style={{background:isOpen?sc+"22":TP.bg,color:isOpen?sc:TP.ts,fontSize:11,fontWeight:800,padding:"2px 8px",borderRadius:20}}>{sectionSvcs.filter(s=>s.active).length} services</div></div><div style={{fontSize:16,color:isOpen?sc:"#aaa",transform:isOpen?"rotate(180deg)":"none"}}>⌄</div></div>{isOpen&&<>{sectionSvcs.map(s=>(<div key={s.id}>{editId===s.id?(<div style={{padding:"13px 14px",borderBottom:`2px solid ${TP.bg}`,background:TP.bg}}><div style={{fontWeight:800,fontSize:13,color:sc,marginBottom:9}}>✏️ {s.name}</div><div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}><select value={s.emoji} onChange={e=>updSvc(s.id,"emoji",e.target.value)} style={{...is,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select><input value={s.name} onChange={e=>updSvc(s.id,"name",e.target.value)} style={{...is,height:44}}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:11}}><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Price (₹)</div><input type="number" value={s.price} onChange={e=>updSvc(s.id,"price",parseInt(e.target.value)||0)} style={is}/></div><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Duration</div><select value={s.duration} onChange={e=>updSvc(s.id,"duration",parseInt(e.target.value))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div></div><div style={{display:"flex",gap:8}}><button onClick={()=>setEditId(null)} style={{flex:1,padding:"10px",background:sc,border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>✓ Done</button><button onClick={()=>delSvc(s.id)} style={{padding:"10px 14px",background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:10,color:TP.rt,fontFamily:"inherit",fontSize:13,cursor:"pointer"}}>🗑</button></div></div>):(<div style={{display:"flex",alignItems:"center",gap:11,padding:"12px 14px",borderBottom:`2px solid ${TP.bg}`,background:s.active?"#fff":TP.bg}}><button onClick={()=>toggleSvc(s.id)} style={{width:22,height:22,borderRadius:"50%",border:"none",background:s.active?sc:TP.border,color:"#fff",fontSize:10,fontWeight:800,cursor:"pointer",flexShrink:0}}>{s.active?"✓":""}</button><span style={{fontSize:18,flexShrink:0}}>{s.emoji}</span><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:s.active?TP.text:"#aaa"}}>{s.name}</div><div style={{fontSize:11,color:"#aaa"}}>{s.duration} min</div></div><div style={{fontWeight:800,fontSize:13,color:s.active?sc:"#ccc"}}>₹{s.price}</div><button onClick={()=>setEditId(s.id)} style={{width:30,height:30,border:`2px solid ${TP.border}`,borderRadius:8,background:"#fff",cursor:"pointer",fontSize:13,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>✏️</button></div>)}</div>))}{isAdding?(<div style={{padding:"13px 14px",background:sb}}><div style={{fontWeight:800,fontSize:13,color:sc,marginBottom:9}}>➕ New Service</div><div style={{display:"grid",gridTemplateColumns:"46px 1fr",gap:7,marginBottom:9}}><select value={newSvc.emoji} onChange={e=>setNewSvc(p=>({...p,emoji:e.target.value}))} style={{...is,fontSize:18,textAlign:"center",padding:"8px 4px",height:44,marginTop:0}}>{EMOJIS.map(em=><option key={em} value={em}>{em}</option>)}</select><input value={newSvc.name} onChange={e=>setNewSvc(p=>({...p,name:e.target.value}))} placeholder="Service name" style={{...is,height:44}}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:11}}><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Price (₹)</div><input type="number" value={newSvc.price} onChange={e=>setNewSvc(p=>({...p,price:e.target.value}))} placeholder="450" style={is}/></div><div><div style={{fontSize:12,fontWeight:700,color:TP.tm,marginBottom:4}}>Duration</div><select value={newSvc.duration} onChange={e=>setNewSvc(p=>({...p,duration:parseInt(e.target.value)}))} style={{...is,cursor:"pointer"}}>{[15,30,45,60,75,90,120].map(d=><option key={d} value={d}>{d} min</option>)}</select></div></div><div style={{display:"flex",gap:8}}><button onClick={()=>{if(!newSvc.name.trim())return;setServices(p=>[...p,{id:Date.now(),emoji:newSvc.emoji,name:newSvc.name.trim(),price:parseInt(newSvc.price)||0,duration:newSvc.duration,active:true,gender:gs}]);setNewSvc({emoji:"✂️",name:"",price:"",duration:30,gender:"both"});setShowAdd(false);}} style={{flex:1,padding:"10px",background:sc,border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>➕ Add</button><button onClick={()=>setShowAdd(false)} style={{padding:"10px 14px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:10,fontFamily:"inherit",fontSize:13,cursor:"pointer",color:"#888"}}>Cancel</button></div></div>):(<div style={{padding:"11px 14px"}}><button onClick={()=>{setShowAdd(gs);setNewSvc({emoji:"✂️",name:"",price:"",duration:30,gender:gs});}} style={{width:"100%",padding:"10px",background:sb,border:`2px dashed ${sbd}`,borderRadius:11,color:sc,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>➕ Add Service</button></div>)}</>}</div>);})} </div>)}
+      {tab==="hours"&&(<div style={{flex:1,overflowY:"auto",paddingBottom:80}}><div style={{background:"#fff",borderRadius:14,margin:"12px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>{sectionTitle("📅","Working Days")}<Divider/><div style={{padding:"14px 16px",display:"flex",flexWrap:"wrap",gap:8}}>{WEEK_DAYS.map(d=>{const a=hours.workDays.includes(d);return(<button key={d} onClick={()=>toggleDay(d)} style={{padding:"8px 16px",borderRadius:20,border:`1.5px solid ${a?"#5b3fc4":"#e5e7eb"}`,background:a?"#5b3fc4":"#fff",color:a?"#fff":"#374151",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{d}</button>);})}</div></div><div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>{sectionTitle("🕐","Timings")}<Divider/><div style={{padding:"14px 16px"}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}><div><FieldLabel>Opens At</FieldLabel><select value={hours.openTime} onChange={e=>setHours(p=>({...p,openTime:parseInt(e.target.value)}))} style={{...inp,cursor:"pointer"}}>{HOURS_LIST.filter(h=>h.val<=14).map(h=><option key={h.val} value={h.val}>{h.label}</option>)}</select></div><div><FieldLabel>Closes At</FieldLabel><select value={hours.closeTime} onChange={e=>setHours(p=>({...p,closeTime:parseInt(e.target.value)}))} style={{...inp,cursor:"pointer"}}>{HOURS_LIST.filter(h=>h.val>=12).map(h=><option key={h.val} value={h.val}>{h.label}</option>)}</select></div></div><div style={{background:"#f0eeff",border:"1px solid #ddd6fe",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#5b3fc4",fontWeight:600}}>🕐 {hours.openTime}:00 AM → {hours.closeTime>12?hours.closeTime-12:hours.closeTime}:00 PM</div></div></div></div>)}
+      {tab==="whatsapp"&&(<div style={{flex:1,overflowY:"auto",paddingBottom:80}}><div style={{background:"#fff",borderRadius:14,margin:"12px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>{sectionTitle("💬","WhatsApp Number")}<Divider/><div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}><div><FieldLabel>WhatsApp Business Number</FieldLabel><input value={wa.number} onChange={e=>setWa(p=>({...p,number:e.target.value}))} placeholder="8307340281" style={inp} onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/></div><button style={{width:"100%",padding:"11px",background:"#f0eeff",border:"1.5px solid #ddd6fe",borderRadius:10,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>🚀 Send Test Message</button></div></div><div style={{background:"#fff",borderRadius:14,margin:"10px 16px 0",border:"1px solid #f1f0f5",overflow:"hidden"}}>{sectionTitle("🔗","Booking Link & QR")}<Divider/><div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:12}}><div><FieldLabel>Bot Keyword</FieldLabel><input value={wa.botKeyword||""} onChange={e=>setWa(p=>({...p,botKeyword:e.target.value}))} placeholder="e.g. snipsalon" style={inp} onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e5e7eb"}/></div><div><FieldLabel>Booking Link</FieldLabel><div style={{display:"flex",alignItems:"center",gap:8,background:"#f8f7ff",border:"1px solid #e5e7eb",borderRadius:10,padding:"10px 12px"}}><span style={{flex:1,fontSize:11,color:"#6b7280",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{bookingLink}</span><button onClick={()=>navigator.clipboard.writeText(bookingLink)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,flexShrink:0}}>📋</button></div></div><button onClick={()=>window.open(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(bookingLink)}`,"_blank")} style={{width:"100%",padding:"11px",background:"#5b3fc4",border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>📷 Generate QR Code</button></div></div></div>)}
+      {tab==="account"&&(<div style={{flex:1,overflowY:"auto",padding:"12px 16px 80px"}}><div style={{background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",borderRadius:16,padding:"18px",marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}><div><div style={{fontSize:11,color:"rgba(255,255,255,0.55)",fontWeight:500,marginBottom:4}}>Current Plan</div><div style={{fontWeight:800,fontSize:22,color:"#fff",letterSpacing:"-0.4px"}}>⚡ Early Access</div></div><div style={{background:"rgba(255,255,255,0.15)",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#c4b8f0",fontWeight:600}}>Beta User 🎉</div></div><button style={{width:"100%",padding:"11px",background:"rgba(255,255,255,0.15)",border:"1.5px solid rgba(255,255,255,0.25)",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>✉️ Contact for Pricing</button></div><div style={{background:"#fff",borderRadius:14,border:"1px solid #f1f0f5",overflow:"hidden",marginBottom:10}}>{sectionTitle("👤","Account Info")}<Divider/><div style={{padding:"12px 16px",display:"flex",flexDirection:"column",gap:10}}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:14}}>📧</span><span style={{fontSize:13,color:"#374151"}}>{user.email}</span></div><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:14}}>🏪</span><span style={{fontSize:13,color:"#374151"}}>{user.salon}</span></div></div></div><button onClick={handleLogout} style={{width:"100%",padding:"14px",background:"#fff",border:"1.5px solid #fca5a5",borderRadius:14,color:"#dc2626",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>🚪 Logout</button></div>)}
     </div>
-    {tab!=="account"&&(
-      <div style={{background:"#fff",borderTop:"1px solid #f1f0f5",padding:"12px 16px",flexShrink:0,boxShadow:"0 -2px 12px rgba(0,0,0,0.04)"}}>
-        <button onClick={save} style={{width:"100%",padding:"14px",background:saved?"#f0eeff":"#5b3fc4",border:saved?"1.5px solid #ddd6fe":"none",borderRadius:12,color:saved?"#5b3fc4":"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,letterSpacing:"-0.1px"}}>
-          {saved?"✅ Saved!":"💾 Save Changes"}
-        </button>
-      </div>
-    )}
+    {tab!=="account"&&(<div style={{background:"#fff",borderTop:"1px solid #f1f0f5",padding:"12px 16px",flexShrink:0,boxShadow:"0 -2px 12px rgba(0,0,0,0.04)"}}><button onClick={save} style={{width:"100%",padding:"14px",background:saved?"#f0eeff":"#5b3fc4",border:saved?"1.5px solid #ddd6fe":"none",borderRadius:12,color:saved?"#5b3fc4":"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,letterSpacing:"-0.1px"}}>{saved?"✅ Saved!":"💾 Save Changes"}</button></div>)}
   </div>);
 }
 
@@ -396,9 +199,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       {["chats"].includes(screen)&&<SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
         {screen==="dashboard"&&(
-          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff"}}> 
-
-            {/* Dashboard Header — Image 1 style */}
+          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff"}}>
             <div style={{background:"#fff",padding:"12px 18px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div onClick={()=>setShowDrawer(true)} style={{display:"flex",flexDirection:"column",gap:4,cursor:"pointer",padding:"4px"}}>
@@ -419,115 +220,44 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                 <div style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff"}}>{user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div>
               </div>
             </div>
-
-
-            {/* Revenue Card */}
             <div style={{margin:"10px 16px 0",background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:18,padding:"16px",position:"relative",overflow:"hidden"}}>
               <svg style={{position:"absolute",bottom:0,right:0,opacity:0.15}} width="140" height="70" viewBox="0 0 140 70"><polyline points="0,60 25,45 50,52 75,28 100,35 120,15 140,22" fill="none" stroke="#fff" strokeWidth="2.5"/></svg>
               <div style={{position:"absolute",width:100,height:100,borderRadius:"50%",background:"rgba(255,255,255,0.05)",top:-30,right:-20}}/>
               <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:700,letterSpacing:0.5,marginBottom:4}}>{user.salon.toUpperCase()} · TODAY'S REVENUE</div>
               <div style={{fontSize:32,fontWeight:800,color:"#fff",marginBottom:6}}>₹{revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||"0"}</div>
-              <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}>
-                <span style={{color:"#22c55e",fontSize:11,fontWeight:700}}>↑ 18%</span>
-                <span style={{color:"rgba(255,255,255,0.6)",fontSize:11}}>from yesterday</span>
-              </div>
+              <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}><span style={{color:"#22c55e",fontSize:11,fontWeight:700}}>↑ 18%</span><span style={{color:"rgba(255,255,255,0.6)",fontSize:11}}>from yesterday</span></div>
             </div>
-
-            {/* Stats Row */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,margin:"8px 16px 0"}}>
-              {[{icon:"📅",val:booked,label:"Bookings",color:"#1a0a4a"},{icon:"⏳",val:pending,label:"Pending",color:"#f59e0b"},{icon:"👥",val:clients.length,label:"Clients",color:"#22c55e"},{icon:"💰",val:"₹"+(revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||0),label:"Revenue",color:"#5b3fc4"}].map(s=>(<div key={s.label} style={{background:"#fff",borderRadius:10,padding:"8px 4px",textAlign:"center",border:"0.5px solid #e0d8ff"}}>
-                <div style={{fontSize:13,marginBottom:2}}>{s.icon}</div>
-                <div style={{fontSize:15,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
-                <div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>{s.label}</div>
-              </div>))}
+              {[{icon:"📅",val:booked,label:"Bookings",color:"#1a0a4a"},{icon:"⏳",val:pending,label:"Pending",color:"#f59e0b"},{icon:"👥",val:clients.length,label:"Clients",color:"#22c55e"},{icon:"💰",val:"₹"+(revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||0),label:"Revenue",color:"#5b3fc4"}].map(s=>(<div key={s.label} style={{background:"#fff",borderRadius:10,padding:"8px 4px",textAlign:"center",border:"0.5px solid #e0d8ff"}}><div style={{fontSize:13,marginBottom:2}}>{s.icon}</div><div style={{fontSize:15,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>{s.label}</div></div>))}
             </div>
-
-            {/* Week Strip */}
             <div style={{padding:"8px 16px 0"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                {weekDays.map((d,i)=>{
-                  const key=dateKey(d);const isSel=key===selKey;const isToday=key===dateKey(today);
-                  const cnt=Object.values(bookings[key]||{}).filter(b=>b.status!=="break").length;
-                  return(<div key={i} onClick={()=>{setSelDate(d);setScreen("calendar");}} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",flex:1}}>
-                    <div style={{fontSize:9,fontWeight:700,color:isSel?"#5b3fc4":"#9b8ec4",letterSpacing:0.3}}>{["MON","TUE","WED","THU","FRI","SAT"][i]}</div>
-                    <div style={{width:34,height:34,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isSel?"#2d1b69":isToday?"#ede9fe":"transparent",boxShadow:isSel?"0 4px 12px rgba(45,27,105,0.3)":"none"}}>
-                      <div style={{fontSize:14,fontWeight:800,color:isSel?"#fff":isToday?"#2d1b69":"#1a0a4a"}}>{d.getDate()}</div>
-                    </div>
-                    <div style={{width:4,height:4,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.8)":"#5b3fc4"):"transparent"}}/>
-                  </div>);
-                })}
+                {weekDays.map((d,i)=>{const key=dateKey(d);const isSel=key===selKey;const isToday=key===dateKey(today);const cnt=Object.values(bookings[key]||{}).filter(b=>b.status!=="break").length;return(<div key={i} onClick={()=>{setSelDate(d);setScreen("calendar");}} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",flex:1}}><div style={{fontSize:9,fontWeight:700,color:isSel?"#5b3fc4":"#9b8ec4",letterSpacing:0.3}}>{["MON","TUE","WED","THU","FRI","SAT"][i]}</div><div style={{width:34,height:34,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isSel?"#2d1b69":isToday?"#ede9fe":"transparent",boxShadow:isSel?"0 4px 12px rgba(45,27,105,0.3)":"none"}}><div style={{fontSize:14,fontWeight:800,color:isSel?"#fff":isToday?"#2d1b69":"#1a0a4a"}}>{d.getDate()}</div></div><div style={{width:4,height:4,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.8)":"#5b3fc4"):"transparent"}}/></div>);})}
               </div>
             </div>
-
-            {/* Today's Appointments */}
             <div style={{padding:"14px 16px 0"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <div style={{fontSize:15,fontWeight:800,color:"#1a0a4a"}}>Today's Appointments</div>
                 <div onClick={()=>setScreen("calendar")} style={{fontSize:12,fontWeight:700,color:"#5b3fc4",cursor:"pointer"}}>View all →</div>
               </div>
-              {Object.entries(dayData).filter(([,b])=>b.status!=="break").length===0?(
-                <div style={{background:"#fff",borderRadius:14,padding:"20px",textAlign:"center",color:"#9b8ec4",fontSize:13,border:"0.5px solid #e0d8ff"}}>No appointments today 🌟</div>
-              ):Object.entries(dayData).filter(([,b])=>b.status!=="break").slice(0,3).map(([slot,b],i)=>{
-                const st=STATUS_MAP[b.status]||STATUS_MAP.confirmed;
-                const av=b.name.split(" ").map(w=>w[0]).join("").slice(0,2);
-                const cardStyles=[
-                  {cardBg:"#ede9fe",avBg:"#c4b8f0",avColor:"#2d1b69",textColor:"#3d1f8f"},
-                  {cardBg:"#fef9c3",avBg:"#fde68a",avColor:"#a16207",textColor:"#92400e"},
-                  {cardBg:"#e8fdf0",avBg:"#bbf7d0",avColor:"#16a34a",textColor:"#14532d"},
-                  {cardBg:"#fff0f6",avBg:"#fbcfe8",avColor:"#db2777",textColor:"#9d174d"},
-                  {cardBg:"#eff6ff",avBg:"#bfdbfe",avColor:"#2563eb",textColor:"#1e40af"},
-                  {cardBg:"#f0fdfa",avBg:"#99f6e4",avColor:"#0d9488",textColor:"#0f766e"}
-                ];
-                const cs=cardStyles[i%cardStyles.length];
-                return(<div key={i} style={{background:cs.cardBg,borderRadius:16,padding:"13px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:12,position:"relative",overflow:"hidden"}}>
-                  <div style={{position:"absolute",width:60,height:60,borderRadius:"50%",background:"rgba(255,255,255,0.25)",top:-15,right:-10}}/>
-                  <div style={{width:44,height:44,borderRadius:13,background:cs.avBg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:cs.avColor,flexShrink:0}}>{av}</div>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontWeight:800,fontSize:13,color:"#1a0a4a"}}>{b.name}</div>
-                    <div style={{fontSize:11,color:cs.textColor,opacity:0.8,marginTop:2}}>{b.service} · {b.src==="wa"?"💬":"🚶"}</div>
-                  </div>
-                  <div style={{textAlign:"right",flexShrink:0}}>
-                    <div style={{fontSize:12,fontWeight:800,color:"#1a0a4a",marginBottom:4}}>{fmt12(slot)}</div>
-                    <div style={{background:"rgba(255,255,255,0.6)",color:cs.avColor,fontSize:10,fontWeight:700,padding:"2px 9px",borderRadius:20}}>{st.label}</div>
-                  </div>
-                </div>);
-              })}
+              {Object.entries(dayData).filter(([,b])=>b.status!=="break").length===0?(<div style={{background:"#fff",borderRadius:14,padding:"20px",textAlign:"center",color:"#9b8ec4",fontSize:13,border:"0.5px solid #e0d8ff"}}>No appointments today 🌟</div>):Object.entries(dayData).filter(([,b])=>b.status!=="break").slice(0,3).map(([slot,b],i)=>{const st=STATUS_MAP[b.status]||STATUS_MAP.confirmed;const av=b.name.split(" ").map(w=>w[0]).join("").slice(0,2);const cardStyles=[{cardBg:"#ede9fe",avBg:"#c4b8f0",avColor:"#2d1b69",textColor:"#3d1f8f"},{cardBg:"#fef9c3",avBg:"#fde68a",avColor:"#a16207",textColor:"#92400e"},{cardBg:"#e8fdf0",avBg:"#bbf7d0",avColor:"#16a34a",textColor:"#14532d"},{cardBg:"#fff0f6",avBg:"#fbcfe8",avColor:"#db2777",textColor:"#9d174d"},{cardBg:"#eff6ff",avBg:"#bfdbfe",avColor:"#2563eb",textColor:"#1e40af"},{cardBg:"#f0fdfa",avBg:"#99f6e4",avColor:"#0d9488",textColor:"#0f766e"}];const cs=cardStyles[i%cardStyles.length];return(<div key={i} style={{background:cs.cardBg,borderRadius:16,padding:"13px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:12,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",width:60,height:60,borderRadius:"50%",background:"rgba(255,255,255,0.25)",top:-15,right:-10}}/><div style={{width:44,height:44,borderRadius:13,background:cs.avBg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:cs.avColor,flexShrink:0}}>{av}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:13,color:"#1a0a4a"}}>{b.name}</div><div style={{fontSize:11,color:cs.textColor,opacity:0.8,marginTop:2}}>{b.service} · {b.src==="wa"?"💬":"🚶"}</div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:12,fontWeight:800,color:"#1a0a4a",marginBottom:4}}>{fmt12(slot)}</div><div style={{background:"rgba(255,255,255,0.6)",color:cs.avColor,fontSize:10,fontWeight:700,padding:"2px 9px",borderRadius:20}}>{st.label}</div></div></div>);})}
             </div>
-
-            {/* Quick Actions */}
             <div style={{padding:"12px 16px 30px"}}>
               <div style={{fontSize:13,fontWeight:800,color:"#1a0a4a",marginBottom:8}}>Quick Actions</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                {[
-                  {icon:"📅",label:"New Booking",sub:"Add appointment",s:"calendar",dark:true},
-                  {icon:"👥",label:"Add Client",sub:"New customer",s:"clients",dark:false},
-                  {icon:"💬",label:"Bot Chats",sub:"WhatsApp history",s:"chats",dark:false},
-                  {icon:"💫",label:"Create Offer",sub:"New campaign",s:"engage",dark:false}
-                ].map(a=>(<div key={a.label} onClick={()=>setScreen(a.s)} style={{background:a.dark?"#2d1b69":"#fff",borderRadius:14,padding:"14px 12px",cursor:"pointer",border:a.dark?"none":"0.5px solid #e0d8ff",display:"flex",alignItems:"center",gap:10}}>
-                  <div style={{width:36,height:36,background:a.dark?"rgba(255,255,255,0.15)":"#f4f2ff",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{a.icon}</div>
-                  <div>
-                    <div style={{fontWeight:700,fontSize:13,color:a.dark?"#fff":"#1a0a4a"}}>{a.label}</div>
-                    <div style={{fontSize:11,color:a.dark?"rgba(255,255,255,0.5)":"#9b8ec4",marginTop:1}}>{a.sub}</div>
-                  </div>
-                </div>))}
+                {[{icon:"📅",label:"New Booking",sub:"Add appointment",s:"calendar",dark:true},{icon:"👥",label:"Add Client",sub:"New customer",s:"clients",dark:false},{icon:"💬",label:"Bot Chats",sub:"WhatsApp history",s:"chats",dark:false},{icon:"💫",label:"Create Offer",sub:"New campaign",s:"engage",dark:false}].map(a=>(<div key={a.label} onClick={()=>setScreen(a.s)} style={{background:a.dark?"#2d1b69":"#fff",borderRadius:14,padding:"14px 12px",cursor:"pointer",border:a.dark?"none":"0.5px solid #e0d8ff",display:"flex",alignItems:"center",gap:10}}><div style={{width:36,height:36,background:a.dark?"rgba(255,255,255,0.15)":"#f4f2ff",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{a.icon}</div><div><div style={{fontWeight:700,fontSize:13,color:a.dark?"#fff":"#1a0a4a"}}>{a.label}</div><div style={{fontSize:11,color:a.dark?"rgba(255,255,255,0.5)":"#9b8ec4",marginTop:1}}>{a.sub}</div></div></div>))}
               </div>
             </div>
           </div>
-        )
-        }
+        )}
         {screen==="calendar"&&(
           <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-            {/* White top header */}
             <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <button onClick={()=>setScreen("dashboard")} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600}}>←</button>
-                <div>
-                  <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Calendar</div>
-                  <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Appointments & bookings</div>
-                </div>
+                <div><div style={{fontWeight:800,fontSize:16,color:"#0f0a2e",letterSpacing:"-0.3px"}}>Calendar</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:2,fontWeight:500}}>Appointments & bookings</div></div>
               </div>
             </div>
-            {/* Calendar Header */}
             <div style={{background:"#fff",borderBottom:"0.5px solid #e0d8ff",padding:"12px 16px",flexShrink:0}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                 <div style={{fontSize:17,fontWeight:800,color:"#1a0a4a"}}>{MONTHS[selDate.getMonth()]} {selDate.getFullYear()}</div>
@@ -537,213 +267,60 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                   <button onClick={nextDay} style={{width:30,height:30,borderRadius:8,border:"0.5px solid #e0d8ff",background:"#fff",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#5b3fc4"}}>→</button>
                 </div>
               </div>
-              {/* Week strip */}
               <div style={{display:"flex",gap:4}}>
-                {Array.from({length:7}).map((_,i)=>{
-                  const d=addDays(weekStart,i);const key=dateKey(d);
-                  const isSel=dateKey(d)===selKey;const isToday=dateKey(d)===dateKey(today);
-                  const cnt=Object.values(bookings[key]||{}).filter(b=>b.status!=="break").length;
-                  return(<div key={i} onClick={()=>setSelDate(d)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"8px 2px",borderRadius:10,cursor:"pointer",background:isSel?"#2d1b69":isToday?"#ede9fe":"#fff",border:`0.5px solid ${isSel?"#2d1b69":isToday?"#c4b8f0":"#e0d8ff"}`}}>
-                    <div style={{fontSize:9,fontWeight:700,color:isSel?"rgba(255,255,255,0.6)":isToday?"#5b3fc4":"#9b8ec4"}}>{DAYS_S[d.getDay()]}</div>
-                    <div style={{fontSize:15,fontWeight:800,color:isSel?"#fff":isToday?"#2d1b69":"#1a0a4a"}}>{d.getDate()}</div>
-                    <div style={{width:5,height:5,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.7)":"#5b3fc4"):"transparent"}}/>
-                  </div>);
-                })}
+                {Array.from({length:7}).map((_,i)=>{const d=addDays(weekStart,i);const key=dateKey(d);const isSel=dateKey(d)===selKey;const isToday=dateKey(d)===dateKey(today);const cnt=Object.values(bookings[key]||{}).filter(b=>b.status!=="break").length;return(<div key={i} onClick={()=>setSelDate(d)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"8px 2px",borderRadius:10,cursor:"pointer",background:isSel?"#2d1b69":isToday?"#ede9fe":"#fff",border:`0.5px solid ${isSel?"#2d1b69":isToday?"#c4b8f0":"#e0d8ff"}`}}><div style={{fontSize:9,fontWeight:700,color:isSel?"rgba(255,255,255,0.6)":isToday?"#5b3fc4":"#9b8ec4"}}>{DAYS_S[d.getDay()]}</div><div style={{fontSize:15,fontWeight:800,color:isSel?"#fff":isToday?"#2d1b69":"#1a0a4a"}}>{d.getDate()}</div><div style={{width:5,height:5,borderRadius:"50%",background:cnt>0?(isSel?"rgba(255,255,255,0.7)":"#5b3fc4"):"transparent"}}/></div>);})}
               </div>
             </div>
-
-            {/* Date bar */}
             <div style={{padding:"8px 16px",background:"#f4f2ff",borderBottom:"0.5px solid #e0d8ff",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
               <div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>{DAYS_S[selDate.getDay()]}, {selDate.getDate()} {SHORT_M[selDate.getMonth()]}</div>
               <div style={{fontSize:12,fontWeight:700,color:"#5b3fc4"}}>{Object.values(sDayData).filter(b=>b.status!=="break").length} Booked</div>
             </div>
-
-            {/* Time slots */}
             <div style={{flex:1,overflowY:"auto",padding:"10px 16px",WebkitOverflowScrolling:"touch"}} onTouchStart={e=>{touchStart.current=e.touches[0].clientX;}} onTouchEnd={e=>{if(touchStart.current===null)return;const diff=touchStart.current-e.changedTouches[0].clientX;if(Math.abs(diff)>50){diff>0?nextDay():prevDay();}touchStart.current=null;}}>
               <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                {slots.map(key=>{
-                  const b=sDayData[key];const isHour=key.endsWith(":00");
-                  if(b?.status==="break")return(<div key={key} style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:"#ccc",textAlign:"right"}}>{fmt12(key)}</div><div style={{flex:1,background:"repeating-linear-gradient(45deg,#f8fafc,#f8fafc 5px,#f0f4f8 5px,#f0f4f8 10px)",border:"0.5px dashed #e0d8ff",borderRadius:10,padding:"9px 12px",color:"#ccc",fontSize:12,fontWeight:700}}>Break</div></div>);
-                  if(b){
-                    const st=STATUS_MAP[b.status]||STATUS_MAP.confirmed;
-                    const cardStyles=[
-                      {cardBg:"#ede9fe",left:"#5b3fc4",nameColor:"#2d1b69",priceColor:"#5b3fc4"},
-                      {cardBg:"#fef9c3",left:"#f59e0b",nameColor:"#92400e",priceColor:"#a16207"},
-                      {cardBg:"#e8fdf0",left:"#16a34a",nameColor:"#14532d",priceColor:"#16a34a"},
-                      {cardBg:"#fff0f6",left:"#db2777",nameColor:"#9d174d",priceColor:"#db2777"},
-                      {cardBg:"#eff6ff",left:"#2563eb",nameColor:"#1e40af",priceColor:"#2563eb"},
-                      {cardBg:"#f0fdfa",left:"#0d9488",nameColor:"#0f766e",priceColor:"#0d9488"},
-                    ];
-                    const slotIdx=slots.indexOf(key);
-                    const cs=cardStyles[slotIdx%cardStyles.length];
-                    return(<div key={key} style={{display:"flex",gap:10,alignItems:"flex-start"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:isHour?"#1a0a4a":"#ccc",textAlign:"right",paddingTop:12}}>{fmt12(key)}</div><div style={{flex:1,background:cs.cardBg,borderRadius:12,padding:"11px 13px",borderLeft:`3px solid ${cs.left}`,position:"relative",overflow:"hidden"}}>
-                      <div style={{position:"absolute",width:50,height:50,borderRadius:"50%",background:"rgba(255,255,255,0.2)",top:-10,right:-10}}/>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <div><div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>{b.name}</div><div style={{fontSize:11,color:cs.nameColor,opacity:0.8,marginTop:2}}>{b.service}</div></div>
-                        <div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:12,fontWeight:800,color:cs.priceColor}}>₹{b.price}</div><div style={{background:"rgba(255,255,255,0.6)",color:cs.left,fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:20,marginTop:3,display:"inline-block"}}>{st.label}</div></div>
-                      </div>
-                    </div></div>);
-                  }
-                  return(<div key={key} style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:isHour?"#1a0a4a":"#ccc",textAlign:"right"}}>{fmt12(key)}</div><button onClick={()=>{setCalForm({name:"",service:SERVICES_LIST[0],price:"",src:"wa"});setCalModal({slot:key});}} style={{flex:1,border:"0.5px dashed #e0d8ff",borderRadius:10,background:"#fff",padding:"9px 12px",color:"#ccc",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}>+ {fmt12(key)}</button></div>);
-                })}
+                {slots.map(key=>{const b=sDayData[key];const isHour=key.endsWith(":00");if(b?.status==="break")return(<div key={key} style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:"#ccc",textAlign:"right"}}>{fmt12(key)}</div><div style={{flex:1,background:"repeating-linear-gradient(45deg,#f8fafc,#f8fafc 5px,#f0f4f8 5px,#f0f4f8 10px)",border:"0.5px dashed #e0d8ff",borderRadius:10,padding:"9px 12px",color:"#ccc",fontSize:12,fontWeight:700}}>Break</div></div>);if(b){const st=STATUS_MAP[b.status]||STATUS_MAP.confirmed;const cardStyles=[{cardBg:"#ede9fe",left:"#5b3fc4",nameColor:"#2d1b69",priceColor:"#5b3fc4"},{cardBg:"#fef9c3",left:"#f59e0b",nameColor:"#92400e",priceColor:"#a16207"},{cardBg:"#e8fdf0",left:"#16a34a",nameColor:"#14532d",priceColor:"#16a34a"},{cardBg:"#fff0f6",left:"#db2777",nameColor:"#9d174d",priceColor:"#db2777"},{cardBg:"#eff6ff",left:"#2563eb",nameColor:"#1e40af",priceColor:"#2563eb"},{cardBg:"#f0fdfa",left:"#0d9488",nameColor:"#0f766e",priceColor:"#0d9488"}];const slotIdx=slots.indexOf(key);const cs=cardStyles[slotIdx%cardStyles.length];return(<div key={key} style={{display:"flex",gap:10,alignItems:"flex-start"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:isHour?"#1a0a4a":"#ccc",textAlign:"right",paddingTop:12}}>{fmt12(key)}</div><div style={{flex:1,background:cs.cardBg,borderRadius:12,padding:"11px 13px",borderLeft:`3px solid ${cs.left}`,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",width:50,height:50,borderRadius:"50%",background:"rgba(255,255,255,0.2)",top:-10,right:-10}}/><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>{b.name}</div><div style={{fontSize:11,color:cs.nameColor,opacity:0.8,marginTop:2}}>{b.service}</div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontSize:12,fontWeight:800,color:cs.priceColor}}>₹{b.price}</div><div style={{background:"rgba(255,255,255,0.6)",color:cs.left,fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:20,marginTop:3,display:"inline-block"}}>{st.label}</div></div></div></div></div>);}return(<div key={key} style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:52,flexShrink:0,fontSize:11,fontWeight:700,color:isHour?"#1a0a4a":"#ccc",textAlign:"right"}}>{fmt12(key)}</div><button onClick={()=>{setCalForm({name:"",service:SERVICES_LIST[0],price:"",src:"wa"});setCalModal({slot:key});}} style={{flex:1,border:"0.5px dashed #e0d8ff",borderRadius:10,background:"#fff",padding:"9px 12px",color:"#ccc",fontSize:12,fontWeight:700,cursor:"pointer",textAlign:"left",fontFamily:"inherit"}}>+ {fmt12(key)}</button></div>);})}
               </div>
             </div>
             {calModal&&(<div onClick={()=>setCalModal(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 18px 32px",width:"100%"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 16px"}}/><div style={{fontWeight:800,fontSize:15,marginBottom:4,color:"#1a0a4a"}}>New Booking</div><div style={{fontSize:12,color:"#9b8ec4",marginBottom:14}}>{fmt12(calModal.slot)}</div>{[{label:"Client Name",el:<input value={calForm.name} onChange={e=>setCalForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Priya Sharma" style={obIs}/>},{label:"Service",el:<select value={calForm.service} onChange={e=>setCalForm(f=>({...f,service:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}>{SERVICES_LIST.map(s=><option key={s}>{s}</option>)}</select>},{label:"Price",el:<input type="number" value={calForm.price} onChange={e=>setCalForm(f=>({...f,price:e.target.value}))} placeholder="450" style={{...is,marginTop:5}}/>},{label:"Source",el:<select value={calForm.src} onChange={e=>setCalForm(f=>({...f,src:e.target.value}))} style={{...is,marginTop:5,cursor:"pointer"}}><option value="wa">WhatsApp</option><option value="walk">Walk-in</option></select>}].map(({label,el})=>(<div key={label} style={{marginBottom:10}}><div style={{fontSize:12,fontWeight:800,color:"#4a3580"}}>{label}</div>{el}</div>))}<div style={{display:"flex",gap:10,marginTop:14}}><button onClick={()=>setCalModal(null)} style={{flex:1,padding:11,border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Cancel</button><button onClick={saveCal} style={{flex:2,padding:11,border:"none",borderRadius:12,background:calForm.name.trim()?"#2d1b69":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
           </div>
-        )
-        }
+        )}
         {screen==="clients"&&(
           <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-            {/* Header — same style as staff/engagement */}
             <div style={{background:"#fff",padding:"14px 20px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <div style={{display:"flex",flexDirection:"column",gap:4,justifyContent:"center",cursor:"pointer"}} onClick={()=>setScreen("dashboard")}>
-                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:22}}/>
-                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:16}}/>
-                  <div style={{height:2,background:"#2d1b69",borderRadius:2,width:22}}/>
-                </div>
-                <div>
-                  <div style={{fontSize:17,fontWeight:800,color:"#1a0a4a"}}>Clients</div>
-                  <div style={{fontSize:11,color:"#9b8ec4"}}>Manage your customers</div>
-                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:4,justifyContent:"center",cursor:"pointer"}} onClick={()=>setScreen("dashboard")}><div style={{height:2,background:"#2d1b69",borderRadius:2,width:22}}/><div style={{height:2,background:"#2d1b69",borderRadius:2,width:16}}/><div style={{height:2,background:"#2d1b69",borderRadius:2,width:22}}/></div>
+                <div><div style={{fontSize:17,fontWeight:800,color:"#1a0a4a"}}>Clients</div><div style={{fontSize:11,color:"#9b8ec4"}}>Manage your customers</div></div>
               </div>
               <div onClick={()=>setShowAddClient(true)} style={{background:"#5b3fc4",color:"#fff",border:"none",borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add New</div>
-            </div> 
-
-            {/* Stats Row */}
+            </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",background:"#fff",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
-              {[{val:clients.length,label:"Total",color:"#1a0a4a"},{val:clients.filter(c=>c.tag==="VIP").length,label:"VIP",color:"#5b3fc4"},{val:clients.filter(c=>c.tag==="Regular").length,label:"Regular",color:"#f59e0b"},{val:clients.filter(c=>c.tag==="New").length,label:"New",color:"#22c55e"}].map((s,i)=>(<div key={s.label} style={{textAlign:"center",padding:"12px 8px",borderRight:i<3?"0.5px solid #f0eeff":"none"}}>
-                <div style={{fontSize:20,fontWeight:800,color:s.color}}>{s.val}</div>
-                <div style={{fontSize:10,color:"#9b8ec4",marginTop:2}}>{s.label}</div>
-              </div>))}
+              {[{val:clients.length,label:"Total",color:"#1a0a4a"},{val:clients.filter(c=>c.tag==="VIP").length,label:"VIP",color:"#5b3fc4"},{val:clients.filter(c=>c.tag==="Regular").length,label:"Regular",color:"#f59e0b"},{val:clients.filter(c=>c.tag==="New").length,label:"New",color:"#22c55e"}].map((s,i)=>(<div key={s.label} style={{textAlign:"center",padding:"12px 8px",borderRight:i<3?"0.5px solid #f0eeff":"none"}}><div style={{fontSize:20,fontWeight:800,color:s.color}}>{s.val}</div><div style={{fontSize:10,color:"#9b8ec4",marginTop:2}}>{s.label}</div></div>))}
             </div>
-
-            {/* Search */}
             <div style={{padding:"10px 16px 8px",background:"#fff",borderBottom:"0.5px solid #f0eeff",flexShrink:0}}>
-              <div style={{background:"#f4f2ff",borderRadius:12,padding:"9px 14px",display:"flex",alignItems:"center",gap:8,border:"0.5px solid #e0d8ff"}}>
-                <span style={{fontSize:14,color:"#9b8ec4"}}>🔍</span>
-                <input value={cSearch} onChange={e=>setCSearch(e.target.value)} placeholder="Search by name or number..." style={{background:"transparent",border:"none",outline:"none",fontSize:13,color:"#1a0a4a",fontFamily:"inherit",flex:1}}/>
-              </div>
+              <div style={{background:"#f4f2ff",borderRadius:12,padding:"9px 14px",display:"flex",alignItems:"center",gap:8,border:"0.5px solid #e0d8ff"}}><span style={{fontSize:14,color:"#9b8ec4"}}>🔍</span><input value={cSearch} onChange={e=>setCSearch(e.target.value)} placeholder="Search by name or number..." style={{background:"transparent",border:"none",outline:"none",fontSize:13,color:"#1a0a4a",fontFamily:"inherit",flex:1}}/></div>
             </div>
-
-            {/* Client List */}
             <div style={{flex:1,overflowY:"auto",padding:"8px 16px 80px",WebkitOverflowScrolling:"touch"}}>
               <div style={{fontSize:11,color:"#9b8ec4",textAlign:"center",padding:"4px 0 8px"}}>Showing all customers</div>
               {filtC.length===0&&<div style={{textAlign:"center",padding:"32px 0",color:"#9b8ec4",fontSize:13}}>No clients found</div>}
-              {filtC.map((c,idx)=>{
-                const avColors=[{bg:"#ede9fe",color:"#5b3fc4"},{bg:"#fef9c3",color:"#a16207"},{bg:"#e8fdf0",color:"#16a34a"},{bg:"#fff0f6",color:"#db2777"},{bg:"#eff6ff",color:"#2563eb"},{bg:"#f0fdfa",color:"#0d9488"}];
-                const ac=avColors[idx%avColors.length];
-                return(<div key={c.id} onClick={()=>setSelClient(c)} style={{background:"#fff",borderRadius:16,padding:"14px",marginBottom:8,border:"0.5px solid #e0d8ff",cursor:"pointer"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:c.visits>0?10:0}}>
-                    <div style={{width:44,height:44,borderRadius:14,background:ac.bg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:ac.color,flexShrink:0}}>{c.avatar}</div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <div style={{fontWeight:800,fontSize:13,color:"#1a0a4a"}}>{c.name}</div>
-                        {c.tag==="VIP"&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20}}>⭐ VIP</div>}
-                      </div>
-                      <div style={{fontSize:11,color:"#9b8ec4",marginTop:2,display:"flex",alignItems:"center",gap:4}}>
-                        <span>{c.src==="wa"?"💬":"🚶"}</span>
-                        <span>{c.phone}</span>
-                      </div>
-                    </div>
-                    <div style={{text:"right",flexShrink:0}}>
-                      <div style={{background:c.tag==="VIP"?"#fef9c3":c.tag==="New"?"#e8fdf0":"#ede9fe",color:c.tag==="VIP"?"#a16207":c.tag==="New"?"#16a34a":"#5b3fc4",fontSize:10,fontWeight:700,padding:"2px 9px",borderRadius:20,display:"inline-block",marginBottom:4}}>{c.tag}</div>
-                      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
-                        <div style={{textAlign:"center"}}><div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>{c.visits||0}</div><div style={{fontSize:9,color:"#9b8ec4"}}>visits</div></div>
-                        <div style={{textAlign:"center"}}><div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>₹{((c.totalSpent||0)/1000).toFixed(1)}k</div><div style={{fontSize:9,color:"#9b8ec4"}}>spent</div></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>);
-              })}
+              {filtC.map((c,idx)=>{const avColors=[{bg:"#ede9fe",color:"#5b3fc4"},{bg:"#fef9c3",color:"#a16207"},{bg:"#e8fdf0",color:"#16a34a"},{bg:"#fff0f6",color:"#db2777"},{bg:"#eff6ff",color:"#2563eb"},{bg:"#f0fdfa",color:"#0d9488"}];const ac=avColors[idx%avColors.length];return(<div key={c.id} onClick={()=>setSelClient(c)} style={{background:"#fff",borderRadius:16,padding:"14px",marginBottom:8,border:"0.5px solid #e0d8ff",cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:12,marginBottom:c.visits>0?10:0}}><div style={{width:44,height:44,borderRadius:14,background:ac.bg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:ac.color,flexShrink:0}}>{c.avatar}</div><div style={{flex:1,minWidth:0}}><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{fontWeight:800,fontSize:13,color:"#1a0a4a"}}>{c.name}</div>{c.tag==="VIP"&&<div style={{background:"#fef9c3",color:"#a16207",fontSize:9,fontWeight:700,padding:"2px 7px",borderRadius:20}}>⭐ VIP</div>}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:2,display:"flex",alignItems:"center",gap:4}}><span>{c.src==="wa"?"💬":"🚶"}</span><span>{c.phone}</span></div></div><div style={{text:"right",flexShrink:0}}><div style={{background:c.tag==="VIP"?"#fef9c3":c.tag==="New"?"#e8fdf0":"#ede9fe",color:c.tag==="VIP"?"#a16207":c.tag==="New"?"#16a34a":"#5b3fc4",fontSize:10,fontWeight:700,padding:"2px 9px",borderRadius:20,display:"inline-block",marginBottom:4}}>{c.tag}</div><div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><div style={{textAlign:"center"}}><div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>{c.visits||0}</div><div style={{fontSize:9,color:"#9b8ec4"}}>visits</div></div><div style={{textAlign:"center"}}><div style={{fontSize:13,fontWeight:800,color:"#1a0a4a"}}>₹{((c.totalSpent||0)/1000).toFixed(1)}k</div><div style={{fontSize:9,color:"#9b8ec4"}}>spent</div></div></div></div></div></div>);})}
             </div>
-
-            {selClient&&(<div onClick={()=>setSelClient(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
-              <div style={{background:"#fff",padding:"12px 18px 10px",borderRadius:"20px 20px 0 0",borderBottom:"0.5px solid #f0eeff"}}><div style={{width:32,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 10px"}}/><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:40,height:40,borderRadius:12,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:15,color:"#5b3fc4",flexShrink:0}}>{selClient.avatar}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:15,color:"#1a0a4a"}}>{selClient.name}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{selClient.phone}{selClient.city?" · "+selClient.city:""}</div></div><div style={{background:"#ede9fe",borderRadius:20,padding:"2px 10px",fontSize:10,fontWeight:700,color:"#5b3fc4",flexShrink:0}}>{selClient.tag||"Regular"}</div></div></div>
-              <div style={{padding:"16px 18px"}}><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>{[{val:selClient.visits||0,label:"Visits",color:"#5b3fc4"},{val:`₹${(selClient.totalSpent||0).toLocaleString()}`,label:"Total Spent",color:"#16a34a"},{val:selClient.lastVisit||"—",label:"Last Visit",color:"#f59e0b"}].map(s=>(<div key={s.label} style={{background:"#f8f7ff",borderRadius:10,padding:"10px 6px",textAlign:"center",border:"0.5px solid #e0d8ff"}}><div style={{fontWeight:800,fontSize:16,color:s.color}}>{s.val}</div><div style={{fontSize:10,color:"#9b8ec4",marginTop:2,fontWeight:600}}>{s.label}</div></div>))}</div>
-              <div style={{display:"flex",gap:8,marginBottom:10}}><button onClick={()=>{setScreen("calendar");setSelClient(null);}} style={{flex:1,padding:"11px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📅 Book Now</button><button onClick={()=>{if(!selClient?.phone)return;setWelcomeModal("confirm");}} style={{flex:1,padding:"11px",background:welcomeSending?"#f4f2ff":"#ede9fe",border:"0.5px solid #c4b8f0",borderRadius:12,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{welcomeSending?"Sending...":"💬 WhatsApp"}</button></div>
-              <button onClick={()=>{setEditClient({...selClient});setShowEditClient(true);}} style={{width:"100%",padding:"11px",background:"#fff",border:"0.5px solid #e0d8ff",borderRadius:12,color:"#4a3580",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8}}>✏️ Edit Profile</button>
-              <button onClick={()=>{setScreen("history");setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#ede9fe",border:"0.5px solid #c4b8f0",borderRadius:12,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",marginBottom:8}}>📋 Visit History →</button>
-              <button onClick={async()=>{if(!window.confirm(`${selClient.name} ko delete karna hai?`))return;await supabase.from("customers").delete().eq("id",selClient.id);setClients(prev=>prev.filter(c=>c.id!==selClient.id));setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#fff0f0",border:"0.5px solid #fca5a5",borderRadius:12,color:"#dc2626",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🗑️ Delete Customer</button></div>
-            </div></div>)}
+            {selClient&&(<div onClick={()=>setSelClient(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:500,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",overflowY:"auto"}}><div style={{background:"#fff",padding:"12px 18px 10px",borderRadius:"20px 20px 0 0",borderBottom:"0.5px solid #f0eeff"}}><div style={{width:32,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 10px"}}/><div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{width:40,height:40,borderRadius:12,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:15,color:"#5b3fc4",flexShrink:0}}>{selClient.avatar}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:800,fontSize:15,color:"#1a0a4a"}}>{selClient.name}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{selClient.phone}{selClient.city?" · "+selClient.city:""}</div></div><div style={{background:"#ede9fe",borderRadius:20,padding:"2px 10px",fontSize:10,fontWeight:700,color:"#5b3fc4",flexShrink:0}}>{selClient.tag||"Regular"}</div></div></div><div style={{padding:"16px 18px"}}><div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:12}}>{[{val:selClient.visits||0,label:"Visits",color:"#5b3fc4"},{val:`₹${(selClient.totalSpent||0).toLocaleString()}`,label:"Total Spent",color:"#16a34a"},{val:selClient.lastVisit||"—",label:"Last Visit",color:"#f59e0b"}].map(s=>(<div key={s.label} style={{background:"#f8f7ff",borderRadius:10,padding:"10px 6px",textAlign:"center",border:"0.5px solid #e0d8ff"}}><div style={{fontWeight:800,fontSize:16,color:s.color}}>{s.val}</div><div style={{fontSize:10,color:"#9b8ec4",marginTop:2,fontWeight:600}}>{s.label}</div></div>))}</div><div style={{display:"flex",gap:8,marginBottom:10}}><button onClick={()=>{setScreen("calendar");setSelClient(null);}} style={{flex:1,padding:"11px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>📅 Book Now</button><button onClick={()=>{if(!selClient?.phone)return;setWelcomeModal("confirm");}} style={{flex:1,padding:"11px",background:welcomeSending?"#f4f2ff":"#ede9fe",border:"0.5px solid #c4b8f0",borderRadius:12,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{welcomeSending?"Sending...":"💬 WhatsApp"}</button></div><button onClick={()=>{setEditClient({...selClient});setShowEditClient(true);}} style={{width:"100%",padding:"11px",background:"#fff",border:"0.5px solid #e0d8ff",borderRadius:12,color:"#4a3580",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:8}}>✏️ Edit Profile</button><button onClick={()=>{setScreen("history");setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#ede9fe",border:"0.5px solid #c4b8f0",borderRadius:12,color:"#5b3fc4",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",marginBottom:8}}>📋 Visit History →</button><button onClick={async()=>{if(!window.confirm(`${selClient.name} ko delete karna hai?`))return;await supabase.from("customers").delete().eq("id",selClient.id);setClients(prev=>prev.filter(c=>c.id!==selClient.id));setSelClient(null);}} style={{width:"100%",padding:"12px",background:"#fff0f0",border:"0.5px solid #fca5a5",borderRadius:12,color:"#dc2626",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🗑️ Delete Customer</button></div></div></div>)}
             {welcomeModal&&selClient&&(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}><div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:340}}>{welcomeModal==="confirm"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{width:64,height:64,borderRadius:20,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 12px"}}>💬</div><div style={{fontWeight:900,fontSize:17,color:"#1a0a4a",marginBottom:6}}>Welcome Message?</div><div style={{fontSize:13,color:"#666"}}>{selClient.name} ko WhatsApp pe message jayega</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setWelcomeModal(null)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}>Cancel</button><button onClick={sendWelcomeMessage} style={{flex:2,padding:"12px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Bhejo</button></div></>)}{welcomeModal==="success"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{fontSize:50,marginBottom:8}}>✅</div><div style={{fontWeight:900,fontSize:17,color:"#16a34a",marginBottom:8}}>Message Bhej Diya!</div><div style={{fontSize:13,color:"#555"}}>{welcomeModalMsg}</div></div><button onClick={()=>setWelcomeModal(null)} style={{width:"100%",padding:"13px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Done</button></>)}{welcomeModal==="error"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{fontSize:50,marginBottom:8}}>❌</div><div style={{fontWeight:900,fontSize:17,color:"#dc2626",marginBottom:8}}>Message Nahi Gaya</div><div style={{fontSize:13,color:"#555"}}>{welcomeModalMsg}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setWelcomeModal(null)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}>Close</button><button onClick={()=>setWelcomeModal("confirm")} style={{flex:1,padding:"12px",background:"#ef4444",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Retry</button></div></>)}</div></div>)}
             {showEditClient&&editClient&&(<div onClick={()=>setShowEditClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,marginBottom:16,color:"#1a0a4a"}}>Edit Customer</div>{[{label:"Full Name",key:"name",ph:"Priya Sharma",type:"text"},{label:"Phone",key:"phone",ph:"9876543210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"},{label:"Email",key:"email",ph:"customer@gmail.com",type:"email"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:4}}>{f.label}</div><input type={f.type} value={editClient[f.key]||""} onChange={e=>setEditClient(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={is} onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e0d8ff"}/></div>))}<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"Male"},{id:"female",label:"Female"}].map(g=>(<button key={g.id} onClick={()=>setEditClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.gender===g.id?"#5b3fc4":"#e0d8ff"}`,background:editClient.gender===g.id?"#ede9fe":"#fff",color:editClient.gender===g.id?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setEditClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.tag===t?"#5b3fc4":"#e0d8ff"}`,background:editClient.tag===t?"#ede9fe":"#fff",color:editClient.tag===t?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowEditClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Cancel</button><button onClick={async()=>{if(!editClient.name.trim())return;await supabase.from("customers").update({name:editClient.name.trim(),phone:editClient.phone||"",city:editClient.city||"",birthday:editClient.dob||null,email:editClient.email||"",tag:editClient.tag||"Regular",gender:editClient.gender||"male"}).eq("id",editClient.id);setClients(prev=>prev.map(c=>c.id===editClient.id?{...c,...editClient,name:editClient.name.trim()}:c));setSelClient(prev=>prev?{...prev,...editClient,name:editClient.name.trim()}:null);setShowEditClient(false);}} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:editClient.name.trim()?"#2d1b69":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
             {showAddClient&&(<div onClick={()=>setShowAddClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,marginBottom:16,color:"#1a0a4a"}}>Add New Customer</div>{[{label:"Full Name *",key:"name",ph:"Priya Sharma",type:"text"},{label:"Phone *",key:"phone",ph:"9876543210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:4}}>{f.label}</div><input type={f.type} value={newClient[f.key]} onChange={e=>setNewClient(p=>({...p,[f.key]:f.key==="phone"?e.target.value.replace(/\D/g,"").slice(0,10):e.target.value}))} placeholder={f.ph} maxLength={f.key==="phone"?10:undefined} inputMode={f.key==="phone"?"numeric":undefined} style={is} onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e0d8ff"}/></div>))}<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"Male"},{id:"female",label:"Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.gender===g.id?"#5b3fc4":"#e0d8ff"}`,background:newClient.gender===g.id?"#ede9fe":"#fff",color:newClient.gender===g.id?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setNewClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.tag===t?"#5b3fc4":"#e0d8ff"}`,background:newClient.tag===t?"#ede9fe":"#fff",color:newClient.tag===t?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowAddClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Cancel</button><button onClick={async()=>{if(!newClient.name.trim()||!newClient.phone.trim())return;await supabase.from("customers").insert({salon_id:user.id,name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"",tag:newClient.tag,source:"walk",birthday:newClient.dob||null,gender:newClient.gender||"male"});const ini=newClient.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();setClients(prev=>[{id:Date.now(),name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"—",src:"walk",avatar:ini,joined:new Date().toLocaleDateString("en-IN",{month:"short",year:"numeric"}),visits:0,totalSpent:0,lastVisit:"—",tag:newClient.tag,history:[]},...prev]);setNewClient({name:"",phone:"",city:"",dob:"",tag:"Regular",gender:"male"});setShowAddClient(false);}} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:newClient.name.trim()&&newClient.phone.trim()?"#2d1b69":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
           </div>
-        )
-        }
+        )}
         {screen==="staff"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><div style={{flex:1,overflowY:"auto"}}><StaffManagement role="owner" currentUser={user} showRevenue={showRevenue} setShowRevenue={setShowRevenue} onBack={()=>setScreen("dashboard")}/></div></div>)}
         {screen==="history"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><CustomerHistory key={screen} currentUser={{...user,role:"owner"}} onBack={()=>setScreen("dashboard")} onBookAppointment={()=>setScreen("calendar")}/></div>)}
         {screen==="chats"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><ChatHistory salonId={user.id}/></div>)}
         {screen==="engage"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><EngagementCenter currentUser={user} onBack={()=>setScreen("dashboard")}/></div>)}
         {screen==="settings"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><Settings user={user} onBack={()=>setScreen("dashboard")} onLogout={onLogout} onSalonUpdate={(newName,newLogoUrl)=>setUser(prev=>({...prev,salon:newName,logo_url:newLogoUrl||prev.logo_url}))} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/></div>)}
       </div>
-      {/* Bottom Nav — Home, Calendar, [+], Staff, Settings */}
       <div style={{background:"#fff",borderTop:"0.5px solid #e0d8ff",paddingBottom:"env(safe-area-inset-bottom,0px)",display:"flex",alignItems:"center",flexShrink:0,boxShadow:"0 -4px 20px rgba(45,27,105,0.07)",position:"relative",height:62}}>
-        {[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",label:"Calendar"}].map(item=>{const active=screen===item.id;return(
-          <div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>
-            {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}
-            <div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div>
-            <span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span>
-          </div>
-        );})}
-        {/* Center + button — opens Add Client */}
-        <div style={{flex:1,display:"flex",justifyContent:"center",alignItems:"center"}}>
-          <div onClick={()=>{setScreen("clients");setShowAddClient(true);}} style={{width:50,height:50,borderRadius:"50%",background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,color:"#fff",boxShadow:"0 4px 16px rgba(45,27,105,0.4)",cursor:"pointer",marginBottom:8}}>+</div>
-        </div>
-        {[{id:"staff",icon:"👨‍💼",label:"Staff"},{id:"settings",icon:"⚙️",label:"Settings"}].map(item=>{const active=screen===item.id;return(
-          <div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>
-            {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}
-            <div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div>
-            <span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span>
-          </div>
-        );})}
+        {[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",label:"Calendar"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>{active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}<div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div><span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span></div>);})}
+        <div style={{flex:1,display:"flex",justifyContent:"center",alignItems:"center"}}><div onClick={()=>{setScreen("clients");setShowAddClient(true);}} style={{width:50,height:50,borderRadius:"50%",background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,color:"#fff",boxShadow:"0 4px 16px rgba(45,27,105,0.4)",cursor:"pointer",marginBottom:8}}>+</div></div>
+        {[{id:"staff",icon:"👨‍💼",label:"Staff"},{id:"settings",icon:"⚙️",label:"Settings"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>{active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}<div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div><span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span></div>);})}
       </div>
-
-      {/* Slide-out Drawer */}
-      {showDrawer&&(<>
-        <div onClick={()=>setShowDrawer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:700}}/>
-        <div style={{position:"fixed",top:0,left:0,bottom:0,width:280,background:"#fff",zIndex:800,display:"flex",flexDirection:"column",boxShadow:"4px 0 24px rgba(0,0,0,0.15)"}}>
-          {/* Drawer header — compact */}
-          <div style={{background:"#f4f2ff",padding:"44px 16px 12px",borderBottom:"0.5px solid #e0d8ff"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <div style={{width:38,height:38,borderRadius:10,background:"#ede9fe",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:"#5b3fc4",flexShrink:0}}>{user?.salon?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div>
-              <div>
-                <div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>✂️ {user?.salon}</div>
-                <div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{user?.name}</div>
-              </div>
-            </div>
-          </div>
-          {/* Drawer items */}
-          <div style={{flex:1,overflowY:"auto",padding:"4px 0"}}>
-            {[
-              {id:"dashboard",icon:"🏠",label:"Home"},
-              {id:"calendar",icon:"📅",label:"Calendar"},
-              {id:"clients",icon:"👥",label:"Clients"},
-              {id:"staff",icon:"👨‍💼",label:"Staff"},
-              {id:"history",icon:"📋",label:"Customer History"},
-              {id:"engage",icon:"💫",label:"Engagement"},
-              {id:"chats",icon:"💬",label:"Bot Chats"},
-              {id:"settings",icon:"⚙️",label:"Settings"},
-            ].map(item=>{
-              const active=screen===item.id;
-              return(<div key={item.id} onClick={()=>{setScreen(item.id);setShowDrawer(false);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 16px",cursor:"pointer",background:active?"#f4f2ff":"transparent",borderLeft:active?"3px solid #2d1b69":"3px solid transparent"}}>
-                <div style={{width:30,height:30,borderRadius:8,background:active?"#ede9fe":"#f4f2ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{item.icon}</div>
-                <div style={{fontWeight:active?800:500,fontSize:13,color:active?"#2d1b69":"#1a0a4a"}}>{item.label}</div>
-                {active&&<div style={{marginLeft:"auto",width:5,height:5,borderRadius:"50%",background:"#2d1b69"}}/>}
-              </div>);
-            })}
-          </div>
-          {/* Drawer footer */}
-          <div style={{padding:"12px 16px",borderTop:"1px solid #f1f0f5"}}>
-            <button onClick={()=>{setShowDrawer(false);onLogout();}} style={{width:"100%",padding:"11px 16px",background:"#fff5f5",border:"1px solid #fca5a5",borderRadius:12,display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontFamily:"inherit"}}>
-              <div style={{width:32,height:32,borderRadius:9,background:"#fee2e2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🚪</div>
-              <span style={{fontSize:14,fontWeight:700,color:"#dc2626"}}>Logout</span>
-            </button>
-            <div style={{fontSize:10,color:"#c4b8f0",textAlign:"center",marginTop:10}}>SnipBook · {user?.salon}</div>
-          </div>
-        </div>
-      </>)}
+      {showDrawer&&(<><div onClick={()=>setShowDrawer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:700}}/><div style={{position:"fixed",top:0,left:0,bottom:0,width:280,background:"#fff",zIndex:800,display:"flex",flexDirection:"column",boxShadow:"4px 0 24px rgba(0,0,0,0.15)"}}><div style={{background:"#f4f2ff",padding:"44px 16px 12px",borderBottom:"0.5px solid #e0d8ff"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:10,background:"#ede9fe",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:"#5b3fc4",flexShrink:0}}>{user?.salon?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>✂️ {user?.salon}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{user?.name}</div></div></div></div><div style={{flex:1,overflowY:"auto",padding:"4px 0"}}>{[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",label:"Calendar"},{id:"clients",icon:"👥",label:"Clients"},{id:"staff",icon:"👨‍💼",label:"Staff"},{id:"history",icon:"📋",label:"Customer History"},{id:"engage",icon:"💫",label:"Engagement"},{id:"chats",icon:"💬",label:"Bot Chats"},{id:"settings",icon:"⚙️",label:"Settings"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>{setScreen(item.id);setShowDrawer(false);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 16px",cursor:"pointer",background:active?"#f4f2ff":"transparent",borderLeft:active?"3px solid #2d1b69":"3px solid transparent"}}><div style={{width:30,height:30,borderRadius:8,background:active?"#ede9fe":"#f4f2ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{item.icon}</div><div style={{fontWeight:active?800:500,fontSize:13,color:active?"#2d1b69":"#1a0a4a"}}>{item.label}</div>{active&&<div style={{marginLeft:"auto",width:5,height:5,borderRadius:"50%",background:"#2d1b69"}}/>}</div>);})}</div><div style={{padding:"12px 16px",borderTop:"1px solid #f1f0f5"}}><button onClick={()=>{setShowDrawer(false);onLogout();}} style={{width:"100%",padding:"11px 16px",background:"#fff5f5",border:"1px solid #fca5a5",borderRadius:12,display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontFamily:"inherit"}}><div style={{width:32,height:32,borderRadius:9,background:"#fee2e2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🚪</div><span style={{fontSize:14,fontWeight:700,color:"#dc2626"}}>Logout</span></button><div style={{fontSize:10,color:"#c4b8f0",textAlign:"center",marginTop:10}}>SnipBook · {user?.salon}</div></div></div></>)}
       {showNotifs&&(<div onClick={()=>setShowNotifs(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-start",justifyContent:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",width:"90%",maxWidth:360,height:"100vh",overflowY:"auto"}}><div style={{padding:"16px",borderBottom:`2px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:TP.purple,position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:16,color:"#fff"}}>🔔 Notifications</div><button onClick={()=>setShowNotifs(false)} style={{background:"rgba(255,255,255,0.15)",border:"none",fontSize:18,cursor:"pointer",color:"#fff",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>{notifications.length===0?(<div style={{padding:32,textAlign:"center",color:TP.ts}}>No notifications</div>):notifications.map((n,i)=>(<div key={i} onClick={()=>{setScreen("calendar");setSelDate(new Date(n.date));setShowNotifs(false);}} style={{padding:"14px 16px",borderBottom:`2px solid ${TP.bg}`,cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:12,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>📅</div><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:TP.text}}>{n.customer_name||"Customer"}</div><div style={{fontSize:11,color:TP.ts,marginTop:2}}>{n.service} · ₹{n.amount||0}</div><div style={{fontSize:11,color:TP.purple,marginTop:2,fontWeight:700}}>{n.date} at {n.time_slot}</div></div></div></div>))}</div></div>)}
     </div>
   );
