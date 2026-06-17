@@ -6,6 +6,7 @@ export default function LandingPage({ onStart, onLogin }) {
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 720);
@@ -157,10 +158,10 @@ export default function LandingPage({ onStart, onLogin }) {
             <span style={{fontSize:18,fontWeight:800,color:S.text}}>SnipBook</span>
           </div>
           {isMobile ? (
-            <div style={{display:"flex",flexDirection:"column",gap:4,cursor:"pointer"}} onClick={()=>{if(onStart)onStart();}}>
-              <div style={{width:20,height:2,background:S.purpleDark,borderRadius:2}}/>
-              <div style={{width:20,height:2,background:S.purpleDark,borderRadius:2}}/>
-              <div style={{width:20,height:2,background:S.purpleDark,borderRadius:2}}/>
+            <div style={{display:"flex",flexDirection:"column",gap:5,cursor:"pointer",padding:4}} onClick={()=>setMenuOpen(true)}>
+              <div style={{width:22,height:2,background:S.purpleDark,borderRadius:2}}/>
+              <div style={{width:22,height:2,background:S.purpleDark,borderRadius:2}}/>
+              <div style={{width:22,height:2,background:S.purpleDark,borderRadius:2}}/>
             </div>
           ) : (
             <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -170,6 +171,23 @@ export default function LandingPage({ onStart, onLogin }) {
           )}
         </div>
       </div>
+
+      {/* Mobile Drawer */}
+      {menuOpen && (
+        <div onClick={()=>setMenuOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:300}}>
+          <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,right:0,width:240,height:"100vh",background:"#fff",padding:"24px 20px",display:"flex",flexDirection:"column",gap:12,boxShadow:"-4px 0 20px rgba(0,0,0,.15)"}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{width:32,height:32,background:S.purpleDark,borderRadius:9,display:"grid",placeItems:"center",fontSize:14,color:"#fff"}}>✂</div>
+                <span style={{fontWeight:800,fontSize:16,color:S.text}}>SnipBook</span>
+              </div>
+              <span onClick={()=>setMenuOpen(false)} style={{fontSize:20,cursor:"pointer",color:S.muted}}>✕</span>
+            </div>
+            <button onClick={()=>{setMenuOpen(false);if(onLogin)onLogin();}} style={{padding:"13px",border:"1.5px solid #c4b8f0",borderRadius:12,background:"#fff",color:S.purpleDark,fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer"}}>Login</button>
+            <button onClick={()=>{setMenuOpen(false);if(onStart)onStart();}} style={{padding:"13px",background:S.purpleDark,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer"}}>Get Started →</button>
+          </div>
+        </div>
+      )}
 
       <div style={{maxWidth:980,margin:"0 auto",padding:"0 24px"}}>
 
