@@ -207,6 +207,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [showShareLink,setShowShareLink]=useState(false);const [salonBotKeyword,setSalonBotKeyword]=useState("");
   useEffect(()=>{async function loadKeyword(){try{const{data}=await supabase.from("salons").select("bot_keyword").eq("id",user.id).single();if(data?.bot_keyword)setSalonBotKeyword(data.bot_keyword);}catch(e){}}loadKeyword();},[user.id]);
   const shareBookingLink=`https://wa.me/918307340281?text=${encodeURIComponent(`Namaste! Main ${salonBotKeyword||"snipsalon"} mein appointment book karna chahta hoon 🙏`)}`;
+  const [showDrawer,setShowDrawer]=useState(false);
   const weekDays=Array.from({length:6},(_,i)=>addDays(weekStart,i));
   return(
     <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
