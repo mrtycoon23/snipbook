@@ -337,7 +337,7 @@ function ReengagementTab({customers}){
   );
 }
 
-function BirthdayTab({customers}){
+function BirthdayTab({customers,onAddBirthday}){
   const [waModal,setWaModal]=useState(null);
   const [sentIds,setSentIds]=useState([]);
   const [gf,setGf]=useState("all");
@@ -356,7 +356,7 @@ function BirthdayTab({customers}){
             <div style={{fontSize:11,color:"#6b5fa0",marginTop:1}}>Celebrate clients' special days.</div>
           </div>
         </div>
-        <div onClick={()=>{}} style={{background:"#5b3fc4",color:"#fff",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5,cursor:"pointer"}}>Create Birthday Offer ›</div>
+        <div onClick={onAddBirthday} style={{background:"#5b3fc4",color:"#fff",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5,cursor:"pointer"}}>Create Birthday Offer ›</div>
       </div>
 
       {/* Upcoming header */}
@@ -387,7 +387,7 @@ function BirthdayTab({customers}){
           <div style={{fontSize:52,marginBottom:12}}>🎁</div>
           <div style={{fontSize:15,fontWeight:800,color:TP.text,marginBottom:6,letterSpacing:"-0.2px"}}>No Upcoming Birthdays</div>
           <div style={{fontSize:12,color:TP.ts,lineHeight:1.6,marginBottom:16}}>Add customer birth dates to start<br/>automatic birthday campaigns.</div>
-          <div style={{display:"inline-flex",alignItems:"center",gap:6,border:"1.5px solid #ddd6fe",borderRadius:24,padding:"10px 22px",fontSize:13,fontWeight:700,color:TP.purpleMid,cursor:"pointer",background:"#fff"}}>➕ Add Birthday</div>
+          <div onClick={onAddBirthday} style={{display:"inline-flex",alignItems:"center",gap:6,border:"1.5px solid #ddd6fe",borderRadius:24,padding:"10px 22px",fontSize:13,fontWeight:700,color:TP.purpleMid,cursor:"pointer",background:"#fff"}}>➕ Add Birthday</div>
         </div>
         :<div style={{display:"flex",flexDirection:"column",gap:10}}>
           {wb.map(c=>{const us=US[c.bdayInfo.urgency];const isSent=sentIds.includes(c.id);const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||TP.purpleMid;return(
@@ -525,7 +525,7 @@ function CampaignsTab({customers}){
 }
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
-export default function EngagementCenter({currentUser,onBack}){
+export default function EngagementCenter({currentUser,onBack,onAddBirthday}){
   const [tab,setTab]=useState("reengagement");
   const [customers,setCustomers]=useState([]);
   const [loading,setLoading]=useState(true);
@@ -593,7 +593,7 @@ export default function EngagementCenter({currentUser,onBack}){
       {/* Content */}
       <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
         {tab==="reengagement"&&<ReengagementTab customers={customers}/>}
-        {tab==="birthday"&&<BirthdayTab customers={customers}/>}
+        {tab==="birthday"&&<BirthdayTab customers={customers} onAddBirthday={onAddBirthday}/>}
         {tab==="campaigns"&&<CampaignsTab customers={customers}/>}
       </div>
     </div>
