@@ -127,9 +127,10 @@ async function clearSession(key) {
 async function getSalonByKeyword(keyword) {
   if (!keyword) return null;
   try {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/salons?bot_keyword=eq.${encodeURIComponent(keyword.toLowerCase().trim())}&limit=1`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
-    const d = await r.json();
-    return d?.[0] || null;
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/salons?select=*`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+    const allSalons = await r.json();
+    const textLower = keyword.toLowerCase().trim();
+    return (allSalons || []).find(s => s.bot_keyword && textLower.includes(s.bot_keyword.toLowerCase())) || null;
   } catch(e) { return null; }
 }
 
