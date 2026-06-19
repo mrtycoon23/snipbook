@@ -116,7 +116,7 @@ function Settings({user,onBack,onLogout,onSalonUpdate,showRevenue,setShowRevenue
   function toggleDay(d){setHours(p=>({...p,workDays:p.workDays.includes(d)?p.workDays.filter(x=>x!==d):[...p.workDays,d]}));}
   const inputStyle={...is,marginTop:5};const F=SF;const Card=SCard;const Toggle=SToggle;
   const rawNum=(wa.number||"").replace(/[^0-9]/g,""); 
-  const bookingLink=`https://wa.me/${rawNum.startsWith("91")?rawNum:"91"+rawNum}?text=${encodeURIComponent(`Namaste! Main ${profile.salonName} mein appointment book karna chahta hoon 🙏`)}`;
+  const bookingLink=`https://wa.me/${rawNum.startsWith("91")?rawNum:"91"+rawNum}?text=${encodeURIComponent(wa.botKeyword||"snipsalon")}`;
   const C={purple:"#2d1b69",purpleMid:"#5b3fc4",purpleLight:"#ede9fe",bg:"#f8f7ff",white:"#ffffff",text:"#0f0a2e",muted:"#6b7280",border:"#e5e7eb",green:"#16a34a"};
   const inp={width:"100%",padding:"10px 13px",border:"1.5px solid #e5e7eb",borderRadius:10,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fff",boxSizing:"border-box",color:"#0f0a2e"};
   const sectionTitle=(icon,title)=>(<div style={{display:"flex",alignItems:"center",gap:10,padding:"14px 16px 10px"}}><div style={{width:32,height:32,borderRadius:9,background:"#f0eeff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{icon}</div><div style={{fontWeight:700,fontSize:15,color:"#0f0a2e",letterSpacing:"-0.2px"}}>{title}</div></div>);
