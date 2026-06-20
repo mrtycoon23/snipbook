@@ -214,8 +214,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       {["chats"].includes(screen)&&<SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
         {screen==="dashboard"&&(
-          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff",overscrollBehavior:"contain",overscrollBehavior:"contain"}}>
-            <div style={{background:"#fff",padding:"12px 18px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff"}}>
+          <div style={{display:"flex",flexDirection:"column",height:"100%",overflow:"hidden"}}>
+            <div style={{background:"#fff",padding:"12px 18px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff",flexShrink:0}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div onClick={()=>setShowDrawer(true)} style={{display:"flex",flexDirection:"column",gap:4,cursor:"pointer",padding:"4px"}}>
                   <div style={{height:2,background:"#2d1b69",borderRadius:2,width:20}}/>
@@ -235,6 +235,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
                 <div style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:"#fff"}}>{user?.name?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div>
               </div>
             </div>
+            <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff",overscrollBehavior:"contain"}}>
             <div style={{margin:"10px 16px 0",background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:18,padding:"16px",position:"relative",overflow:"hidden"}}>
               <svg style={{position:"absolute",bottom:0,right:0,opacity:0.15}} width="140" height="70" viewBox="0 0 140 70"><polyline points="0,60 25,45 50,52 75,28 100,35 120,15 140,22" fill="none" stroke="#fff" strokeWidth="2.5"/></svg>
               <div style={{position:"absolute",width:100,height:100,borderRadius:"50%",background:"rgba(255,255,255,0.05)",top:-30,right:-20}}/>
@@ -262,6 +263,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                 {[{icon:"🔗",label:"Share Booking Link",sub:"WhatsApp link & QR",s:"__share__",dark:true},{icon:"👥",label:"Add Client",sub:"New customer",s:"clients",dark:false},{icon:"💬",label:"Bot Chats",sub:"WhatsApp history",s:"chats",dark:false},{icon:"💫",label:"Create Offer",sub:"New campaign",s:"engage",dark:false}].map(a=>(<div key={a.label} onClick={()=>a.s==="__share__"?setShowShareLink(true):setScreen(a.s)} style={{background:a.dark?"#2d1b69":"#fff",borderRadius:14,padding:"14px 12px",cursor:"pointer",border:a.dark?"none":"0.5px solid #e0d8ff",display:"flex",alignItems:"center",gap:10}}><div style={{width:36,height:36,background:a.dark?"rgba(255,255,255,0.15)":"#f4f2ff",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{a.icon}</div><div><div style={{fontWeight:700,fontSize:13,color:a.dark?"#fff":"#1a0a4a"}}>{a.label}</div><div style={{fontSize:11,color:a.dark?"rgba(255,255,255,0.5)":"#9b8ec4",marginTop:1}}>{a.sub}</div></div></div>))}
               </div>
+            </div>
             </div>
           </div>
         )}
