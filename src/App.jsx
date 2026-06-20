@@ -210,11 +210,11 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [showDrawer,setShowDrawer]=useState(false);
   const weekDays=Array.from({length:6},(_,i)=>addDays(weekStart,i));
   return(
-    <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
+    <div style={{height:"100dvh",display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
       {["chats"].includes(screen)&&<SalonHeader user={user} screen={screen} onSettings={()=>setScreen("settings")} unreadCount={unreadCount} onBell={handleBell} onBack={()=>setScreen("dashboard")}/>}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}>
         {screen==="dashboard"&&(
-          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff"}}>
+          <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",background:"#f4f2ff",overscrollBehavior:"contain",overscrollBehavior:"contain"}}>
             <div style={{background:"#fff",padding:"12px 18px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"0.5px solid #e0d8ff"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div onClick={()=>setShowDrawer(true)} style={{display:"flex",flexDirection:"column",gap:4,cursor:"pointer",padding:"4px"}}>
