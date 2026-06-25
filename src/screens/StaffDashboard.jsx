@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import CustomerHistory from "./CustomerHistoryApp";
 
@@ -26,6 +26,8 @@ const AVATAR_COLORS = [
   {bg:"#d1fae5",text:"#065f46"},{bg:"#fef3c7",text:"#92400e"},{bg:"#ede9fe",text:"#4c1d95"},
 ];
 
+const BUCKET = "visit photos";
+
 const today = new Date().toISOString().slice(0,10);
 const thisWeekStart = (()=>{const d=new Date();d.setDate(d.getDate()-d.getDay());return d.toISOString().slice(0,10);})();
 const thisMonthStart = new Date().toISOString().slice(0,8)+"01";
@@ -34,6 +36,57 @@ function initials(name){return name.split(" ").map(w=>w[0]).join("").substring(0
 function avc(id){const n=typeof id==="string"?id.charCodeAt(0):(id||1);return AVATAR_COLORS[Math.abs(n-1)%AVATAR_COLORS.length];}
 function fc(n){return "₹"+Number(n).toLocaleString("en-IN");}
 function fd(d){return new Date(d+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"});}
+
+// ─── Staged photo helpers (upload happens immediately, visit row created on final save) ──
+function StagedPhotoItem({photo,onRemove}){
+  const [removing,setRemoving]=useState(false);
+  async function handleRemove(){
+    if(photo?.path){
+      setRemoving(true);
+      await supabase.storage.from(BUCKET).remove([photo.path]);
+      setRemoving(false);
+    }
+    onRemove();
+  }
+  return(
+    <div style={{position:"relative",flexShrink:0,width:80,height:80}}>
+      <img src={photo.url} alt="visit" style={{width:80,height:80,borderRadius:12,objectFit:"cover",border:`2px solid ${T.border}`,display:"block"}}/>
+      {removing
+        ?<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{fontSize:10,color:"white",fontWeight:800}}>...</div></div>
+        :<button onClick={handleRemove} style={{position:"absolute",top:-6,left:-6,width:20,height:20,borderRadius:"50%",background:T.rt,border:"2px solid white",color:"white",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,zIndex:10,padding:0}}>✕</button>}
+    </div>
+  );
+}
+
+function StagedAddPhotoBtn({tempId,onAdd}){
+  const fileRef=useRef();
+  const [uploading,setUploading]=useState(false);
+  async function handleFileChange(e){
+    const file=e.target.files[0];
+    if(!file)return;
+    setUploading(true);
+    try{
+      const ext=file.name.split(".").pop()||"jpg";
+      const path=`${tempId}/photo_${Date.now()}.${ext}`;
+      const {error}=await supabase.storage.from(BUCKET).upload(path,file,{upsert:true});
+      if(error){setUploading(false);return;}
+      const {data:urlData}=supabase.storage.from(BUCKET).getPublicUrl(path);
+      onAdd({url:urlData.publicUrl,path});
+    }catch(err){}
+    setUploading(false);
+    e.target.value="";
+  }
+  return(
+    <div style={{flexShrink:0}}>
+      <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleFileChange}/>
+      <div onClick={()=>!uploading&&fileRef.current?.click()} style={{width:80,height:80,borderRadius:12,cursor:uploading?"wait":"pointer",background:T.sub,border:`2px dashed ${T.border}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
+        {uploading
+          ?<div style={{fontSize:10,color:T.ts,fontWeight:700}}>Uploading...</div>
+          :<><div style={{fontSize:26,color:"#5b3fc4",fontWeight:900,lineHeight:1}}>+</div><div style={{fontSize:9,color:T.ts,fontWeight:700}}>Add Photo</div></>}
+      </div>
+    </div>
+  );
+}
 
 // ─── Add Work Log Modal ────────────────────────────────────────────────────────
 function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
@@ -48,6 +101,19 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   const [newCustGender,setNewCustGender]=useState("male");
   const [savingCustomer,setSavingCustomer]=useState(false);
   const [pendingLogData,setPendingLogData]=useState(null);
+  const [notes,setNotes]=useState("");
+  const [photos,setPhotos]=useState([]);
+  const [tempVisitId]=useState(()=>`temp_${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
+
+  async function handleCancel(){
+    if(photos.length>0){
+      const paths=photos.map(p=>p.path).filter(Boolean);
+      if(paths.length>0){
+        try{await supabase.storage.from(BUCKET).remove(paths);}catch(e){}
+      }
+    }
+    onClose();
+  }
 
   if(!isPresent){
     return(
@@ -72,15 +138,15 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
       if(salonId){
         const {data:existingCustomers}=await supabase.from("customers").select("id").eq("salon_id",salonId).eq("name",clientName.trim());
         if(!existingCustomers||existingCustomers.length===0){
-          setPendingLogData({staffId,clientName:clientName.trim(),service,amount:Number(amount),date});
+          setPendingLogData({staffId,clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos});
           setSaving(false);
           setShowNewCustomer(true);
           return;
         }
       }
-      await saveLog({staffId,clientName:clientName.trim(),service,amount:Number(amount),date});
+      await saveLog({staffId,clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos});
     }catch(e){
-      setPendingLogData({staffId,clientName:clientName.trim(),service,amount:Number(amount),date});
+      setPendingLogData({staffId,clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos});
       setSaving(false);
       setShowNewCustomer(true);
     }
@@ -103,8 +169,8 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
             services: [logData.service],
             stylist: logData.staffId,
             amount: logData.amount,
-            notes: "",
-            photos: []
+            notes: logData.notes||"",
+            photos: logData.photos||[]
           });
         }
         if(res){
@@ -139,7 +205,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
 
   if(showNewCustomer&&pendingLogData){
     return(
-      <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
+      <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
         <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
           <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
@@ -173,7 +239,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   }
 
   return(
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
+    <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
       <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto"}}>
         <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{fontWeight:900,fontSize:16,marginBottom:16}}>➕ Work Log Add Karo</div>
@@ -197,8 +263,19 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
           <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Amount (₹) *</div>
           <input style={IS} type="number" placeholder="500" value={amount} onChange={e=>setAmount(e.target.value)} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
         </div>
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>📝 Stylist Notes</div>
+          <textarea style={{...IS,resize:"vertical",lineHeight:1.6,minHeight:64,fontFamily:"inherit"}} placeholder="e.g. Shampoo + conditioning kiya, keratin ke baare mein pucha..." value={notes} onChange={e=>setNotes(e.target.value)} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
+        </div>
+        <div style={{marginBottom:18}}>
+          <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:8}}>📸 Visit Photos ({photos.length})</div>
+          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+            {photos.map((ph,i)=><StagedPhotoItem key={i} photo={ph} onRemove={()=>setPhotos(prev=>prev.filter((_,idx)=>idx!==i))}/>)}
+            <StagedAddPhotoBtn tempId={tempVisitId} onAdd={ph=>setPhotos(prev=>[...prev,ph])}/>
+          </div>
+        </div>
         <div style={{display:"flex",gap:10}}>
-          <button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button>
+          <button onClick={handleCancel} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button>
           <button onClick={save} disabled={saving} style={{flex:2,padding:12,border:"none",borderRadius:12,background:clientName.trim()&&amount?T.green:"#d1d5db",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>
             {saving?"Saving...":"✓ Save Karo"}
           </button>
