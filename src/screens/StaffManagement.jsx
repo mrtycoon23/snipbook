@@ -909,7 +909,7 @@ export default function StaffManagement({role="owner",currentUser,showRevenue=fa
   useEffect(()=>{
     async function loadStaff(){
       const{data}=await supabase.from("staff").select("*").eq("salon_id",currentUser?.id);
-      setStaffList(data&&data.length>0?data:[]);
+      setStaffList(data&&data.length>0?data.filter(s=>s.role!=="Owner"):[]);
     }
     if(currentUser?.id)loadStaff();
   },[currentUser?.id]);

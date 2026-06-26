@@ -169,6 +169,151 @@ function StaffSalonEntry({onFound,onBack}){
 
 const NAV=[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",label:"Calendar"},{id:"clients",icon:"👥",label:"Clients"},{id:"staff",icon:"👨‍💼",label:"Staff"},{id:"history",icon:"📋",label:"History"},{id:"engage",icon:"💫",label:"Engage"},{id:"settings",icon:"⚙️",label:"Settings"}];
 
+const OWNER_LOG_SERVICES=["Haircut","Hair Color","Facial","Waxing","Bridal Makeup","Manicure","Pedicure","Head Massage","Threading","Blowdry","Keratin","Hair Spa"];
+
+function OwnerWorkLogModal({salonId,onSave,onClose}){
+  const [clientName,setClientName]=useState("");
+  const [service,setService]=useState(OWNER_LOG_SERVICES[0]);
+  const [amount,setAmount]=useState("");
+  const [date,setDate]=useState(dateKey(new Date()));
+  const [saving,setSaving]=useState(false);
+  const [showNewCustomer,setShowNewCustomer]=useState(false);
+  const [newCustPhone,setNewCustPhone]=useState("");
+  const [newCustDob,setNewCustDob]=useState("");
+  const [newCustGender,setNewCustGender]=useState("male");
+  const [savingCustomer,setSavingCustomer]=useState(false);
+  const [pendingLogData,setPendingLogData]=useState(null);
+
+  async function getOwnerStaffId(){
+    const{data:existing}=await supabase.from("staff").select("id").eq("salon_id",salonId).eq("name","Owner").maybeSingle();
+    if(existing?.id)return existing.id;
+    const{data:created}=await supabase.from("staff").insert({salon_id:salonId,name:"Owner",role:"Owner",phone:"",salary:0,pin:"0000"}).select().single();
+    return created?.id;
+  }
+
+  async function saveLog(logData){
+    try{
+      const ownerStaffId=await getOwnerStaffId();
+      if(!ownerStaffId){onClose();return;}
+      await supabase.from("work_logs").insert({
+        salon_id:salonId,staff_id:ownerStaffId,client_name:logData.clientName,
+        service:logData.service,amount:logData.amount,date:logData.date
+      });
+      const custRes=await supabase.from("customers").select("id").eq("salon_id",salonId).eq("name",logData.clientName).single();
+      if(custRes.data){
+        await supabase.from("visit_history").insert({
+          salon_id:salonId,customer_id:custRes.data.id,date:logData.date,
+          services:[logData.service],stylist:ownerStaffId,amount:logData.amount,notes:"",photos:[]
+        });
+      }
+      onSave(logData);
+      onClose();
+    }catch(e){console.error(e);onClose();}
+  }
+
+  async function save(){
+    if(!clientName.trim()||!amount||isNaN(amount))return;
+    setSaving(true);
+    try{
+      const{data:existingCustomers}=await supabase.from("customers").select("id").eq("salon_id",salonId).eq("name",clientName.trim());
+      if(!existingCustomers||existingCustomers.length===0){
+        setPendingLogData({clientName:clientName.trim(),service,amount:Number(amount),date});
+        setSaving(false);
+        setShowNewCustomer(true);
+        return;
+      }
+      await saveLog({clientName:clientName.trim(),service,amount:Number(amount),date});
+    }catch(e){
+      setPendingLogData({clientName:clientName.trim(),service,amount:Number(amount),date});
+      setSaving(false);
+      setShowNewCustomer(true);
+    }
+  }
+
+  async function saveNewCustomer(){
+    setSavingCustomer(true);
+    try{
+      await supabase.from("customers").insert({
+        salon_id:salonId,name:pendingLogData.clientName,phone:newCustPhone||"",
+        birthday:newCustDob||null,gender:newCustGender||"male"
+      });
+      await saveLog(pendingLogData);
+    }catch(e){
+      console.error(e);
+      await saveLog(pendingLogData);
+    }
+    setSavingCustomer(false);
+  }
+
+  if(showNewCustomer&&pendingLogData){
+    return(
+      <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
+        <div style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
+          <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+            <div style={{width:44,height:44,borderRadius:14,background:TP.blue,border:`2px solid ${TP.bb}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🆕</div>
+            <div>
+              <div style={{fontWeight:900,fontSize:16,color:TP.text}}>Naya Customer!</div>
+              <div style={{fontSize:12,color:TP.ts,marginTop:2}}>{pendingLogData.clientName} pehle kabhi nahi aaya</div>
+            </div>
+          </div>
+          <div style={{marginBottom:12}}>
+            <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Phone Number *</div>
+            <input style={is} type="tel" placeholder="e.g. 9876543210" value={newCustPhone} onChange={e=>setNewCustPhone(e.target.value.replace(/\D/g,"").slice(0,10))} autoFocus/>
+          </div>
+          <div style={{marginBottom:12}}>
+            <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Date of Birth (optional)</div>
+            <input style={is} type="date" value={newCustDob} onChange={e=>setNewCustDob(e.target.value)}/>
+          </div>
+          <div style={{marginBottom:16}}>
+            <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:8}}>Gender</div>
+            <div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewCustGender(g.id)} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustGender===g.id?TP.purple:TP.border}`,background:newCustGender===g.id?TP.purpleLight:"#fff",color:newCustGender===g.id?TP.purple:TP.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div>
+          </div>
+          <button onClick={saveNewCustomer} disabled={savingCustomer||!newCustPhone||newCustPhone.length<10} style={{width:"100%",padding:13,background:savingCustomer||!newCustPhone||newCustPhone.length<10?"#d1d5db":TP.purple,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:newCustPhone.length===10?"pointer":"not-allowed"}}>
+            {savingCustomer?"Saving...":"✓ Customer + Log Save Karo"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
+      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto"}}>
+        <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
+        <div style={{fontWeight:900,fontSize:16,marginBottom:4,color:TP.text}}>➕ Apna Work Log Add Karo</div>
+        <div style={{fontSize:12,color:TP.ts,marginBottom:16}}>Khud ki di hui service yahan likho</div>
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Client Naam *</div>
+          <input style={is} placeholder="e.g. Anjali Mehta" value={clientName} onChange={e=>setClientName(e.target.value)} autoFocus/>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+          <div>
+            <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Service</div>
+            <select style={{...is,cursor:"pointer"}} value={service} onChange={e=>setService(e.target.value)}>
+              {OWNER_LOG_SERVICES.map(s=><option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <div>
+            <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Date</div>
+            <input style={is} type="date" value={date} onChange={e=>setDate(e.target.value)}/>
+          </div>
+        </div>
+        <div style={{marginBottom:18}}>
+          <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Amount (₹) *</div>
+          <input style={is} type="number" placeholder="500" value={amount} onChange={e=>setAmount(e.target.value)}/>
+        </div>
+        <div style={{display:"flex",gap:10}}>
+          <button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button>
+          <button onClick={save} disabled={saving} style={{flex:2,padding:12,border:"none",borderRadius:12,background:clientName.trim()&&amount?TP.purple:"#d1d5db",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>
+            {saving?"Saving...":"✓ Save Karo"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [screen,setScreen]=useState("dashboard");
   const [bookings,setBookings]=useState(user?.id==="demo"?seedBookings():{});
@@ -176,6 +321,16 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const booked=Object.values(dayData).filter(b=>b.status!=="break").length;
   const revenue=Object.values(dayData).reduce((s,b)=>s+(b.price||0),0);
   const pending=Object.values(dayData).filter(b=>b.status==="pending").length;
+  const [earnedRevenue,setEarnedRevenue]=useState(0);
+  useEffect(()=>{
+    async function loadEarnedRevenue(){
+      try{
+        const{data}=await supabase.from("work_logs").select("amount").eq("salon_id",user.id).eq("date",todayKey);
+        setEarnedRevenue(data?data.reduce((s,l)=>s+(l.amount||0),0):0);
+      }catch(e){}
+    }
+    loadEarnedRevenue();
+  },[user.id,todayKey]);
   const [selDate,setSelDate]=useState(today);
   const [showNotifs,setShowNotifs]=useState(false);const [notifications,setNotifications]=useState([]);const [unreadCount,setUnreadCount]=useState(0);
   useEffect(()=>{
@@ -205,6 +360,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const filtC=clients.filter(c=>{const q=cSearch.toLowerCase();return !q||c.name.toLowerCase().includes(q)||c.phone.includes(q);});
   async function sendWelcomeMessage(){if(!selClient?.phone)return;setWelcomeSending(true);setWelcomeModal(null);try{const res=await fetch("/api/send-welcome",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:selClient.phone,customerName:selClient.name,salonId:user.id,salonName:user.salon})});if(res.ok){setWelcomeModalMsg(`${user.salon} ka bot ab ${selClient.name} ke liye ready hai!`);setWelcomeModal("success");}else{setWelcomeModalMsg("Phone number check karo.");setWelcomeModal("error");}}catch(e){setWelcomeModalMsg("Network error: "+e.message);setWelcomeModal("error");}setWelcomeSending(false);}
   const [showShareLink,setShowShareLink]=useState(false);const [salonBotKeyword,setSalonBotKeyword]=useState("");
+  const [showQuickAdd,setShowQuickAdd]=useState(false);const [showOwnerWorkLog,setShowOwnerWorkLog]=useState(false);
   useEffect(()=>{async function loadKeyword(){try{const{data}=await supabase.from("salons").select("bot_keyword").eq("id",user.id).single();if(data?.bot_keyword)setSalonBotKeyword(data.bot_keyword);}catch(e){}}loadKeyword();},[user.id]);
   const shareBookingLink=`https://wa.me/918307340281?text=${encodeURIComponent(`Namaste! Main ${salonBotKeyword||"snipsalon"} mein appointment book karna chahta hoon 🙏`)}`;
   const [showDrawer,setShowDrawer]=useState(false);
@@ -239,12 +395,15 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             <div style={{margin:"10px 16px 0",background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:18,padding:"16px",position:"relative",overflow:"hidden"}}>
               <svg style={{position:"absolute",bottom:0,right:0,opacity:0.15}} width="140" height="70" viewBox="0 0 140 70"><polyline points="0,60 25,45 50,52 75,28 100,35 120,15 140,22" fill="none" stroke="#fff" strokeWidth="2.5"/></svg>
               <div style={{position:"absolute",width:100,height:100,borderRadius:"50%",background:"rgba(255,255,255,0.05)",top:-30,right:-20}}/>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:700,letterSpacing:0.5,marginBottom:4}}>{user.salon.toUpperCase()} · TODAY'S REVENUE</div>
-              <div style={{fontSize:32,fontWeight:800,color:"#fff",marginBottom:6}}>₹{revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||"0"}</div>
-              <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}><span style={{color:"#22c55e",fontSize:11,fontWeight:700}}>↑ 18%</span><span style={{color:"rgba(255,255,255,0.6)",fontSize:11}}>from yesterday</span></div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:700,letterSpacing:0.5,marginBottom:4}}>{user.salon.toUpperCase()} · TODAY'S EARNED REVENUE</div>
+              <div style={{fontSize:32,fontWeight:800,color:"#fff",marginBottom:6}}>₹{earnedRevenue>=1000?(earnedRevenue/1000).toFixed(1)+"k":earnedRevenue||"0"}</div>
+              <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}><span style={{color:"#22c55e",fontSize:11,fontWeight:700}}>✓ Service ho gayi</span></div>
+                <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,255,255,0.15)",borderRadius:20,padding:"3px 10px"}}><span style={{color:"#fff",fontSize:11,fontWeight:700}}>📅 Expected (bookings): ₹{revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||0}</span></div>
+              </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,margin:"8px 16px 0"}}>
-              {[{icon:"📅",val:booked,label:"Bookings",color:"#1a0a4a"},{icon:"⏳",val:pending,label:"Pending",color:"#f59e0b"},{icon:"👥",val:clients.length,label:"Clients",color:"#22c55e"},{icon:"💰",val:"₹"+(revenue>=1000?(revenue/1000).toFixed(1)+"k":revenue||0),label:"Revenue",color:"#5b3fc4"}].map(s=>(<div key={s.label} style={{background:"#fff",borderRadius:10,padding:"8px 4px",textAlign:"center",border:"0.5px solid #e0d8ff"}}><div style={{fontSize:13,marginBottom:2}}>{s.icon}</div><div style={{fontSize:15,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>{s.label}</div></div>))}
+              {[{icon:"📅",val:booked,label:"Bookings",color:"#1a0a4a"},{icon:"⏳",val:pending,label:"Pending",color:"#f59e0b"},{icon:"👥",val:clients.length,label:"Clients",color:"#22c55e"},{icon:"💰",val:"₹"+(earnedRevenue>=1000?(earnedRevenue/1000).toFixed(1)+"k":earnedRevenue||0),label:"Revenue",color:"#5b3fc4"}].map(s=>(<div key={s.label} style={{background:"#fff",borderRadius:10,padding:"8px 4px",textAlign:"center",border:"0.5px solid #e0d8ff"}}><div style={{fontSize:13,marginBottom:2}}>{s.icon}</div><div style={{fontSize:15,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>{s.label}</div></div>))}
             </div>
             <div style={{padding:"8px 16px 0"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -334,12 +493,14 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       </div>
       <div style={{background:"#fff",borderTop:"0.5px solid #e0d8ff",paddingBottom:"env(safe-area-inset-bottom,0px)",display:"flex",alignItems:"center",flexShrink:0,boxShadow:"0 -4px 20px rgba(45,27,105,0.07)",position:"relative",height:62}}>
         {[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",label:"Calendar"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>{active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}<div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div><span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span></div>);})}
-        <div style={{flex:1,display:"flex",justifyContent:"center",alignItems:"center"}}><div onClick={()=>{setScreen("clients");setShowAddClient(true);}} style={{width:50,height:50,borderRadius:"50%",background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,color:"#fff",boxShadow:"0 4px 16px rgba(45,27,105,0.4)",cursor:"pointer",marginBottom:8}}>+</div></div>
+        <div style={{flex:1,display:"flex",justifyContent:"center",alignItems:"center"}}><div onClick={()=>setShowQuickAdd(true)} style={{width:50,height:50,borderRadius:"50%",background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,color:"#fff",boxShadow:"0 4px 16px rgba(45,27,105,0.4)",cursor:"pointer",marginBottom:8}}>+</div></div>
         {[{id:"staff",icon:"👨‍💼",label:"Staff"},{id:"settings",icon:"⚙️",label:"Settings"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>{active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}<div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div><span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span></div>);})}
       </div>
       {showDrawer&&(<><div onClick={()=>setShowDrawer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:700}}/><div style={{position:"fixed",top:0,left:0,bottom:0,width:280,background:"#fff",zIndex:800,display:"flex",flexDirection:"column",boxShadow:"4px 0 24px rgba(0,0,0,0.15)"}}><div style={{background:"#f4f2ff",padding:"44px 16px 12px",borderBottom:"0.5px solid #e0d8ff"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:10,background:"#ede9fe",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:"#5b3fc4",flexShrink:0}}>{user?.salon?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>✂️ {user?.salon}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{user?.name}</div></div></div></div><div style={{flex:1,overflowY:"auto",padding:"4px 0"}}>{[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",label:"Calendar"},{id:"clients",icon:"👥",label:"Clients"},{id:"staff",icon:"👨‍💼",label:"Staff"},{id:"history",icon:"📋",label:"Customer History"},{id:"engage",icon:"💫",label:"Engagement"},{id:"chats",icon:"💬",label:"Bot Chats"},{id:"settings",icon:"⚙️",label:"Settings"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>{setScreen(item.id);setShowDrawer(false);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 16px",cursor:"pointer",background:active?"#f4f2ff":"transparent",borderLeft:active?"3px solid #2d1b69":"3px solid transparent"}}><div style={{width:30,height:30,borderRadius:8,background:active?"#ede9fe":"#f4f2ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{item.icon}</div><div style={{fontWeight:active?800:500,fontSize:13,color:active?"#2d1b69":"#1a0a4a"}}>{item.label}</div>{active&&<div style={{marginLeft:"auto",width:5,height:5,borderRadius:"50%",background:"#2d1b69"}}/>}</div>);})}</div><div style={{padding:"12px 16px",borderTop:"1px solid #f1f0f5"}}><button onClick={()=>{setShowDrawer(false);onLogout();}} style={{width:"100%",padding:"11px 16px",background:"#fff5f5",border:"1px solid #fca5a5",borderRadius:12,display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontFamily:"inherit"}}><div style={{width:32,height:32,borderRadius:9,background:"#fee2e2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🚪</div><span style={{fontSize:14,fontWeight:700,color:"#dc2626"}}>Logout</span></button><div style={{fontSize:10,color:"#c4b8f0",textAlign:"center",marginTop:10}}>SnipBook · {user?.salon}</div></div></div></>)}
       {showNotifs&&(<div onClick={()=>setShowNotifs(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-start",justifyContent:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",width:"90%",maxWidth:360,height:"100vh",overflowY:"auto"}}><div style={{padding:"16px",borderBottom:`2px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:TP.purple,position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:16,color:"#fff"}}>🔔 Notifications</div><button onClick={()=>setShowNotifs(false)} style={{background:"rgba(255,255,255,0.15)",border:"none",fontSize:18,cursor:"pointer",color:"#fff",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>{notifications.length===0?(<div style={{padding:32,textAlign:"center",color:TP.ts}}>No notifications</div>):notifications.map((n,i)=>(<div key={i} onClick={()=>{setScreen("calendar");setSelDate(new Date(n.date));setShowNotifs(false);}} style={{padding:"14px 16px",borderBottom:`2px solid ${TP.bg}`,cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:12,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>📅</div><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:TP.text}}>{n.customer_name||"Customer"}</div><div style={{fontSize:11,color:TP.ts,marginTop:2}}>{n.service} · ₹{n.amount||0}</div><div style={{fontSize:11,color:TP.purple,marginTop:2,fontWeight:700}}>{n.date} at {n.time_slot}</div></div></div></div>))}</div></div>)}
       {showShareLink&&(<div onClick={()=>setShowShareLink(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:700,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"22px 20px 36px",width:"100%",textAlign:"center"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 18px"}}/><div style={{fontSize:36,marginBottom:8}}>🔗</div><div style={{fontWeight:900,fontSize:17,marginBottom:4,color:"#1a0a4a"}}>Share Booking Link</div><div style={{fontSize:12,color:"#9b8ec4",marginBottom:18}}>Customers ko bhejo ya QR scan karwao</div><img src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(shareBookingLink)}`} alt="QR" style={{width:200,height:200,borderRadius:14,border:"2px solid #e0d8ff",marginBottom:18}}/><div style={{background:"#f4f2ff",border:"1.5px solid #e0d8ff",borderRadius:12,padding:"11px 14px",display:"flex",alignItems:"center",gap:8,marginBottom:14}}><span style={{flex:1,fontSize:11,color:"#4a3580",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"left"}}>{shareBookingLink}</span><button onClick={()=>navigator.clipboard.writeText(shareBookingLink)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,flexShrink:0}}>📋</button></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowShareLink(false)} style={{flex:1,padding:13,border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Close</button><a href={shareBookingLink} target="_blank" rel="noreferrer" style={{flex:2,padding:13,border:"none",borderRadius:12,background:"#25d366",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>💬 Open in WhatsApp</a></div></div></div>)}
+      {showQuickAdd&&(<div onClick={()=>setShowQuickAdd(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:650,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 16px"}}/><div style={{fontWeight:900,fontSize:15,marginBottom:14,color:"#1a0a4a"}}>Kya add karna hai?</div><div onClick={()=>{setShowQuickAdd(false);setScreen("clients");setShowAddClient(true);}} style={{display:"flex",alignItems:"center",gap:12,padding:"14px",background:"#f4f2ff",borderRadius:14,marginBottom:10,cursor:"pointer",border:"0.5px solid #e0d8ff"}}><div style={{width:42,height:42,borderRadius:12,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>👥</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>Add Client</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>Naya customer add karo</div></div></div><div onClick={()=>{setShowQuickAdd(false);setShowOwnerWorkLog(true);}} style={{display:"flex",alignItems:"center",gap:12,padding:"14px",background:"#f4f2ff",borderRadius:14,cursor:"pointer",border:"0.5px solid #e0d8ff"}}><div style={{width:42,height:42,borderRadius:12,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>✂️</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>Add Work Log</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>Apna diya hua service likho</div></div></div></div></div>)}
+      {showOwnerWorkLog&&<OwnerWorkLogModal salonId={user.id} onSave={(logData)=>{if(logData.date===todayKey)setEarnedRevenue(prev=>prev+logData.amount);}} onClose={()=>setShowOwnerWorkLog(false)}/>}
     </div>
   );
 }
