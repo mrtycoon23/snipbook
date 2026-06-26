@@ -164,15 +164,19 @@ async function getBookedSlots(salonId, date) {
 async function getStaffList(salonId) {
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/staff?salon_id=eq.${salonId}&select=id,name,gender_capability`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
-    return (await r.json()) || [];
-  } catch(e) { return []; }
+    const d = await r.json();
+    if (!Array.isArray(d)) { console.error("getStaffList non-array response:", JSON.stringify(d)); return []; }
+    return d;
+  } catch(e) { console.error("getStaffList error:", e.message); return []; }
 }
 
 async function getAppointmentsForDate(salonId, date) {
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${salonId}&date=eq.${date}&status=eq.confirmed&select=time_slot,staff_id`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
-    return (await r.json()) || [];
-  } catch(e) { return []; }
+    const d = await r.json();
+    if (!Array.isArray(d)) { console.error("getAppointmentsForDate non-array response:", JSON.stringify(d)); return []; }
+    return d;
+  } catch(e) { console.error("getAppointmentsForDate error:", e.message); return []; }
 }
 
 function eligibleStaffFor(staffList, gender) {
