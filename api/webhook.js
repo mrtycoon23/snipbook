@@ -160,6 +160,68 @@ async function getBookedSlots(salonId, date) {
   } catch(e) { return []; }
 }
 
+// ─── STAFF CAPACITY HELPERS ───────────────────────────────────────────────────
+async function getStaffList(salonId) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/staff?salon_id=eq.${salonId}&select=id,name,gender_capability`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+    return (await r.json()) || [];
+  } catch(e) { return []; }
+}
+
+async function getAppointmentsForDate(salonId, date) {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/appointments?salon_id=eq.${salonId}&date=eq.${date}&status=eq.confirmed&select=time_slot,staff_id`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
+    return (await r.json()) || [];
+  } catch(e) { return []; }
+}
+
+function eligibleStaffFor(staffList, gender) {
+  if (!gender) return staffList || [];
+  return (staffList || []).filter(s => !s.gender_capability || s.gender_capability === "both" || s.gender_capability === gender);
+}
+
+// Returns the time slots that still have at least one free, eligible staff member.
+// If salon has no staff configured at all, falls back to the old single-capacity behaviour
+// so existing salons aren't broken before they set up staff.
+async function computeAvailableSlots({ salonId, date, gender, staffPref, openTime, closeTime, isMorning }) {
+  const slots = getTimeSlots(isMorning ? openTime : 14, isMorning ? 14 : closeTime, date);
+  const staffList = await getStaffList(salonId);
+  const eligible = eligibleStaffFor(staffList, gender);
+  const appts = await getAppointmentsForDate(salonId, date);
+
+  if (eligible.length === 0) {
+    const booked = appts.map(a => a.time_slot);
+    return slots.filter(s => !booked.includes(s.key));
+  }
+
+  const pool = staffPref ? eligible.filter(s => s.id === staffPref) : eligible;
+  const effectivePool = pool.length > 0 ? pool : eligible;
+
+  return slots.filter(s => {
+    const apptsAtSlot = appts.filter(a => a.time_slot === s.key);
+    // Legacy/unassigned bookings (no staff_id) block the whole slot — we don't know who they used.
+    if (apptsAtSlot.some(a => !a.staff_id)) return false;
+    const busyIds = new Set(apptsAtSlot.map(a => a.staff_id));
+    return effectivePool.some(s2 => !busyIds.has(s2.id));
+  });
+}
+
+// Picks which staff member to actually assign to a new booking at confirm-time.
+async function assignStaffForBooking({ salonId, date, time, gender, staffPref }) {
+  try {
+    const staffList = await getStaffList(salonId);
+    const eligible = eligibleStaffFor(staffList, gender);
+    if (eligible.length === 0) return null;
+    const pool = staffPref ? eligible.filter(s => s.id === staffPref) : eligible;
+    const effectivePool = pool.length > 0 ? pool : eligible;
+    const apptsAtSlot = (await getAppointmentsForDate(salonId, date)).filter(a => a.time_slot === time);
+    const busyIds = new Set(apptsAtSlot.map(a => a.staff_id).filter(Boolean));
+    const free = effectivePool.find(s => !busyIds.has(s.id));
+    return free || null;
+  } catch(e) { return null; }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ─── GET UPCOMING BOOKING ─────────────────────────────────────────────────────
 async function getUpcomingBooking(salonId, phone) {
   try {
@@ -223,8 +285,27 @@ async function sendDateList(to, data, workDays, salonId = null) {
   await sendList(to, "📅 Date Chunein", `*${data.service}*${priceText}\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows, "Powered by SnipBook", salonId, data.name);
 }
 
+// After service is picked, either skip straight to date (0-1 eligible staff) or let the
+// customer pick a specific staff member when more than one qualifies (Point C).
+async function offerStaffPrefOrDate(from, sKey, data, workDays, salonId, customerName) {
+  const staffList = await getStaffList(salonId);
+  const eligible = eligibleStaffFor(staffList, data.gender);
+  if (eligible.length > 1) {
+    await setSession(sKey, "ask_staff_pref", { ...data });
+    const rows = [
+      { id: "staffpref_any", title: "✅ Koi Bhi Chalega", description: "Sabse pehla available staff" },
+      ...eligible.map(s => ({ id: `staffpref_${s.id}`, title: `👤 ${s.name}`.slice(0, 24), description: "Specific staff member" })),
+    ];
+    await sendList(from, "👤 Staff Pasand?", `*${data.service}*\n\nKisi specific staff member se chahiye, ya koi bhi chalega?`, "Staff Chunein", rows, "Powered by SnipBook", salonId, customerName);
+  } else {
+    const staffPref = eligible[0]?.id || null;
+    await setSession(sKey, "ask_date", { ...data, staffPref });
+    await sendDateList(from, data, workDays, salonId);
+  }
+}
+
 async function sendStepHint(to, step, salonId = null) {
-  const hints = { ask_name:`Aapka naam type karein 👇`, ask_gender:`Upar se Male ya Female chunein 👆`, ask_service:`Service list mein se chunein 👆`, ask_date:`Date list mein se chunein 👆`, ask_date_custom:`Date likhein jaise: *25 May* ya *3 June* 📅`, ask_time_part:`Morning ya Evening chunein 👆`, ask_time:`Time slot chunein 👆`, confirm:`Confirm karne ke liye button dabayein 👆`, browse_services_gender:`Male ya Female chunein 👆`, browse_services_list:`Service chunein 👆` };
+  const hints = { ask_name:`Aapka naam type karein 👇`, ask_gender:`Upar se Male ya Female chunein 👆`, ask_service:`Service list mein se chunein 👆`, ask_staff_pref:`Staff list mein se chunein 👆`, ask_date:`Date list mein se chunein 👆`, ask_date_custom:`Date likhein jaise: *25 May* ya *3 June* 📅`, ask_time_part:`Morning ya Evening chunein 👆`, ask_time:`Time slot chunein 👆`, confirm:`Confirm karne ke liye button dabayein 👆`, browse_services_gender:`Male ya Female chunein 👆`, browse_services_list:`Service chunein 👆` };
   const hint = hints[step];
   if (hint) await sendText(to, `_${hint}_\n\n_Wapas menu ke liye "Hi" type karein_`, salonId);
 }
@@ -334,7 +415,7 @@ export default async function handler(req, res) {
         );
       } else {
         const priceText = booking.amount > 0 ? `₹${booking.amount}` : "Price on visit";
-        await setSession(sKey, "my_booking_action", { ...data, bookingId: booking.id, bookingDate: booking.date, bookingTime: booking.time_slot, bookingService: booking.service });
+        await setSession(sKey, "my_booking_action", { ...data, bookingId: booking.id, bookingDate: booking.date, bookingTime: booking.time_slot, bookingService: booking.service, bookingStaffId: booking.staff_id || null });
         await sendButtons(from,
           `📋 *Aapki Upcoming Booking:*\n\n✂️ *Service:* ${booking.service}\n📅 *Date:* ${formatDate(booking.date)}\n🕐 *Time:* ${formatTime12(booking.time_slot)}\n💰 *Amount:* ${priceText}\n\nKya karna chahte hain?`,
           [{ id: "cancel_booking", title: "❌ Cancel Karein" }, { id: "reschedule_booking", title: "🔄 Reschedule" }, { id: "main_menu", title: "🏠 Main Menu" }],
@@ -402,8 +483,9 @@ export default async function handler(req, res) {
 
     if (step === "reschedule_time_part" && (interactiveId === "rtime_morning" || interactiveId === "rtime_evening")) {
       const isMorning = interactiveId === "rtime_morning";
-      const booked = await getBookedSlots(SALON_ID, data.newDate);
-      const available = getTimeSlots(isMorning ? openTime : 14, isMorning ? 14 : closeTime, data.newDate).filter(s => !booked.includes(s.key));
+      // Reschedule keeps the original staff if possible (no gender data carried over from the old booking),
+      // but still respects per-staff capacity so it doesn't block a slot another staff member could take.
+      const available = await computeAvailableSlots({ salonId: SALON_ID, date: data.newDate, gender: null, staffPref: data.bookingStaffId || null, openTime, closeTime, isMorning });
       if (available.length === 0) { await sendButtons(from, `😔 Koi slot available nahi!\n\nDusra time chunein:`, [{ id: "rtime_morning", title: "🌅 Morning (9AM-2PM)" }, { id: "rtime_evening", title: "🌆 Evening (2PM-9PM)" }], SALON_ID, customerName); res.status(200).json({ status: "ok" }); return; }
       await setSession(sKey, "reschedule_time", { ...data });
       await sendList(from, `🕐 ${isMorning ? "🌅 Morning" : "🌆 Evening"} Slots`, `📅 *${formatDate(data.newDate)}*\n\nKaunsa time slot chahiye?`, "Slot Chunein", available.map(s => ({ id: `rtime_${s.key}`, title: `🟢 ${s.label}`, description: "Available" })), "Powered by SnipBook", SALON_ID, customerName);
@@ -423,7 +505,14 @@ export default async function handler(req, res) {
 
     if (step === "confirm_reschedule" && interactiveId === "confirm_reschedule_yes") {
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${data.bookingId}`, { method: "PATCH", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ date: data.newDate, time_slot: data.newTime, status: "confirmed" }) });
+        let staffIdForReschedule = data.bookingStaffId || null;
+        if (staffIdForReschedule) {
+          const stillFree = await computeAvailableSlots({ salonId: SALON_ID, date: data.newDate, gender: null, staffPref: staffIdForReschedule, openTime, closeTime, isMorning: true });
+          const stillFreeEvening = await computeAvailableSlots({ salonId: SALON_ID, date: data.newDate, gender: null, staffPref: staffIdForReschedule, openTime, closeTime, isMorning: false });
+          const slotTaken = ![...stillFree, ...stillFreeEvening].some(s => s.key === data.newTime);
+          if (slotTaken) staffIdForReschedule = null; // original staff no longer free here — leave unassigned rather than wrongly double-book
+        }
+        await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${data.bookingId}`, { method: "PATCH", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ date: data.newDate, time_slot: data.newTime, status: "confirmed", staff_id: staffIdForReschedule }) });
       } catch(e) { console.error("Reschedule error:", e.message); }
       await clearSession(sKey);
       const rawNotif = (salon?.notification_number || "").replace(/[^0-9]/g, "");
@@ -441,8 +530,7 @@ export default async function handler(req, res) {
     if (step === "ask_name" && text && !interactiveId) {
       await setSession(`name_${from}`, "saved", { name: text });
       if (data.pendingService) {
-        await setSession(sKey, "ask_date", { ...data, name: text, service: data.pendingService, price: data.pendingPrice || 0 });
-        await sendDateList(from, { name: text, service: data.pendingService, price: data.pendingPrice || 0 }, workDays, SALON_ID);
+        await offerStaffPrefOrDate(from, sKey, { ...data, name: text, service: data.pendingService, price: data.pendingPrice || 0 }, workDays, SALON_ID, text);
       } else {
         await setSession(sKey, "ask_gender", { ...data, name: text });
         await sendButtons(from, `Nice to meet you, *${text}!* 🙌\n\nAap kaunsi services chahte hain?`, [{ id: "gender_male", title: "👨 Male Services" }, { id: "gender_female", title: "👩 Female Services" }], SALON_ID, text);
@@ -462,13 +550,20 @@ export default async function handler(req, res) {
     }
 
     if (step === "ask_service" && interactiveId === "svc_custom") { await setSession(sKey, "ask_service_custom", { ...data }); await sendText(from, `✏️ *Apni service likhein:*\n\n_Wapas menu ke liye "Hi" type karein_`, SALON_ID, customerName); res.status(200).json({ status: "ok" }); return; }
-    if (step === "ask_service_custom" && text && !interactiveId) { await setSession(sKey, "ask_date", { ...data, service: text, price: 0 }); await sendDateList(from, { ...data, service: text, price: 0 }, workDays, SALON_ID); res.status(200).json({ status: "ok" }); return; }
+    if (step === "ask_service_custom" && text && !interactiveId) { await offerStaffPrefOrDate(from, sKey, { ...data, service: text, price: 0 }, workDays, SALON_ID, customerName); res.status(200).json({ status: "ok" }); return; }
 
     if (step === "ask_service" && interactiveId?.startsWith("svc_")) {
       const svcId = interactiveId.replace("svc_", "");
       const selected = services.find(s => String(s.id) === svcId);
-      await setSession(sKey, "ask_date", { ...data, service: selected?.name || svcId, price: selected?.price || 0 });
-      await sendDateList(from, { ...data, service: selected?.name || svcId, price: selected?.price || 0 }, workDays, SALON_ID);
+      await offerStaffPrefOrDate(from, sKey, { ...data, service: selected?.name || svcId, price: selected?.price || 0 }, workDays, SALON_ID, customerName);
+      res.status(200).json({ status: "ok" }); return;
+    }
+
+    if (step === "ask_staff_pref" && interactiveId?.startsWith("staffpref_")) {
+      const pref = interactiveId.replace("staffpref_", "");
+      const staffPref = pref === "any" ? null : pref;
+      await setSession(sKey, "ask_date", { ...data, staffPref });
+      await sendDateList(from, data, workDays, SALON_ID);
       res.status(200).json({ status: "ok" }); return;
     }
 
@@ -492,8 +587,7 @@ export default async function handler(req, res) {
 
     if (step === "ask_time_part" && (interactiveId === "time_morning" || interactiveId === "time_evening")) {
       const isMorning = interactiveId === "time_morning";
-      const booked = await getBookedSlots(SALON_ID, data.date);
-      const available = getTimeSlots(isMorning ? openTime : 14, isMorning ? 14 : closeTime, data.date).filter(s => !booked.includes(s.key));
+      const available = await computeAvailableSlots({ salonId: SALON_ID, date: data.date, gender: data.gender, staffPref: data.staffPref, openTime, closeTime, isMorning });
       if (available.length === 0) { await sendButtons(from, `😔 Koi slot available nahi!\n\nDusra time chunein:`, [{ id: "time_morning", title: "🌅 Morning (9AM-2PM)" }, { id: "time_evening", title: "🌆 Evening (2PM-9PM)" }], SALON_ID, customerName); res.status(200).json({ status: "ok" }); return; }
       await setSession(sKey, "ask_time", { ...data });
       await sendList(from, `🕐 ${isMorning ? "🌅 Morning" : "🌆 Evening"} Slots`, `📅 *${formatDate(data.date)}*\n\nKaunsa time slot chahiye?`, "Slot Chunein", available.map(s => ({ id: `time_${s.key}`, title: `🟢 ${s.label}`, description: "Available" })), "Powered by SnipBook", SALON_ID, customerName);
@@ -523,7 +617,9 @@ export default async function handler(req, res) {
 
       try { await fetch(`${SUPABASE_URL}/rest/v1/customers`, { method: "POST", headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`, "Content-Type": "application/json", Prefer: "resolution=ignore-duplicates,return=minimal" }, body: JSON.stringify({ salon_id: SALON_ID, name: data.name || "WhatsApp Customer", phone: from, source: "wa", tag: "New" }) }); } catch(e) { console.error("Customer save error:", e.message); }
 
-      await fetch(`${SUPABASE_URL}/rest/v1/appointments`, { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ salon_id: SALON_ID, customer_name: data.name || "WhatsApp Customer", customer_phone: from, service: data.service, amount: data.price || 0, date: data.date, time_slot: data.time, status: "confirmed" }) });
+      const assignedStaff = await assignStaffForBooking({ salonId: SALON_ID, date: data.date, time: data.time, gender: data.gender, staffPref: data.staffPref });
+
+      await fetch(`${SUPABASE_URL}/rest/v1/appointments`, { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ salon_id: SALON_ID, customer_name: data.name || "WhatsApp Customer", customer_phone: from, service: data.service, amount: data.price || 0, date: data.date, time_slot: data.time, status: "confirmed", staff_id: assignedStaff?.id || null }) });
 
       await clearSession(sKey);
       const priceText = data.price > 0 ? `₹${data.price}` : "Price on visit";
@@ -531,7 +627,8 @@ export default async function handler(req, res) {
 
       const rawNotif = (salon?.notification_number || "").replace(/[^0-9]/g, "");
       const notifTarget = rawNotif ? (rawNotif.startsWith("91") ? rawNotif : `91${rawNotif}`) : "";
-      if (notifTarget) await sendText(notifTarget, `🔔 *Naya Appointment!*\n\n🏪 *Salon:* ${salonName}\n👤 *Customer:* ${data.name}\n📱 *Phone:* +${from.replace(/^\+/,"")}\n✂️ *Service:* ${data.service}\n📅 *Date:* ${formatDate(data.date)}\n🕐 *Time:* ${formatTime12(data.time)}\n💰 *Amount:* ${priceText}\n\n_SnipBook se auto-booked_ 💈`);
+      const staffLine = assignedStaff?.name ? `\n👤 *Staff:* ${assignedStaff.name}` : "";
+      if (notifTarget) await sendText(notifTarget, `🔔 *Naya Appointment!*\n\n🏪 *Salon:* ${salonName}\n👤 *Customer:* ${data.name}\n📱 *Phone:* +${from.replace(/^\+/,"")}\n✂️ *Service:* ${data.service}${staffLine}\n📅 *Date:* ${formatDate(data.date)}\n🕐 *Time:* ${formatTime12(data.time)}\n💰 *Amount:* ${priceText}\n\n_SnipBook se auto-booked_ 💈`);
 
       try {
         const fromWithPlus = from.startsWith("+") ? from : `+${from}`;
@@ -599,7 +696,7 @@ export default async function handler(req, res) {
       else { const svcId = interactiveId.replace("book_svc_", ""); const sel = services.find(s => String(s.id) === svcId); serviceName = sel?.name || svcId; servicePrice = sel?.price || 0; }
       const nameSession = await getSession(`name_${from}`);
       const savedName = nameSession?.data?.name || data.name;
-      if (savedName) { await setSession(sKey, "ask_date", { ...data, name: savedName, service: serviceName, price: servicePrice }); await sendDateList(from, { name: savedName, service: serviceName, price: servicePrice }, workDays, SALON_ID); }
+      if (savedName) { await offerStaffPrefOrDate(from, sKey, { ...data, name: savedName, service: serviceName, price: servicePrice }, workDays, SALON_ID, savedName); }
       else { await setSession(sKey, "ask_name", { ...data, pendingService: serviceName, pendingPrice: servicePrice }); await sendText(from, `📅 *Appointment Book Karein*\n\n*Aapka naam kya hai?*`, SALON_ID); }
       res.status(200).json({ status: "ok" }); return;
     }
