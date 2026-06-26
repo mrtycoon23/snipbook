@@ -77,10 +77,52 @@ function QuickAddModal({customer,staffName,onSave,onClose}){const[step,setStep]=
 function BookModal({customer,onClose,onConfirm}){const today=new Date();const[selDate,setSelDate]=useState(today.toISOString().split("T")[0]);const[selSlot,setSelSlot]=useState("");const[selSvc,setSelSvc]=useState((customer.fav_services||customer.favServices||[])[0]||"");const[done,setDone]=useState(false);function confirm(){if(!selSlot||!selSvc)return;setDone(true);setTimeout(()=>onConfirm({customer,date:selDate,slot:selSlot,service:selSvc}),1500);}return(<div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:700,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 18px"}}/>{!done?<><div style={{fontWeight:900,fontSize:16,marginBottom:20,color:T.text}}>📅 Book Appointment</div><div style={{marginBottom:14}}><div style={{fontSize:13,fontWeight:800,color:T.tm,marginBottom:8}}>Service</div><div style={{display:"flex",flexWrap:"wrap",gap:6}}>{SERVICES.map(s=>{const a=selSvc===s;return <button key={s} onClick={()=>setSelSvc(s)} style={{padding:"7px 13px",borderRadius:20,border:`2px solid ${a?T.purple:T.border}`,background:a?T.purpleLight:T.surface,color:a?T.purple:T.tm,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{a?"✓ ":""}{s}</button>;})}</div></div><div style={{marginBottom:14}}><div style={{fontSize:13,fontWeight:800,color:T.tm,marginBottom:8}}>Date</div><input type="date" value={selDate} onChange={e=>setSelDate(e.target.value)} style={IS}/></div><div style={{marginBottom:20}}><div style={{fontSize:13,fontWeight:800,color:T.tm,marginBottom:8}}>Time Slot</div><div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:7}}>{SLOTS.map(sl=>{const a=selSlot===sl;return <button key={sl} onClick={()=>setSelSlot(sl)} style={{padding:"8px 4px",borderRadius:10,border:`2px solid ${a?T.purple:T.border}`,background:a?T.purpleLight:T.surface,color:a?T.purple:T.tm,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>{sl}</button>;})}</div></div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:13,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:T.tm}}>Cancel</button><button onClick={confirm} style={{flex:2,padding:13,background:selSlot&&selSvc?T.purple:"#d1d5db",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:selSlot&&selSvc?"pointer":"not-allowed"}}>✓ Confirm</button></div></>:<div style={{textAlign:"center",padding:"20px 0"}}><div style={{fontSize:48,marginBottom:12}}>🎉</div><div style={{fontWeight:900,fontSize:18,marginBottom:6,color:T.text}}>Booking Confirmed!</div></div>}</div></div>);}
 
 function parseVisitDate(dateStr){if(!dateStr)return null;if(dateStr.includes("-")&&dateStr.length===10)return new Date(dateStr+"T00:00:00");const months={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};const parts=dateStr.split(" ");if(parts.length===3)return new Date(parseInt(parts[2]),months[parts[1]],parseInt(parts[0]));return null;}
-function getDateRange(preset,customFrom,customTo){const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());if(preset==="today")return{from:today,to:today,label:"Today"};if(preset==="week"){const from=new Date(today);from.setDate(today.getDate()-today.getDay());return{from,to:today,label:"This Week"};}if(preset==="month"){const from=new Date(today.getFullYear(),today.getMonth(),1);return{from,to:today,label:"This Month"};}if(preset==="quarter"){const from=new Date(today.getFullYear(),today.getMonth()-2,1);return{from,to:today,label:"Last 3 Months"};}if(preset==="year"){const from=new Date(today.getFullYear(),0,1);return{from,to:today,label:"This Year"};}if(preset==="all")return{from:new Date(2020,0,1),to:today,label:"All Time"};if(preset==="custom"&&customFrom&&customTo)return{from:new Date(customFrom),to:new Date(customTo),label:`${customFrom} → ${customTo}`};return{from:new Date(2020,0,1),to:today,label:"All Time"};}
+function getDateRange(preset,customFrom,customTo){const now=new Date();const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());if(preset==="today")return{from:today,to:today,label:"Today"};if(preset==="week"){const from=new Date(today);from.setDate(today.getDate()-today.getDay());return{from,to:today,label:"This Week"};}if(preset==="month"){const from=new Date(today.getFullYear(),today.getMonth(),1);return{from,to:today,label:"This Month"};}if(preset==="quarter"){const from=new Date(today.getFullYear(),today.getMonth()-2,1);return{from,to:today,label:"Last 3 Months"};}if(preset==="year"){const from=new Date(today.getFullYear(),0,1);return{from,to:today,label:"This Year"};}if(preset==="all")return{from:new Date(2020,0,1),to:today,label:"All Time"};if(preset==="custom"&&customFrom&&customTo)return{from:new Date(customFrom+"T00:00:00"),to:new Date(customTo+"T00:00:00"),label:`${customFrom} → ${customTo}`};return{from:new Date(2020,0,1),to:today,label:"All Time"};}
 
-function OwnerDashboard({customers}){
+function AllVisitsModal({visits,staffMap,label,onClose}){
+  const sorted=[...visits].sort((a,b)=>{
+    const da=parseVisitDate(a.date),db=parseVisitDate(b.date);
+    if(!da||!db)return 0;
+    return db-da;
+  });
+  const total=sorted.reduce((s,v)=>s+(v.amount||0),0);
+  return(
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:900,display:"flex",alignItems:"flex-end"}}>
+      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"16px 18px 12px",borderBottom:`0.5px solid ${T.border}`,flexShrink:0}}>
+          <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 14px"}}/>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontWeight:900,fontSize:16,color:T.text}}>All Services</div>
+              <div style={{fontSize:11,color:T.ts,marginTop:2}}>{label} · {sorted.length} entries · ₹{total.toLocaleString("en-IN")}</div>
+            </div>
+            <button onClick={onClose} style={{background:T.sub,border:"none",borderRadius:8,padding:"6px 10px",fontSize:13,cursor:"pointer",color:T.tm,fontWeight:700}}>✕</button>
+          </div>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"6px 18px 24px"}}>
+          {sorted.length===0
+            ?<div style={{textAlign:"center",color:T.tf,padding:"32px 0",fontSize:13}}>Koi entry nahi hai is period mein</div>
+            :sorted.map((v,i)=>(
+              <div key={v.id||i} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 0",borderBottom:`1px solid ${T.bg}`}}>
+                <div style={{width:36,height:36,borderRadius:10,background:T.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0,fontWeight:800,color:T.purpleMid}}>{(v.customerName||"?").slice(0,2).toUpperCase()}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:700,color:T.text}}>{v.customerName}</div>
+                  <div style={{fontSize:11,color:"#6b7280",marginTop:1}}>{(v.services||[]).join(", ")} · {v.date}</div>
+                  <div style={{fontSize:11,color:T.purpleMid,marginTop:1,fontWeight:600}}>👤 {staffMap?.[v.stylist]||v.stylist||"—"}</div>
+                </div>
+                <div style={{fontSize:13,fontWeight:800,color:T.gd,flexShrink:0}}>₹{(v.amount||0).toLocaleString("en-IN")}</div>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OwnerDashboard({customers,staffMap}){
   const[preset,setPreset]=useState("month");const[customFrom,setCustomFrom]=useState("");const[customTo,setCustomTo]=useState("");const[appliedFrom,setAppliedFrom]=useState("");const[appliedTo,setAppliedTo]=useState("");const[showCustom,setShowCustom]=useState(false);
+  const[showAllVisits,setShowAllVisits]=useState(false);
   const{from,to,label}=getDateRange(preset,appliedFrom,appliedTo);const canApply=customFrom&&customTo&&customFrom<=customTo;
   function visitsInRange(customer){return(customer.visitHistory||[]).filter(v=>{const d=parseVisitDate(v.date);if(!d)return false;return d>=from&&d<=new Date(to.getFullYear(),to.getMonth(),to.getDate(),23,59,59);});}
   const filteredVisits=customers.flatMap(c=>visitsInRange(c).map(v=>({...v,customerName:c.name})));
@@ -154,7 +196,7 @@ function OwnerDashboard({customers}){
         <div style={{background:N.white,borderRadius:14,margin:"12px 16px 0",border:`1px solid ${N.border}`,padding:"14px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
             <div style={{fontSize:14,fontWeight:800,color:N.text,letterSpacing:"-0.2px"}}>Top Services</div>
-            <div style={{fontSize:12,color:N.mid,fontWeight:600,cursor:"pointer"}}>View All</div>
+            <div onClick={()=>setShowAllVisits(true)} style={{fontSize:12,color:N.mid,fontWeight:600,cursor:"pointer"}}>View All</div>
           </div>
           {topServices.map(([svc,count],i)=>(
             <div key={svc} style={{display:"flex",alignItems:"center",gap:12,marginBottom:i<topServices.length-1?14:0}}>
@@ -182,6 +224,7 @@ function OwnerDashboard({customers}){
           <div style={{fontWeight:700,fontSize:14,color:N.muted}}>No visits in this period</div>
         </div>
       )}
+      {showAllVisits&&<AllVisitsModal visits={filteredVisits} staffMap={staffMap} label={label} onClose={()=>setShowAllVisits(false)}/>}
     </div>
   );
 }
@@ -324,8 +367,9 @@ function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
 
 export default function CustomerHistory({currentUser,onBack}){
   const[customers,setCustomers]=useState([]);const[selectedId,setSelectedId]=useState(null);const[ownerTab,setOwnerTab]=useState("customers");const[loading,setLoading]=useState(true);const[showAddCustomer,setShowAddCustomer]=useState(false);const[newCustomer,setNewCustomer]=useState({name:"",phone:"",dob:"",gender:"male",email:""});const[savingCustomer,setSavingCustomer]=useState(false);
+  const[staffMap,setStaffMap]=useState({});
   const isStaff=currentUser?.role==="staff";const isOwner=currentUser?.role==="owner";
-  async function loadData(){setLoading(true);const salonId=currentUser?.salon_id||currentUser?.id;const{data:cData}=await supabase.from("customers").select("*").eq("salon_id",salonId);const{data:vData}=await supabase.from("visit_history").select("*").eq("salon_id",salonId);if(cData&&cData.length>0){const grouped={};if(vData){vData.forEach(v=>{if(!grouped[v.customer_id])grouped[v.customer_id]=[];grouped[v.customer_id].push({id:v.id,date:v.date,services:v.services||[],stylist:v.stylist,amount:v.amount,notes:v.notes||"",photos:Array.isArray(v.photos)?v.photos:[]});});}setCustomers(cData.map(c=>({...c,avatar:c.avatar||(c.name?.slice(0,2)||"??").toUpperCase(),color:c.color||T.purple,visitHistory:grouped[c.id]||[],totalSpent:c.total_spent||0,lastVisit:c.last_visit||"-",favServices:c.fav_services||[],tag:c.tag||"New",src:c.source||"wa",email:c.email||""})));}else{setCustomers([]);}setLoading(false);}
+  async function loadData(){setLoading(true);const salonId=currentUser?.salon_id||currentUser?.id;const{data:cData}=await supabase.from("customers").select("*").eq("salon_id",salonId);const{data:vData}=await supabase.from("visit_history").select("*").eq("salon_id",salonId);const{data:sData}=await supabase.from("staff").select("id,name").eq("salon_id",salonId);if(sData){const map={};sData.forEach(s=>{map[s.id]=s.name;});setStaffMap(map);}if(cData&&cData.length>0){const grouped={};if(vData){vData.forEach(v=>{if(!grouped[v.customer_id])grouped[v.customer_id]=[];grouped[v.customer_id].push({id:v.id,date:v.date,services:v.services||[],stylist:v.stylist,amount:v.amount,notes:v.notes||"",photos:Array.isArray(v.photos)?v.photos:[]});});}setCustomers(cData.map(c=>({...c,avatar:c.avatar||(c.name?.slice(0,2)||"??").toUpperCase(),color:c.color||T.purple,visitHistory:grouped[c.id]||[],totalSpent:c.total_spent||0,lastVisit:c.last_visit||"-",favServices:c.fav_services||[],tag:c.tag||"New",src:c.source||"wa",email:c.email||""})));}else{setCustomers([]);}setLoading(false);}
   useEffect(()=>{if(currentUser?.id)loadData();},[currentUser?.id]);
   function handleUpdate(cId,changes){setCustomers(prev=>prev.map(c=>c.id===cId?{...c,...changes}:c));}
   async function handleAddCustomer(){if(!newCustomer.name.trim()||newCustomer.phone.length<10)return;setSavingCustomer(true);try{const salonId=currentUser?.salon_id||currentUser?.id;const{data:res}=await supabase.from("customers").insert({salon_id:salonId,name:newCustomer.name.trim(),phone:newCustomer.phone.trim(),birthday:newCustomer.dob||null,gender:newCustomer.gender||"male",email:newCustomer.email.trim()||null,tag:"New",source:"walk"}).select().single();if(res){setCustomers(prev=>[{...res,avatar:(res.name?.slice(0,2)||"??").toUpperCase(),color:T.purple,visitHistory:[],totalSpent:0,lastVisit:"-",favServices:[],tag:"New",src:"walk",email:res.email||"",visits:0},...prev]);}setNewCustomer({name:"",phone:"",dob:"",gender:"male",email:""});setShowAddCustomer(false);}catch(e){console.error(e);}setSavingCustomer(false);}
@@ -353,7 +397,7 @@ export default function CustomerHistory({currentUser,onBack}){
           ))}
         </div>
       )}
-      {selected?<CustomerDetail customer={selected} isStaff={isStaff} currentUser={currentUser} onBack={()=>setSelectedId(null)} onUpdate={handleUpdate}/>:isOwner&&ownerTab==="dashboard"?<OwnerDashboard customers={customers}/>:<CustomerList customers={customers} isStaff={isStaff} onSelect={c=>setSelectedId(c.id)} onAddCustomer={()=>setShowAddCustomer(true)}/>}
+      {selected?<CustomerDetail customer={selected} isStaff={isStaff} currentUser={currentUser} onBack={()=>setSelectedId(null)} onUpdate={handleUpdate}/>:isOwner&&ownerTab==="dashboard"?<OwnerDashboard customers={customers} staffMap={staffMap}/>:<CustomerList customers={customers} isStaff={isStaff} onSelect={c=>setSelectedId(c.id)} onAddCustomer={()=>setShowAddCustomer(true)}/>}
       {showAddCustomer&&(<div onClick={()=>setShowAddCustomer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,color:T.text,marginBottom:16}}>🆕 Naya Customer Add Karo</div>{[{label:"Full Name *",key:"name",ph:"e.g. Priya Sharma",type:"text"},{label:"Phone Number *",key:"phone",ph:"9876543210",type:"tel"},{label:"Date of Birth",key:"dob",ph:"",type:"date"},{label:"Email Address",key:"email",ph:"customer@gmail.com",type:"email"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>{f.label}</div><input type={f.type} value={newCustomer[f.key]} onChange={e=>setNewCustomer(p=>({...p,[f.key]:f.key==="phone"?e.target.value.replace(/\D/g,"").slice(0,10):e.target.value}))} placeholder={f.ph} style={IS}/></div>))}<div style={{marginBottom:18}}><div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewCustomer(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustomer.gender===g.id?T.purple:T.border}`,background:newCustomer.gender===g.id?T.purpleLight:"#fff",color:newCustomer.gender===g.id?T.purple:T.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>{setShowAddCustomer(false);setNewCustomer({name:"",phone:"",dob:"",gender:"male",email:""});}} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:T.tm}}>Cancel</button><button onClick={handleAddCustomer} disabled={savingCustomer||!newCustomer.name.trim()||newCustomer.phone.length<10} style={{flex:2,padding:12,border:"none",borderRadius:12,background:savingCustomer||!newCustomer.name.trim()||newCustomer.phone.length<10?"#d1d5db":T.purple,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:newCustomer.name.trim()&&newCustomer.phone.length===10?"pointer":"not-allowed"}}>{savingCustomer?"Saving...":"✓ Save Customer"}</button></div></div></div>)}
     </div>
   );

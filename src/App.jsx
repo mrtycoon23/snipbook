@@ -23,6 +23,7 @@ const EMOJIS=["✂️","🎨","💆","💄","💅","💇","🪒","🧴","💈","
 const WEEK_DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const HOURS_LIST=Array.from({length:17},(_,i)=>i+6).map(h=>({val:h,label:`${h<=12?h:h-12}:00 ${h<12?"AM":h===12?"PM":"PM"}`}));
 const LOGO_BUCKET="salon-logos";
+const BUCKET="visit photos";
 const DEFAULT_SHOW_REVENUE=false;
 const CARD_COLORS=[{cardBg:"#ede9fe",cardColor:"#5b3fc4",avBg:"#c4b8f0",avColor:"#2d1b69"},{cardBg:"#fef9c3",cardColor:"#a16207",avBg:"#fde68a",avColor:"#a16207"},{cardBg:"#f0fdf4",cardColor:"#16a34a",avBg:"#bbf7d0",avColor:"#16a34a"},{cardBg:"#fff0f6",cardColor:"#db2777",avBg:"#fbcfe8",avColor:"#db2777"},{cardBg:"#eff6ff",cardColor:"#2563eb",avBg:"#bfdbfe",avColor:"#1d4ed8"},{cardBg:"#fff7ed",cardColor:"#ea580c",avBg:"#fed7aa",avColor:"#ea580c"},{cardBg:"#f0fdfa",cardColor:"#0d9488",avBg:"#99f6e4",avColor:"#0f766e"}];
 const is={width:"100%",padding:"11px 13px",border:`2px solid ${TP.border}`,borderRadius:11,fontSize:14,fontFamily:"inherit",outline:"none",background:TP.inp,boxSizing:"border-box",color:TP.text};
@@ -171,6 +172,88 @@ const NAV=[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",
 
 const OWNER_LOG_SERVICES=["Haircut","Hair Color","Facial","Waxing","Bridal Makeup","Manicure","Pedicure","Head Massage","Threading","Blowdry","Keratin","Hair Spa"];
 
+function RevenueDetailModal({rows,staffMap,onClose}){
+  const total=rows.reduce((s,r)=>s+(r.amount||0),0);
+  return(
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:900,display:"flex",alignItems:"flex-end"}}>
+      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"16px 18px 12px",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
+          <div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 14px"}}/>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontWeight:900,fontSize:16,color:"#0f0a2e"}}>Aaj Ki Services</div>
+              <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>{rows.length} entries · ₹{total.toLocaleString("en-IN")}</div>
+            </div>
+            <button onClick={onClose} style={{background:"#f1f0f5",border:"none",borderRadius:8,padding:"6px 10px",fontSize:13,cursor:"pointer",color:"#555",fontWeight:700}}>✕</button>
+          </div>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"6px 18px 24px"}}>
+          {rows.length===0
+            ?<div style={{textAlign:"center",color:"#aaa",padding:"32px 0",fontSize:13}}>Aaj koi service nahi hui abhi</div>
+            :rows.map((r,i)=>(
+              <div key={r.id||i} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 0",borderBottom:"1px solid #f4f2ff"}}>
+                <div style={{width:36,height:36,borderRadius:10,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0,fontWeight:800,color:"#5b3fc4"}}>{(r.client_name||"?").slice(0,2).toUpperCase()}</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:700,color:"#0f0a2e"}}>{r.client_name}</div>
+                  <div style={{fontSize:11,color:"#6b7280",marginTop:1}}>{r.service}</div>
+                  <div style={{fontSize:11,color:"#5b3fc4",marginTop:1,fontWeight:600}}>👤 {staffMap?.[r.staff_id]||"Staff"}</div>
+                </div>
+                <div style={{fontSize:13,fontWeight:800,color:"#16a34a",flexShrink:0}}>₹{(r.amount||0).toLocaleString("en-IN")}</div>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OwnerStagedPhotoItem({photo,onRemove}){
+  const [removing,setRemoving]=useState(false);
+  async function handleRemove(){
+    if(photo?.path){setRemoving(true);await supabase.storage.from(BUCKET).remove([photo.path]);setRemoving(false);}
+    onRemove();
+  }
+  return(
+    <div style={{position:"relative",flexShrink:0,width:80,height:80}}>
+      <img src={photo.url} alt="visit" style={{width:80,height:80,borderRadius:12,objectFit:"cover",border:`2px solid ${TP.border}`,display:"block"}}/>
+      {removing
+        ?<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.5)",borderRadius:12,display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{fontSize:10,color:"white",fontWeight:800}}>...</div></div>
+        :<button onClick={handleRemove} style={{position:"absolute",top:-6,left:-6,width:20,height:20,borderRadius:"50%",background:TP.rt,border:"2px solid white",color:"white",fontSize:11,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,zIndex:10,padding:0}}>✕</button>}
+    </div>
+  );
+}
+
+function OwnerStagedAddPhotoBtn({tempId,onAdd}){
+  const fileRef=useRef();
+  const [uploading,setUploading]=useState(false);
+  async function handleFileChange(e){
+    const file=e.target.files[0];
+    if(!file)return;
+    setUploading(true);
+    try{
+      const ext=file.name.split(".").pop()||"jpg";
+      const path=`${tempId}/photo_${Date.now()}.${ext}`;
+      const{error}=await supabase.storage.from(BUCKET).upload(path,file,{upsert:true});
+      if(error){setUploading(false);return;}
+      const{data:urlData}=supabase.storage.from(BUCKET).getPublicUrl(path);
+      onAdd({url:urlData.publicUrl,path});
+    }catch(err){}
+    setUploading(false);
+    e.target.value="";
+  }
+  return(
+    <div style={{flexShrink:0}}>
+      <input ref={fileRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleFileChange}/>
+      <div onClick={()=>!uploading&&fileRef.current?.click()} style={{width:80,height:80,borderRadius:12,cursor:uploading?"wait":"pointer",background:TP.sub,border:`2px dashed ${TP.border}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
+        {uploading
+          ?<div style={{fontSize:10,color:TP.ts,fontWeight:700}}>Uploading...</div>
+          :<><div style={{fontSize:26,color:TP.purple,fontWeight:900,lineHeight:1}}>+</div><div style={{fontSize:9,color:TP.ts,fontWeight:700}}>Add Photo</div></>}
+      </div>
+    </div>
+  );
+}
+
 function OwnerWorkLogModal({salonId,onSave,onClose}){
   const [clientName,setClientName]=useState("");
   const [service,setService]=useState(OWNER_LOG_SERVICES[0]);
@@ -183,6 +266,17 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
   const [newCustGender,setNewCustGender]=useState("male");
   const [savingCustomer,setSavingCustomer]=useState(false);
   const [pendingLogData,setPendingLogData]=useState(null);
+  const [notes,setNotes]=useState("");
+  const [photos,setPhotos]=useState([]);
+  const [tempVisitId]=useState(()=>`owner_${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
+
+  async function handleCancel(){
+    if(photos.length>0){
+      const paths=photos.map(p=>p.path).filter(Boolean);
+      if(paths.length>0){try{await supabase.storage.from(BUCKET).remove(paths);}catch(e){}}
+    }
+    onClose();
+  }
 
   async function getOwnerStaffId(){
     const{data:existing}=await supabase.from("staff").select("id").eq("salon_id",salonId).eq("name","Owner").maybeSingle();
@@ -203,10 +297,10 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
       if(custRes.data){
         await supabase.from("visit_history").insert({
           salon_id:salonId,customer_id:custRes.data.id,date:logData.date,
-          services:[logData.service],stylist:ownerStaffId,amount:logData.amount,notes:"",photos:[]
+          services:[logData.service],stylist:ownerStaffId,amount:logData.amount,notes:logData.notes||"",photos:logData.photos||[]
         });
       }
-      onSave(logData);
+      onSave({client_name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,staff_id:ownerStaffId});
       onClose();
     }catch(e){console.error(e);onClose();}
   }
@@ -217,14 +311,14 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
     try{
       const{data:existingCustomers}=await supabase.from("customers").select("id").eq("salon_id",salonId).eq("name",clientName.trim());
       if(!existingCustomers||existingCustomers.length===0){
-        setPendingLogData({clientName:clientName.trim(),service,amount:Number(amount),date});
+        setPendingLogData({clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos});
         setSaving(false);
         setShowNewCustomer(true);
         return;
       }
-      await saveLog({clientName:clientName.trim(),service,amount:Number(amount),date});
+      await saveLog({clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos});
     }catch(e){
-      setPendingLogData({clientName:clientName.trim(),service,amount:Number(amount),date});
+      setPendingLogData({clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos});
       setSaving(false);
       setShowNewCustomer(true);
     }
@@ -247,7 +341,7 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
 
   if(showNewCustomer&&pendingLogData){
     return(
-      <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
+      <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
         <div style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
           <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
@@ -278,7 +372,7 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
   }
 
   return(
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
+    <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
       <div style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto"}}>
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{fontWeight:900,fontSize:16,marginBottom:4,color:TP.text}}>➕ Apna Work Log Add Karo</div>
@@ -303,8 +397,19 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
           <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Amount (₹) *</div>
           <input style={is} type="number" placeholder="500" value={amount} onChange={e=>setAmount(e.target.value)}/>
         </div>
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>📝 Stylist Notes</div>
+          <textarea style={{...is,resize:"vertical",lineHeight:1.6,minHeight:64,fontFamily:"inherit"}} placeholder="e.g. Shampoo + conditioning kiya..." value={notes} onChange={e=>setNotes(e.target.value)}/>
+        </div>
+        <div style={{marginBottom:18}}>
+          <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:8}}>📸 Visit Photos ({photos.length})</div>
+          <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+            {photos.map((ph,i)=><OwnerStagedPhotoItem key={i} photo={ph} onRemove={()=>setPhotos(prev=>prev.filter((_,idx)=>idx!==i))}/>)}
+            <OwnerStagedAddPhotoBtn tempId={tempVisitId} onAdd={ph=>setPhotos(prev=>[...prev,ph])}/>
+          </div>
+        </div>
         <div style={{display:"flex",gap:10}}>
-          <button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button>
+          <button onClick={handleCancel} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button>
           <button onClick={save} disabled={saving} style={{flex:2,padding:12,border:"none",borderRadius:12,background:clientName.trim()&&amount?TP.purple:"#d1d5db",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>
             {saving?"Saving...":"✓ Save Karo"}
           </button>
@@ -322,15 +427,28 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const revenue=Object.values(dayData).reduce((s,b)=>s+(b.price||0),0);
   const pending=Object.values(dayData).filter(b=>b.status==="pending").length;
   const [earnedRevenue,setEarnedRevenue]=useState(0);
+  const [todayWorkLogs,setTodayWorkLogs]=useState([]);
   useEffect(()=>{
     async function loadEarnedRevenue(){
       try{
-        const{data}=await supabase.from("work_logs").select("amount").eq("salon_id",user.id).eq("date",todayKey);
+        const{data}=await supabase.from("work_logs").select("*").eq("salon_id",user.id).eq("date",todayKey);
+        setTodayWorkLogs(data||[]);
         setEarnedRevenue(data?data.reduce((s,l)=>s+(l.amount||0),0):0);
       }catch(e){}
     }
     loadEarnedRevenue();
   },[user.id,todayKey]);
+  const [staffMap,setStaffMap]=useState({});
+  useEffect(()=>{
+    async function loadStaffMap(){
+      try{
+        const{data}=await supabase.from("staff").select("id,name").eq("salon_id",user.id);
+        if(data){const map={};data.forEach(s=>{map[s.id]=s.name;});setStaffMap(map);}
+      }catch(e){}
+    }
+    loadStaffMap();
+  },[user.id]);
+  const [showRevenueDetail,setShowRevenueDetail]=useState(false);
   const [selDate,setSelDate]=useState(today);
   const [showNotifs,setShowNotifs]=useState(false);const [notifications,setNotifications]=useState([]);const [unreadCount,setUnreadCount]=useState(0);
   useEffect(()=>{
@@ -395,7 +513,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             <div style={{margin:"10px 16px 0",background:"linear-gradient(135deg,#3d2490 0%,#5b3fc4 60%,#7c5fe6 100%)",borderRadius:18,padding:"16px",position:"relative",overflow:"hidden"}}>
               <svg style={{position:"absolute",bottom:0,right:0,opacity:0.15}} width="140" height="70" viewBox="0 0 140 70"><polyline points="0,60 25,45 50,52 75,28 100,35 120,15 140,22" fill="none" stroke="#fff" strokeWidth="2.5"/></svg>
               <div style={{position:"absolute",width:100,height:100,borderRadius:"50%",background:"rgba(255,255,255,0.05)",top:-30,right:-20}}/>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:700,letterSpacing:0.5,marginBottom:4}}>{user.salon.toUpperCase()} · TODAY'S EARNED REVENUE</div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontWeight:700,letterSpacing:0.5,marginBottom:4}}>Today's Revenue</div>
               <div style={{fontSize:32,fontWeight:800,color:"#fff",marginBottom:6}}>₹{earnedRevenue>=1000?(earnedRevenue/1000).toFixed(1)+"k":earnedRevenue||"0"}</div>
               <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                 <div style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(34,197,94,0.2)",borderRadius:20,padding:"3px 10px"}}><span style={{color:"#22c55e",fontSize:11,fontWeight:700}}>✓ Service ho gayi</span></div>
@@ -403,7 +521,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
               </div>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,margin:"8px 16px 0"}}>
-              {[{icon:"📅",val:booked,label:"Bookings",color:"#1a0a4a"},{icon:"⏳",val:pending,label:"Pending",color:"#f59e0b"},{icon:"👥",val:clients.length,label:"Clients",color:"#22c55e"},{icon:"💰",val:"₹"+(earnedRevenue>=1000?(earnedRevenue/1000).toFixed(1)+"k":earnedRevenue||0),label:"Revenue",color:"#5b3fc4"}].map(s=>(<div key={s.label} style={{background:"#fff",borderRadius:10,padding:"8px 4px",textAlign:"center",border:"0.5px solid #e0d8ff"}}><div style={{fontSize:13,marginBottom:2}}>{s.icon}</div><div style={{fontSize:15,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>{s.label}</div></div>))}
+              {[{icon:"📅",val:booked,label:"Bookings",color:"#1a0a4a"},{icon:"⏳",val:pending,label:"Pending",color:"#f59e0b"},{icon:"👥",val:clients.length,label:"Clients",color:"#22c55e"},{icon:"💰",val:"₹"+(earnedRevenue>=1000?(earnedRevenue/1000).toFixed(1)+"k":earnedRevenue||0),label:"Revenue",color:"#5b3fc4"}].map(s=>(<div key={s.label} onClick={s.label==="Revenue"?()=>setShowRevenueDetail(true):undefined} style={{background:"#fff",borderRadius:10,padding:"8px 4px",textAlign:"center",border:`0.5px solid ${s.label==="Revenue"?"#c4b8f0":"#e0d8ff"}`,cursor:s.label==="Revenue"?"pointer":"default"}}><div style={{fontSize:13,marginBottom:2}}>{s.icon}</div><div style={{fontSize:15,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div><div style={{fontSize:9,color:"#9b8ec4",marginTop:2}}>{s.label}</div></div>))}
             </div>
             <div style={{padding:"8px 16px 0"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -500,7 +618,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
       {showNotifs&&(<div onClick={()=>setShowNotifs(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-start",justifyContent:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",width:"90%",maxWidth:360,height:"100vh",overflowY:"auto"}}><div style={{padding:"16px",borderBottom:`2px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:TP.purple,position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:16,color:"#fff"}}>🔔 Notifications</div><button onClick={()=>setShowNotifs(false)} style={{background:"rgba(255,255,255,0.15)",border:"none",fontSize:18,cursor:"pointer",color:"#fff",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>{notifications.length===0?(<div style={{padding:32,textAlign:"center",color:TP.ts}}>No notifications</div>):notifications.map((n,i)=>(<div key={i} onClick={()=>{setScreen("calendar");setSelDate(new Date(n.date));setShowNotifs(false);}} style={{padding:"14px 16px",borderBottom:`2px solid ${TP.bg}`,cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:12,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>📅</div><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:TP.text}}>{n.customer_name||"Customer"}</div><div style={{fontSize:11,color:TP.ts,marginTop:2}}>{n.service} · ₹{n.amount||0}</div><div style={{fontSize:11,color:TP.purple,marginTop:2,fontWeight:700}}>{n.date} at {n.time_slot}</div></div></div></div>))}</div></div>)}
       {showShareLink&&(<div onClick={()=>setShowShareLink(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:700,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"22px 20px 36px",width:"100%",textAlign:"center"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 18px"}}/><div style={{fontSize:36,marginBottom:8}}>🔗</div><div style={{fontWeight:900,fontSize:17,marginBottom:4,color:"#1a0a4a"}}>Share Booking Link</div><div style={{fontSize:12,color:"#9b8ec4",marginBottom:18}}>Customers ko bhejo ya QR scan karwao</div><img src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(shareBookingLink)}`} alt="QR" style={{width:200,height:200,borderRadius:14,border:"2px solid #e0d8ff",marginBottom:18}}/><div style={{background:"#f4f2ff",border:"1.5px solid #e0d8ff",borderRadius:12,padding:"11px 14px",display:"flex",alignItems:"center",gap:8,marginBottom:14}}><span style={{flex:1,fontSize:11,color:"#4a3580",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"left"}}>{shareBookingLink}</span><button onClick={()=>navigator.clipboard.writeText(shareBookingLink)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,flexShrink:0}}>📋</button></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowShareLink(false)} style={{flex:1,padding:13,border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Close</button><a href={shareBookingLink} target="_blank" rel="noreferrer" style={{flex:2,padding:13,border:"none",borderRadius:12,background:"#25d366",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,textDecoration:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>💬 Open in WhatsApp</a></div></div></div>)}
       {showQuickAdd&&(<div onClick={()=>setShowQuickAdd(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:650,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 16px"}}/><div style={{fontWeight:900,fontSize:15,marginBottom:14,color:"#1a0a4a"}}>Kya add karna hai?</div><div onClick={()=>{setShowQuickAdd(false);setScreen("clients");setShowAddClient(true);}} style={{display:"flex",alignItems:"center",gap:12,padding:"14px",background:"#f4f2ff",borderRadius:14,marginBottom:10,cursor:"pointer",border:"0.5px solid #e0d8ff"}}><div style={{width:42,height:42,borderRadius:12,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>👥</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>Add Client</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>Naya customer add karo</div></div></div><div onClick={()=>{setShowQuickAdd(false);setShowOwnerWorkLog(true);}} style={{display:"flex",alignItems:"center",gap:12,padding:"14px",background:"#f4f2ff",borderRadius:14,cursor:"pointer",border:"0.5px solid #e0d8ff"}}><div style={{width:42,height:42,borderRadius:12,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>✂️</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>Add Work Log</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>Apna diya hua service likho</div></div></div></div></div>)}
-      {showOwnerWorkLog&&<OwnerWorkLogModal salonId={user.id} onSave={(logData)=>{if(logData.date===todayKey)setEarnedRevenue(prev=>prev+logData.amount);}} onClose={()=>setShowOwnerWorkLog(false)}/>}
+      {showOwnerWorkLog&&<OwnerWorkLogModal salonId={user.id} onSave={(logData)=>{if(logData.date===todayKey){setEarnedRevenue(prev=>prev+logData.amount);setTodayWorkLogs(prev=>[...prev,logData]);}}} onClose={()=>setShowOwnerWorkLog(false)}/>}
+      {showRevenueDetail&&<RevenueDetailModal rows={todayWorkLogs} staffMap={staffMap} onClose={()=>setShowRevenueDetail(false)}/>}
     </div>
   );
 }
@@ -521,3 +640,4 @@ export default function SnipBook(){
   if(page==="loading"){return(<div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,fontFamily:"system-ui,sans-serif"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:48,height:48,background:"rgba(255,255,255,0.15)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>✂️</div><span style={{fontWeight:900,fontSize:22,color:"#fff"}}>Snip<span style={{color:"#c4b8f0"}}>Book</span></span></div><div style={{marginTop:20,fontSize:13,color:"rgba(255,255,255,0.5)",fontWeight:700}}>Loading...</div></div>);}
   return(<>{page==="landing"&&<LandingPage onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}{page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{setPage("staffSalonEntry");}} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}{page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{const sd={...staffData,salon_id:staffData.salon_id};setStaffUser(sd);localStorage.setItem("snipbook_staff",JSON.stringify(sd));setPage("staffApp");}} onBack={()=>setPage("login")}/>}{page==="staffApp"&&staffUser&&<StaffDashboard staff={staffUser} showRevenue={showRevenue} onLogout={staffLogout}/>}{page==="onboarding"&&<Onboarding onComplete={u=>{setUser(u);setPage("app");}} onBack={()=>setPage("landing")}/>}{page==="resetPassword"&&<ResetPasswordPage onDone={()=>setPage("login")}/>}{page==="app"&&user&&<MainApp user={user} setUser={setUser} onLogout={ownerLogout} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/>}</>);
 }
+    
