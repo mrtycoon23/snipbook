@@ -17,18 +17,22 @@ function playNotificationSound(){
     const Ctx=window.AudioContext||window.webkitAudioContext;
     if(!Ctx)return;
     const ctx=new Ctx();
-    const osc=ctx.createOscillator();
-    const gain=ctx.createGain();
-    osc.connect(gain);gain.connect(ctx.destination);
-    osc.type="sine";
-    osc.frequency.setValueAtTime(880,ctx.currentTime);
-    osc.frequency.setValueAtTime(1100,ctx.currentTime+0.12);
-    gain.gain.setValueAtTime(0.0001,ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.3,ctx.currentTime+0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.3);
-    osc.start();
-    osc.stop(ctx.currentTime+0.32);
-    setTimeout(()=>{try{ctx.close();}catch(e){}},500);
+    const fire=()=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type="sine";
+      osc.frequency.setValueAtTime(880,ctx.currentTime);
+      osc.frequency.setValueAtTime(1100,ctx.currentTime+0.12);
+      gain.gain.setValueAtTime(0.0001,ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.3,ctx.currentTime+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.3);
+      osc.start();
+      osc.stop(ctx.currentTime+0.32);
+      setTimeout(()=>{try{ctx.close();}catch(e){}},500);
+    };
+    if(ctx.state==="suspended")ctx.resume().then(fire).catch(()=>{});
+    else fire();
   }catch(e){}
 }
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -536,10 +540,10 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   const [showNotifs,setShowNotifs]=useState(false);const [notifications,setNotifications]=useState([]);const [unreadCount,setUnreadCount]=useState(0);
   const prevUnreadRef=useRef(0);
   useEffect(()=>{
-    async function loadNotifications(){try{const{data}=await supabase.from("appointments").select("*").eq("salon_id",user.id).eq("status","confirmed").order("created_at",{ascending:false}).limit(10);if(data&&data.length>0){setNotifications(data);const lastSeen=localStorage.getItem(`notif_seen_${user.id}`)||"0";const unseen=data.filter(a=>new Date(a.created_at)>new Date(lastSeen));setUnreadCount(unseen.length);if(unseen.length>prevUnreadRef.current)playNotificationSound();prevUnreadRef.current=unseen.length;}}catch(e){}}
+    async function loadNotifications(){try{const{data}=await supabase.from("appointments").select("*").eq("salon_id",user.id).eq("status","confirmed").order("created_at",{ascending:false}).limit(10);if(data&&data.length>0){setNotifications(data);let seenIds=[];try{seenIds=JSON.parse(localStorage.getItem(`notif_seen_ids_${user.id}`)||"[]");}catch(e){seenIds=[];}const unseen=data.filter(a=>!seenIds.includes(a.id));setUnreadCount(unseen.length);if(unseen.length>prevUnreadRef.current)playNotificationSound();prevUnreadRef.current=unseen.length;}}catch(e){console.error("Notif load error:",e?.message);}}
     loadNotifications();const interval=setInterval(loadNotifications,10000);return()=>clearInterval(interval);
   },[user.id]);
-  function handleBell(){setShowNotifs(v=>!v);localStorage.setItem(`notif_seen_${user.id}`,new Date().toISOString());setUnreadCount(0);prevUnreadRef.current=0;}
+  function handleBell(){setShowNotifs(v=>!v);try{localStorage.setItem(`notif_seen_ids_${user.id}`,JSON.stringify(notifications.map(n=>n.id)));}catch(e){}setUnreadCount(0);prevUnreadRef.current=0;}
   const [botChatUnread,setBotChatUnread]=useState(0);
   useEffect(()=>{
     async function loadChatBadge(){try{const{data}=await supabase.from("message_logs").select("created_at").eq("salon_id",user.id).eq("direction","inbound").order("created_at",{ascending:false}).limit(50);if(data&&data.length>0){const lastSeen=localStorage.getItem(`chats_seen_${user.id}`)||"0";const unseen=data.filter(m=>new Date(m.created_at)>new Date(lastSeen));setBotChatUnread(unseen.length);}}catch(e){}}
