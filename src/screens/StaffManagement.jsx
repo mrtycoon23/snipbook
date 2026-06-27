@@ -97,12 +97,13 @@ function AddStaffModal({onSave,onClose}){
   const [name,setName]=useState("");const [role,setRole]=useState("Hairstylist");
   const [phone,setPhone]=useState("");const [salary,setSalary]=useState("");
   const [pin,setPin]=useState("");const [error,setError]=useState("");
+  const [genderCapability,setGenderCapability]=useState("both");
   function handleSave(){
     setError("");
     if(!name.trim()){setError("Naam daalo!");return;}
     if(phone&&phone.length!==10){setError("Phone 10 digits hona chahiye!");return;}
     if(!pin||pin.length!==4){setError("4-digit PIN daalo!");return;}
-    onSave({name:name.trim(),role,phone,salary:Number(salary)||0,pin});
+    onSave({name:name.trim(),role,phone,salary:Number(salary)||0,pin,gender_capability:genderCapability});
     onClose();
   }
   return(
@@ -118,6 +119,14 @@ function AddStaffModal({onSave,onClose}){
           <div style={S.fg}><label style={S.label}>Phone</label><PhoneInput value={phone} onChange={setPhone}/></div>
           <div style={S.fg}><label style={S.label}>Salary (₹/mo)</label><input style={S.input} type="number" placeholder="12000" value={salary} onChange={e=>setSalary(e.target.value)}/></div>
         </div>
+        <div style={S.fg}>
+          <label style={S.label}>Kis clientele ki service de sakta/sakti hai? (WhatsApp booking ke liye)</label>
+          <div style={{display:"flex",gap:6}}>
+            {[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"},{id:"both",label:"👥 Dono"}].map(g=>(
+              <button key={g.id} onClick={()=>setGenderCapability(g.id)} style={{flex:1,padding:"9px 4px",borderRadius:8,border:`2px solid ${genderCapability===g.id?"#1a1a2e":"#e2e8f0"}`,background:genderCapability===g.id?"#1a1a2e":"#fff",color:genderCapability===g.id?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{g.label}</button>
+            ))}
+          </div>
+        </div>
         <div style={S.fg}><label style={S.label}>PIN (4 digit) *</label><input style={S.input} type="number" placeholder="1234" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
         <div style={S.ma}><button style={S.bc} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Add Karo</button></div>
       </div>
@@ -129,11 +138,12 @@ function EditStaffModal({staff,onSave,onDelete,onClose}){
   const [name,setName]=useState(staff.name);const [role,setRole]=useState(staff.role);
   const [phone,setPhone]=useState(staff.phone||"");const [salary,setSalary]=useState(staff.salary);
   const [pin,setPin]=useState(staff.pin);const [confirmDelete,setConfirmDelete]=useState(false);const [error,setError]=useState("");
+  const [genderCapability,setGenderCapability]=useState(staff.gender_capability||"both");
   function handleSave(){
     setError("");
     if(!name.trim()){setError("Naam daalo!");return;}
     if(phone&&phone.length!==10){setError("Phone 10 digits hona chahiye!");return;}
-    onSave({...staff,name:name.trim(),role,phone,salary:Number(salary)||0,pin});
+    onSave({...staff,name:name.trim(),role,phone,salary:Number(salary)||0,pin,gender_capability:genderCapability});
     onClose();
   }
   return(
@@ -148,6 +158,14 @@ function EditStaffModal({staff,onSave,onDelete,onClose}){
         <div style={S.fr}>
           <div style={S.fg}><label style={S.label}>Phone</label><PhoneInput value={phone} onChange={setPhone}/></div>
           <div style={S.fg}><label style={S.label}>Salary (₹/mo)</label><input style={S.input} type="number" value={salary} onChange={e=>setSalary(e.target.value)}/></div>
+        </div>
+        <div style={S.fg}>
+          <label style={S.label}>Kis clientele ki service de sakta/sakti hai? (WhatsApp booking ke liye)</label>
+          <div style={{display:"flex",gap:6}}>
+            {[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"},{id:"both",label:"👥 Dono"}].map(g=>(
+              <button key={g.id} onClick={()=>setGenderCapability(g.id)} style={{flex:1,padding:"9px 4px",borderRadius:8,border:`2px solid ${genderCapability===g.id?"#1a1a2e":"#e2e8f0"}`,background:genderCapability===g.id?"#1a1a2e":"#fff",color:genderCapability===g.id?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{g.label}</button>
+            ))}
+          </div>
         </div>
         <div style={S.fg}><label style={S.label}>PIN (4 digit)</label><input style={S.input} type="number" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
         <div style={S.ma}><button style={S.bc} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Save</button></div>
@@ -457,19 +475,16 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
             <div style={{fontSize:15,marginBottom:3}}>💰</div>
             <div style={{fontSize:15,fontWeight:700,color:NP.green,lineHeight:1}}>{fc(totalRevenue)}</div>
             <div style={{fontSize:9,color:NP.green,marginTop:3,fontWeight:500}}>Total Revenue</div>
-            <div style={{fontSize:8,color:NP.green,marginTop:2}}>↑ 18% vs last month</div>
           </div>
           <div style={{background:"#eff6ff",borderRadius:10,padding:"10px 6px",textAlign:"center",border:"1px solid #bfdbfe"}}>
             <div style={{fontSize:15,marginBottom:3}}>👥</div>
             <div style={{fontSize:15,fontWeight:700,color:NP.blue,lineHeight:1}}>{totalClients}</div>
             <div style={{fontSize:9,color:NP.blue,marginTop:3,fontWeight:500}}>Total Clients</div>
-            <div style={{fontSize:8,color:NP.blue,marginTop:2}}>↑ 12% vs last month</div>
           </div>
           <div style={{background:avgAtt>=80?"#f0fdf4":avgAtt>=60?"#fef9c3":"#fff5f5",borderRadius:10,padding:"10px 6px",textAlign:"center",border:`1px solid ${avgAtt>=80?"#bbf7d0":avgAtt>=60?"#fcd34d":"#fca5a5"}`}}>
             <div style={{fontSize:15,marginBottom:3}}>📅</div>
             <div style={{fontSize:15,fontWeight:700,color:avgAtt>=80?NP.green:avgAtt>=60?"#a16207":NP.red,lineHeight:1}}>{avgAtt}%</div>
             <div style={{fontSize:9,color:avgAtt>=80?NP.green:avgAtt>=60?"#a16207":NP.red,marginTop:3,fontWeight:500}}>Avg. Attendance</div>
-            <div style={{fontSize:8,color:NP.red,marginTop:2}}>↓ 5% vs last month</div>
           </div>
         </div>
 

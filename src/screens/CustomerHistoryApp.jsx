@@ -169,23 +169,21 @@ function OwnerDashboard({customers,staffMap}){
         <div style={{fontSize:32,fontWeight:800,color:"#fff",letterSpacing:"-0.5px",marginBottom:4}}>
           ₹{totalRevenue>=1000?(totalRevenue/1000).toFixed(1)+"k":totalRevenue.toLocaleString()}
         </div>
-        <div style={{fontSize:12,color:"#4ade80",fontWeight:600}}>↑ 18% vs last month</div>
       </div>
 
       {/* 4 stat cards */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,margin:"12px 16px 0"}}>
         {[
-          {icon:"💰",val:totalRevenue>=1000?`₹${(totalRevenue/1000).toFixed(1)}k`:`₹${totalRevenue}`,label:"Revenue",sub:"↑ 18% vs last month",color:"#5b3fc4",bg:"#f0eeff",ibg:"#ede9fe"},
-          {icon:"✂️",val:totalVisits,label:"Total Visits",sub:"↑ 12% vs last month",color:"#dc2626",bg:"#fff5f5",ibg:"#fee2e2"},
-          {icon:"👥",val:uniqueCustomers,label:"Customers",sub:"↑ 15% vs last month",color:"#2563eb",bg:"#eff6ff",ibg:"#dbeafe"},
-          {icon:"📊",val:`₹${avgTicket}`,label:"Avg. Ticket Size",sub:"↑ 8% vs last month",color:"#d97706",bg:"#fffbeb",ibg:"#fef3c7"},
+          {icon:"💰",val:totalRevenue>=1000?`₹${(totalRevenue/1000).toFixed(1)}k`:`₹${totalRevenue}`,label:"Revenue",color:"#5b3fc4",bg:"#f0eeff",ibg:"#ede9fe"},
+          {icon:"✂️",val:totalVisits,label:"Total Visits",color:"#dc2626",bg:"#fff5f5",ibg:"#fee2e2"},
+          {icon:"👥",val:uniqueCustomers,label:"Customers",color:"#2563eb",bg:"#eff6ff",ibg:"#dbeafe"},
+          {icon:"📊",val:`₹${avgTicket}`,label:"Avg. Ticket Size",color:"#d97706",bg:"#fffbeb",ibg:"#fef3c7"},
         ].map(s=>(
           <div key={s.label} style={{background:N.white,borderRadius:14,padding:"14px",border:`1px solid ${N.border}`,display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:40,height:40,borderRadius:12,background:s.ibg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{s.icon}</div>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:18,fontWeight:800,color:s.color,lineHeight:1}}>{s.val}</div>
               <div style={{fontSize:10,color:N.muted,marginTop:3,fontWeight:500}}>{s.label}</div>
-              <div style={{fontSize:9,color:N.green,marginTop:2}}>↑ {s.sub.split("↑ ")[1]||""}</div>
             </div>
           </div>
         ))}
@@ -402,3 +400,4 @@ export default function CustomerHistory({currentUser,onBack}){
     </div>
   );
 }
+ 
