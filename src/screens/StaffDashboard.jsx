@@ -307,7 +307,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
 
   return(
     <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
-      <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+      <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto",overflowX:"hidden",boxSizing:"border-box",WebkitOverflowScrolling:"touch"}}>
         <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{fontWeight:900,fontSize:16,marginBottom:16}}>➕ Work Log Add Karo</div>
         <div style={{marginBottom:12}}>
@@ -320,15 +320,15 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
           <div style={{fontSize:10,color:T.tf,marginTop:4}}>Same naam ke customers ko differentiate karne ke liye</div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-          <div>
+          <div style={{minWidth:0}}>
             <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Service</div>
-            <select style={{...IS,cursor:"pointer"}} value={service} onChange={e=>setService(e.target.value)}>
+            <select style={{...IS,cursor:"pointer",width:"100%",boxSizing:"border-box"}} value={service} onChange={e=>setService(e.target.value)}>
               {SERVICES.map(s=><option key={s}>{s}</option>)}
             </select>
           </div>
-          <div>
+          <div style={{minWidth:0}}>
             <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Date</div>
-            <input style={IS} type="date" value={date} onChange={e=>setDate(e.target.value)}/>
+            <input style={{...IS,width:"100%",boxSizing:"border-box"}} type="date" value={date} onChange={e=>setDate(e.target.value)}/>
           </div>
         </div>
         <div style={{marginBottom:18}}>

@@ -468,7 +468,7 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
 
   return(
     <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
-      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto",overflowX:"hidden",boxSizing:"border-box",WebkitOverflowScrolling:"touch"}}>
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{fontWeight:900,fontSize:16,marginBottom:4,color:TP.text}}>➕ Apna Work Log Add Karo</div>
         <div style={{fontSize:12,color:TP.ts,marginBottom:16}}>Khud ki di hui service yahan likho</div>
@@ -482,15 +482,15 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
           <div style={{fontSize:10,color:TP.tf,marginTop:4}}>Same naam ke customers ko differentiate karne ke liye</div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-          <div>
+          <div style={{minWidth:0}}>
             <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Service</div>
-            <select style={{...is,cursor:"pointer"}} value={service} onChange={e=>setService(e.target.value)}>
+            <select style={{...is,cursor:"pointer",width:"100%",boxSizing:"border-box"}} value={service} onChange={e=>setService(e.target.value)}>
               {OWNER_LOG_SERVICES.map(s=><option key={s}>{s}</option>)}
             </select>
           </div>
-          <div>
+          <div style={{minWidth:0}}>
             <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Date</div>
-            <input style={is} type="date" value={date} onChange={e=>setDate(e.target.value)}/>
+            <input style={{...is,width:"100%",boxSizing:"border-box"}} type="date" value={date} onChange={e=>setDate(e.target.value)}/>
           </div>
         </div>
         <div style={{marginBottom:18}}>
@@ -761,4 +761,3 @@ export default function SnipBook(){
   if(page==="loading"){return(<div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,fontFamily:"system-ui,sans-serif"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:48,height:48,background:"rgba(255,255,255,0.15)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>✂️</div><span style={{fontWeight:900,fontSize:22,color:"#fff"}}>Snip<span style={{color:"#c4b8f0"}}>Book</span></span></div><div style={{marginTop:20,fontSize:13,color:"rgba(255,255,255,0.5)",fontWeight:700}}>Loading...</div></div>);}
   return(<>{page==="landing"&&<LandingPage onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}{page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{setPage("staffSalonEntry");}} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}{page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{const sd={...staffData,salon_id:staffData.salon_id};setStaffUser(sd);localStorage.setItem("snipbook_staff",JSON.stringify(sd));setPage("staffApp");}} onBack={()=>setPage("login")}/>}{page==="staffApp"&&staffUser&&<StaffDashboard staff={staffUser} showRevenue={showRevenue} onLogout={staffLogout}/>}{page==="onboarding"&&<Onboarding onComplete={u=>{setUser(u);setPage("app");}} onBack={()=>setPage("landing")}/>}{page==="resetPassword"&&<ResetPasswordPage onDone={()=>setPage("login")}/>}{page==="app"&&user&&<MainApp user={user} setUser={setUser} onLogout={ownerLogout} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/>}</>);
 }
- 
