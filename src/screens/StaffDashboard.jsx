@@ -91,6 +91,7 @@ function StagedAddPhotoBtn({tempId,onAdd}){
 // ─── Add Work Log Modal ────────────────────────────────────────────────────────
 function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   const [clientName,setClientName]=useState("");
+  const [clientPhone,setClientPhone]=useState("");
   const [service,setService]=useState(SERVICES[0]);
   const [amount,setAmount]=useState("");
   const [date,setDate]=useState(today);
@@ -101,6 +102,8 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   const [newCustGender,setNewCustGender]=useState("male");
   const [savingCustomer,setSavingCustomer]=useState(false);
   const [pendingLogData,setPendingLogData]=useState(null);
+  const [ambiguousCustomers,setAmbiguousCustomers]=useState([]);
+  const [showPickCustomer,setShowPickCustomer]=useState(false);
   const [notes,setNotes]=useState("");
   const [photos,setPhotos]=useState([]);
   const [tempVisitId]=useState(()=>`temp_${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
@@ -134,19 +137,42 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   async function save(){
     if(!clientName.trim()||!amount||isNaN(amount))return;
     setSaving(true);
+    const base={staffId,clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos};
     try{
       if(salonId){
-        const {data:existingCustomers}=await supabase.from("customers").select("id").eq("salon_id",salonId).eq("name",clientName.trim());
+        const phone10=clientPhone.replace(/\D/g,"").slice(0,10);
+        if(phone10.length===10){
+          // Phone diya hai — sabse reliable match, naam-clash ka risk hi nahi
+          const{data:byPhone}=await supabase.from("customers").select("id").eq("salon_id",salonId).ilike("phone",`%${phone10}%`);
+          if(byPhone&&byPhone.length>0){
+            await saveLog({...base,customerId:byPhone[0].id});
+          }else{
+            const{data:newCust}=await supabase.from("customers").insert({salon_id:salonId,name:base.clientName,phone:phone10,gender:"male"}).select().single();
+            await saveLog({...base,customerId:newCust?.id||null});
+          }
+          return;
+        }
+        // Phone nahi diya — naam se match karo
+        const{data:existingCustomers}=await supabase.from("customers").select("id,name,phone,last_visit").eq("salon_id",salonId).eq("name",base.clientName);
         if(!existingCustomers||existingCustomers.length===0){
-          setPendingLogData({staffId,clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos});
+          setPendingLogData(base);
           setSaving(false);
           setShowNewCustomer(true);
           return;
         }
+        if(existingCustomers.length>1){
+          setAmbiguousCustomers(existingCustomers);
+          setPendingLogData(base);
+          setSaving(false);
+          setShowPickCustomer(true);
+          return;
+        }
+        await saveLog({...base,customerId:existingCustomers[0].id});
+        return;
       }
-      await saveLog({staffId,clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos});
+      await saveLog(base);
     }catch(e){
-      setPendingLogData({staffId,clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos});
+      setPendingLogData(base);
       setSaving(false);
       setShowNewCustomer(true);
     }
@@ -160,11 +186,15 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
           client_name:logData.clientName, service:logData.service,
           amount:logData.amount, date:logData.date
         }).select().single();
-        const custRes = await supabase.from("customers").select("id").eq("salon_id", salonId).eq("name", logData.clientName).single();
-        if(custRes.data){
+        let customerId=logData.customerId||null;
+        if(!customerId){
+          const{data:custMatches}=await supabase.from("customers").select("id").eq("salon_id",salonId).eq("name",logData.clientName).limit(1);
+          customerId=custMatches?.[0]?.id||null;
+        }
+        if(customerId){
           await supabase.from("visit_history").insert({
             salon_id: salonId,
-            customer_id: custRes.data.id,
+            customer_id: customerId,
             date: logData.date,
             services: [logData.service],
             stylist: logData.staffId,
@@ -186,21 +216,52 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   async function saveNewCustomer(skipDetails=false){
     setSavingCustomer(true);
     try{
+      let newCustomerId=null;
       if(salonId&&!skipDetails){
-        await supabase.from("customers").insert({
+        const{data:created}=await supabase.from("customers").insert({
           salon_id:salonId,
           name:pendingLogData.clientName,
           phone:newCustPhone||"",
           birthday:newCustDob||null,
           gender:newCustGender||"male",
-        });
+        }).select().single();
+        newCustomerId=created?.id||null;
       }
-      await saveLog(pendingLogData);
+      await saveLog({...pendingLogData,customerId:newCustomerId});
     }catch(e){
       console.error(e);
       await saveLog(pendingLogData);
     }
     setSavingCustomer(false);
+  }
+
+  if(showPickCustomer&&pendingLogData){
+    return(
+      <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
+        <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"85vh",overflowY:"auto"}}>
+          <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+            <div style={{width:44,height:44,borderRadius:14,background:T.yellow,border:`2px solid ${T.yb}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🤔</div>
+            <div>
+              <div style={{fontWeight:900,fontSize:15,color:T.text}}>"{pendingLogData.clientName}" naam ke {ambiguousCustomers.length} customers hain</div>
+              <div style={{fontSize:12,color:T.ts,marginTop:2}}>Konsa hai? Niche se select karo</div>
+            </div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+            {ambiguousCustomers.map(c=>(
+              <button key={c.id} disabled={saving} onClick={async()=>{setShowPickCustomer(false);setSaving(true);await saveLog({...pendingLogData,customerId:c.id});}} style={{textAlign:"left",padding:"12px 14px",border:`2px solid ${T.border}`,borderRadius:12,background:T.sub,cursor:"pointer",fontFamily:"inherit"}}>
+                <div style={{fontWeight:800,fontSize:14,color:T.text}}>{c.name}</div>
+                <div style={{fontSize:12,color:T.ts,marginTop:2}}>{c.phone?`📱 ${c.phone}`:"📱 Phone nahi hai"}{c.last_visit?` · Last visit: ${c.last_visit}`:""}</div>
+              </button>
+            ))}
+          </div>
+          <button onClick={()=>{setShowPickCustomer(false);setShowNewCustomer(true);}} style={{width:"100%",padding:13,border:`2px solid ${T.green}`,borderRadius:12,background:T.gl,color:T.gd,fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:8}}>
+            ➕ Yeh Bilkul Naya Customer Hai
+          </button>
+          <button onClick={handleCancel} style={{width:"100%",padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:T.tm}}>Cancel</button>
+        </div>
+      </div>
+    );
   }
 
   if(showNewCustomer&&pendingLogData){
@@ -246,6 +307,11 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
         <div style={{marginBottom:12}}>
           <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Client Naam *</div>
           <input style={IS} placeholder="e.g. Anjali Mehta" value={clientName} onChange={e=>setClientName(e.target.value)} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border} autoFocus/>
+        </div>
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Phone Number <span style={{color:T.tf,fontWeight:600}}>(optional, recommended)</span></div>
+          <input style={IS} type="tel" placeholder="e.g. 9876543210" value={clientPhone} onChange={e=>setClientPhone(e.target.value.replace(/\D/g,"").slice(0,10))} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
+          <div style={{fontSize:10,color:T.tf,marginTop:4}}>Same naam ke customers ko differentiate karne ke liye</div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
           <div>
