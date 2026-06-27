@@ -108,6 +108,12 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   const [photos,setPhotos]=useState([]);
   const [tempVisitId]=useState(()=>`temp_${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
 
+  useEffect(()=>{
+    const prevOverflow=document.body.style.overflow;
+    document.body.style.overflow="hidden";
+    return()=>{document.body.style.overflow=prevOverflow;};
+  },[]);
+
   async function handleCancel(){
     if(photos.length>0){
       const paths=photos.map(p=>p.path).filter(Boolean);
@@ -301,7 +307,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
 
   return(
     <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
-      <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto"}}>
+      <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
         <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{fontWeight:900,fontSize:16,marginBottom:16}}>➕ Work Log Add Karo</div>
         <div style={{marginBottom:12}}>
