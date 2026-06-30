@@ -98,12 +98,16 @@ function AddStaffModal({onSave,onClose}){
   const [phone,setPhone]=useState("");const [salary,setSalary]=useState("");
   const [pin,setPin]=useState("");const [error,setError]=useState("");
   const [genderCapability,setGenderCapability]=useState("both");
-  function handleSave(){
+  const [saving,setSaving]=useState(false);
+  async function handleSave(){
     setError("");
     if(!name.trim()){setError("Naam daalo!");return;}
     if(phone&&phone.length!==10){setError("Phone 10 digits hona chahiye!");return;}
     if(!pin||pin.length!==4){setError("4-digit PIN daalo!");return;}
-    onSave({name:name.trim(),role,phone,salary:Number(salary)||0,pin,gender_capability:genderCapability});
+    setSaving(true);
+    const result=await onSave({name:name.trim(),role,phone,salary:Number(salary)||0,pin,gender_capability:genderCapability});
+    setSaving(false);
+    if(result&&result.success===false){setError(result.message||"Save nahi hua, dobara try karo.");return;}
     onClose();
   }
   return(
@@ -128,7 +132,7 @@ function AddStaffModal({onSave,onClose}){
           </div>
         </div>
         <div style={S.fg}><label style={S.label}>PIN (4 digit) *</label><input style={S.input} type="number" placeholder="1234" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
-        <div style={S.ma}><button style={S.bc} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Add Karo</button></div>
+        <div style={S.ma}><button style={S.bc} onClick={onClose} disabled={saving}>Cancel</button><button style={{...S.bs,opacity:saving?0.6:1}} onClick={handleSave} disabled={saving}>{saving?"Saving...":"✓ Add Karo"}</button></div>
       </div>
     </div>
   );
@@ -139,11 +143,15 @@ function EditStaffModal({staff,onSave,onDelete,onClose}){
   const [phone,setPhone]=useState(staff.phone||"");const [salary,setSalary]=useState(staff.salary);
   const [pin,setPin]=useState(staff.pin);const [confirmDelete,setConfirmDelete]=useState(false);const [error,setError]=useState("");
   const [genderCapability,setGenderCapability]=useState(staff.gender_capability||"both");
-  function handleSave(){
+  const [saving,setSaving]=useState(false);
+  async function handleSave(){
     setError("");
     if(!name.trim()){setError("Naam daalo!");return;}
     if(phone&&phone.length!==10){setError("Phone 10 digits hona chahiye!");return;}
-    onSave({...staff,name:name.trim(),role,phone,salary:Number(salary)||0,pin,gender_capability:genderCapability});
+    setSaving(true);
+    const result=await onSave({...staff,name:name.trim(),role,phone,salary:Number(salary)||0,pin,gender_capability:genderCapability});
+    setSaving(false);
+    if(result&&result.success===false){setError(result.message||"Save nahi hua, dobara try karo.");return;}
     onClose();
   }
   return(
@@ -168,7 +176,7 @@ function EditStaffModal({staff,onSave,onDelete,onClose}){
           </div>
         </div>
         <div style={S.fg}><label style={S.label}>PIN (4 digit)</label><input style={S.input} type="number" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
-        <div style={S.ma}><button style={S.bc} onClick={onClose}>Cancel</button><button style={S.bs} onClick={handleSave}>✓ Save</button></div>
+        <div style={S.ma}><button style={S.bc} onClick={onClose} disabled={saving}>Cancel</button><button style={{...S.bs,opacity:saving?0.6:1}} onClick={handleSave} disabled={saving}>{saving?"Saving...":"✓ Save"}</button></div>
         {!confirmDelete
           ?<button onClick={()=>setConfirmDelete(true)} style={{width:"100%",marginTop:10,padding:10,border:"1px solid #fecaca",background:"white",borderRadius:10,fontSize:13,fontWeight:700,color:"#dc2626",cursor:"pointer"}}>🗑 Remove Staff</button>
           :<div style={{marginTop:10,background:"#fef2f2",borderRadius:10,padding:12}}>
@@ -723,17 +731,28 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
 
   async function addStaff(data){
     if(currentUser?.id){
-      const{data:res}=await supabase.from("staff").insert({salon_id:currentUser.id,name:data.name,role:data.role,phone:data.phone,salary:data.salary,pin:data.pin}).select().single();
-      if(res){setStaffList(prev=>[...prev,res]);return;}
+      const{data:res,error}=await supabase.from("staff").insert({salon_id:currentUser.id,name:data.name,role:data.role,phone:data.phone,salary:data.salary,pin:data.pin,gender_capability:data.gender_capability||"both"}).select().single();
+      if(error){
+        const msg=error.code==="23505"?"Yeh phone number pehle se kisi staff ke saath registered hai. Alag number use karo.":"Staff save nahi hua: "+(error.message||"Unknown error");
+        return{success:false,message:msg};
+      }
+      if(res){setStaffList(prev=>[...prev,res]);return{success:true};}
+      return{success:false,message:"Staff save nahi hua, dobara try karo."};
     }
     setStaffList(prev=>[...prev,{...data,id:Date.now()}]);
+    return{success:true};
   }
 
   async function editStaff(updated){
     if(currentUser?.id&&typeof updated.id==="string"){
-      await supabase.from("staff").update({name:updated.name,role:updated.role,phone:updated.phone,salary:updated.salary,pin:updated.pin}).eq("id",updated.id);
+      const{error}=await supabase.from("staff").update({name:updated.name,role:updated.role,phone:updated.phone,salary:updated.salary,pin:updated.pin,gender_capability:updated.gender_capability||"both"}).eq("id",updated.id);
+      if(error){
+        const msg=error.code==="23505"?"Yeh phone number pehle se kisi staff ke saath registered hai. Alag number use karo.":"Update nahi hua: "+(error.message||"Unknown error");
+        return{success:false,message:msg};
+      }
     }
     setStaffList(prev=>prev.map(s=>s.id===updated.id?updated:s));
+    return{success:true};
   }
 
   async function deleteStaff(id){
