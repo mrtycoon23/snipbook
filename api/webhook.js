@@ -187,13 +187,36 @@ function eligibleStaffFor(staffList, gender) {
 // Returns the time slots that still have at least one free, eligible staff member.
 // If salon has no staff configured at all, falls back to the old single-capacity behaviour
 // so existing salons aren't broken before they set up staff.
+
+// Returns IDs of staff who are explicitly marked absent on a given date.
+// Staff with no attendance record are treated as present (don't block them).
+async function getAbsentStaffIds(salonId, date) {
+  try {
+    const r = await fetch(
+      `${SUPABASE_URL}/rest/v1/attendance?salon_id=eq.${salonId}&date=eq.${date}&is_present=eq.false&select=staff_id`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const d = await r.json();
+    if (!Array.isArray(d)) return [];
+    return d.map(a => a.staff_id).filter(Boolean);
+  } catch(e) { return []; }
+}
+
 async function computeAvailableSlots({ salonId, date, gender, staffPref, openTime, closeTime, isMorning }) {
   const slots = getTimeSlots(isMorning ? openTime : 14, isMorning ? 14 : closeTime, date);
   const staffList = await getStaffList(salonId);
-  const eligible = eligibleStaffFor(staffList, gender);
+  const absentIds = await getAbsentStaffIds(salonId, date);
+  // Filter out absent staff before everything else
+  const presentStaff = staffList.filter(s => !absentIds.includes(s.id));
+  const eligible = eligibleStaffFor(presentStaff, gender);
   const appts = await getAppointmentsForDate(salonId, date);
 
   if (eligible.length === 0) {
+    // No staff configured OR all eligible staff are absent today
+    if (staffList.length > 0 && absentIds.length > 0) {
+      // Staff exist but all are absent — return empty (no slots available)
+      return [];
+    }
     const booked = appts.map(a => a.time_slot);
     return slots.filter(s => !booked.includes(s.key));
   }
@@ -214,7 +237,9 @@ async function computeAvailableSlots({ salonId, date, gender, staffPref, openTim
 async function assignStaffForBooking({ salonId, date, time, gender, staffPref }) {
   try {
     const staffList = await getStaffList(salonId);
-    const eligible = eligibleStaffFor(staffList, gender);
+    const absentIds = await getAbsentStaffIds(salonId, date);
+    const presentStaff = staffList.filter(s => !absentIds.includes(s.id));
+    const eligible = eligibleStaffFor(presentStaff, gender);
     if (eligible.length === 0) return null;
     const pool = staffPref ? eligible.filter(s => s.id === staffPref) : eligible;
     const effectivePool = pool.length > 0 ? pool : eligible;
@@ -623,6 +648,16 @@ export default async function handler(req, res) {
 
       const assignedStaff = await assignStaffForBooking({ salonId: SALON_ID, date: data.date, time: data.time, gender: data.gender, staffPref: data.staffPref });
 
+      // If a specific staff was requested but they're absent/unavailable today, block the booking
+      if (!assignedStaff && data.staffPref) {
+        await sendButtons(from,
+          `😔 *Staff Aaj Available Nahi!*\n\n✂️ ${data.service}\n📅 ${formatDate(data.date)}\n\nJis staff ko aapne choose kiya tha woh aaj available nahi hain.\n\nKisi aur din try karein ya kisi aur staff ko choose karein.`,
+          [{ id: "appointment", title: "📅 Dobara Try Karein" }, { id: "main_menu", title: "🏠 Main Menu" }],
+          SALON_ID, customerName);
+        await clearSession(sKey);
+        res.status(200).json({ status: "ok" }); return;
+      }
+
       await fetch(`${SUPABASE_URL}/rest/v1/appointments`, { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ salon_id: SALON_ID, customer_name: data.name || "WhatsApp Customer", customer_phone: from, service: data.service, amount: data.price || 0, date: data.date, time_slot: data.time, status: "confirmed", staff_id: assignedStaff?.id || null }) });
 
       await clearSession(sKey);
@@ -725,3 +760,4 @@ export default async function handler(req, res) {
     res.status(200).json({ status: "ok" });
   }
 }
+  
