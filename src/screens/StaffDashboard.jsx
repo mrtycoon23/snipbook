@@ -131,9 +131,9 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
           <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
           <div style={{textAlign:"center",padding:"20px 0"}}>
             <div style={{fontSize:48,marginBottom:12}}>⚠️</div>
-            <div style={{fontWeight:900,fontSize:18,color:T.rt,marginBottom:8}}>Pehle Present Mark Karo!</div>
-            <div style={{fontSize:13,color:T.ts,marginBottom:24}}>Aap abhi absent hain. Work log add karne se pehle attendance mark karo.</div>
-            <button onClick={onClose} style={{padding:"12px 32px",background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Okay, Mark Karta Hoon</button>
+            <div style={{fontWeight:900,fontSize:18,color:T.rt,marginBottom:8}}>Please Mark Yourself as Present First!</div>
+            <div style={{fontSize:13,color:T.ts,marginBottom:24}}>You are currently marked absent. Please mark attendance before adding a work log.</div>
+            <button onClick={onClose} style={{padding:"12px 32px",background:T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Got It, Mark Present</button>
           </div>
         </div>
       </div>
@@ -249,20 +249,20 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
             <div style={{width:44,height:44,borderRadius:14,background:T.yellow,border:`2px solid ${T.yb}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🤔</div>
             <div>
-              <div style={{fontWeight:900,fontSize:15,color:T.text}}>"{pendingLogData.clientName}" naam ke {ambiguousCustomers.length} customers hain</div>
-              <div style={{fontSize:12,color:T.ts,marginTop:2}}>Konsa hai? Niche se select karo</div>
+              <div style={{fontWeight:900,fontSize:15,color:T.text}}>"{pendingLogData.clientName}" customers share this name</div>
+              <div style={{fontSize:12,color:T.ts,marginTop:2}}>Which one is it? Please select below</div>
             </div>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
             {ambiguousCustomers.map(c=>(
               <button key={c.id} disabled={saving} onClick={async()=>{setShowPickCustomer(false);setSaving(true);await saveLog({...pendingLogData,customerId:c.id});}} style={{textAlign:"left",padding:"12px 14px",border:`2px solid ${T.border}`,borderRadius:12,background:T.sub,cursor:"pointer",fontFamily:"inherit"}}>
                 <div style={{fontWeight:800,fontSize:14,color:T.text}}>{c.name}</div>
-                <div style={{fontSize:12,color:T.ts,marginTop:2}}>{c.phone?`📱 ${c.phone}`:"📱 Phone nahi hai"}{c.last_visit?` · Last visit: ${c.last_visit}`:""}</div>
+                <div style={{fontSize:12,color:T.ts,marginTop:2}}>{c.phone?`📱 ${c.phone}`:"📱 No phone number"}{c.last_visit?` · Last visit: ${c.last_visit}`:""}</div>
               </button>
             ))}
           </div>
           <button onClick={()=>{setShowPickCustomer(false);setShowNewCustomer(true);}} style={{width:"100%",padding:13,border:`2px solid ${T.green}`,borderRadius:12,background:T.gl,color:T.gd,fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginBottom:8}}>
-            ➕ Yeh Bilkul Naya Customer Hai
+            ➕ This is a New Customer
           </button>
           <button onClick={handleCancel} style={{width:"100%",padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:T.tm}}>Cancel</button>
         </div>
@@ -278,12 +278,12 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
           <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
             <div style={{width:44,height:44,borderRadius:14,background:T.blue,border:`2px solid ${T.bb}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>🆕</div>
             <div>
-              <div style={{fontWeight:900,fontSize:16,color:T.text}}>Naya Customer!</div>
-              <div style={{fontSize:12,color:T.ts,marginTop:2}}>{pendingLogData.clientName} pehle kabhi nahi aaya</div>
+              <div style={{fontWeight:900,fontSize:16,color:T.text}}>New Customer!</div>
+              <div style={{fontSize:12,color:T.ts,marginTop:2}}>{pendingLogData.clientName} has not visited before</div>
             </div>
           </div>
           <div style={{background:T.gl,border:`1.5px solid ${T.gm}`,borderRadius:10,padding:"10px 13px",marginBottom:16,fontSize:12,color:T.gd,fontWeight:700}}>
-            💡 Iska data save karo — owner ke dashboard mein bhi dikh jaayega!
+            💡 Save their details — it will also appear in the owner's dashboard!
           </div>
           <div style={{marginBottom:12}}>
             <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Phone Number *</div>
@@ -298,7 +298,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
             <div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewCustGender(g.id)} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustGender===g.id?T.green:T.border}`,background:newCustGender===g.id?T.gl:"#fff",color:newCustGender===g.id?T.gd:T.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div>
           </div>
           <button onClick={()=>saveNewCustomer(false)} disabled={savingCustomer||!newCustPhone||newCustPhone.length<10} style={{width:"100%",padding:13,background:savingCustomer||!newCustPhone||newCustPhone.length<10?"#d1d5db":T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:newCustPhone.length===10?"pointer":"not-allowed"}}>
-            {savingCustomer?"Saving...":"✓ Customer + Log Save Karo"}
+            {savingCustomer?"Saving...":"✓ Customer + Log Save"}
           </button>
         </div>
       </div>
@@ -309,15 +309,15 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
     <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end"}}>
       <div style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"80vh",overflowY:"auto",overflowX:"hidden",boxSizing:"border-box",WebkitOverflowScrolling:"touch"}}>
         <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
-        <div style={{fontWeight:900,fontSize:16,marginBottom:16}}>➕ Work Log Add Karo</div>
+        <div style={{fontWeight:900,fontSize:16,marginBottom:16}}>➕ Add Work Log</div>
         <div style={{marginBottom:12}}>
-          <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Client Naam *</div>
+          <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Client Name *</div>
           <input style={IS} placeholder="e.g. Anjali Mehta" value={clientName} onChange={e=>setClientName(e.target.value)} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border} autoFocus/>
         </div>
         <div style={{marginBottom:12}}>
           <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>Phone Number <span style={{color:T.tf,fontWeight:600}}>(optional, recommended)</span></div>
           <input style={IS} type="tel" placeholder="e.g. 9876543210" value={clientPhone} onChange={e=>setClientPhone(e.target.value.replace(/\D/g,"").slice(0,10))} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
-          <div style={{fontSize:10,color:T.tf,marginTop:4}}>Same naam ke customers ko differentiate karne ke liye</div>
+          <div style={{fontSize:10,color:T.tf,marginTop:4}}>Helps identify customers with the same name</div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
           <div style={{minWidth:0}}>
@@ -337,7 +337,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
         </div>
         <div style={{marginBottom:14}}>
           <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>📝 Stylist Notes</div>
-          <textarea style={{...IS,resize:"vertical",lineHeight:1.6,minHeight:64,fontFamily:"inherit"}} placeholder="e.g. Shampoo + conditioning kiya, keratin ke baare mein pucha..." value={notes} onChange={e=>setNotes(e.target.value)} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
+          <textarea style={{...IS,resize:"vertical",lineHeight:1.6,minHeight:64,fontFamily:"inherit"}} placeholder="e.g. Shampooed and conditioned hair, discussed keratin treatment..." value={notes} onChange={e=>setNotes(e.target.value)} onFocus={e=>e.target.style.borderColor=T.green} onBlur={e=>e.target.style.borderColor=T.border}/>
         </div>
         <div style={{marginBottom:18}}>
           <div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:8}}>📸 Visit Photos ({photos.length})</div>
@@ -349,7 +349,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
         <div style={{display:"flex",gap:10}}>
           <button onClick={handleCancel} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button>
           <button onClick={save} disabled={saving} style={{flex:2,padding:12,border:"none",borderRadius:12,background:clientName.trim()&&amount?T.green:"#d1d5db",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>
-            {saving?"Saving...":"✓ Save Karo"}
+            {saving?"Saving...":"✓ Save"}
           </button>
         </div>
       </div>
@@ -538,8 +538,8 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
 
       {!isPresent&&(
         <div style={{background:N.w,border:"1px solid #f1f0f5",borderRadius:12,padding:"12px 14px",marginBottom:10}}>
-          <div style={{fontSize:11,fontWeight:700,color:"#6b7280",marginBottom:6}}>🔒 Reason for absence (only you can see):</div>
-          <input style={{...IS,background:"#f8f7ff",borderColor:"#e0d8ff"}} placeholder="Add reason — owner won't see this..." value={(absentNotes||{})[today]||""} onChange={async e=>{setAbsentNotes(prev=>({...prev,[today]:e.target.value}));if(salonId)await supabase.from("attendance").upsert({salon_id:salonId,staff_id:staff.id,date:today,is_present:false,absent_reason:e.target.value},{onConflict:"salon_id,staff_id,date"});}}/>
+          <div style={{fontSize:11,fontWeight:700,color:"#6b7280",marginBottom:6}}>🔒 Reason for absence (private):</div>
+          <input style={{...IS,background:"#f8f7ff",borderColor:"#e0d8ff"}} placeholder="Add reason — only visible to you..." value={(absentNotes||{})[today]||""} onChange={async e=>{setAbsentNotes(prev=>({...prev,[today]:e.target.value}));if(salonId)await supabase.from("attendance").upsert({salon_id:salonId,staff_id:staff.id,date:today,is_present:false,absent_reason:e.target.value},{onConflict:"salon_id,staff_id,date"});}}/>
         </div>
       )}
 
@@ -723,7 +723,7 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
 
       <div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:360,boxShadow:"0 16px 48px rgba(0,0,0,0.3)"}}>
         <div style={{fontWeight:900,fontSize:17,marginBottom:3,color:T.text}}>Staff Login</div>
-        <div style={{fontSize:13,color:T.ts,marginBottom:20}}>Apna naam aur PIN daalo</div>
+        <div style={{fontSize:13,color:T.ts,marginBottom:20}}>Enter your name and PIN</div>
 
         <div style={{marginBottom:14}}>
           <div style={{fontSize:13,fontWeight:800,color:T.tm,marginBottom:6}}>Apna Naam</div>

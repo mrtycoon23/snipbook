@@ -63,15 +63,15 @@ function WorkLogModal({staffList,preselectedStaffId,onSave,onClose}){
   const [amount,setAmount]=useState("");
   const [date,setDate]=useState(today);
   function handleSave(){
-    if(!clientName.trim()){alert("Client naam daalo!");return;}
-    if(!amount||isNaN(amount)){alert("Amount daalo!");return;}
+    if(!clientName.trim()){alert("Please enter the client name!");return;}
+    if(!amount||isNaN(amount)){alert("Please enter an amount!");return;}
     onSave({staffId,clientName:clientName.trim(),service,amount:Number(amount),date});
     onClose();
   }
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={S.modal}>
-        <div style={S.modalTitle}>➕ Work Log Add Karo</div>
+        <div style={S.modalTitle}>➕ Add Work Log</div>
         {!preselectedStaffId&&(
           <div style={S.fg}><label style={S.label}>Staff</label>
             <select style={S.input} value={staffId} onChange={e=>setStaffId(e.target.value)}>
@@ -80,7 +80,7 @@ function WorkLogModal({staffList,preselectedStaffId,onSave,onClose}){
           </div>
         )}
         <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Client Naam *</label><input style={S.input} placeholder="Anjali Mehta" value={clientName} onChange={e=>setClientName(e.target.value)}/></div>
+          <div style={S.fg}><label style={S.label}>Client Name *</label><input style={S.input} placeholder="Anjali Mehta" value={clientName} onChange={e=>setClientName(e.target.value)}/></div>
           <div style={S.fg}><label style={S.label}>Date</label><input style={S.input} type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
         </div>
         <div style={S.fr}>
@@ -101,38 +101,38 @@ function AddStaffModal({onSave,onClose}){
   const [saving,setSaving]=useState(false);
   async function handleSave(){
     setError("");
-    if(!name.trim()){setError("Naam daalo!");return;}
-    if(phone&&phone.length!==10){setError("Phone 10 digits hona chahiye!");return;}
-    if(!pin||pin.length!==4){setError("4-digit PIN daalo!");return;}
+    if(!name.trim()){setError("Please enter a name!");return;}
+    if(phone&&phone.length!==10){setError("Phone number must be 10 digits!");return;}
+    if(!pin||pin.length!==4){setError("Please enter a 4-digit PIN!");return;}
     setSaving(true);
     const result=await onSave({name:name.trim(),role,phone,salary:Number(salary)||0,pin,gender_capability:genderCapability});
     setSaving(false);
-    if(result&&result.success===false){setError(result.message||"Save nahi hua, dobara try karo.");return;}
+    if(result&&result.success===false){setError(result.message||"Could not save. Please try again.");return;}
     onClose();
   }
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={{...S.modal,maxHeight:"85vh",overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        <div style={S.modalTitle}>👤 Naya Staff Add Karo</div>
+        <div style={S.modalTitle}>👤 Add New Staff</div>
         {error&&<div style={S.err}>{error}</div>}
         <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Naam *</label><input style={S.input} placeholder="Priya Sharma" value={name} onChange={e=>setName(e.target.value)}/></div>
+          <div style={S.fg}><label style={S.label}>Name *</label><input style={S.input} placeholder="Priya Sharma" value={name} onChange={e=>setName(e.target.value)}/></div>
           <div style={S.fg}><label style={S.label}>Role</label><select style={S.input} value={role} onChange={e=>setRole(e.target.value)}>{["Hairstylist","Makeup Artist","Nail Artist","Receptionist","Manager"].map(r=><option key={r}>{r}</option>)}</select></div>
         </div>
         <div style={S.fr}>
           <div style={S.fg}><label style={S.label}>Phone</label><PhoneInput value={phone} onChange={setPhone}/></div>
-          <div style={S.fg}><label style={S.label}>Salary (₹/mo)</label><input style={S.input} type="number" placeholder="12000" value={salary} onChange={e=>setSalary(e.target.value)}/></div>
+          <div style={S.fg}><label style={S.label}>Salary (₹/month)</label><input style={S.input} type="number" placeholder="12000" value={salary} onChange={e=>setSalary(e.target.value)}/></div>
         </div>
         <div style={S.fg}>
-          <label style={S.label}>Kis clientele ki service de sakta/sakti hai? (WhatsApp booking ke liye)</label>
+          <label style={S.label}>Which clients can this staff member serve? (for WhatsApp bookings)</label>
           <div style={{display:"flex",gap:6}}>
-            {[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"},{id:"both",label:"👥 Dono"}].map(g=>(
+            {[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"},{id:"both",label:"👥 Both"}].map(g=>(
               <button key={g.id} onClick={()=>setGenderCapability(g.id)} style={{flex:1,padding:"9px 4px",borderRadius:8,border:`2px solid ${genderCapability===g.id?"#1a1a2e":"#e2e8f0"}`,background:genderCapability===g.id?"#1a1a2e":"#fff",color:genderCapability===g.id?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{g.label}</button>
             ))}
           </div>
         </div>
-        <div style={S.fg}><label style={S.label}>PIN (4 digit) *</label><input style={S.input} type="number" placeholder="1234" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
-        <div style={S.ma}><button style={S.bc} onClick={onClose} disabled={saving}>Cancel</button><button style={{...S.bs,opacity:saving?0.6:1}} onClick={handleSave} disabled={saving}>{saving?"Saving...":"✓ Add Karo"}</button></div>
+        <div style={S.fg}><label style={S.label}>PIN (4 digits) *</label><input style={S.input} type="number" placeholder="1234" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
+        <div style={S.ma}><button style={S.bc} onClick={onClose} disabled={saving}>Cancel</button><button style={{...S.bs,opacity:saving?0.6:1}} onClick={handleSave} disabled={saving}>{saving?"Saving...":"✓ Add"}</button></div>
       </div>
     </div>
   );
@@ -146,41 +146,41 @@ function EditStaffModal({staff,onSave,onDelete,onClose}){
   const [saving,setSaving]=useState(false);
   async function handleSave(){
     setError("");
-    if(!name.trim()){setError("Naam daalo!");return;}
-    if(phone&&phone.length!==10){setError("Phone 10 digits hona chahiye!");return;}
+    if(!name.trim()){setError("Please enter a name!");return;}
+    if(phone&&phone.length!==10){setError("Phone number must be 10 digits!");return;}
     setSaving(true);
     const result=await onSave({...staff,name:name.trim(),role,phone,salary:Number(salary)||0,pin,gender_capability:genderCapability});
     setSaving(false);
-    if(result&&result.success===false){setError(result.message||"Save nahi hua, dobara try karo.");return;}
+    if(result&&result.success===false){setError(result.message||"Could not save. Please try again.");return;}
     onClose();
   }
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={{...S.modal,maxHeight:"85vh",overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        <div style={S.modalTitle}>✏️ Staff Edit Karo</div>
+        <div style={S.modalTitle}>✏️ Edit Staff</div>
         {error&&<div style={S.err}>{error}</div>}
         <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Naam</label><input style={S.input} value={name} onChange={e=>setName(e.target.value)}/></div>
+          <div style={S.fg}><label style={S.label}>Name</label><input style={S.input} value={name} onChange={e=>setName(e.target.value)}/></div>
           <div style={S.fg}><label style={S.label}>Role</label><select style={S.input} value={role} onChange={e=>setRole(e.target.value)}>{["Hairstylist","Makeup Artist","Nail Artist","Receptionist","Manager"].map(r=><option key={r}>{r}</option>)}</select></div>
         </div>
         <div style={S.fr}>
           <div style={S.fg}><label style={S.label}>Phone</label><PhoneInput value={phone} onChange={setPhone}/></div>
-          <div style={S.fg}><label style={S.label}>Salary (₹/mo)</label><input style={S.input} type="number" value={salary} onChange={e=>setSalary(e.target.value)}/></div>
+          <div style={S.fg}><label style={S.label}>Salary (₹/month)</label><input style={S.input} type="number" value={salary} onChange={e=>setSalary(e.target.value)}/></div>
         </div>
         <div style={S.fg}>
-          <label style={S.label}>Kis clientele ki service de sakta/sakti hai? (WhatsApp booking ke liye)</label>
+          <label style={S.label}>Which clients can this staff member serve? (for WhatsApp bookings)</label>
           <div style={{display:"flex",gap:6}}>
-            {[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"},{id:"both",label:"👥 Dono"}].map(g=>(
+            {[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"},{id:"both",label:"👥 Both"}].map(g=>(
               <button key={g.id} onClick={()=>setGenderCapability(g.id)} style={{flex:1,padding:"9px 4px",borderRadius:8,border:`2px solid ${genderCapability===g.id?"#1a1a2e":"#e2e8f0"}`,background:genderCapability===g.id?"#1a1a2e":"#fff",color:genderCapability===g.id?"#fff":"#555",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{g.label}</button>
             ))}
           </div>
         </div>
-        <div style={S.fg}><label style={S.label}>PIN (4 digit)</label><input style={S.input} type="number" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
+        <div style={S.fg}><label style={S.label}>PIN (4 digits)</label><input style={S.input} type="number" maxLength={4} value={pin} onChange={e=>setPin(e.target.value.slice(0,4))}/></div>
         <div style={S.ma}><button style={S.bc} onClick={onClose} disabled={saving}>Cancel</button><button style={{...S.bs,opacity:saving?0.6:1}} onClick={handleSave} disabled={saving}>{saving?"Saving...":"✓ Save"}</button></div>
         {!confirmDelete
           ?<button onClick={()=>setConfirmDelete(true)} style={{width:"100%",marginTop:10,padding:10,border:"1px solid #fecaca",background:"white",borderRadius:10,fontSize:13,fontWeight:700,color:"#dc2626",cursor:"pointer"}}>🗑 Remove Staff</button>
           :<div style={{marginTop:10,background:"#fef2f2",borderRadius:10,padding:12}}>
-            <div style={{fontSize:13,color:"#dc2626",fontWeight:600,marginBottom:10}}>Pakka delete karna hai?</div>
+            <div style={{fontSize:13,color:"#dc2626",fontWeight:600,marginBottom:10}}>Are you sure you want to delete?</div>
             <div style={{display:"flex",gap:8}}>
               <button onClick={()=>setConfirmDelete(false)} style={{flex:1,padding:9,border:"1px solid #e2e8f0",background:"white",borderRadius:8,fontSize:13,cursor:"pointer"}}>Cancel</button>
               <button onClick={()=>{onDelete(staff.id);onClose();}} style={{flex:1,padding:9,border:"none",background:"#dc2626",borderRadius:8,fontSize:13,fontWeight:700,color:"white",cursor:"pointer"}}>Delete</button>
@@ -199,16 +199,16 @@ function EditLogModal({log,onSave,onDelete,onClose}){
   const [date,setDate]=useState(log.date);
   const [confirmDelete,setConfirmDelete]=useState(false);
   function handleSave(){
-    if(!clientName.trim()){alert("Client naam daalo!");return;}
+    if(!clientName.trim()){alert("Please enter the client name!");return;}
     onSave({...log,clientName:clientName.trim(),service,amount:Number(amount),date});
     onClose();
   }
   return(
     <div style={S.modalBg} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={S.modal}>
-        <div style={S.modalTitle}>✏️ Entry Edit Karo</div>
+        <div style={S.modalTitle}>✏️ Edit Entry</div>
         <div style={S.fr}>
-          <div style={S.fg}><label style={S.label}>Client Naam</label><input style={S.input} value={clientName} onChange={e=>setClientName(e.target.value)}/></div>
+          <div style={S.fg}><label style={S.label}>Client Name</label><input style={S.input} value={clientName} onChange={e=>setClientName(e.target.value)}/></div>
           <div style={S.fg}><label style={S.label}>Date</label><input style={S.input} type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
         </div>
         <div style={S.fr}>
@@ -219,7 +219,7 @@ function EditLogModal({log,onSave,onDelete,onClose}){
         {!confirmDelete
           ?<button onClick={()=>setConfirmDelete(true)} style={{width:"100%",marginTop:10,padding:10,border:"1px solid #fecaca",background:"white",borderRadius:10,fontSize:13,fontWeight:700,color:"#dc2626",cursor:"pointer"}}>🗑 Delete Entry</button>
           :<div style={{marginTop:10,background:"#fef2f2",borderRadius:10,padding:12}}>
-            <div style={{fontSize:13,color:"#dc2626",fontWeight:600,marginBottom:10}}>Pakka?</div>
+            <div style={{fontSize:13,color:"#dc2626",fontWeight:600,marginBottom:10}}>Are you sure?</div>
             <div style={{display:"flex",gap:8}}>
               <button onClick={()=>setConfirmDelete(false)} style={{flex:1,padding:9,border:"1px solid #e2e8f0",background:"white",borderRadius:8,fontSize:13,cursor:"pointer"}}>Cancel</button>
               <button onClick={()=>{onDelete(log.id);onClose();}} style={{flex:1,padding:9,border:"none",background:"#dc2626",borderRadius:8,fontSize:13,fontWeight:700,color:"white",cursor:"pointer"}}>Delete</button>
@@ -258,11 +258,11 @@ function SalarySlipScreen({staff,logs,attendance,onBack}){
             <div style={{...S.av,width:48,height:48,fontSize:16,background:c.bg,color:c.text}}>{initials(staff.name)}</div>
             <div><div style={{fontSize:15,fontWeight:800}}>{staff.name}</div><div style={{fontSize:12,color:"#888"}}>{staff.role}</div></div>
           </div>
-          <div style={{fontSize:13,fontWeight:700,textAlign:"center",marginBottom:12}}>{monthLabel} ka Salary</div>
+          <div style={{fontSize:13,fontWeight:700,textAlign:"center",marginBottom:12}}>{monthLabel} Salary</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
             <div style={{background:"#f0fdf4",borderRadius:10,padding:"10px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:"#16a34a"}}>{presentDays}</div><div style={{fontSize:10,color:"#166534"}}>Present</div></div>
             <div style={{background:"#fef2f2",borderRadius:10,padding:"10px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:800,color:"#dc2626"}}>{absentDays}</div><div style={{fontSize:10,color:"#991b1b"}}>Absent</div></div>
-            <div style={{background:"#f8fafc",borderRadius:10,padding:"10px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:800}}>{totalDaysInMonth}</div><div style={{fontSize:10,color:"#555"}}>Total Din</div></div>
+            <div style={{background:"#f8fafc",borderRadius:10,padding:"10px",textAlign:"center"}}><div style={{fontSize:22,fontWeight:800}}>{totalDaysInMonth}</div><div style={{fontSize:10,color:"#555"}}>Total Days</div></div>
           </div>
           <div style={{background:"#f8fafc",borderRadius:10,padding:"12px",marginBottom:12}}>
             {[{label:"Fixed Salary",value:fc(staff.salary),color:"#1a1a2e"},{label:"Earned",value:fc(earnedSalary),color:"#16a34a"},{label:"Deduction",value:"- "+fc(deduction),color:"#dc2626"}].map(row=>(
@@ -733,11 +733,11 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
     if(currentUser?.id){
       const{data:res,error}=await supabase.from("staff").insert({salon_id:currentUser.id,name:data.name,role:data.role,phone:data.phone,salary:data.salary,pin:data.pin,gender_capability:data.gender_capability||"both"}).select().single();
       if(error){
-        const msg=error.code==="23505"?"Yeh phone number pehle se kisi staff ke saath registered hai. Alag number use karo.":"Staff save nahi hua: "+(error.message||"Unknown error");
+        const msg=error.code==="23505"?"This phone number is already registered. Please use a different number.":"Failed to save staff: "+(error.message||"Unknown error");
         return{success:false,message:msg};
       }
       if(res){setStaffList(prev=>[...prev,res]);return{success:true};}
-      return{success:false,message:"Staff save nahi hua, dobara try karo."};
+      return{success:false,message:"Could not save staff. Please try again."};
     }
     setStaffList(prev=>[...prev,{...data,id:Date.now()}]);
     return{success:true};
@@ -747,7 +747,7 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
     if(currentUser?.id&&typeof updated.id==="string"){
       const{error}=await supabase.from("staff").update({name:updated.name,role:updated.role,phone:updated.phone,salary:updated.salary,pin:updated.pin,gender_capability:updated.gender_capability||"both"}).eq("id",updated.id);
       if(error){
-        const msg=error.code==="23505"?"Yeh phone number pehle se kisi staff ke saath registered hai. Alag number use karo.":"Update nahi hua: "+(error.message||"Unknown error");
+        const msg=error.code==="23505"?"This phone number is already registered. Please use a different number.":"Update failed: "+(error.message||"Unknown error");
         return{success:false,message:msg};
       }
     }
