@@ -20,12 +20,12 @@ const IS={
 };
 
 const CAMPAIGNS=[
-  {id:"diwali",icon:"🪔",name:"Diwali Special",category:"Festival",color:"#f59e0b",colorLight:"#fff7ed",colorBorder:"#fed7aa",desc:"Diwali se pehle salon full rehta hai",template:`🪔 *Diwali Mubarak, {name}!*\n\n✨ *Diwali Special*\n💇 Haircut + Blowdry — ₹299\n💄 Bridal Makeup — 20% OFF\n\n📅 Reply *BOOK*\n\n_Happy Diwali! 💈_`},
-  {id:"eid",icon:"🌙",name:"Eid Mubarak",category:"Festival",color:TP.purpleMid,colorLight:TP.purpleLight,colorBorder:TP.border,desc:"Eid pe special grooming offer",template:`🌙 *Eid Mubarak, {name}!*\n\n✨ *Eid Special*\n✂️ Haircut + Beard — ₹349\n\nReply *EID*\n\n_Eid Mubarak! 💈_`},
-  {id:"newyear",icon:"🎆",name:"New Year Offer",category:"Festival",color:"#2563eb",colorLight:"#eff6ff",colorBorder:"#93c5fd",desc:"Naye saal mein naya look",template:`🎆 *Happy New Year, {name}!*\n\n🎁 Any Haircut — 25% OFF!\n\n_Naya Saal, Naya Look! 💈_`},
-  {id:"monsoon",icon:"🌧️",name:"Monsoon Hair Care",category:"Seasonal",color:"#0891b2",colorLight:"#ecfeff",colorBorder:"#a5f3fc",desc:"Monsoon mein hair care tips + offer",template:`🌧️ *Monsoon Alert, {name}!*\n\n✨ Anti-Dandruff Treatment — ₹299\n💆 Deep Conditioning — ₹499\n\nReply *MONSOON*\n\n_Take care! 💈_`},
-  {id:"referral",icon:"🤝",name:"Refer & Earn",category:"Growth",color:"#16a34a",colorLight:"#e8fdf0",colorBorder:"#bbf7d0",desc:"Existing customers se referral",template:`🤝 *{name} bhai/didi, ek kaam karo!*\n\nApne dost ko refer karo — Dono ko ₹100 OFF!\n\n_Thank you! 💈_`},
-  {id:"review",icon:"⭐",name:"Review Request",category:"Growth",color:"#f59e0b",colorLight:"#fef9c3",colorBorder:"#fde68a",desc:"Google/social review maango",template:`⭐ *{name}, 2 minute ka kaam hai!*\n\nKya aap humara Google review de sakte hain? 🙏\n\n_Aap hain toh hum hain! 💈_`},
+  {id:"diwali",icon:"🪔",name:"Diwali Special",category:"Festival",color:"#f59e0b",colorLight:"#fff7ed",colorBorder:"#fed7aa",desc:"Fill up your salon before Diwali",template:`🪔 *Diwali Mubarak, {name}!*\n\n✨ *Diwali Special*\n💇 Haircut + Blowdry — ₹299\n💄 Bridal Makeup — 20% OFF\n\n📅 Reply *BOOK*\n\n_Happy Diwali! 💈_`},
+  {id:"eid",icon:"🌙",name:"Eid Mubarak",category:"Festival",color:TP.purpleMid,colorLight:TP.purpleLight,colorBorder:TP.border,desc:"Special grooming offer for Eid",template:`🌙 *Eid Mubarak, {name}!*\n\n✨ *Eid Special*\n✂️ Haircut + Beard — ₹349\n\nReply *EID*\n\n_Eid Mubarak! 💈_`},
+  {id:"newyear",icon:"🎆",name:"New Year Offer",category:"Festival",color:"#2563eb",colorLight:"#eff6ff",colorBorder:"#93c5fd",desc:"New year, new look",template:`🎆 *Happy New Year, {name}!*\n\n🎁 Any Haircut — 25% OFF!\n\n_Naya Saal, Naya Look! 💈_`},
+  {id:"monsoon",icon:"🌧️",name:"Monsoon Hair Care",category:"Seasonal",color:"#0891b2",colorLight:"#ecfeff",colorBorder:"#a5f3fc",desc:"Hair care tips + offer for monsoon",template:`🌧️ *Monsoon Alert, {name}!*\n\n✨ Anti-Dandruff Treatment — ₹299\n💆 Deep Conditioning — ₹499\n\nReply *MONSOON*\n\n_Take care! 💈_`},
+  {id:"referral",icon:"🤝",name:"Refer & Earn",category:"Growth",color:"#16a34a",colorLight:"#e8fdf0",colorBorder:"#bbf7d0",desc:"Get referrals from existing clients",template:`🤝 *{name} bhai/didi, ek kaam karo!*\n\nApne dost ko refer karo — Dono ko ₹100 OFF!\n\n_Thank you! 💈_`},
+  {id:"review",icon:"⭐",name:"Review Request",category:"Growth",color:"#f59e0b",colorLight:"#fef9c3",colorBorder:"#fde68a",desc:"Ask for Google/social reviews",template:`⭐ *{name}, 2 minute ka kaam hai!*\n\nKya aap humara Google review de sakte hain? 🙏\n\n_Aap hain toh hum hain! 💈_`},
 ];
 
 function daysSince(dateStr){if(!dateStr)return 0;const d=new Date(dateStr);if(isNaN(d))return 0;return Math.floor((new Date()-d)/(1000*60*60*24));}
@@ -35,15 +35,15 @@ function getBirthdayInfo(dob){
   const today=new Date();const bday=new Date(dob);if(isNaN(bday))return null;
   bday.setFullYear(today.getFullYear());
   const diff=Math.ceil((bday-today)/(1000*60*60*24));
-  if(diff===0)return{label:"🎂 Aaj Birthday!",urgency:"today",diff:0};
-  if(diff>0&&diff<=3)return{label:`🎂 ${diff} din mein`,urgency:"soon",diff};
-  if(diff>3&&diff<=7)return{label:"🎂 Is hafte",urgency:"week",diff};
-  if(diff>7&&diff<=30)return{label:`🎂 ${diff} din mein`,urgency:"month",diff};
-  if(diff<0&&diff>=-3)return{label:`🎂 ${Math.abs(diff)} din pehle tha`,urgency:"passed",diff};
+  if(diff===0)return{label:"🎂 Birthday Today!",urgency:"today",diff:0};
+  if(diff>0&&diff<=3)return{label:`🎂 In ${diff} day${diff>1?"s":""}`,urgency:"soon",diff};
+  if(diff>3&&diff<=7)return{label:"🎂 This Week",urgency:"week",diff};
+  if(diff>7&&diff<=30)return{label:`🎂 In ${diff} days`,urgency:"month",diff};
+  if(diff<0&&diff>=-3)return{label:`🎂 ${Math.abs(diff)} day${Math.abs(diff)>1?"s":""} ago`,urgency:"passed",diff};
   return null;
 }
 
-const US={today:{bg:"#fff0f0",border:TP.rb,color:TP.rt,badge:"🔴 Aaj!"},soon:{bg:TP.yellow,border:TP.yb,color:TP.yt,badge:"🟡 Jaldi!"},week:{bg:TP.gl,border:TP.gm,color:TP.gd,badge:"🟢 Is Hafte"},month:{bg:TP.sub,border:TP.border,color:TP.ts,badge:"📅 Is Mahine"},passed:{bg:TP.sub,border:TP.border,color:TP.tf,badge:"✓ Gaya"}};
+const US={today:{bg:"#fff0f0",border:TP.rb,color:TP.rt,badge:"🔴 Today!"},soon:{bg:TP.yellow,border:TP.yb,color:TP.yt,badge:"🟡 Coming Up!"},week:{bg:TP.gl,border:TP.gm,color:TP.gd,badge:"🟢 This Week"},month:{bg:TP.sub,border:TP.border,color:TP.ts,badge:"📅 This Month"},passed:{bg:TP.sub,border:TP.border,color:TP.tf,badge:"✓ Passed"}};
 const SL=({children,color})=><div style={{fontSize:10,fontWeight:800,color:color||TP.tf,letterSpacing:1.2,textTransform:"uppercase",marginBottom:10}}>{children}</div>;
 
 async function sendViaAPI(messages){
@@ -79,7 +79,7 @@ function LVFilter({value,onChange,total,match}){
         </div>
         {value>0&&<button onClick={()=>onChange(0)} style={{padding:"10px 14px",background:"#fff",border:`2px solid ${TP.border}`,borderRadius:10,fontSize:12,fontWeight:700,color:TP.ts,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>✕</button>}
       </div>
-      {value>0&&<div style={{background:match>0?TP.gl:TP.red,border:`1.5px solid ${match>0?TP.gm:TP.rb}`,borderRadius:8,padding:"7px 10px",fontSize:11,fontWeight:700,color:match>0?TP.gd:TP.rt}}>{match>0?`✅ ${match} customers — ${value}+ din absent`:`❌ No clients found`}</div>}
+      {value>0&&<div style={{background:match>0?TP.gl:TP.red,border:`1.5px solid ${match>0?TP.gm:TP.rb}`,borderRadius:8,padding:"7px 10px",fontSize:11,fontWeight:700,color:match>0?TP.gd:TP.rt}}>{match>0?`✅ ${match} clients — ${value}+ days inactive`:`❌ No clients found`}</div>}
     </div>
   );
 }
@@ -109,10 +109,10 @@ function WAModal({title,message,phone,name,onClose}){
           ?<div style={{marginBottom:16}}><textarea value={msg} onChange={e=>setMsg(e.target.value)} rows={10} autoFocus style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:13,padding:"12px",borderColor:TP.purpleMid,marginBottom:8}}/><button onClick={()=>setEdit(false)} style={{padding:"6px 14px",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:9,fontSize:11,fontWeight:800,color:"#fff",cursor:"pointer",fontFamily:"inherit"}}>✓ Done</button></div>
           :<div style={{background:"#e5ddd5",borderRadius:14,padding:14,marginBottom:16}}><div style={{background:"#fff",borderRadius:"12px 12px 12px 3px",padding:"12px 14px",maxWidth:"90%"}}><pre style={{margin:0,fontFamily:"inherit",fontSize:12,lineHeight:1.7,color:TP.text,whiteSpace:"pre-wrap",wordBreak:"break-word"}}>{msg}</pre></div></div>
         }
-        {status==="idle"&&<div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:13,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button><button onClick={sendDirect} style={{flex:2,padding:13,background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>💬 Send Directly</button></div>}
+        {status==="idle"&&<div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:13,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button><button onClick={sendDirect} style={{flex:2,padding:13,background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>💬 Send Message</button></div>}
         {status==="sending"&&<div style={{background:TP.purpleLight,border:`2px solid ${TP.border}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:TP.purpleMid}}>📤 Sending...</div>}
-        {status==="sent"&&<div style={{background:TP.gl,border:`2px solid ${TP.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:TP.gd}}>✅ Message bhej diya!</div>}
-        {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:TP.rt,fontWeight:700}}>⚠️ Send nahi hua</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={sendDirect} style={{flex:1,padding:12,background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
+        {status==="sent"&&<div style={{background:TP.gl,border:`2px solid ${TP.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:TP.gd}}>✅ Message sent!</div>}
+        {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:TP.rt,fontWeight:700}}>⚠️ Failed to send</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={sendDirect} style={{flex:1,padding:12,background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
       </div>
     </div>
   );
@@ -140,7 +140,7 @@ function BulkSendModal({customers,template,title,onClose}){
       <div onClick={e=>e.stopPropagation()} style={{background:TP.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"92vh",overflowY:"auto"}}>
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 18px"}}/>
         <div style={{fontWeight:900,fontSize:16,marginBottom:2,color:TP.text}}>📤 {title}</div>
-        <div style={{fontSize:12,color:TP.ts,marginBottom:16}}>{sc.length} customers ko bhejenge</div>
+        <div style={{fontSize:12,color:TP.ts,marginBottom:16}}>Sending to {sc.length} customers</div>
         {phase==="select"&&(<>
           <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:14,marginBottom:14,overflow:"hidden"}}>
             <div style={{padding:"11px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${TP.border}`}}>
@@ -153,8 +153,8 @@ function BulkSendModal({customers,template,title,onClose}){
             }
           </div>
           <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div style={{fontSize:13,fontWeight:800,color:TP.text}}>{sel.length===0?"Koi select nahi":`${sel.length} selected`}</div>
-            <button onClick={()=>setSel(allSel?[]:customers.map(c=>c.id))} style={{padding:"6px 14px",background:allSel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allSel?"✕ Deselect":"✓ Select All"}</button>
+            <div style={{fontSize:13,fontWeight:800,color:TP.text}}>{sel.length===0?"None selected":`${sel.length} selected`}</div>
+            <button onClick={()=>setSel(allSel?[]:customers.map(c=>c.id))} style={{padding:"6px 14px",background:allSel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allSel?"✕ Deselect All":"✓ Select All"}</button>
           </div>
           <div style={{marginBottom:16,background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,overflow:"hidden"}}>
             {customers.map((c,i)=>{const isSel=sel.includes(c.id);const av=c.avatar||(c.name?.slice(0,2)||"??").toUpperCase();const col=c.color||TP.purpleMid;return(
@@ -171,9 +171,9 @@ function BulkSendModal({customers,template,title,onClose}){
             <button onClick={()=>{if(sel.length>0)sendAll();}} style={{flex:2,padding:12,background:sel.length>0?TP.wa:"#d1d5db",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:sel.length>0?"pointer":"not-allowed"}}>💬 Send to {sel.length} →</button>
           </div>
         </>)}
-        {phase==="sending"&&status==="sending"&&<div style={{background:TP.purpleLight,border:`2px solid ${TP.border}`,borderRadius:14,padding:24,textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>📤</div><div style={{fontWeight:900,fontSize:16,color:TP.purpleMid,marginBottom:4}}>Sending {sc.length} messages...</div><div style={{fontSize:12,color:TP.ts}}>Thoda wait karo</div></div>}
+        {phase==="sending"&&status==="sending"&&<div style={{background:TP.purpleLight,border:`2px solid ${TP.border}`,borderRadius:14,padding:24,textAlign:"center"}}><div style={{fontSize:36,marginBottom:10}}>📤</div><div style={{fontWeight:900,fontSize:16,color:TP.purpleMid,marginBottom:4}}>Sending {sc.length} messages...</div><div style={{fontSize:12,color:TP.ts}}>Please wait...</div></div>}
         {status==="done"&&results&&<div style={{background:TP.gl,border:`2px solid ${TP.gm}`,borderRadius:14,padding:24,textAlign:"center"}}><div style={{fontSize:42,marginBottom:10}}>🎉</div><div style={{fontWeight:900,fontSize:16,color:TP.gd,marginBottom:4}}>Done!</div><div style={{fontSize:13,color:TP.gd,marginBottom:4}}>✅ {results.sent} sent · ❌ {results.failed} failed</div><button onClick={onClose} style={{padding:"11px 32px",background:TP.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",marginTop:8}}>Done ✓</button></div>}
-        {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:14,textAlign:"center",fontSize:13,color:TP.rt,fontWeight:700}}>⚠️ Error hua</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>{setStatus("idle");setPhase("select");}} style={{flex:1,padding:12,background:TP.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
+        {status==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:14,textAlign:"center",fontSize:13,color:TP.rt,fontWeight:700}}>⚠️ An error occurred</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:TP.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>{setStatus("idle");setPhase("select");}} style={{flex:1,padding:12,background:TP.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
       </div>
     </div>
   );
@@ -210,7 +210,6 @@ function ReengagementTab({customers}){
 
   return(
     <div style={{padding:"16px 16px 80px",background:TP.bg}}>
-      {/* Hero Banner — Periwinkle Blue */}
       <div style={{background:"linear-gradient(135deg,#eff6ff,#dbeafe)",borderRadius:14,padding:"12px 14px",marginBottom:12,position:"relative",overflow:"hidden",border:"1px solid #93c5fd"}}>
         <div style={{position:"absolute",right:-8,top:"50%",transform:"translateY(-50%)",fontSize:50,opacity:0.1,pointerEvents:"none"}}>🧲</div>
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
@@ -232,7 +231,6 @@ function ReengagementTab({customers}){
         </div>
       </div>
 
-      {/* Sub tabs */}
       <div style={{display:"flex",gap:8,marginBottom:16}}>
         {[{id:"inactive",label:"💤 Inactive",desc:"Not visited recently"},{id:"all",label:"👥 All Clients",desc:"Broadcast to all"}].map(t=>(
           <div key={t.id} onClick={()=>setSub(t.id)} style={{flex:1,padding:"11px 10px",borderRadius:14,border:`1.5px solid ${sub===t.id?TP.purpleMid:TP.border}`,background:sub===t.id?TP.purpleLight:TP.surface,cursor:"pointer",textAlign:"center",boxShadow:sub===t.id?"0 2px 8px rgba(91,63,196,0.15)":"0 1px 3px rgba(0,0,0,0.04)"}}>
@@ -247,19 +245,19 @@ function ReengagementTab({customers}){
         <LVFilter value={filter} onChange={(v)=>{setFilter(v);setSelInactive([]);}} total={customers.filter(c=>gFilter==="all"?true:c.gender===gFilter).length} match={customers.filter(c=>(gFilter==="all"?true:c.gender===gFilter)&&getLV(c)>=filter).length}/>
         {lost.length>0&&(
           <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div style={{fontSize:13,fontWeight:800,color:TP.text}}>{selInactive.length===0?`${lost.length} customers`:`${selInactive.length} selected`}</div>
+            <div style={{fontSize:13,fontWeight:800,color:TP.text}}>{selInactive.length===0?`${lost.length} clients`:`${selInactive.length} selected`}</div>
             <div style={{display:"flex",gap:7}}>
-              <button onClick={()=>setSelInactive(allISel?[]:lost.map(c=>c.id))} style={{padding:"5px 12px",background:allISel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allISel?"✕":"✓ Select All"}</button>
+              <button onClick={()=>setSelInactive(allISel?[]:lost.map(c=>c.id))} style={{padding:"5px 12px",background:allISel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allISel?"✕ Deselect":"✓ Select All"}</button>
               {selInactive.length>0&&<button onClick={()=>setBulkModal(true)} style={{padding:"5px 12px",background:TP.wa,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>💬 ({selInactive.length})</button>}
             </div>
           </div>
         )}
         {lost.length===0
           ?<div style={{background:"#fff",border:"1.5px dashed #ddd6fe",borderRadius:20,padding:"36px 20px",textAlign:"center"}}>
-          <div style={{fontSize:52,marginBottom:12}}>🎉</div>
-          <div style={{fontSize:15,fontWeight:800,color:TP.text,marginBottom:4,letterSpacing:"-0.2px"}}>Great News!</div>
-          <div style={{fontSize:12,color:TP.ts,lineHeight:1.6}}>No inactive clients found.<br/>Your client retention is excellent.</div>
-        </div>
+            <div style={{fontSize:52,marginBottom:12}}>🎉</div>
+            <div style={{fontSize:15,fontWeight:800,color:TP.text,marginBottom:4,letterSpacing:"-0.2px"}}>Great News!</div>
+            <div style={{fontSize:12,color:TP.ts,lineHeight:1.6}}>No inactive clients found.<br/>Your client retention is excellent.</div>
+          </div>
           :<div style={{display:"flex",flexDirection:"column",gap:10}}>
             {lost.map(c=>{
               const isSent=sentIds.includes(c.id);const isSel=selInactive.includes(c.id);
@@ -272,12 +270,12 @@ function ReengagementTab({customers}){
                     <div onClick={()=>setSelInactive(p=>p.includes(c.id)?p.filter(x=>x!==c.id):[...p,c.id])} style={{width:22,height:22,borderRadius:7,flexShrink:0,background:isSel?TP.purpleMid:TP.surface,border:`2px solid ${isSel?TP.purpleMid:TP.border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:"#fff",fontWeight:900,cursor:"pointer"}}>{isSel?"✓":""}</div>
                     <div style={{width:44,height:44,borderRadius:14,background:col+"22",border:`2px solid ${col}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:900,color:col,flexShrink:0}}>{av}</div>
                     <div style={{flex:1}}><div style={{fontWeight:800,fontSize:14,color:TP.text}}>{c.name}</div><div style={{fontSize:11,color:TP.ts}}>📱 {c.phone}</div></div>
-                    <div style={{background:uB,color:uC,fontSize:11,fontWeight:800,padding:"4px 10px",borderRadius:20,flexShrink:0}}>{c.days} din</div>
+                    <div style={{background:uB,color:uC,fontSize:11,fontWeight:800,padding:"4px 10px",borderRadius:20,flexShrink:0}}>{c.days} days</div>
                   </div>
                   <div style={{background:TP.sub,borderRadius:9,padding:"8px 12px",marginBottom:12,fontSize:12,color:TP.tm}}>📅 Last visit: <strong>{c.last_visit||c.lastVisit||"—"}</strong></div>
                   {isSent
-                    ?<div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:10,padding:"10px",textAlign:"center",fontSize:12,fontWeight:800,color:TP.gd}}>✅ Message bhej diya!</div>
-                    :<button onClick={()=>setWaModal({customer:c,message:reMsg})} style={{width:"100%",padding:"11px",background:TP.wa,border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>💬 Wapas bulao</button>
+                    ?<div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:10,padding:"10px",textAlign:"center",fontSize:12,fontWeight:800,color:TP.gd}}>✅ Message sent!</div>
+                    :<button onClick={()=>setWaModal({customer:c,message:reMsg})} style={{width:"100%",padding:"11px",background:TP.wa,border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>💬 Send Re-engagement Message</button>
                   }
                 </div>
               );
@@ -309,9 +307,9 @@ function ReengagementTab({customers}){
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…" style={{...IS,padding:"9px 12px 9px 32px",fontSize:13}} onFocus={e=>e.target.style.borderColor=TP.purpleMid} onBlur={e=>e.target.style.borderColor=TP.border}/>
         </div>
         <div style={{background:TP.sub,border:`2px solid ${TP.border}`,borderRadius:12,padding:"10px 14px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{fontSize:13,fontWeight:800,color:TP.text}}>{selAll.length===0?`${filtAll.length} customers`:`${selAll.length} selected`}</div>
+          <div style={{fontSize:13,fontWeight:800,color:TP.text}}>{selAll.length===0?`${filtAll.length} clients`:`${selAll.length} selected`}</div>
           <div style={{display:"flex",gap:7}}>
-            <button onClick={()=>setSelAll(allASel?[]:filtAll.map(c=>c.id))} style={{padding:"5px 12px",background:allASel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allASel?"✕":"✓ Select All"}</button>
+            <button onClick={()=>setSelAll(allASel?[]:filtAll.map(c=>c.id))} style={{padding:"5px 12px",background:allASel?TP.rt:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>{allASel?"✕ Deselect":"✓ Select All"}</button>
             {selAll.length>0&&<button onClick={()=>setAllBulk(true)} style={{padding:"5px 12px",background:TP.wa,border:"none",borderRadius:20,color:"#fff",fontSize:11,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>💬 ({selAll.length})</button>}
           </div>
         </div>
@@ -346,7 +344,6 @@ function BirthdayTab({customers,onAddBirthday}){
   function bdayMsg(c){if(c.bdayInfo.urgency==="passed")return `🎂 *Belated Birthday, ${c.name}!*\n\nThodi der se sahi, par dil se! 🙏\n\n🎁 Next visit pe *20% OFF*!\n\n_With love! 💈_`;return `🎂 *Happy Birthday, ${c.name}!* 🎉\n\nAaj ka din aapka hai! 🥳\n\n🎁 Free Haircut OR 25% OFF!\nSirf birthday month mein!\n\nReply *BDAY*\n\n_Khush raho! 💈_`;}
   return(
     <div style={{padding:"16px 16px 80px",background:TP.bg}}>
-      {/* Hero Banner — Birthday compact */}
       <div style={{background:"linear-gradient(135deg,#f0eeff,#e4dcff)",border:"1px solid #ddd6fe",borderRadius:16,padding:"14px 16px",marginBottom:14,position:"relative",overflow:"hidden"}}>
         <div style={{position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",fontSize:56,opacity:0.2,pointerEvents:"none"}}>🎂</div>
         <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
@@ -359,13 +356,11 @@ function BirthdayTab({customers,onAddBirthday}){
         <div onClick={onAddBirthday} style={{background:"#5b3fc4",color:"#fff",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5,cursor:"pointer"}}>Create Birthday Offer ›</div>
       </div>
 
-      {/* Upcoming header */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
         <div style={{fontSize:14,fontWeight:800,color:TP.text,letterSpacing:"-0.2px"}}>Upcoming Birthdays</div>
         <div style={{fontSize:12,color:TP.purpleMid,fontWeight:600,cursor:"pointer"}}>View All</div>
       </div>
 
-      {/* 4 stat boxes */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:7,marginBottom:16}}>
         {[
           {l:"Today",u:"today",bg:"#f0fdf4",border:"#bbf7d0",icon:"🎁"},
@@ -401,7 +396,7 @@ function BirthdayTab({customers,onAddBirthday}){
                 <div style={{background:us.bg,color:us.color,border:`1.5px solid ${us.border}`,fontSize:10,fontWeight:800,padding:"3px 9px",borderRadius:20,flexShrink:0}}>{us.badge}</div>
               </div>
               {isSent
-                ?<div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:10,padding:"10px",textAlign:"center",fontSize:12,fontWeight:800,color:TP.gd}}>✅ Birthday wish bhej diya!</div>
+                ?<div style={{background:TP.gl,border:`1.5px solid ${TP.gm}`,borderRadius:10,padding:"10px",textAlign:"center",fontSize:12,fontWeight:800,color:TP.gd}}>✅ Birthday wish sent!</div>
                 :<button onClick={()=>setWaModal({customer:c,message:bdayMsg(c)})} style={{width:"100%",padding:"11px",background:c.bdayInfo.urgency==="today"?"linear-gradient(135deg,#f59e0b,#ef4444)":TP.wa,border:"none",borderRadius:11,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>{c.bdayInfo.urgency==="today"?"🎂 Wish Today!":"💬 Send Birthday Wish + Offer"}</button>
               }
             </div>
@@ -431,7 +426,6 @@ function CampaignsTab({customers}){
     <div style={{padding:"16px 16px 80px",background:TP.bg}}>
       {!sel
         ?(<>
-          {/* Hero Banner — Campaign compact */}
           <div style={{background:"linear-gradient(135deg,#f0fdf4,#d1fae5)",border:"1px solid #a7f3d0",borderRadius:16,padding:"14px 16px",marginBottom:14,position:"relative",overflow:"hidden"}}>
             <div style={{position:"absolute",right:-4,top:"50%",transform:"translateY(-50%)",fontSize:56,opacity:0.18,pointerEvents:"none"}}>📣</div>
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
@@ -444,7 +438,6 @@ function CampaignsTab({customers}){
             <div style={{background:"#5b3fc4",color:"#fff",borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,display:"inline-flex",alignItems:"center",gap:5,cursor:"pointer"}}>New Campaign +</div>
           </div>
 
-          {/* Category filter */}
           <div style={{fontSize:14,fontWeight:800,color:TP.text,marginBottom:10,letterSpacing:"-0.2px"}}>Campaign Categories</div>
           <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:6,marginBottom:16,WebkitOverflowScrolling:"touch"}}>
             {allCats.map(c=>(
@@ -452,7 +445,6 @@ function CampaignsTab({customers}){
             ))}
           </div>
 
-          {/* Templates */}
           <div style={{fontSize:14,fontWeight:800,color:TP.text,marginBottom:10,letterSpacing:"-0.2px"}}>Ready-made Templates</div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
             {filteredCamps.map(camp=>(
@@ -468,7 +460,6 @@ function CampaignsTab({customers}){
             ))}
           </div>
 
-          {/* Custom */}
           <div style={{background:TP.surface,border:"2px dashed #ddd6fe",borderRadius:18,padding:"24px 20px",textAlign:"center",marginTop:12}}>
             <div style={{width:48,height:48,borderRadius:14,background:"#f5f3ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,margin:"0 auto 12px"}}>✍️</div>
             <div style={{fontSize:14,fontWeight:800,color:TP.text,marginBottom:4,letterSpacing:"-0.2px"}}>Write Your Own</div>
@@ -487,7 +478,7 @@ function CampaignsTab({customers}){
             <div style={{display:"flex",gap:7,marginBottom:8}}>
               {["All","VIP","Regular","New"].map(opt=>(
                 <button key={opt} onClick={()=>setTTag(opt)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:`2px solid ${tTag===opt?TP.purpleMid:TP.border}`,background:tTag===opt?TP.purpleLight:TP.surface,color:tTag===opt?TP.purpleMid:TP.ts,fontSize:12,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>
-                  {opt}<br/><span style={{fontSize:10}}>{opt==="All"?customers.length:customers.filter(c=>c.tag===opt).length} log</span>
+                  {opt}<br/><span style={{fontSize:10}}>{opt==="All"?customers.length:customers.filter(c=>c.tag===opt).length} clients</span>
                 </button>
               ))}
             </div>
@@ -498,7 +489,7 @@ function CampaignsTab({customers}){
           <div style={{marginBottom:16}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
               <div style={{fontSize:10,fontWeight:800,color:TP.tf,letterSpacing:1.2,textTransform:"uppercase"}}>Message</div>
-              <div style={{fontSize:11,color:TP.ts}}><span style={{color:TP.purpleMid,fontWeight:700}}>{"{name}"}</span> → replace</div>
+              <div style={{fontSize:11,color:TP.ts}}><span style={{color:TP.purpleMid,fontWeight:700}}>{"{name}"}</span> → replaced with client name</div>
             </div>
             <textarea value={cMsg||sel.template} onChange={e=>setCMsg(e.target.value)} rows={10} style={{...IS,resize:"vertical",lineHeight:1.7,fontSize:13,padding:"12px"}} onFocus={e=>e.target.style.borderColor=TP.purpleMid} onBlur={e=>e.target.style.borderColor=TP.border}/>
           </div>
@@ -512,10 +503,10 @@ function CampaignsTab({customers}){
           </div>
           <div style={{background:TP.surface,border:`2px solid ${TP.border}`,borderRadius:14,padding:"14px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{fontWeight:800,fontSize:13,color:TP.text}}>{filtered.length} customers milenge</div>
+              <div style={{fontWeight:800,fontSize:13,color:TP.text}}>{filtered.length} clients will receive this</div>
               <div style={{fontSize:11,color:TP.ts}}>{tTag}</div>
             </div>
-            <button onClick={()=>setBulk(true)} style={{width:"100%",padding:"13px",background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>💬 Directly Send — {filtered.length} customers</button>
+            <button onClick={()=>setBulk(true)} style={{width:"100%",padding:"13px",background:TP.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>💬 Send to {filtered.length} Clients</button>
           </div>
         </>)
       }
@@ -524,7 +515,6 @@ function CampaignsTab({customers}){
   );
 }
 
-// ─── Main Export ──────────────────────────────────────────────────────────────
 export default function EngagementCenter({currentUser,onBack,onAddBirthday}){
   const [tab,setTab]=useState("reengagement");
   const [customers,setCustomers]=useState([]);
@@ -563,7 +553,6 @@ export default function EngagementCenter({currentUser,onBack,onAddBirthday}){
 
   return(
     <div style={{height:"100%",display:"flex",flexDirection:"column",fontFamily:"-apple-system,'SF Pro Display',system-ui,sans-serif",color:TP.text,background:TP.bg,overflow:"hidden"}}>
-      {/* White Header */}
       <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <button onClick={onBack} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600,flexShrink:0}}>←</button>
@@ -578,7 +567,6 @@ export default function EngagementCenter({currentUser,onBack,onAddBirthday}){
         </div>
       </div>
 
-      {/* Premium Tab bar */}
       <div style={{background:"#fff",borderBottom:"1px solid #f1f0f5",display:"flex",padding:"0 8px",flexShrink:0}}>
         {TABS.map(t=>(
           <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,padding:"11px 4px 9px",display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`,transition:"all 0.2s"}}>
@@ -590,7 +578,6 @@ export default function EngagementCenter({currentUser,onBack,onAddBirthday}){
         ))}
       </div>
 
-      {/* Content */}
       <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
         {tab==="reengagement"&&<ReengagementTab customers={customers}/>}
         {tab==="birthday"&&<BirthdayTab customers={customers} onAddBirthday={onAddBirthday}/>}
