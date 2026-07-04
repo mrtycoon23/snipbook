@@ -648,14 +648,23 @@ export default async function handler(req, res) {
 
       const assignedStaff = await assignStaffForBooking({ salonId: SALON_ID, date: data.date, time: data.time, gender: data.gender, staffPref: data.staffPref });
 
-      // If a specific staff was requested but they're absent/unavailable today, block the booking
-      if (!assignedStaff && data.staffPref) {
-        await sendButtons(from,
-          `😔 *Staff Aaj Available Nahi!*\n\n✂️ ${data.service}\n📅 ${formatDate(data.date)}\n\nJis staff ko aapne choose kiya tha woh aaj available nahi hain.\n\nKisi aur din try karein ya kisi aur staff ko choose karein.`,
-          [{ id: "appointment", title: "📅 Dobara Try Karein" }, { id: "main_menu", title: "🏠 Main Menu" }],
-          SALON_ID, customerName);
-        await clearSession(sKey);
-        res.status(200).json({ status: "ok" }); return;
+      // Block booking if staff are configured but none available (absent or fully booked)
+      if (!assignedStaff) {
+        const salonStaff = await getStaffList(SALON_ID);
+        if (salonStaff.length > 0) {
+          // Salon has staff but none could be assigned — all absent or double-booked
+          const absentToday = await getAbsentStaffIds(SALON_ID, data.date);
+          const allAbsent = absentToday.length >= salonStaff.length;
+          const msg = allAbsent
+            ? `😔 *Aaj Salon Closed Hai!*\n\n📅 ${formatDate(data.date)} ko sab staff absent hain.\n\nKisi aur din try karein.`
+            : `😔 *Yeh slot ab available nahi!*\n\nKisi doosre ne abhi book kar liya.\n\nDusra slot try karein.`;
+          await sendButtons(from, msg,
+            [{ id: "appointment", title: "📅 Dobara Try Karein" }, { id: "main_menu", title: "🏠 Main Menu" }],
+            SALON_ID, customerName);
+          await clearSession(sKey);
+          res.status(200).json({ status: "ok" }); return;
+        }
+        // No staff configured at all — proceed with null (legacy behavior)
       }
 
       await fetch(`${SUPABASE_URL}/rest/v1/appointments`, { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ salon_id: SALON_ID, customer_name: data.name || "WhatsApp Customer", customer_phone: from, service: data.service, amount: data.price || 0, date: data.date, time_slot: data.time, status: "confirmed", staff_id: assignedStaff?.id || null }) });
@@ -760,4 +769,3 @@ export default async function handler(req, res) {
     res.status(200).json({ status: "ok" });
   }
 }
-  
