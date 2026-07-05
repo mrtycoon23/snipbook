@@ -197,9 +197,18 @@ async function getAbsentStaffIds(salonId, date) {
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
     const d = await r.json();
-    if (!Array.isArray(d)) return [];
-    return d.map(a => a.staff_id).filter(Boolean);
-  } catch(e) { return []; }
+    console.log(`[absent-check] salon=${salonId} date=${date} response=`, JSON.stringify(d));
+    if (!Array.isArray(d)) {
+      console.error("[absent-check] non-array response:", JSON.stringify(d));
+      return [];
+    }
+    const ids = d.map(a => a.staff_id).filter(Boolean);
+    console.log(`[absent-check] absent staff IDs:`, ids);
+    return ids;
+  } catch(e) {
+    console.error("[absent-check] error:", e.message);
+    return [];
+  }
 }
 
 async function computeAvailableSlots({ salonId, date, gender, staffPref, openTime, closeTime, isMorning }) {
@@ -769,4 +778,3 @@ export default async function handler(req, res) {
     res.status(200).json({ status: "ok" });
   }
 }
- 
