@@ -215,17 +215,22 @@ async function computeAvailableSlots({ salonId, date, gender, staffPref, openTim
   const slots = getTimeSlots(isMorning ? openTime : 14, isMorning ? 14 : closeTime, date);
   const staffList = await getStaffList(salonId);
   const absentIds = await getAbsentStaffIds(salonId, date);
-  // Filter out absent staff before everything else
+
+  // If customer chose a specific staff and that staff is absent → no slots
+  if (staffPref && absentIds.includes(staffPref)) {
+    console.log(`[absent-check] staffPref ${staffPref} is absent on ${date} — blocking all slots`);
+    return [];
+  }
+
   const presentStaff = staffList.filter(s => !absentIds.includes(s.id));
   const eligible = eligibleStaffFor(presentStaff, gender);
   const appts = await getAppointmentsForDate(salonId, date);
 
   if (eligible.length === 0) {
-    // No staff configured OR all eligible staff are absent today
     if (staffList.length > 0 && absentIds.length > 0) {
-      // Staff exist but all are absent — return empty (no slots available)
-      return [];
+      return []; // All eligible staff are absent
     }
+    // Legacy: no staff configured at all
     const booked = appts.map(a => a.time_slot);
     return slots.filter(s => !booked.includes(s.key));
   }
@@ -235,7 +240,6 @@ async function computeAvailableSlots({ salonId, date, gender, staffPref, openTim
 
   return slots.filter(s => {
     const apptsAtSlot = appts.filter(a => a.time_slot === s.key);
-    // Legacy/unassigned bookings (no staff_id) block the whole slot — we don't know who they used.
     if (apptsAtSlot.some(a => !a.staff_id)) return false;
     const busyIds = new Set(apptsAtSlot.map(a => a.staff_id));
     return effectivePool.some(s2 => !busyIds.has(s2.id));
@@ -626,7 +630,18 @@ export default async function handler(req, res) {
     if (step === "ask_time_part" && (interactiveId === "time_morning" || interactiveId === "time_evening")) {
       const isMorning = interactiveId === "time_morning";
       const available = await computeAvailableSlots({ salonId: SALON_ID, date: data.date, gender: data.gender, staffPref: data.staffPref, openTime, closeTime, isMorning });
-      if (available.length === 0) { await sendButtons(from, `😔 Koi slot available nahi!\n\nDusra time chunein:`, [{ id: "time_morning", title: "🌅 Morning (9AM-2PM)" }, { id: "time_evening", title: "🌆 Evening (2PM-9PM)" }], SALON_ID, customerName); res.status(200).json({ status: "ok" }); return; }
+      if (available.length === 0) {
+        const absentToday = data.staffPref ? await getAbsentStaffIds(SALON_ID, data.date) : [];
+        const chosenAbsent = data.staffPref && absentToday.includes(data.staffPref);
+        const noSlotMsg = chosenAbsent
+          ? `😔 *Yeh staff ${formatDate(data.date)} ko available nahi hain!*\n\nKisi aur din try karein ya kisi aur staff ko chunein.`
+          : `😔 Koi slot available nahi!\n\nDusra time chunein:`;
+        const btns = chosenAbsent
+          ? [{ id: "appointment", title: "📅 Dobara Try Karein" }, { id: "main_menu", title: "🏠 Main Menu" }]
+          : [{ id: "time_morning", title: "🌅 Morning (9AM-2PM)" }, { id: "time_evening", title: "🌆 Evening (2PM-9PM)" }];
+        await sendButtons(from, noSlotMsg, btns, SALON_ID, customerName);
+        res.status(200).json({ status: "ok" }); return;
+      }
       await setSession(sKey, "ask_time", { ...data });
       await sendList(from, `🕐 ${isMorning ? "🌅 Morning" : "🌆 Evening"} Slots`, `📅 *${formatDate(data.date)}*\n\nKaunsa time slot chahiye?`, "Slot Chunein", available.map(s => ({ id: `time_${s.key}`, title: `🟢 ${s.label}`, description: "Available" })), "Powered by SnipBook", SALON_ID, customerName);
       res.status(200).json({ status: "ok" }); return;
