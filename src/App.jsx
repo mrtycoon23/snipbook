@@ -93,28 +93,20 @@ function LoginPage({onOwnerLogin,onStaffLogin,onSignup,onBack}){
 
   async function handleOwnerLogin(){
     if(loginMode==="phone"){
-      // Phone login: look up salon by notification_number or phone → get email → authenticate
       const phone10=phone.replace(/\D/g,"").slice(0,10);
       if(phone10.length!==10){setError("Please enter a valid 10-digit phone number");return;}
       if(!pass){setError("Please enter your password");return;}
       setLoading(true);setError("");
       try{
-        // Try matching notification_number or phone field
-        let salonData=null;
-        const{data:byNotif}=await supabase.from("salons").select("*").eq("notification_number",phone10).limit(1);
-        if(byNotif&&byNotif.length>0)salonData=byNotif[0];
-        if(!salonData){
-          const{data:byPhone}=await supabase.from("salons").select("*").eq("phone",phone10).limit(1);
-          if(byPhone&&byPhone.length>0)salonData=byPhone[0];
-        }
-        if(!salonData){setError("No account found with this phone number.");setLoading(false);return;}
-        // Get owner email from auth.users via salon id
-        const{data:authData}=await supabase.from("salons").select("notification_email").eq("id",salonData.id).single();
-        const ownerEmail=authData?.notification_email;
-        if(!ownerEmail){setError("Account found but email not linked. Please login with email.");setLoading(false);return;}
+        // Call API to get the real auth email for this phone number
+        const res=await fetch("/api/phone-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone:phone10})});
+        const result=await res.json();
+        if(!res.ok||result.error){setError(result.error||"No account found with this phone number");setLoading(false);return;}
+        const ownerEmail=result.email;
         const{data,error:err}=await supabase.auth.signInWithPassword({email:ownerEmail,password:pass});
         if(err)throw err;
-        onOwnerLogin({id:data.user.id,email:data.user.email,name:salonData.owner_name||data.user.email,salon:salonData.salon_name||"Mera Salon",city:salonData.city||"",plan:salonData.plan||"free",logo_url:salonData.logo_url||null});
+        const{data:salon}=await supabase.from("salons").select("*").eq("id",data.user.id).single();
+        onOwnerLogin({id:data.user.id,email:data.user.email,name:salon?.owner_name||data.user.email,salon:salon?.salon_name||"Mera Salon",city:salon?.city||"",plan:salon?.plan||"free",logo_url:salon?.logo_url||null});
       }catch(e){setError(e.message);}
       setLoading(false);return;
     }
