@@ -117,17 +117,13 @@ async function sendPhoto(to, photoUrl) {
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { customerPhone, customerName, salonName, visit } = req.body || {};
+  const { customerPhone, customerName, salonName, salonId, visit } = req.body || {};
   if (!customerPhone) return res.status(400).json({ error: "customerPhone required" });
 
   const to = normalizePhone(customerPhone);
   let sent = false;
   let method = "none";
-
-  // Try to find salon for logging
-  const salonInfo = await getSalonId(normalizePhone(customerPhone).slice(2)).catch(()=>null);
-  const salonId = salonInfo?.id || null;
-  const resolvedSalonName = salonName || salonInfo?.salon_name || "Salon";
+  const resolvedSalonName = salonName || "Salon";
 
   try {
     const templateSent = await sendTemplate(to, customerName, resolvedSalonName);

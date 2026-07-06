@@ -89,7 +89,7 @@ function StagedAddPhotoBtn({tempId,onAdd}){
 }
 
 // ─── Add Work Log Modal ────────────────────────────────────────────────────────
-function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
+function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
   const [clientName,setClientName]=useState("");
   const [clientPhone,setClientPhone]=useState("");
   const [service,setService]=useState(SERVICES[0]);
@@ -109,7 +109,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
 
   async function sendWASummary(pd){
     try{
-      const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:pd.phone,customerName:pd.name,salonName:pd.salonName||"Salon",visit:{date:pd.date,services:[pd.service],amount:pd.amount,notes:pd.notes||"",photos:[]}})});
+      const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:pd.phone,customerName:pd.name,salonName:pd.salonName||"Salon",salonId:pd.salonId||null,visit:{date:pd.date,services:[pd.service],amount:pd.amount,notes:pd.notes||"",photos:[]}})});
       setWaStatus(r.ok?"sent":"error");
       setTimeout(()=>onClose(),r.ok?1800:3000);
     }catch(e){setWaStatus("error");setTimeout(()=>onClose(),3000);}
@@ -153,7 +153,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   async function save(){
     if(!clientName.trim()||!amount||isNaN(amount))return;
     setSaving(true);
-    const base={staffId,clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos};
+    const base={staffId,clientName:clientName.trim(),clientPhone,service,amount:Number(amount),date,notes,photos};
     try{
       if(salonId){
         const phone10=clientPhone.replace(/\D/g,"").slice(0,10);
@@ -222,7 +222,7 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
         if(res){
           onSave({id:res.id,staffId:res.staff_id,clientName:res.client_name,service:res.service,amount:res.amount,date:res.date});
           const phone10=(logData.clientPhone||"").replace(/\D/g,"").slice(0,10);
-          if(phone10.length===10){setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||""});setWaStatus("idle");}else onClose();
+          if(phone10.length===10){setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||"",salonId,salonName:salonName||""});setWaStatus("idle");}else onClose();
           return;
         }
       }
@@ -612,7 +612,7 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
           }
         </div>
       </div>
-      {showAddLog&&<AddLogModal staffId={staff.id} salonId={salonId} isPresent={isPresent} onSave={addLog} onClose={()=>setShowAddLog(false)}/>}
+      {showAddLog&&<AddLogModal staffId={staff.id} salonId={salonId} salonName={salonName} isPresent={isPresent} onSave={addLog} onClose={()=>setShowAddLog(false)}/>}
       {selectedLog&&<EntryDetailModal log={selectedLog} onClose={()=>setSelectedLog(null)}/>}
     </div>
   );
@@ -627,11 +627,14 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
   const [loading,setLoading]=useState(true);
 
   const salonId = staff?.salon_id || null;
+  const [salonName,setSalonName]=useState("");
 
   useEffect(()=>{
     async function loadData(){
       if(!salonId){setLoading(false);return;}
       setLoading(true);
+      // Load salon name for WA summary
+      supabase.from("salons").select("salon_name").eq("id",salonId).single().then(({data})=>{if(data?.salon_name)setSalonName(data.salon_name);});
 
       const {data:logsData}=await supabase.from("work_logs").select("*").eq("salon_id",salonId).eq("staff_id",staff.id);
       if(logsData){
