@@ -104,6 +104,8 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
   const [pendingLogData,setPendingLogData]=useState(null);
   const [waPromptData,setWaPromptData]=useState(null);
   const [waStatus,setWaStatus]=useState("idle");
+  const [ambiguousCustomers,setAmbiguousCustomers]=useState([]);
+  const [showPickCustomer,setShowPickCustomer]=useState(false);
 
   async function sendWASummary(pd){
     try{
