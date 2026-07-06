@@ -8,6 +8,41 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 // Template name from YCloud (the approved utility template)
 const THANKYOU_TEMPLATE = "template_utility_20260704234404";
 
+async function logToMessageLogs(salonId, phone, message) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/message_logs`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify({
+        salon_id: salonId,
+        phone,
+        direction: "outbound",
+        message,
+        msg_type: "template"
+      })
+    });
+  } catch(e) { console.error("[send-summary] log error:", e.message); }
+}
+
+async function getSalonId(phone10) {
+  try {
+    for (const field of ["notification_number", "phone"]) {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/salons?${field}=eq.${phone10}&select=id,salon_name&limit=1`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const d = await r.json();
+      if (d?.[0]?.id) return d[0];
+    }
+    return null;
+  } catch(e) { return null; }
+}
+
 function normalizePhone(phone) {
   const digits = (phone || "").replace(/\D/g, "");
   if (digits.startsWith("91") && digits.length === 12) return digits;
@@ -89,14 +124,18 @@ export default async function handler(req, res) {
   let sent = false;
   let method = "none";
 
+  // Try to find salon for logging
+  const salonInfo = await getSalonId(normalizePhone(customerPhone).slice(2)).catch(()=>null);
+  const salonId = salonInfo?.id || null;
+  const resolvedSalonName = salonName || salonInfo?.salon_name || "Salon";
+
   try {
-    // Step 1: Try template first (works outside 24h window)
-    const templateSent = await sendTemplate(to, customerName, salonName);
+    const templateSent = await sendTemplate(to, customerName, resolvedSalonName);
     if (templateSent) {
       sent = true;
       method = "template";
+      if (salonId) await logToMessageLogs(salonId, to, `Visit summary sent to ${customerName}`);
 
-      // Step 2: If visit has photos and template sent (24h window now open), send photos
       const photos = (visit?.photos || []).filter(p => p?.url);
       if (photos.length > 0) {
         for (const photo of photos) {
@@ -105,9 +144,12 @@ export default async function handler(req, res) {
         }
       }
     } else {
-      // Fallback: free-form text (within 24h only)
-      const textSent = await sendFreeText(to, customerName, salonName, visit || {});
-      if (textSent) { sent = true; method = "text"; }
+      const textSent = await sendFreeText(to, customerName, resolvedSalonName, visit || {});
+      if (textSent) {
+        sent = true;
+        method = "text";
+        if (salonId) await logToMessageLogs(salonId, to, `Visit summary sent to ${customerName}`);
+      }
     }
   } catch (e) {
     console.error("[send-summary] error:", e.message);

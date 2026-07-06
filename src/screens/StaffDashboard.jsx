@@ -222,8 +222,8 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
         if(res){
           onSave({id:res.id,staffId:res.staff_id,clientName:res.client_name,service:res.service,amount:res.amount,date:res.date});
           const phone10=(logData.clientPhone||"").replace(/\D/g,"").slice(0,10);
-          if(phone10.length===10){setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||""});setWaStatus("sending");sendWASummary({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||""});}
-          else onClose();return;
+          if(phone10.length===10){setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||""});setWaStatus("idle");}else onClose();
+          return;
         }
       }
       onSave({id:Date.now(),...logData});
@@ -323,15 +323,19 @@ function AddLogModal({staffId,salonId,isPresent,onSave,onClose}){
         <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
           <div style={{width:44,height:44,borderRadius:14,background:T.gl,border:`2px solid ${T.gm}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>✅</div>
-          <div><div style={{fontWeight:900,fontSize:15,color:T.text}}>Work log saved!</div><div style={{fontSize:12,color:T.ts,marginTop:2}}>Sending summary to {waPromptData.name}...</div></div>
+          <div><div style={{fontWeight:900,fontSize:15,color:T.text}}>Work log saved!</div><div style={{fontSize:12,color:T.ts,marginTop:2}}>Send visit summary to {waPromptData.name}?</div></div>
         </div>
         <div style={{background:T.sub,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"12px 14px",marginBottom:16}}>
           <div style={{fontSize:12,color:T.tm}}>✂️ {waPromptData.service} · ₹{waPromptData.amount}</div>
           <div style={{fontSize:12,color:T.tm,marginTop:4}}>📱 +91 {waPromptData.phone}</div>
         </div>
-        {waStatus==="sending"&&<div style={{background:T.purpleLight,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.purpleMid}}>📤 Sending on WhatsApp...</div>}
+        {waStatus==="idle"&&<div style={{display:"flex",gap:10}}>
+          <button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Skip</button>
+          <button onClick={()=>sendWASummary(waPromptData)} style={{flex:2,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>💬 Send on WhatsApp</button>
+        </div>}
+        {waStatus==="sending"&&<div style={{background:T.purpleLight,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.purpleMid}}>📤 Sending...</div>}
         {waStatus==="sent"&&<div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.gd}}>✅ Summary sent on WhatsApp!</div>}
-        {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:T.red,border:`2px solid ${T.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:T.rt,fontWeight:700}}>⚠️ Failed — 24h window expired. Log saved ✅</div><button onClick={onClose} style={{padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:T.tm,width:"100%"}}>Close</button></div>}
+        {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:T.red,border:`2px solid ${T.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:T.rt,fontWeight:700}}>⚠️ Failed — 24h window may have expired.</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:12,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
       </div>
     </div>
   );}
