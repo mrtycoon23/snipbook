@@ -389,8 +389,9 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
   const [newCustGender,setNewCustGender]=useState("male");
   const [savingCustomer,setSavingCustomer]=useState(false);
   const [pendingLogData,setPendingLogData]=useState(null);
-  const [ambiguousCustomers,setAmbiguousCustomers]=useState([]);
-  const [showPickCustomer,setShowPickCustomer]=useState(false);
+  const [waPromptData,setWaPromptData]=useState(null);
+  const [waSending,setWaSending]=useState(false);
+  const [waStatus,setWaStatus]=useState("idle"); // idle | sending | sent | error
   const [notes,setNotes]=useState("");
   const [photos,setPhotos]=useState([]);
   const [tempVisitId]=useState(()=>`owner_${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
@@ -436,14 +437,21 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
         });
       }
       onSave({client_name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,staff_id:ownerStaffId});
-      onClose();
+      // If we have a phone number, show WA send prompt instead of closing immediately
+      const phone=logData.clientPhone||"";
+      const phone10=phone.replace(/\D/g,"").slice(0,10);
+      if(phone10.length===10){
+        setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||""});
+      }else{
+        onClose();
+      }
     }catch(e){console.error(e);onClose();}
   }
 
   async function save(){
     if(!clientName.trim()||!amount||isNaN(amount))return;
     setSaving(true);
-    const base={clientName:clientName.trim(),service,amount:Number(amount),date,notes,photos};
+    const base={clientName:clientName.trim(),clientPhone:clientPhone,service,amount:Number(amount),date,notes,photos};
     try{
       const phone10=clientPhone.replace(/\D/g,"").slice(0,10);
       if(phone10.length===10){
@@ -555,6 +563,40 @@ function OwnerWorkLogModal({salonId,onSave,onClose}){
       </div>
     );
   }
+
+  async function sendWASummary(){
+    if(!waPromptData)return;
+    setWaSending(true);setWaStatus("sending");
+    try{
+      const res=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:waPromptData.phone,customerName:waPromptData.name,salonName:user?.salon||"Salon",visit:{date:waPromptData.date,services:[waPromptData.service],amount:waPromptData.amount,notes:waPromptData.notes||"",photos:[]}})});
+      if(res.ok){setWaStatus("sent");setTimeout(()=>onClose(),2000);}
+      else setWaStatus("error");
+    }catch(e){setWaStatus("error");}
+    setWaSending(false);
+  }
+
+  if(waPromptData){return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
+      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"22px 18px 36px",width:"100%"}}>
+        <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+          <div style={{width:44,height:44,borderRadius:14,background:"#e8fdf0",border:"2px solid #bbf7d0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>✅</div>
+          <div><div style={{fontWeight:900,fontSize:15,color:TP.text}}>Work log saved!</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>Send visit summary to {waPromptData.name}?</div></div>
+        </div>
+        <div style={{background:TP.sub,border:`1.5px solid ${TP.border}`,borderRadius:12,padding:"12px 14px",marginBottom:16}}>
+          <div style={{fontSize:12,color:TP.tm}}>✂️ {waPromptData.service} · ₹{waPromptData.amount}</div>
+          <div style={{fontSize:12,color:TP.tm,marginTop:4}}>📅 {waPromptData.date} · 📱 {waPromptData.phone}</div>
+        </div>
+        {waStatus==="idle"&&<div style={{display:"flex",gap:10}}>
+          <button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Skip</button>
+          <button onClick={sendWASummary} style={{flex:2,padding:12,background:"#25d366",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>💬 Send on WhatsApp</button>
+        </div>}
+        {waStatus==="sending"&&<div style={{background:TP.purpleLight,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:TP.purpleMid}}>📤 Sending...</div>}
+        {waStatus==="sent"&&<div style={{background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:"#16a34a"}}>✅ Summary sent on WhatsApp!</div>}
+        {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:TP.rt,fontWeight:700}}>⚠️ Failed — 24h window may have expired.</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:12,background:"#25d366",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
+      </div>
+    </div>
+  );}
 
   return(
     <div onClick={e=>e.target===e.currentTarget&&handleCancel()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
