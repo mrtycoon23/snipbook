@@ -53,7 +53,12 @@ async function sendTemplate(to, templateKey, customerName, salonName, service, a
     whatsappTemplate: {
       name: tpl.name,
       language: "en",
-      variables          // ← YCloud uses simple array, not components/parameters
+      components: [
+        {
+          type: "body",
+          parameters: variables.map(text => ({ type: "text", text }))
+        }
+      ]
     }
   };
 
