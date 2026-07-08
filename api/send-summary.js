@@ -34,29 +34,37 @@ function normalizePhone(phone) {
 async function sendTemplate(to, templateKey, customerName, salonName, service, amount) {
   const tpl = TEMPLATES[templateKey] || TEMPLATES.thankyou;
   if (tpl.name === "PENDING_UPDATE") {
-    console.log("[send-summary] bill_summary template not yet approved, falling back to visit_summary");
+    console.log("[send-summary] bill_summary pending, using visit_summary");
     return sendTemplate(to, "visit_summary", customerName, salonName, service, amount);
   }
-  const parameters = tpl.vars(customerName || "Customer", salonName || "Salon", service || "", amount || 0)
-    .map(text => ({ type: "text", text: String(text) }));
+  const variables = tpl.vars(
+    customerName || "Customer",
+    salonName || "Salon",
+    service || "Service",
+    amount || 0
+  ).map(String);
+
+  console.log(`[send-summary] Sending template=${tpl.name} to=${to} vars=`, variables);
+
+  const body = {
+    from: BOT_NUMBER,
+    to,
+    type: "whatsapp_template",
+    whatsappTemplate: {
+      name: tpl.name,
+      language: "en",
+      variables          // ← YCloud uses simple array, not components/parameters
+    }
+  };
 
   const res = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
     method: "POST",
     headers: { "X-API-Key": YCLOUD_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: BOT_NUMBER,
-      to,
-      type: "whatsapp_template",
-      whatsappTemplate: {
-        name: tpl.name,
-        language: "en",
-        components: [{ type: "body", parameters }]
-      }
-    })
+    body: JSON.stringify(body)
   });
   const data = await res.json();
-  console.log(`[send-summary] ${tpl.name} → ${to}:`, res.status, JSON.stringify(data).slice(0, 200));
-  return res.ok;
+  console.log(`[send-summary] YCloud response:`, res.status, JSON.stringify(data));
+  return { ok: res.ok, error: data?.error?.message || data?.message || null };
 }
 
 async function sendPhoto(to, photoUrl) {
@@ -96,14 +104,12 @@ export default async function handler(req, res) {
   const amount = visit?.amount || 0;
 
   try {
-    const sent = await sendTemplate(to, tKey, customerName, salonName, service, amount);
+    const result = await sendTemplate(to, tKey, customerName, salonName, service, amount);
 
-    if (sent) {
-      // Log to message_logs so it appears in Bot Chats
+    if (result.ok) {
       const logMsg = `Visit summary sent to ${customerName} (${TEMPLATES[tKey]?.label || tKey})`;
       await logToMessageLogs(salonId, to, logMsg);
 
-      // If visit has photos, send them after template (24h window now open)
       const photos = (visit?.photos || []).filter(p => p?.url);
       for (const photo of photos) {
         await new Promise(r => setTimeout(r, 700));
@@ -113,7 +119,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ sent: true, method: "template", template: tKey });
     }
 
-    return res.status(502).json({ sent: false, error: "Template send failed" });
+    return res.status(502).json({ sent: false, error: result.error || "Template send failed" });
   } catch(e) {
     console.error("[send-summary] error:", e.message);
     return res.status(500).json({ error: e.message });

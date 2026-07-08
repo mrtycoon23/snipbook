@@ -565,16 +565,18 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
     );
   }
 
-  if(waPromptData){
-    async function sendWithTemplate(tKey){
-      setWaStatus("sending");
-      try{
-        const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:waPromptData.phone,customerName:waPromptData.name,salonName:salonName,salonId:salonId,templateType:tKey,visit:{date:waPromptData.date,services:[waPromptData.service],amount:waPromptData.amount,notes:waPromptData.notes||"",photos:[]}})});
-        setWaStatus(r.ok?"sent":"error");
-        if(r.ok)setTimeout(()=>onClose(),1800);
-      }catch(e){setWaStatus("error");}
-    }
-    return(
+  async function sendWithTemplate(tKey){
+    setWaStatus("sending");
+    try{
+      const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:waPromptData?.phone,customerName:waPromptData?.name,salonName:salonName,salonId:salonId,templateType:tKey,visit:{date:waPromptData?.date,services:[waPromptData?.service],amount:waPromptData?.amount,notes:waPromptData?.notes||"",photos:[]}})});
+      const data=await r.json().catch(()=>({}));
+      console.log("[send-summary] result:",r.status,JSON.stringify(data));
+      if(r.ok){setWaStatus("sent");setTimeout(()=>onClose(),1800);}
+      else{setWaStatus("error");console.error("[send-summary] failed:",JSON.stringify(data));}
+    }catch(e){setWaStatus("error");console.error("[send-summary] exception:",e.message);}
+  }
+
+  if(waPromptData){return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
       <div style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"22px 18px 36px",width:"100%"}}>
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
@@ -902,4 +904,3 @@ export default function SnipBook(){
   if(page==="loading"){return(<div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,fontFamily:"system-ui,sans-serif"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:48,height:48,background:"rgba(255,255,255,0.15)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>✂️</div><span style={{fontWeight:900,fontSize:22,color:"#fff"}}>Snip<span style={{color:"#c4b8f0"}}>Book</span></span></div><div style={{marginTop:20,fontSize:13,color:"rgba(255,255,255,0.5)",fontWeight:700}}>Loading...</div></div>);}
   return(<>{page==="landing"&&<LandingPage onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}{page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{setPage("staffSalonEntry");}} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}{page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{const sd={...staffData,salon_id:staffData.salon_id};setStaffUser(sd);localStorage.setItem("snipbook_staff",JSON.stringify(sd));setPage("staffApp");}} onBack={()=>setPage("login")}/>}{page==="staffApp"&&staffUser&&<StaffDashboard staff={staffUser} showRevenue={showRevenue} onLogout={staffLogout}/>}{page==="onboarding"&&<Onboarding onComplete={u=>{setUser(u);setPage("app");}} onBack={()=>setPage("landing")}/>}{page==="resetPassword"&&<ResetPasswordPage onDone={()=>setPage("login")}/>}{page==="app"&&user&&<MainApp user={user} setUser={setUser} onLogout={ownerLogout} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/>}</>);
 }
-  
