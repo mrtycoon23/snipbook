@@ -154,3 +154,4 @@ export default async function handler(req, res) {
 
   return res.status(sent ? 200 : 502).json({ sent, method });
 }
+ 
