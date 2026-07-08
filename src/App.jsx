@@ -565,25 +565,44 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
     );
   }
 
-  if(waPromptData){return(
+  if(waPromptData){
+    async function sendWithTemplate(tKey){
+      setWaStatus("sending");
+      try{
+        const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:waPromptData.phone,customerName:waPromptData.name,salonName:salonName,salonId:salonId,templateType:tKey,visit:{date:waPromptData.date,services:[waPromptData.service],amount:waPromptData.amount,notes:waPromptData.notes||"",photos:[]}})});
+        setWaStatus(r.ok?"sent":"error");
+        if(r.ok)setTimeout(()=>onClose(),1800);
+      }catch(e){setWaStatus("error");}
+    }
+    return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}>
       <div style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"22px 18px 36px",width:"100%"}}>
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
           <div style={{width:44,height:44,borderRadius:14,background:"#e8fdf0",border:"2px solid #bbf7d0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>✅</div>
-          <div><div style={{fontWeight:900,fontSize:15,color:TP.text}}>Work log saved!</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>Send visit summary to {waPromptData.name}?</div></div>
+          <div><div style={{fontWeight:900,fontSize:15,color:TP.text}}>Work log saved!</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>Send WhatsApp message to {waPromptData.name}?</div></div>
         </div>
-        <div style={{background:TP.sub,border:`1.5px solid ${TP.border}`,borderRadius:12,padding:"12px 14px",marginBottom:16}}>
-          <div style={{fontSize:12,color:TP.tm}}>✂️ {waPromptData.service} · ₹{waPromptData.amount}</div>
-          <div style={{fontSize:12,color:TP.tm,marginTop:4}}>📱 +91 {waPromptData.phone}</div>
+        <div style={{background:TP.sub,border:`1.5px solid ${TP.border}`,borderRadius:12,padding:"10px 14px",marginBottom:14}}>
+          <div style={{fontSize:12,color:TP.tm}}>✂️ {waPromptData.service} · ₹{waPromptData.amount} · 📱 +91 {waPromptData.phone}</div>
         </div>
-        {waStatus==="idle"&&<div style={{display:"flex",gap:10}}>
-          <button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Skip</button>
-          <button onClick={async()=>{setWaStatus("sending");try{const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:waPromptData.phone,customerName:waPromptData.name,salonName:salonName,salonId:salonId,visit:{date:waPromptData.date,services:[waPromptData.service],amount:waPromptData.amount,notes:waPromptData.notes||"",photos:[]}})});setWaStatus(r.ok?"sent":"error");if(r.ok)setTimeout(()=>onClose(),1800);}catch(e){setWaStatus("error");}}} style={{flex:2,padding:12,background:"#25d366",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>💬 Send on WhatsApp</button>
-        </div>}
+        {waStatus==="idle"&&<>
+          <div style={{fontSize:11,fontWeight:700,color:TP.ts,marginBottom:8}}>Choose message type:</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
+            {[
+              {key:"thankyou",label:"💬 Thank You",desc:"Simple thank you message"},
+              {key:"visit_summary",label:"📋 Visit Summary",desc:"Service details summary"},
+              {key:"bill_summary",label:"💰 Bill + Summary",desc:"Service + bill amount"},
+            ].map(t=>(
+              <button key={t.key} onClick={()=>sendWithTemplate(t.key)} style={{width:"100%",padding:"11px 14px",background:"#25d366",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <span>{t.label}</span><span style={{fontSize:11,opacity:0.85}}>{t.desc}</span>
+              </button>
+            ))}
+          </div>
+          <button onClick={onClose} style={{width:"100%",padding:11,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Skip</button>
+        </>}
         {waStatus==="sending"&&<div style={{background:TP.purpleLight,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:TP.purpleMid}}>📤 Sending...</div>}
-        {waStatus==="sent"&&<div style={{background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:"#16a34a"}}>✅ Summary sent on WhatsApp!</div>}
-        {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:TP.rt,fontWeight:700}}>⚠️ Failed — 24h window may have expired.</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:12,background:"#25d366",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
+        {waStatus==="sent"&&<div style={{background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:"#16a34a"}}>✅ Message sent on WhatsApp!</div>}
+        {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:TP.rt,fontWeight:700}}>⚠️ Failed to send</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:12,background:"#25d366",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
       </div>
     </div>
   );}
@@ -883,4 +902,4 @@ export default function SnipBook(){
   if(page==="loading"){return(<div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,fontFamily:"system-ui,sans-serif"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:48,height:48,background:"rgba(255,255,255,0.15)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>✂️</div><span style={{fontWeight:900,fontSize:22,color:"#fff"}}>Snip<span style={{color:"#c4b8f0"}}>Book</span></span></div><div style={{marginTop:20,fontSize:13,color:"rgba(255,255,255,0.5)",fontWeight:700}}>Loading...</div></div>);}
   return(<>{page==="landing"&&<LandingPage onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}{page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{setPage("staffSalonEntry");}} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}{page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{const sd={...staffData,salon_id:staffData.salon_id};setStaffUser(sd);localStorage.setItem("snipbook_staff",JSON.stringify(sd));setPage("staffApp");}} onBack={()=>setPage("login")}/>}{page==="staffApp"&&staffUser&&<StaffDashboard staff={staffUser} showRevenue={showRevenue} onLogout={staffLogout}/>}{page==="onboarding"&&<Onboarding onComplete={u=>{setUser(u);setPage("app");}} onBack={()=>setPage("landing")}/>}{page==="resetPassword"&&<ResetPasswordPage onDone={()=>setPage("login")}/>}{page==="app"&&user&&<MainApp user={user} setUser={setUser} onLogout={ownerLogout} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/>}</>);
 }
- 
+  
