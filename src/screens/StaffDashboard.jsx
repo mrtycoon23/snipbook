@@ -347,7 +347,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
           </div>
           <button onClick={onClose} style={{width:"100%",padding:11,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Skip</button>
         </>}
-        {waStatus==="sending"&&<div style={{background:T.purpleLight,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.purpleMid}}>📤 Sending...</div>}
+        {waStatus==="sending"&&<div style={{background:"#ede9fe",borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:"#5b3fc4"}}>📤 Sending...</div>}
         {waStatus==="sent"&&<div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.gd}}>✅ Message sent on WhatsApp!</div>}
         {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:T.red,border:`2px solid ${T.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:T.rt,fontWeight:700}}>⚠️ Failed to send{waError?<div style={{fontSize:10,fontWeight:600,marginTop:4,wordBreak:"break-word"}}>{waError}</div>:null}</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:11,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:11,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
       </div>
@@ -445,7 +445,7 @@ function EntryDetailModal({log,onClose}){
   );
 }
 
-function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRevenue, absentNotes, setAbsentNotes, salonId}){
+function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRevenue, absentNotes, setAbsentNotes, salonId, salonName}){
   const [workTab,setWorkTab]=useState("today");
   const [showAddLog,setShowAddLog]=useState(false);
   const [selectedLog,setSelectedLog]=useState(null);
@@ -694,7 +694,7 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
         <button onClick={onLogout} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"#fff5f5",border:"1.5px solid #fca5a5",borderRadius:9,fontSize:11,fontWeight:700,color:"#dc2626",cursor:"pointer",fontFamily:"inherit"}}>🚪 Logout</button>
       </div>
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",position:"relative"}}>
-        {tab==="attendance"&&(<div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}><AttendanceTab staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance} showRevenue={showRevenue} absentNotes={absentNotes} setAbsentNotes={setAbsentNotes} salonId={salonId}/></div>)}
+        {tab==="attendance"&&(<div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}><AttendanceTab staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance} showRevenue={showRevenue} absentNotes={absentNotes} setAbsentNotes={setAbsentNotes} salonId={salonId} salonName={salonName}/></div>)}
         {tab==="customers"&&salonId&&(<CustomerHistory key={salonId} currentUser={{id:salonId,salon_id:salonId,role:"staff",name:staff?.name||"Staff"}}/>)}
         {tab==="attendance"&&(
           <div style={{position:"absolute",right:14,bottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:3,zIndex:10}}>
@@ -703,7 +703,7 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
           </div>
         )}
       </div>
-      {showAddLogFab&&<AddLogModal staffId={staff.id} salonId={salonId} isPresent={!!(attendance[today]||{})[staff.id]} onSave={log=>{setLogs(prev=>[...prev,log]);setShowAddLogFab(false);}} onClose={()=>setShowAddLogFab(false)}/>}
+      {showAddLogFab&&<AddLogModal staffId={staff.id} salonId={salonId} salonName={salonName} isPresent={!!(attendance[today]||{})[staff.id]} onSave={log=>setLogs(prev=>[...prev,log])} onClose={()=>setShowAddLogFab(false)}/>}
       <div style={{background:"#fff",borderTop:"1px solid #f1f0f5",display:"flex",flexShrink:0,padding:"6px 0 8px"}}>
         {[{id:"attendance",icon:"📅",label:"Attendance"},{id:"customers",icon:"👥",label:"Customers"}].map(t=>(
           <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",paddingBottom:4,borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`}}>
@@ -800,3 +800,4 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
     </div>
   );
 }
+ 
