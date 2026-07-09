@@ -44,32 +44,47 @@ async function sendTemplate(to, templateKey, customerName, salonName, service, a
     amount || 0
   ).map(String);
 
-  console.log(`[send-summary] Sending template=${tpl.name} to=${to} vars=`, variables);
+  // Templates were created in YCloud as "English" — the exact language code Meta
+  // registered them under may be en, en_US, or en_GB. A mismatch = permanent
+  // "translation does not exist" rejection, so try each until one succeeds.
+  const LANG_CODES = ["en", "en_US", "en_GB"];
+  let lastError = null;
 
-  const body = {
-    from: BOT_NUMBER,
-    to,
-    type: "whatsapp_template",
-    whatsappTemplate: {
-      name: tpl.name,
-      language: "en",
-      components: [
-        {
-          type: "body",
-          parameters: variables.map(text => ({ type: "text", text }))
-        }
-      ]
-    }
-  };
+  for (const lang of LANG_CODES) {
+    const body = {
+      from: BOT_NUMBER,
+      to,
+      type: "whatsapp_template",
+      whatsappTemplate: {
+        name: tpl.name,
+        language: lang,
+        components: [
+          {
+            type: "body",
+            parameters: variables.map(text => ({ type: "text", text }))
+          }
+        ]
+      }
+    };
 
-  const res = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
-    method: "POST",
-    headers: { "X-API-Key": YCLOUD_KEY, "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  console.log(`[send-summary] YCloud response:`, res.status, JSON.stringify(data));
-  return { ok: res.ok, error: data?.error?.message || data?.message || null };
+    const res = await fetch("https://api.ycloud.com/v2/whatsapp/messages", {
+      method: "POST",
+      headers: { "X-API-Key": YCLOUD_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json().catch(() => ({}));
+    console.log(`[send-summary] template=${tpl.name} lang=${lang} status=${res.status} resp=${JSON.stringify(data).slice(0, 300)}`);
+
+    if (res.ok) return { ok: true, error: null, lang };
+
+    lastError = data?.error?.message || data?.message || JSON.stringify(data).slice(0, 200);
+    // Only retry with next language if the error looks like a language/translation mismatch
+    const errStr = String(lastError).toLowerCase();
+    const isLangIssue = errStr.includes("translation") || errStr.includes("language") || errStr.includes("does not exist") || errStr.includes("not found");
+    if (!isLangIssue) break; // different error (auth, number, etc.) — retrying won't help
+  }
+
+  return { ok: false, error: lastError };
 }
 
 async function sendPhoto(to, photoUrl) {
@@ -129,4 +144,4 @@ export default async function handler(req, res) {
     console.error("[send-summary] error:", e.message);
     return res.status(500).json({ error: e.message });
   }
-}
+} 

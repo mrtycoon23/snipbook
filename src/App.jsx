@@ -392,6 +392,7 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
   const [waPromptData,setWaPromptData]=useState(null);
   const [waSending,setWaSending]=useState(false);
   const [waStatus,setWaStatus]=useState("idle");
+  const [waError,setWaError]=useState("");
   const [ambiguousCustomers,setAmbiguousCustomers]=useState([]);
   const [showPickCustomer,setShowPickCustomer]=useState(false); // idle | sending | sent | error
   const [notes,setNotes]=useState("");
@@ -572,8 +573,8 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
       const data=await r.json().catch(()=>({}));
       console.log("[send-summary] result:",r.status,JSON.stringify(data));
       if(r.ok){setWaStatus("sent");setTimeout(()=>onClose(),1800);}
-      else{setWaStatus("error");console.error("[send-summary] failed:",JSON.stringify(data));}
-    }catch(e){setWaStatus("error");console.error("[send-summary] exception:",e.message);}
+      else{setWaError(data?.error||`HTTP ${r.status}`);setWaStatus("error");console.error("[send-summary] failed:",JSON.stringify(data));}
+    }catch(e){setWaError(e.message);setWaStatus("error");console.error("[send-summary] exception:",e.message);}
   }
 
   if(waPromptData){return(
@@ -582,7 +583,7 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
           <div style={{width:44,height:44,borderRadius:14,background:"#e8fdf0",border:"2px solid #bbf7d0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>✅</div>
-          <div><div style={{fontWeight:900,fontSize:15,color:TP.text}}>Work log saved!</div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>Send WhatsApp message to {waPromptData.name}?</div></div>
+          <div><div style={{fontWeight:900,fontSize:15,color:TP.text}}>Work log saved! <span style={{fontSize:9,color:TP.tf,fontWeight:600}}>v3</span></div><div style={{fontSize:12,color:TP.ts,marginTop:2}}>Send WhatsApp message to {waPromptData.name}?</div></div>
         </div>
         <div style={{background:TP.sub,border:`1.5px solid ${TP.border}`,borderRadius:12,padding:"10px 14px",marginBottom:14}}>
           <div style={{fontSize:12,color:TP.tm}}>✂️ {waPromptData.service} · ₹{waPromptData.amount} · 📱 +91 {waPromptData.phone}</div>
@@ -604,7 +605,7 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
         </>}
         {waStatus==="sending"&&<div style={{background:TP.purpleLight,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:TP.purpleMid}}>📤 Sending...</div>}
         {waStatus==="sent"&&<div style={{background:"#e8fdf0",border:"2px solid #bbf7d0",borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:"#16a34a"}}>✅ Message sent on WhatsApp!</div>}
-        {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:TP.rt,fontWeight:700}}>⚠️ Failed to send</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:12,background:"#25d366",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
+        {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:TP.red,border:`2px solid ${TP.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:TP.rt,fontWeight:700}}>⚠️ Failed to send{waError?<div style={{fontSize:10,fontWeight:600,marginTop:4,wordBreak:"break-word"}}>{waError}</div>:null}</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:12,background:"#25d366",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
       </div>
     </div>
   );}
@@ -904,4 +905,3 @@ export default function SnipBook(){
   if(page==="loading"){return(<div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:`linear-gradient(135deg,${TP.purple},${TP.purpleMid})`,fontFamily:"system-ui,sans-serif"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:48,height:48,background:"rgba(255,255,255,0.15)",borderRadius:14,display:"flex",alignItems:"center",justifyContent:"center",fontSize:24}}>✂️</div><span style={{fontWeight:900,fontSize:22,color:"#fff"}}>Snip<span style={{color:"#c4b8f0"}}>Book</span></span></div><div style={{marginTop:20,fontSize:13,color:"rgba(255,255,255,0.5)",fontWeight:700}}>Loading...</div></div>);}
   return(<>{page==="landing"&&<LandingPage onStart={()=>setPage("onboarding")} onLogin={()=>setPage("login")}/>}{page==="login"&&<LoginPage onOwnerLogin={u=>{setUser(u);setPage("app");}} onStaffLogin={async()=>{setPage("staffSalonEntry");}} onSignup={()=>setPage("onboarding")} onBack={()=>setPage("landing")}/>}{page==="staffSalonEntry"&&<StaffSalonEntry onFound={(staffData)=>{const sd={...staffData,salon_id:staffData.salon_id};setStaffUser(sd);localStorage.setItem("snipbook_staff",JSON.stringify(sd));setPage("staffApp");}} onBack={()=>setPage("login")}/>}{page==="staffApp"&&staffUser&&<StaffDashboard staff={staffUser} showRevenue={showRevenue} onLogout={staffLogout}/>}{page==="onboarding"&&<Onboarding onComplete={u=>{setUser(u);setPage("app");}} onBack={()=>setPage("landing")}/>}{page==="resetPassword"&&<ResetPasswordPage onDone={()=>setPage("login")}/>}{page==="app"&&user&&<MainApp user={user} setUser={setUser} onLogout={ownerLogout} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/>}</>);
 }
- 

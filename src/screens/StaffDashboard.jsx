@@ -104,6 +104,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
   const [pendingLogData,setPendingLogData]=useState(null);
   const [waPromptData,setWaPromptData]=useState(null);
   const [waStatus,setWaStatus]=useState("idle");
+  const [waError,setWaError]=useState("");
   const [ambiguousCustomers,setAmbiguousCustomers]=useState([]);
   const [showPickCustomer,setShowPickCustomer]=useState(false);
 
@@ -111,10 +112,11 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
     setWaStatus("sending");
     try{
       const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:pd.phone,customerName:pd.name,salonName:pd.salonName||"Salon",salonId:pd.salonId||null,templateType:pd.templateType||"thankyou",visit:{date:pd.date,services:[pd.service],amount:pd.amount,notes:pd.notes||"",photos:[]}})});
-      setWaStatus(r.ok?"sent":"error");
-      if(r.ok)setTimeout(()=>onClose(),1800);
-      else setTimeout(()=>setWaStatus("idle"),2500);
-    }catch(e){setWaStatus("error");setTimeout(()=>setWaStatus("idle"),2500);}
+      const data=await r.json().catch(()=>({}));
+      console.log("[send-summary] result:",r.status,JSON.stringify(data));
+      if(r.ok){setWaStatus("sent");setTimeout(()=>onClose(),1800);}
+      else{setWaError(data?.error||`HTTP ${r.status}`);setWaStatus("error");}
+    }catch(e){setWaError(e.message);setWaStatus("error");}
   }
   const [notes,setNotes]=useState("");
   const [photos,setPhotos]=useState([]);
@@ -325,7 +327,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
         <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
           <div style={{width:44,height:44,borderRadius:14,background:T.gl,border:`2px solid ${T.gm}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>✅</div>
-          <div><div style={{fontWeight:900,fontSize:15,color:T.text}}>Work log saved!</div><div style={{fontSize:12,color:T.ts,marginTop:2}}>Send WhatsApp message to {waPromptData.name}?</div></div>
+          <div><div style={{fontWeight:900,fontSize:15,color:T.text}}>Work log saved! <span style={{fontSize:9,color:T.tf,fontWeight:600}}>v3</span></div><div style={{fontSize:12,color:T.ts,marginTop:2}}>Send WhatsApp message to {waPromptData.name}?</div></div>
         </div>
         <div style={{background:T.sub,border:`1.5px solid ${T.border}`,borderRadius:12,padding:"10px 14px",marginBottom:14}}>
           <div style={{fontSize:12,color:T.tm}}>✂️ {waPromptData.service} · ₹{waPromptData.amount} · 📱 +91 {waPromptData.phone}</div>
@@ -347,7 +349,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
         </>}
         {waStatus==="sending"&&<div style={{background:T.purpleLight,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.purpleMid}}>📤 Sending...</div>}
         {waStatus==="sent"&&<div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.gd}}>✅ Message sent on WhatsApp!</div>}
-        {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:T.red,border:`2px solid ${T.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:T.rt,fontWeight:700}}>⚠️ Failed to send</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:11,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:11,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
+        {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:T.red,border:`2px solid ${T.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:T.rt,fontWeight:700}}>⚠️ Failed to send{waError?<div style={{fontSize:10,fontWeight:600,marginTop:4,wordBreak:"break-word"}}>{waError}</div>:null}</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:11,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:11,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
       </div>
     </div>
   );}
@@ -798,4 +800,3 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
     </div>
   );
 }
-  
