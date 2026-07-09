@@ -54,10 +54,10 @@ async function sendTemplate(to, templateKey, customerName, salonName, service, a
     const body = {
       from: BOT_NUMBER,
       to,
-      type: "whatsapp_template",
-      whatsappTemplate: {
+      type: "template",
+      template: {
         name: tpl.name,
-        language: lang,
+        language: { code: lang },
         components: [
           {
             type: "body",
