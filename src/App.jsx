@@ -442,7 +442,7 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
       onSave({client_name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,staff_id:ownerStaffId});
       const phone10=(logData.clientPhone||"").replace(/\D/g,"").slice(0,10);
       if(phone10.length===10){
-        setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||""});
+        setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||"",photos:logData.photos||[]});
         setWaStatus("idle");
       }else{
         onClose();
@@ -569,7 +569,7 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
   async function sendWithTemplate(tKey){
     setWaStatus("sending");
     try{
-      const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:waPromptData?.phone,customerName:waPromptData?.name,salonName:salonName,salonId:salonId,templateType:tKey,visit:{date:waPromptData?.date,services:[waPromptData?.service],amount:waPromptData?.amount,notes:waPromptData?.notes||"",photos:[]}})});
+      const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:waPromptData?.phone,customerName:waPromptData?.name,salonName:salonName,salonId:salonId,templateType:tKey,visit:{date:waPromptData?.date,services:[waPromptData?.service],amount:waPromptData?.amount,notes:waPromptData?.notes||"",photos:waPromptData?.photos||[]}})});
       const data=await r.json().catch(()=>({}));
       console.log("[send-summary] result:",r.status,JSON.stringify(data));
       if(r.ok){setWaStatus("sent");setTimeout(()=>onClose(),1800);}

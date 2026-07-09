@@ -8,17 +8,17 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 // ── Approved Utility Templates ─────────────────────────────────────────────
 const TEMPLATES = {
   thankyou: {
-    name: "template_utility_20260704234404", // Active ✅
+    name: "template_utility_20260704234404", // Active ✅ (2 vars: name, salon)
     label: "💬 Thank You",
     vars: (n, s, svc, amt) => [n, s]
   },
   visit_summary: {
-    name: "template_utility_20260704235043", // Active ✅
+    name: "template_utility_20260705235242", // Active ✅ (3 vars: name, salon, service) — "photos attach" wala
     label: "📋 Visit Summary",
     vars: (n, s, svc, amt) => [n, s, svc]
   },
   bill_summary: {
-    name: "PENDING_UPDATE", // ⚠️ Update this name from YCloud once approved
+    name: "template_utility_20260708103129", // Active ✅ (4 vars: name, salon, service, amount)
     label: "💰 Bill + Summary",
     vars: (n, s, svc, amt) => [n, s, svc, String(amt || 0)]
   }
@@ -33,10 +33,6 @@ function normalizePhone(phone) {
 
 async function sendTemplate(to, templateKey, customerName, salonName, service, amount) {
   const tpl = TEMPLATES[templateKey] || TEMPLATES.thankyou;
-  if (tpl.name === "PENDING_UPDATE") {
-    console.log("[send-summary] bill_summary pending, using visit_summary");
-    return sendTemplate(to, "visit_summary", customerName, salonName, service, amount);
-  }
   const variables = tpl.vars(
     customerName || "Customer",
     salonName || "Salon",

@@ -111,7 +111,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
   async function sendWASummary(pd){
     setWaStatus("sending");
     try{
-      const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:pd.phone,customerName:pd.name,salonName:pd.salonName||"Salon",salonId:pd.salonId||null,templateType:pd.templateType||"thankyou",visit:{date:pd.date,services:[pd.service],amount:pd.amount,notes:pd.notes||"",photos:[]}})});
+      const r=await fetch("/api/send-summary",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerPhone:pd.phone,customerName:pd.name,salonName:pd.salonName||"Salon",salonId:pd.salonId||null,templateType:pd.templateType||"thankyou",visit:{date:pd.date,services:[pd.service],amount:pd.amount,notes:pd.notes||"",photos:pd.photos||[]}})});
       const data=await r.json().catch(()=>({}));
       console.log("[send-summary] result:",r.status,JSON.stringify(data));
       if(r.ok){setWaStatus("sent");setTimeout(()=>onClose(),1800);}
@@ -226,7 +226,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
         if(res){
           onSave({id:res.id,staffId:res.staff_id,clientName:res.client_name,service:res.service,amount:res.amount,date:res.date});
           const phone10=(logData.clientPhone||"").replace(/\D/g,"").slice(0,10);
-          if(phone10.length===10){setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||"",salonId,salonName:salonName||""});setWaStatus("idle");}else onClose();
+          if(phone10.length===10){setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||"",photos:logData.photos||[],salonId,salonName:salonName||""});setWaStatus("idle");}else onClose();
           return;
         }
       }
