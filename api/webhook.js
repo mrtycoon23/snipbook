@@ -290,6 +290,12 @@ async function sendText(to, body, salonId = null, customerName = "") {
   } catch(e) { console.error("sendText error:", e.message); }
 }
 
+async function sendImage(to, imageUrl) {
+  try {
+    await fetch("https://api.ycloud.com/v2/whatsapp/messages", { method: "POST", headers: { "X-API-Key": YCLOUD_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ from: BOT_NUMBER, to, type: "image", image: { link: imageUrl } }) });
+  } catch(e) { console.error("sendImage error:", e.message); }
+}
+
 async function sendButtons(to, bodyText, buttons, salonId = null, customerName = "") {
   try {
     const btns = buttons.slice(0, 3).map(b => ({ type: "reply", reply: { id: b.id, title: b.title.slice(0, 20) } }));
@@ -387,6 +393,8 @@ export default async function handler(req, res) {
   const msgId = msg?.id || "";
   const text = msg?.text?.body?.trim();
   const interactiveId = msg?.interactive?.listReply?.id || msg?.interactive?.list_reply?.id || msg?.interactive?.buttonReply?.id || msg?.interactive?.button_reply?.id;
+  // Template quick-reply buttons arrive as msg.button (not msg.interactive)
+  const templateBtnText = msg?.button?.text || msg?.button?.payload || "";
 
   if (!from) { res.status(200).json({ status: "ok" }); return; }
 
@@ -396,6 +404,28 @@ export default async function handler(req, res) {
       if (processed) { res.status(200).json({ status: "ok" }); return; }
       await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
     }
+
+    // ── Pending visit photos delivery ─────────────────────────────────────
+    // Customer's inbound message just opened the 24h window — deliver any
+    // photos stored by send-summary.js for this phone number.
+    const isPhotoBtn = /photo/i.test(templateBtnText);
+    const pendingPhotos = await getSession(`photos_${from}`);
+    if (pendingPhotos?.data?.photos?.length) {
+      const pSalonId = pendingPhotos.data.salonId || null;
+      const pName = pendingPhotos.data.customerName || "";
+      await sendText(from, `📸 Aapki visit ki photos yeh rahi:`, pSalonId, pName);
+      for (const p of pendingPhotos.data.photos) {
+        if (p?.url) { await new Promise(r => setTimeout(r, 700)); await sendImage(from, p.url); }
+      }
+      if (pSalonId) await logMessage(pSalonId, from, "outbound", `[${pendingPhotos.data.photos.length} visit photos delivered]`, "image", pName);
+      await clearSession(`photos_${from}`);
+      // If they only tapped the photos button, stop here; otherwise continue normal flow
+      if (isPhotoBtn || (!text && !interactiveId)) { res.status(200).json({ status: "ok" }); return; }
+    } else if (isPhotoBtn) {
+      await sendText(from, `📸 Photos pehle hi bheji ja chuki hain ya abhi koi photos available nahi hain.`);
+      res.status(200).json({ status: "ok" }); return;
+    }
+    // ───────────────────────────────────────────────────────────────────────
 
     let salon = null, sKey = null, session = null;
 
