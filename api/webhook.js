@@ -388,8 +388,11 @@ export default async function handler(req, res) {
     // Photos block runs first so YCloud's duplicate webhook calls don't
     // short-circuit before photos are delivered to the customer.
     const isPhotoBtn = /photo/i.test(templateBtnText);
-    const pendingPhotos = await getSession(`photos_${from}`);
-    console.log(`[photos] from=${from} key=photos_${from} found=${!!pendingPhotos} count=${pendingPhotos?.data?.photos?.length || 0}`);
+    // YCloud inbound `from` arrives WITH `+` prefix, but send-summary.js stores
+    // the key WITHOUT `+` (normalizePhone strips it). Normalize before lookup.
+    const fromDigits = from.replace(/^\+/, "");
+    const pendingPhotos = await getSession(`photos_${fromDigits}`);
+    console.log(`[photos] from=${from} key=photos_${fromDigits} found=${!!pendingPhotos} count=${pendingPhotos?.data?.photos?.length || 0}`);
     if (pendingPhotos?.data?.photos?.length) {
       const pSalonId = pendingPhotos.data.salonId || null;
       const pName = pendingPhotos.data.customerName || "";
@@ -398,7 +401,7 @@ export default async function handler(req, res) {
         if (p?.url) { await new Promise(r => setTimeout(r, 700)); await sendImage(from, p.url); }
       }
       if (pSalonId) await logMessage(pSalonId, from, "outbound", `[${pendingPhotos.data.photos.length} visit photos delivered]`, "image", pName);
-      await clearSession(`photos_${from}`);
+      await clearSession(`photos_${fromDigits}`);
       // If they only tapped the photos button OR sent no other actionable content, stop here
       if (isPhotoBtn || (!text && !interactiveId)) { res.status(200).json({ status: "ok" }); return; }
     } else if (isPhotoBtn) {
@@ -801,4 +804,4 @@ export default async function handler(req, res) {
     console.error("Handler error:", err.message);
     res.status(200).json({ status: "ok" });
   }
-} 
+}
