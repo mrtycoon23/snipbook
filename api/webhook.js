@@ -160,7 +160,6 @@ async function getBookedSlots(salonId, date) {
   } catch(e) { return []; }
 }
 
-// ─── STAFF CAPACITY HELPERS ───────────────────────────────────────────────────
 async function getStaffList(salonId) {
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/staff?salon_id=eq.${salonId}&select=id,name,gender_capability`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } });
@@ -184,12 +183,6 @@ function eligibleStaffFor(staffList, gender) {
   return (staffList || []).filter(s => !s.gender_capability || s.gender_capability === "both" || s.gender_capability === gender);
 }
 
-// Returns the time slots that still have at least one free, eligible staff member.
-// If salon has no staff configured at all, falls back to the old single-capacity behaviour
-// so existing salons aren't broken before they set up staff.
-
-// Returns IDs of staff who are explicitly marked absent on a given date.
-// Staff with no attendance record are treated as present (don't block them).
 async function getAbsentStaffIds(salonId, date) {
   try {
     const r = await fetch(
@@ -216,7 +209,6 @@ async function computeAvailableSlots({ salonId, date, gender, staffPref, openTim
   const staffList = await getStaffList(salonId);
   const absentIds = await getAbsentStaffIds(salonId, date);
 
-  // If customer chose a specific staff and that staff is absent → no slots
   if (staffPref && absentIds.includes(staffPref)) {
     console.log(`[absent-check] staffPref ${staffPref} is absent on ${date} — blocking all slots`);
     return [];
@@ -228,9 +220,8 @@ async function computeAvailableSlots({ salonId, date, gender, staffPref, openTim
 
   if (eligible.length === 0) {
     if (staffList.length > 0 && absentIds.length > 0) {
-      return []; // All eligible staff are absent
+      return [];
     }
-    // Legacy: no staff configured at all
     const booked = appts.map(a => a.time_slot);
     return slots.filter(s => !booked.includes(s.key));
   }
@@ -246,7 +237,6 @@ async function computeAvailableSlots({ salonId, date, gender, staffPref, openTim
   });
 }
 
-// Picks which staff member to actually assign to a new booking at confirm-time.
 async function assignStaffForBooking({ salonId, date, time, gender, staffPref }) {
   try {
     const staffList = await getStaffList(salonId);
@@ -262,9 +252,7 @@ async function assignStaffForBooking({ salonId, date, time, gender, staffPref })
     return free || null;
   } catch(e) { return null; }
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
-// ─── GET UPCOMING BOOKING ─────────────────────────────────────────────────────
 async function getUpcomingBooking(salonId, phone) {
   try {
     const today = getTodayKeyIST();
@@ -281,7 +269,6 @@ async function getUpcomingBooking(salonId, phone) {
     return null;
   } catch(e) { return null; }
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 async function sendText(to, body, salonId = null, customerName = "") {
   try {
@@ -333,8 +320,6 @@ async function sendDateList(to, data, workDays, salonId = null) {
   await sendList(to, "📅 Date Chunein", `*${data.service}*${priceText}\n\nKaunsa din aapke liye theek hai?`, "Din Dekho", rows, "Powered by SnipBook", salonId, data.name);
 }
 
-// After service is picked, either skip straight to date (0-1 eligible staff) or let the
-// customer pick a specific staff member when more than one qualifies (Point C).
 async function offerStaffPrefOrDate(from, sKey, data, workDays, salonId, customerName) {
   const staffList = await getStaffList(salonId);
   const eligible = eligibleStaffFor(staffList, data.gender);
@@ -393,23 +378,18 @@ export default async function handler(req, res) {
   const msgId = msg?.id || "";
   const text = msg?.text?.body?.trim();
   const interactiveId = msg?.interactive?.listReply?.id || msg?.interactive?.list_reply?.id || msg?.interactive?.buttonReply?.id || msg?.interactive?.button_reply?.id;
-  // Template quick-reply buttons arrive as msg.button (not msg.interactive)
   const templateBtnText = msg?.button?.text || msg?.button?.payload || "";
 
   if (!from) { res.status(200).json({ status: "ok" }); return; }
 
   try {
-    if (msgId) {
-      const processed = await getSession(`dup_${msgId}`);
-      if (processed) { res.status(200).json({ status: "ok" }); return; }
-      await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
-    }
 
-    // ── Pending visit photos delivery ─────────────────────────────────────
-    // Customer's inbound message just opened the 24h window — deliver any
-    // photos stored by send-summary.js for this phone number.
+    // ── STEP 1: Pending visit photos delivery (BEFORE dup-check) ─────────────
+    // Photos block runs first so YCloud's duplicate webhook calls don't
+    // short-circuit before photos are delivered to the customer.
     const isPhotoBtn = /photo/i.test(templateBtnText);
     const pendingPhotos = await getSession(`photos_${from}`);
+    console.log(`[photos] from=${from} key=photos_${from} found=${!!pendingPhotos} count=${pendingPhotos?.data?.photos?.length || 0}`);
     if (pendingPhotos?.data?.photos?.length) {
       const pSalonId = pendingPhotos.data.salonId || null;
       const pName = pendingPhotos.data.customerName || "";
@@ -419,13 +399,21 @@ export default async function handler(req, res) {
       }
       if (pSalonId) await logMessage(pSalonId, from, "outbound", `[${pendingPhotos.data.photos.length} visit photos delivered]`, "image", pName);
       await clearSession(`photos_${from}`);
-      // If they only tapped the photos button, stop here; otherwise continue normal flow
+      // If they only tapped the photos button OR sent no other actionable content, stop here
       if (isPhotoBtn || (!text && !interactiveId)) { res.status(200).json({ status: "ok" }); return; }
     } else if (isPhotoBtn) {
       await sendText(from, `📸 Photos pehle hi bheji ja chuki hain ya abhi koi photos available nahi hain.`);
       res.status(200).json({ status: "ok" }); return;
     }
-    // ───────────────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // ── STEP 2: Duplicate message check ───────────────────────────────────────
+    if (msgId) {
+      const processed = await getSession(`dup_${msgId}`);
+      if (processed) { res.status(200).json({ status: "ok" }); return; }
+      await setSession(`dup_${msgId}`, "done", { ts: Date.now() });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     let salon = null, sKey = null, session = null;
 
@@ -476,7 +464,6 @@ export default async function handler(req, res) {
     if (isResetWord) { await clearSession(sKey); await sendMainMenu(from, salonName, SALON_ID); res.status(200).json({ status: "ok" }); return; }
     if (effectiveMatch) { await clearSession(sKey); await sendMainMenu(from, salonName, SALON_ID); res.status(200).json({ status: "ok" }); return; }
 
-    // ─── MY BOOKING ───────────────────────────────────────────────────────────
     if (interactiveId === "my_booking") {
       const booking = await getUpcomingBooking(SALON_ID, from);
       if (!booking) {
@@ -497,7 +484,6 @@ export default async function handler(req, res) {
       res.status(200).json({ status: "ok" }); return;
     }
 
-    // ─── CANCEL ───────────────────────────────────────────────────────────────
     if (step === "my_booking_action" && interactiveId === "cancel_booking") {
       await setSession(sKey, "confirm_cancel", { ...data });
       await sendButtons(from,
@@ -524,7 +510,6 @@ export default async function handler(req, res) {
       res.status(200).json({ status: "ok" }); return;
     }
 
-    // ─── RESCHEDULE ───────────────────────────────────────────────────────────
     if (step === "my_booking_action" && interactiveId === "reschedule_booking") {
       await setSession(sKey, "reschedule_date", { ...data });
       await sendDateList(from, { name: customerName, service: data.bookingService, price: 0 }, workDays, SALON_ID);
@@ -555,8 +540,6 @@ export default async function handler(req, res) {
 
     if (step === "reschedule_time_part" && (interactiveId === "rtime_morning" || interactiveId === "rtime_evening")) {
       const isMorning = interactiveId === "rtime_morning";
-      // Reschedule keeps the original staff if possible (no gender data carried over from the old booking),
-      // but still respects per-staff capacity so it doesn't block a slot another staff member could take.
       const available = await computeAvailableSlots({ salonId: SALON_ID, date: data.newDate, gender: null, staffPref: data.bookingStaffId || null, openTime, closeTime, isMorning });
       if (available.length === 0) { await sendButtons(from, `😔 Koi slot available nahi!\n\nDusra time chunein:`, [{ id: "rtime_morning", title: "🌅 Morning (9AM-2PM)" }, { id: "rtime_evening", title: "🌆 Evening (2PM-9PM)" }], SALON_ID, customerName); res.status(200).json({ status: "ok" }); return; }
       await setSession(sKey, "reschedule_time", { ...data });
@@ -582,7 +565,7 @@ export default async function handler(req, res) {
           const stillFree = await computeAvailableSlots({ salonId: SALON_ID, date: data.newDate, gender: null, staffPref: staffIdForReschedule, openTime, closeTime, isMorning: true });
           const stillFreeEvening = await computeAvailableSlots({ salonId: SALON_ID, date: data.newDate, gender: null, staffPref: staffIdForReschedule, openTime, closeTime, isMorning: false });
           const slotTaken = ![...stillFree, ...stillFreeEvening].some(s => s.key === data.newTime);
-          if (slotTaken) staffIdForReschedule = null; // original staff no longer free here — leave unassigned rather than wrongly double-book
+          if (slotTaken) staffIdForReschedule = null;
         }
         await fetch(`${SUPABASE_URL}/rest/v1/appointments?id=eq.${data.bookingId}`, { method: "PATCH", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ date: data.newDate, time_slot: data.newTime, status: "confirmed", staff_id: staffIdForReschedule }) });
       } catch(e) { console.error("Reschedule error:", e.message); }
@@ -597,7 +580,6 @@ export default async function handler(req, res) {
       );
       res.status(200).json({ status: "ok" }); return;
     }
-    // ─────────────────────────────────────────────────────────────────────────
 
     if (step === "ask_name" && text && !interactiveId) {
       await setSession(`name_${from}`, "saved", { name: text });
@@ -702,11 +684,9 @@ export default async function handler(req, res) {
 
       const assignedStaff = await assignStaffForBooking({ salonId: SALON_ID, date: data.date, time: data.time, gender: data.gender, staffPref: data.staffPref });
 
-      // Block booking if staff are configured but none available (absent or fully booked)
       if (!assignedStaff) {
         const salonStaff = await getStaffList(SALON_ID);
         if (salonStaff.length > 0) {
-          // Salon has staff but none could be assigned — all absent or double-booked
           const absentToday = await getAbsentStaffIds(SALON_ID, data.date);
           const allAbsent = absentToday.length >= salonStaff.length;
           const msg = allAbsent
@@ -718,7 +698,6 @@ export default async function handler(req, res) {
           await clearSession(sKey);
           res.status(200).json({ status: "ok" }); return;
         }
-        // No staff configured at all — proceed with null (legacy behavior)
       }
 
       await fetch(`${SUPABASE_URL}/rest/v1/appointments`, { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ salon_id: SALON_ID, customer_name: data.name || "WhatsApp Customer", customer_phone: from, service: data.service, amount: data.price || 0, date: data.date, time_slot: data.time, status: "confirmed", staff_id: assignedStaff?.id || null }) });
@@ -822,4 +801,4 @@ export default async function handler(req, res) {
     console.error("Handler error:", err.message);
     res.status(200).json({ status: "ok" });
   }
-}
+} 
