@@ -405,7 +405,7 @@ export default async function handler(req, res) {
       // If they only tapped the photos button OR sent no other actionable content, stop here
       if (isPhotoBtn || (!text && !interactiveId)) { res.status(200).json({ status: "ok" }); return; }
     } else if (isPhotoBtn) {
-      await sendText(from, `📸 Photos pehle hi bheji ja chuki hain ya abhi koi photos available nahi hain.`);
+      await sendText(from, `📸 Aaj ki visit mein aapki koi photos save nahi hui hain.\n\nAgli visit pe zaroor le lenge! 😊`);
       res.status(200).json({ status: "ok" }); return;
     }
     // ─────────────────────────────────────────────────────────────────────────
@@ -804,4 +804,4 @@ export default async function handler(req, res) {
     console.error("Handler error:", err.message);
     res.status(200).json({ status: "ok" });
   }
-}
+} 

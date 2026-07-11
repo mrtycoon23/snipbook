@@ -13,7 +13,7 @@ const TEMPLATES = {
     vars: (n, s, svc, amt) => [n, s]
   },
   visit_summary: {
-    name: "template_utility_20260705235242", // Active ✅ (3 vars: name, salon, service) — "photos attach" wala
+    name: "template_utility_20260709181203", // Active ✅ (3 vars: name, salon, service) + "Send My Photos" quick-reply button
     label: "📋 Visit Summary",
     vars: (n, s, svc, amt) => [n, s, svc]
   },
@@ -129,7 +129,8 @@ export default async function handler(req, res) {
       const photos = (visit?.photos || []).filter(p => p?.url);
       if (photos.length > 0) {
         // Store as pending — webhook delivers them the moment the customer replies
-        // (their reply opens the 24h window; template alone does not).
+        // or taps the "Send My Photos" quick-reply button (either opens the 24h window).
+        // Key is digits-only (no +) — webhook strips + from inbound `from` to match.
         await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
           method: "POST",
           headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
