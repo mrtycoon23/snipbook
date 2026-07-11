@@ -339,11 +339,11 @@ function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
                     <div style={{fontSize:14,fontWeight:700,color:"#0f0a2e"}}>{c.name}{bday?" 🎂":""}</div>
                     <div style={{fontSize:10,fontWeight:700,padding:"3px 9px",borderRadius:20,background:tag.bg,color:tag.color,border:`1px solid ${tag.border}`,flexShrink:0,marginLeft:8}}>{tag.label}</div>
                   </div>
-                  <div style={{fontSize:11,color:"#6b7280",marginBottom:6}}>🚶 {c.src==="wa"||c.source==="wa"?"Walk-in · ":"Walk-in · "}{c.phone||""}</div>
+                  <div style={{fontSize:11,color:"#6b7280",marginBottom:6}}>🚶 Walk-in{!isStaff&&c.phone?` · ${c.phone}`:""}</div>
                   {lastSvc&&<div style={{display:"inline-flex",alignItems:"center",gap:4,background:"#f0eeff",borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:600,color:"#5b3fc4"}}>✂️ {lastSvc}</div>}
                   {inactive&&!bday&&c.tag!=="VIP"&&c.tag!=="New"&&<div style={{marginTop:4,fontSize:10,color:"#dc2626",fontWeight:600}}>⚠️ Inactive for {daysSince(c.last_visit||c.lastVisit)} days</div>}
                 </div>
-                <div style={{display:"flex",gap:12,alignItems:"center",flexShrink:0}}>
+                <div style={{display:"flex",gap:12,alignItems:"center",flexShrink:0}}> 
                   <div style={{textAlign:"center"}}>
                     <div style={{fontSize:14,fontWeight:800,color:"#0f0a2e"}}>{c.visits||0}</div>
                     <div style={{fontSize:9,color:"#6b7280",marginTop:1}}>Visits</div>
@@ -393,10 +393,10 @@ export default function CustomerHistory({currentUser,onBack}){
               <span style={{fontSize:11,fontWeight:ownerTab===t.id?700:500,color:ownerTab===t.id?"#5b3fc4":"#9ca3af"}}>{t.label}</span>
             </div>
           ))}
-        </div>
+        </div> 
       )}
       {selected?<CustomerDetail customer={selected} isStaff={isStaff} currentUser={currentUser} onBack={()=>setSelectedId(null)} onUpdate={handleUpdate}/>:isOwner&&ownerTab==="dashboard"?<OwnerDashboard customers={customers} staffMap={staffMap}/>:<CustomerList customers={customers} isStaff={isStaff} onSelect={c=>setSelectedId(c.id)} onAddCustomer={()=>setShowAddCustomer(true)}/>}
       {showAddCustomer&&(<div onClick={()=>setShowAddCustomer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:700,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:T.surface,borderRadius:"20px 20px 0 0",padding:"20px 18px 36px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,color:T.text,marginBottom:16}}>🆕 Add New Customer</div>{[{label:"Full Name *",key:"name",ph:"e.g. Priya Sharma",type:"text"},{label:"Phone Number *",key:"phone",ph:"9876543210",type:"tel"},{label:"Date of Birth",key:"dob",ph:"",type:"date"},{label:"Email Address",key:"email",ph:"customer@gmail.com",type:"email"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:5}}>{f.label}</div><input type={f.type} value={newCustomer[f.key]} onChange={e=>setNewCustomer(p=>({...p,[f.key]:f.key==="phone"?e.target.value.replace(/\D/g,"").slice(0,10):e.target.value}))} placeholder={f.ph} style={IS}/></div>))}<div style={{marginBottom:18}}><div style={{fontSize:12,fontWeight:800,color:T.tm,marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewCustomer(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newCustomer.gender===g.id?T.purple:T.border}`,background:newCustomer.gender===g.id?T.purpleLight:"#fff",color:newCustomer.gender===g.id?T.purple:T.ts,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>{setShowAddCustomer(false);setNewCustomer({name:"",phone:"",dob:"",gender:"male",email:""});}} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:T.tm}}>Cancel</button><button onClick={handleAddCustomer} disabled={savingCustomer||!newCustomer.name.trim()||newCustomer.phone.length<10} style={{flex:2,padding:12,border:"none",borderRadius:12,background:savingCustomer||!newCustomer.name.trim()||newCustomer.phone.length<10?"#d1d5db":T.purple,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:newCustomer.name.trim()&&newCustomer.phone.length===10?"pointer":"not-allowed"}}>{savingCustomer?"Saving...":"✓ Save Customer"}</button></div></div></div>)}
-    </div>
+    </div> 
   );
 }
