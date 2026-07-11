@@ -557,7 +557,7 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
   const N={w:"#fff",bg:"#f8f7ff",br:"#f1f0f5",t:"#0f0a2e",m:"#6b7280",p:"#5b3fc4"};
 
   return(
-    <div style={{padding:"12px 14px 80px",background:N.bg}}>
+    <div style={{padding:"12px 14px 100px",background:N.bg}}> 
 
       {/* Hero Card */}
       <div style={{background:N.w,borderRadius:18,padding:"14px",border:"1px solid #e5e7eb",boxShadow:"0 2px 12px rgba(0,0,0,0.05)",marginBottom:10}}>
@@ -770,11 +770,11 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
         )}
       </div>
       {showAddLogFab&&<AddLogModal staffId={staff.id} salonId={salonId} salonName={salonName} isPresent={!!(attendance[today]||{})[staff.id]} onSave={log=>setLogs(prev=>[...prev,log])} onClose={()=>setShowAddLogFab(false)}/>}
-      <div style={{background:"#fff",borderTop:"1px solid #f1f0f5",display:"flex",flexShrink:0,padding:"6px 0 8px"}}>
+      <div style={{background:"#fff",borderTop:"1px solid #f1f0f5",display:"flex",flexShrink:0,padding:"6px 0 8px",paddingBottom:"calc(8px + env(safe-area-inset-bottom, 0px))"}}>
         {[{id:"attendance",icon:"📅",label:"Attendance"},{id:"customers",icon:"👥",label:"Customers"}].map(t=>(
           <div key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,cursor:"pointer",paddingBottom:4,borderBottom:`2.5px solid ${tab===t.id?"#5b3fc4":"transparent"}`}}>
             <span style={{fontSize:17}}>{t.icon}</span>
-            <span style={{fontSize:10,fontWeight:tab===t.id?800:600,color:tab===t.id?"#5b3fc4":"#9ca3af"}}>{t.label}</span>
+            <span style={{fontSize:10,fontWeight:tab===t.id?800:600,color:tab===t.id?"#5b3fc4":"#9ca3af"}}>{t.label}</span> 
           </div>
         ))}
       </div>
@@ -858,7 +858,7 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
         {error&&<div style={{background:T.red,border:`1.5px solid ${T.rb}`,borderRadius:9,padding:"9px 12px",marginBottom:14,fontSize:12,color:T.rt,fontWeight:600}}>⚠️ {error}</div>}
 
         <button onClick={handleLogin} disabled={loading} style={{width:"100%",padding:"13px",background:loading?"#86efac":T.green,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:15,fontWeight:800,cursor:"pointer",marginBottom:12}}>
-          {loading?"Logging in...":"Login →"}
+          {loading?"Logging in...":"Login →"} 
         </button>
 
         <button onClick={onBack} style={{width:"100%",background:"none",border:"none",color:T.ts,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>← Back to Login</button>
