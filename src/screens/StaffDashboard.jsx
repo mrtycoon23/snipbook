@@ -748,7 +748,7 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
   }
 
   return(
-    <div style={{height:"100vh",display:"flex",flexDirection:"column",fontFamily:"-apple-system,system-ui,sans-serif",background:"#f8f7ff",overflow:"hidden"}}>
+    <div style={{height:"100dvh",display:"flex",flexDirection:"column",fontFamily:"-apple-system,system-ui,sans-serif",background:"#f8f7ff",overflow:"hidden"}}>
       <div style={{background:"#fff",padding:"12px 16px 10px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:38,height:38,borderRadius:12,background:c.bg,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:14,color:c.text,flexShrink:0}}>{initials(staff?.name||"ST")}</div>
