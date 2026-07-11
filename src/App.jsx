@@ -395,6 +395,9 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
   const [waError,setWaError]=useState("");
   const [ambiguousCustomers,setAmbiguousCustomers]=useState([]);
   const [showPickCustomer,setShowPickCustomer]=useState(false); // idle | sending | sent | error
+  const [suggestions,setSuggestions]=useState([]);
+  const [suppressSuggest,setSuppressSuggest]=useState(false);
+  const [phoneConflict,setPhoneConflict]=useState(null);
   const [notes,setNotes]=useState("");
   const [photos,setPhotos]=useState([]);
   const [tempVisitId]=useState(()=>`owner_${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
@@ -404,6 +407,47 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
     document.body.style.overflow="hidden";
     return()=>{document.body.style.overflow=prevOverflow;};
   },[]);
+
+  useEffect(()=>{
+    if(!salonId||suppressSuggest){setSuggestions([]);return;}
+    const term=clientName.trim();
+    const ph=clientPhone.replace(/\D/g,"");
+    if(term.length<2&&ph.length<3){setSuggestions([]);return;}
+    const t=setTimeout(async()=>{
+      try{
+        let q=supabase.from("customers").select("id,name,phone").eq("salon_id",salonId).limit(5);
+        if(ph.length>=3)q=q.ilike("phone",`%${ph}%`);
+        else q=q.ilike("name",`%${term}%`);
+        const{data}=await q;
+        setSuggestions(data||[]);
+      }catch(e){setSuggestions([]);}
+    },300);
+    return()=>clearTimeout(t);
+  },[clientName,clientPhone,salonId,suppressSuggest]);
+
+  useEffect(()=>{
+    if(!salonId){setPhoneConflict(null);return;}
+    const ph=clientPhone.replace(/\D/g,"");
+    if(ph.length!==10){setPhoneConflict(null);return;}
+    let cancelled=false;
+    (async()=>{
+      try{
+        const{data}=await supabase.from("customers").select("id,name,phone").eq("salon_id",salonId).ilike("phone",`%${ph}%`).limit(1);
+        if(cancelled)return;
+        const ex=data?.[0];
+        if(ex&&clientName.trim()&&(ex.name||"").trim().toLowerCase()!==clientName.trim().toLowerCase())setPhoneConflict(ex);
+        else setPhoneConflict(null);
+      }catch(e){}
+    })();
+    return()=>{cancelled=true;};
+  },[clientPhone,clientName,salonId]);
+
+  function pickSuggestion(cu){
+    setSuppressSuggest(true);
+    setClientName(cu.name||"");
+    if(cu.phone)setClientPhone((cu.phone||"").replace(/\D/g,"").slice(-10));
+    setSuggestions([]);
+  }
 
   async function handleCancel(){
     if(photos.length>0){
@@ -616,14 +660,34 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{fontWeight:900,fontSize:16,marginBottom:4,color:TP.text}}>➕ Add Your Work Log</div>
         <div style={{fontSize:12,color:TP.ts,marginBottom:16}}>Record the service you provided</div>
-        <div style={{marginBottom:12}}>
+        <div style={{marginBottom:12,position:"relative"}}>
           <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Client Name *</div>
-          <input style={is} placeholder="e.g. Anjali Mehta" value={clientName} onChange={e=>setClientName(e.target.value)} autoFocus/>
-        </div>
+          <input style={is} placeholder="e.g. Anjali Mehta" value={clientName} onChange={e=>{setClientName(e.target.value);setSuppressSuggest(false);}} autoFocus/>
+          {suggestions.length>0&&(
+            <div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:50,background:"#fff",border:`2px solid ${TP.border}`,borderRadius:12,marginTop:4,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",overflow:"hidden"}}>
+              <div style={{fontSize:10,fontWeight:800,color:TP.tf,padding:"7px 12px 4px",borderBottom:`1px solid ${TP.border}`}}>EXISTING CUSTOMERS</div>
+              {suggestions.map(cu=>(
+                <div key={cu.id} onClick={()=>pickSuggestion(cu)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",borderBottom:"1px solid #f6f8fa",cursor:"pointer"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
+                    <div style={{width:28,height:28,borderRadius:9,background:TP.purpleLight,color:TP.purpleMid,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,flexShrink:0}}>{(cu.name||"?").slice(0,2).toUpperCase()}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:TP.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{cu.name}</div>
+                  </div>
+                  <div style={{fontSize:11,color:TP.ts,fontWeight:600,flexShrink:0,marginLeft:8}}>{cu.phone?`📱 ${(cu.phone||"").replace(/\D/g,"").slice(-10)}`:"No phone"}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div> 
         <div style={{marginBottom:12}}>
           <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Phone Number <span style={{color:TP.tf,fontWeight:600}}>(optional, recommended)</span></div>
-          <input style={is} type="tel" placeholder="e.g. 9876543210" value={clientPhone} onChange={e=>setClientPhone(e.target.value.replace(/\D/g,"").slice(0,10))}/>
-          <div style={{fontSize:10,color:TP.tf,marginTop:4}}>Helps identify customers with the same name</div>
+          <input style={{...is,...(phoneConflict?{borderColor:"#f59e0b"}:{})}} type="tel" placeholder="e.g. 9876543210" value={clientPhone} onChange={e=>{setClientPhone(e.target.value.replace(/\D/g,"").slice(0,10));setSuppressSuggest(false);}}/>
+          {phoneConflict
+            ?<div style={{background:TP.yellow,border:`1.5px solid ${TP.yb}`,borderRadius:10,padding:"9px 12px",marginTop:6}}>
+              <div style={{fontSize:12,color:TP.yt,fontWeight:800,marginBottom:6}}>⚠️ This number is already saved as "{phoneConflict.name}"</div>
+              <div style={{fontSize:11,color:TP.yt,marginBottom:8}}>Saving with a different name will link this log to {phoneConflict.name}'s history.</div>
+              <button onClick={()=>{setSuppressSuggest(true);setClientName(phoneConflict.name);setPhoneConflict(null);setSuggestions([]);}} style={{padding:"7px 12px",background:"#fff",border:`1.5px solid ${TP.yb}`,borderRadius:9,fontSize:12,fontWeight:800,color:TP.yt,cursor:"pointer",fontFamily:"inherit"}}>✓ Use "{phoneConflict.name}" instead</button>
+            </div>
+            :<div style={{fontSize:10,color:TP.tf,marginTop:4}}>Helps identify customers with the same name</div>} 
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
           <div style={{minWidth:0}}>
