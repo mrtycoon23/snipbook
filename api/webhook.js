@@ -322,7 +322,11 @@ async function sendDateList(to, data, workDays, salonId = null) {
 
 async function offerStaffPrefOrDate(from, sKey, data, workDays, salonId, customerName) {
   const staffList = await getStaffList(salonId);
-  const eligible = eligibleStaffFor(staffList, data.gender);
+  // Filter out absent staff for today before showing staff preference list
+  const todayKey = getTodayKeyIST();
+  const absentIds = await getAbsentStaffIds(salonId, todayKey);
+  const presentStaff = staffList.filter(s => !absentIds.includes(s.id));
+  const eligible = eligibleStaffFor(presentStaff, data.gender);
   if (eligible.length > 1) {
     await setSession(sKey, "ask_staff_pref", { ...data });
     const rows = [
@@ -804,4 +808,4 @@ export default async function handler(req, res) {
     console.error("Handler error:", err.message);
     res.status(200).json({ status: "ok" });
   }
-} 
+}
