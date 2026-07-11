@@ -186,7 +186,7 @@ function eligibleStaffFor(staffList, gender) {
 async function getAbsentStaffIds(salonId, date) {
   try {
     const r = await fetch(
-      `${SUPABASE_URL}/rest/v1/attendance?salon_id=eq.${salonId}&date=eq.${date}&is_present=eq.false&select=staff_id`,
+      `${SUPABASE_URL}/rest/v1/attendance?salon_id=eq.${salonId}&date=eq.${date}&select=staff_id,is_present`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
     const d = await r.json();
@@ -195,9 +195,13 @@ async function getAbsentStaffIds(salonId, date) {
       console.error("[absent-check] non-array response:", JSON.stringify(d));
       return [];
     }
-    const ids = d.map(a => a.staff_id).filter(Boolean);
-    console.log(`[absent-check] absent staff IDs:`, ids);
-    return ids;
+    // Staff with no attendance record OR is_present=false = absent
+    // Only staff explicitly marked is_present=true are present
+    const presentIds = new Set(d.filter(a => a.is_present === true).map(a => a.staff_id).filter(Boolean));
+    const allStaff = await getStaffList(salonId);
+    const absentIds = allStaff.map(s => s.id).filter(id => !presentIds.has(id));
+    console.log(`[absent-check] presentIds:`, [...presentIds], `absentIds:`, absentIds);
+    return absentIds;
   } catch(e) {
     console.error("[absent-check] error:", e.message);
     return [];
@@ -808,4 +812,4 @@ export default async function handler(req, res) {
     console.error("Handler error:", err.message);
     res.status(200).json({ status: "ok" });
   }
-}
+} 
