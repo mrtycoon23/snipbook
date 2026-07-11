@@ -689,7 +689,7 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
             </div>
             :<div style={{fontSize:10,color:TP.tf,marginTop:4}}>Helps identify customers with the same name</div>} 
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}> 
           <div style={{minWidth:0}}>
             <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Service</div>
             <select style={{...is,cursor:"pointer",width:"100%",boxSizing:"border-box"}} value={service} onChange={e=>setService(e.target.value)}>
