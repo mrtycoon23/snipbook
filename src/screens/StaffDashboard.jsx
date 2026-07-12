@@ -477,6 +477,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
 
 // ─── Tab 1: Attendance & Work Log ─────────────────────────────────────────────
 function EntryDetailModal({log,onClose}){
+  useEffect(()=>{const p=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=p;};},[]);
   function si(svc){const s=(svc||"").toLowerCase();
     if(s.includes("color")||s.includes("colour"))return{icon:"🎨",bg:"#fff7ed",border:"#fed7aa",color:"#ea580c"};
     if(s.includes("beard")||s.includes("shave"))return{icon:"🪒",bg:"#f0fdf4",border:"#bbf7d0",color:"#16a34a"};
@@ -498,6 +499,8 @@ function EntryDetailModal({log,onClose}){
             <div style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#fff"}}>{(log.clientName||"?").slice(0,2).toUpperCase()}</div>
             <div><div style={{fontSize:14,fontWeight:800,color:"#0f0a2e"}}>{log.clientName}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>Client</div></div>
           </div>
+          {log.status==="pending"&&<div style={{background:"#fef9c3",border:"1.5px solid #fde68a",borderRadius:10,padding:"10px 12px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:15}}>⏳</span><div><div style={{fontSize:12,fontWeight:800,color:"#a16207"}}>Pending Approval</div><div style={{fontSize:11,color:"#a16207",marginTop:1}}>Owner ne abhi approve nahi kiya</div></div></div>}
+          {log.status==="rejected"&&<div style={{background:"#fff0f0",border:"1.5px solid #fca5a5",borderRadius:10,padding:"10px 12px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:15}}>❌</span><div><div style={{fontSize:12,fontWeight:800,color:"#dc2626"}}>Log Rejected</div><div style={{fontSize:11,color:"#dc2626",marginTop:1}}>Owner ne reject kar diya</div></div></div>}
           {[{bg:ic.bg,border:ic.border,icon:ic.icon,label:"Service",val:log.service,color:ic.color},
             {bg:"#f0fdf4",border:"#bbf7d0",icon:"💰",label:"Amount",val:"₹"+Number(log.amount||0).toLocaleString("en-IN"),color:"#16a34a"},
             {bg:"#f8f7ff",border:"#e5e7eb",icon:"📅",label:"Date",val:new Date(log.date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}),color:"#0f0a2e"}
