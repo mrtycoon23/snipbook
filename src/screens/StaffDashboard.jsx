@@ -127,8 +127,8 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
 
   useEffect(()=>{
     const prevOverflow=document.body.style.overflow;
-    
-    return()=>{};
+    const _y=window.scrollY;document.body.style.position="fixed";document.body.style.top=`-${_y}px`;document.body.style.width="100%";
+    return()=>{document.body.style.position="";document.body.style.top="";document.body.style.width="";window.scrollTo(0,_y);};
   },[]);
 
   // ── Live customer suggestions while typing name or phone ──
@@ -497,7 +497,7 @@ function EntryDetailModal({log,onClose}){
   const ic=si(log.service);
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"flex-end",zIndex:999}} onClick={onClose}>
-      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",overflowY:"auto",WebkitOverflowScrolling:"touch",paddingBottom:"calc(28px + env(safe-area-inset-bottom,0px))"}} onClick={e=>e.stopPropagation()}>
+      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",paddingBottom:28}} onClick={e=>e.stopPropagation()}>
         <div style={{width:34,height:4,background:"#e5e7eb",borderRadius:2,margin:"12px auto 0"}}/>
         <div style={{background:"linear-gradient(135deg,#3d2490,#5b3fc4)",padding:"14px 18px",margin:"10px 0 0"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
@@ -774,16 +774,13 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
             <div style={{fontSize:10,color:"#9b8ec4",marginTop:1}}>{staff?.role} · Staff Portal</div>
           </div>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <button onClick={()=>window.location.reload()} style={{width:32,height:32,borderRadius:9,border:"1.5px solid #e0d8ff",background:"#f4f2ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,cursor:"pointer",color:"#5b3fc4"}}>🔄</button>
-          <div style={{display:"flex",gap:8,alignItems:"center"}}><button onClick={()=>window.location.reload()} style={{width:32,height:32,borderRadius:9,border:"1.5px solid #e0d8ff",background:"#f4f2ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,cursor:"pointer",color:"#5b3fc4"}}>🔄</button><button onClick={onLogout} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"#fff5f5",border:"1.5px solid #fca5a5",borderRadius:9,fontSize:11,fontWeight:700,color:"#dc2626",cursor:"pointer",fontFamily:"inherit"}}>🚪 Logout</button></div>
-        </div>
+        <button onClick={onLogout} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:"#fff5f5",border:"1.5px solid #fca5a5",borderRadius:9,fontSize:11,fontWeight:700,color:"#dc2626",cursor:"pointer",fontFamily:"inherit"}}>🚪 Logout</button>
       </div>
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",position:"relative"}}>
         {tab==="attendance"&&(<div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}><AttendanceTab staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance} showRevenue={showRevenue} absentNotes={absentNotes} setAbsentNotes={setAbsentNotes} salonId={salonId} salonName={salonName}/></div>)}
         {tab==="customers"&&salonId&&(<CustomerHistory key={salonId} currentUser={{id:salonId,salon_id:salonId,role:"staff",name:staff?.name||"Staff"}}/>)}
         {tab==="attendance"&&(
-          <div style={{position:"absolute",right:14,bottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:3,zIndex:selectedLog?-1:10}}>
+          <div style={{position:"absolute",right:14,bottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:3,zIndex:10}}>
             <div onClick={()=>setShowAddLogFab(true)} style={{width:54,height:54,borderRadius:"50%",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:24,color:"#fff",boxShadow:"0 4px 18px rgba(91,63,196,0.45)",cursor:"pointer"}}>+</div>
             <span style={{fontSize:9,fontWeight:700,color:"#5b3fc4",background:"#fff",padding:"1px 5px",borderRadius:4}}>Add Log</span>
           </div>
@@ -886,3 +883,4 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
     </div>
   );
 }
+ 
