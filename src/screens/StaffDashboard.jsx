@@ -247,10 +247,13 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
   async function saveLog(logData){
     try{
       if(salonId){
+        const{data:salonData}=await supabase.from("salons").select("approval_required").eq("id",salonId).single();
+        const needsApproval=salonData?.approval_required||false;
         const {data:res}=await supabase.from("work_logs").insert({
           salon_id:salonId, staff_id:logData.staffId,
           client_name:logData.clientName, service:logData.service,
-          amount:logData.amount, date:logData.date
+          amount:logData.amount, date:logData.date,
+          status:needsApproval?"pending":"approved"
         }).select().single();
         let customerId=logData.customerId||null;
         if(!customerId){
@@ -270,7 +273,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
           });
         }
         if(res){
-          onSave({id:res.id,staffId:res.staff_id,clientName:res.client_name,service:res.service,amount:res.amount,date:res.date});
+          onSave({id:res.id,staffId:res.staff_id,clientName:res.client_name,service:res.service,amount:res.amount,date:res.date,status:res.status||"approved"});
           const phone10=(logData.clientPhone||"").replace(/\D/g,"").slice(0,10);
           if(phone10.length===10){setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||"",photos:logData.photos||[],salonId,salonName:salonName||""});setWaStatus("idle");}else onClose();
           return;
@@ -718,7 +721,7 @@ export default function StaffDashboard({staff, showRevenue=false, onLogout}){
 
       const {data:logsData}=await supabase.from("work_logs").select("*").eq("salon_id",salonId).eq("staff_id",staff.id);
       if(logsData){
-        setLogs(logsData.map(l=>({id:l.id,staffId:l.staff_id,clientName:l.client_name,service:l.service,amount:l.amount,date:l.date})));
+        setLogs(logsData.map(l=>({id:l.id,staffId:l.staff_id,clientName:l.client_name,service:l.service,amount:l.amount,date:l.date,status:l.status||"approved"})));
       }
 
       const {data:attData}=await supabase.from("attendance").select("*").eq("salon_id",salonId).eq("staff_id",staff.id);
@@ -866,4 +869,3 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
     </div>
   );
 }
- 
