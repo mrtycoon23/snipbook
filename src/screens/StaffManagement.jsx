@@ -258,7 +258,7 @@ function AddStaffModal({salonId,onSave,onClose}){
 }
 
 // ─── Main StaffManagement ─────────────────────────────────────────────────────
-export default function StaffManagement({user,showRevenue=true,onBack}){
+export default function StaffManagement({user,currentUser,showRevenue=true,onBack}){
   const[staff,setStaff]=useState([]);
   const[loading,setLoading]=useState(true);
   const[tab,setTab]=useState("staff");
@@ -266,7 +266,8 @@ export default function StaffManagement({user,showRevenue=true,onBack}){
   const[showAdd,setShowAdd]=useState(false);
   const[approvalRequired,setApprovalRequired]=useState(false);
   const[pendingCount,setPendingCount]=useState(0);
-  const salonId=user?.id||user?.salon_id;
+  const activeUser=user||currentUser;
+  const salonId=activeUser?.id||activeUser?.salon_id;
 
   const staffMap={};
   staff.forEach(s=>{staffMap[s.id]=s.name;});
