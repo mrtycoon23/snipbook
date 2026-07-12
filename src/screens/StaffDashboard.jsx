@@ -127,8 +127,8 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
 
   useEffect(()=>{
     const prevOverflow=document.body.style.overflow;
-    document.body.style.overflow="hidden";
-    return()=>{document.body.style.overflow=prevOverflow;};
+    const _y=window.scrollY;document.body.style.position="fixed";document.body.style.top=`-${_y}px`;document.body.style.width="100%";
+    return()=>{document.body.style.position="";document.body.style.top="";document.body.style.width="";window.scrollTo(0,_y);};
   },[]);
 
   // ── Live customer suggestions while typing name or phone ──
@@ -477,7 +477,18 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
 
 // ─── Tab 1: Attendance & Work Log ─────────────────────────────────────────────
 function EntryDetailModal({log,onClose}){
-  useEffect(()=>{const p=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{document.body.style.overflow=p;};},[]);
+  useEffect(()=>{
+    const y=window.scrollY;
+    document.body.style.position="fixed";
+    document.body.style.top=`-${y}px`;
+    document.body.style.width="100%";
+    return()=>{
+      document.body.style.position="";
+      document.body.style.top="";
+      document.body.style.width="";
+      window.scrollTo(0,y);
+    };
+  },[]);
   function si(svc){const s=(svc||"").toLowerCase();
     if(s.includes("color")||s.includes("colour"))return{icon:"🎨",bg:"#fff7ed",border:"#fed7aa",color:"#ea580c"};
     if(s.includes("beard")||s.includes("shave"))return{icon:"🪒",bg:"#f0fdf4",border:"#bbf7d0",color:"#16a34a"};
@@ -872,3 +883,4 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
     </div>
   );
 }
+ 
