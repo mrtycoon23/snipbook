@@ -110,6 +110,20 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
   const [suggestions,setSuggestions]=useState([]);
   const [suppressSuggest,setSuppressSuggest]=useState(false);
   const [phoneConflict,setPhoneConflict]=useState(null);
+  const [isNewClient,setIsNewClient]=useState(false);
+
+  // Check if phone number belongs to a new client
+  useEffect(()=>{
+    if(!salonId||clientPhone.length!==10){setIsNewClient(false);return;}
+    let cancelled=false;
+    (async()=>{
+      try{
+        const{data}=await supabase.from("customers").select("id").eq("salon_id",salonId).ilike("phone",`%${clientPhone}%`).limit(1);
+        if(!cancelled) setIsNewClient(!data||data.length===0);
+      }catch(e){if(!cancelled)setIsNewClient(false);}
+    })();
+    return()=>{cancelled=true;};
+  },[clientPhone,salonId]);
 
   async function sendWASummary(pd){
     setWaStatus("sending");
@@ -464,6 +478,15 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
             <StagedAddPhotoBtn tempId={tempVisitId} onAdd={ph=>setPhotos(prev=>[...prev,ph])}/>
           </div>
         </div>
+        {isNewClient&&clientPhone.length===10&&(
+          <div style={{background:"#eff6ff",border:"1.5px solid #93c5fd",borderRadius:11,padding:"10px 13px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:18}}>🆕</span>
+            <div>
+              <div style={{fontSize:12,fontWeight:800,color:"#2563eb"}}>New Client Detected!</div>
+              <div style={{fontSize:11,color:"#3b82f6",marginTop:1}}>After saving, add their birthday & details in the Customers tab</div>
+            </div>
+          </div>
+        )}
         <div style={{display:"flex",gap:10}}>
           <button onClick={handleCancel} style={{flex:1,padding:12,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Cancel</button>
           <button onClick={save} disabled={saving} style={{flex:2,padding:12,border:"none",borderRadius:12,background:clientName.trim()&&amount?T.green:"#d1d5db",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>
@@ -548,7 +571,10 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
   const attRate=monthPresent2+monthAbsent2>0?Math.round((monthPresent2/(monthPresent2+monthAbsent2))*100):0;
   const mClients=useMemo(()=>new Set(logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).map(l=>l.clientName)).size,[logs,staff.id]);
   const mLogs=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).length;
-  const mRev=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart).reduce((s,l)=>s+l.amount,0);
+  const monthLogs2=logs.filter(l=>l.staffId===staff.id&&l.date>=thisMonthStart);
+  const mRev=monthLogs2.filter(l=>l.status==="approved"||!l.status).reduce((s,l)=>s+l.amount,0);
+  const mPendingLogs=monthLogs2.filter(l=>l.status==="pending");
+  const mPendingRev=mPendingLogs.reduce((s,l)=>s+l.amount,0);
   const heat=[];
   for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().slice(0,10);heat.push({ds,p:!!(attendance[ds]||{})[staff.id],f:ds>today});}
   let streak=0;
@@ -619,6 +645,13 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
                 <div style={{fontSize:13,fontWeight:800,color:N.p,lineHeight:1}}>{mLogs} logs</div>
                 <div style={{fontSize:9,color:"#6b7280",marginTop:2}}>Work Entries</div>
               </div>
+            </div>
+            {mPendingLogs.length>0&&(
+              <div style={{background:"#fef9c3",border:"1.5px solid #fde68a",borderRadius:9,padding:"7px 10px",display:"flex",alignItems:"center",gap:6}}>
+                <span style={{fontSize:12}}>⏳</span>
+                <div style={{fontSize:10,fontWeight:700,color:"#a16207"}}>{mPendingLogs.length} logs pending · ₹{mPendingRev.toLocaleString("en-IN")} under review</div>
+              </div>
+            )}</div><div style={{display:"none"}}>
             </div>
           </div>
         </div>
