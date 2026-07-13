@@ -61,13 +61,14 @@ function PendingLogsPanel({salonId, staffMap, onUpdate}){
               <div style={{fontSize:12,fontWeight:800,color:N.yt}}>⏳ Pending Approval</div>
               <div style={{fontSize:11,color:N.yt}}>{fd(log.date)}</div>
             </div>
-            <div style={{padding:"12px 14px"}}>
-              <div style={{fontWeight:800,fontSize:14,color:N.text,marginBottom:4}}>{log.client_name}</div>
-              <div style={{fontSize:12,color:N.muted,marginBottom:4}}>✂️ {log.service} · {fc(log.amount)}</div>
-              <div style={{fontSize:12,color:N.muted,marginBottom:12}}>👤 {staffMap?.[log.staff_id]||"Staff"}</div>
-              <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>approve(log)} style={{flex:1,padding:"10px",background:N.green,border:"none",borderRadius:10,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>✅ Approve</button>
-                <button onClick={()=>setRejectModal(log)} style={{flex:1,padding:"10px",background:N.red,border:`1.5px solid ${N.rb}`,borderRadius:10,color:N.rt,fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>❌ Reject</button>
+            <div style={{padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:800,fontSize:13,color:N.text}}>{log.client_name}</div>
+                <div style={{fontSize:11,color:N.muted,marginTop:2}}>✂️ {log.service} · {fc(log.amount)} · 👤 {staffMap?.[log.staff_id]||"Staff"}</div>
+              </div>
+              <div style={{display:"flex",gap:6,flexShrink:0}}>
+                <button onClick={()=>approve(log)} style={{width:36,height:36,borderRadius:10,background:N.green,border:"none",color:"#fff",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✓</button>
+                <button onClick={()=>setRejectModal(log)} style={{width:36,height:36,borderRadius:10,background:N.red,border:"1.5px solid "+N.rb,color:N.rt,fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
               </div>
             </div>
           </div>
@@ -149,17 +150,17 @@ function StaffCard({staff,idx,salonId,onEdit,showRevenue}){
       {loading
         ?<div style={{padding:16,textAlign:"center",color:N.muted,fontSize:12}}>Loading...</div>
         :<div style={{padding:"12px 16px"}}>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:10}}>
+          <div style={{display:"flex",gap:6,marginBottom:8}}>
             {[
               {icon:"✅",val:att.present,label:"Present",color:N.green},
               {icon:"❌",val:att.absent,label:"Absent",color:N.rt},
               {icon:"✂️",val:monthLogs,label:"Services",color:N.mid},
-              showRevenue?{icon:"💰",val:fc(monthRev),label:"Revenue",color:N.green}:{icon:"⏳",val:pendingCount,label:"Pending",color:N.yt},
+              showRevenue?{icon:"💰",val:fc(monthRev),label:"Rev",color:N.green}:{icon:"⏳",val:pendingCount,label:"Pending",color:N.yt},
             ].map(s=>(
-              <div key={s.label} style={{background:N.bg,borderRadius:10,padding:"8px 4px",textAlign:"center"}}>
-                <div style={{fontSize:13}}>{s.icon}</div>
-                <div style={{fontSize:12,fontWeight:800,color:s.color,marginTop:2}}>{s.val}</div>
-                <div style={{fontSize:9,color:N.muted,marginTop:1}}>{s.label}</div>
+              <div key={s.label} style={{flex:1,background:N.bg,borderRadius:8,padding:"5px 2px",textAlign:"center"}}>
+                <div style={{fontSize:11}}>{s.icon}</div>
+                <div style={{fontSize:11,fontWeight:800,color:s.color,marginTop:1}}>{s.val}</div>
+                <div style={{fontSize:8,color:N.muted,marginTop:1}}>{s.label}</div>
               </div>
             ))}
           </div>
