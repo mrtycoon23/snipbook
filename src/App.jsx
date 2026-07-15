@@ -741,7 +741,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   useEffect(()=>{
     async function loadEarnedRevenue(){
       try{
-        const{data}=await supabase.from("work_logs").select("*").eq("salon_id",user.id).eq("date",todayKey);
+        const{data:wlRaw}=await supabase.from("work_logs").select("*").eq("salon_id",user.id).eq("date",todayKey);const data=(wlRaw||[]).filter(l=>l.status==="approved"||!l.status);
         setTodayWorkLogs(data||[]);
         setEarnedRevenue(data?data.reduce((s,l)=>s+(l.amount||0),0):0);
       }catch(e){}
