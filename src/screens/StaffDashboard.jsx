@@ -651,8 +651,7 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
                 <span style={{fontSize:12}}>⏳</span>
                 <div style={{fontSize:10,fontWeight:700,color:"#a16207"}}>{mPendingLogs.length} logs pending · ₹{mPendingRev.toLocaleString("en-IN")} under review</div>
               </div>
-            )}</div><div style={{display:"none"}}>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -906,4 +905,3 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
     </div>
   );
 }
- 
