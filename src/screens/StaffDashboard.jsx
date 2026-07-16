@@ -111,6 +111,8 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
   const [suppressSuggest,setSuppressSuggest]=useState(false);
   const [phoneConflict,setPhoneConflict]=useState(null);
   const [isNewClient,setIsNewClient]=useState(false);
+  const [newClientDob,setNewClientDob]=useState("");
+  const [newClientGender,setNewClientGender]=useState("male");
 
   // Check if phone number belongs to a new client
   useEffect(()=>{
@@ -227,7 +229,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
           if(byPhone&&byPhone.length>0){
             await saveLog({...base,customerId:byPhone[0].id});
           }else{
-            const{data:newCust}=await supabase.from("customers").insert({salon_id:salonId,name:base.clientName,phone:phone10,gender:"male"}).select().single();
+            const{data:newCust}=await supabase.from("customers").insert({salon_id:salonId,name:base.clientName,phone:phone10,gender:newClientGender||"male",birthday:newClientDob||null}).select().single();
             await saveLog({...base,customerId:newCust?.id||null});
           }
           return;
@@ -479,11 +481,18 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
           </div>
         </div>
         {isNewClient&&clientPhone.length===10&&(
-          <div style={{background:"#eff6ff",border:"1.5px solid #93c5fd",borderRadius:11,padding:"10px 13px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:18}}>🆕</span>
+          <div style={{background:"#eff6ff",border:"1.5px solid #93c5fd",borderRadius:11,padding:"12px 13px",marginBottom:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+              <span style={{fontSize:16}}>🆕</span>
+              <div style={{fontSize:12,fontWeight:800,color:"#2563eb"}}>New Client Detected! Add details:</div>
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#3b82f6",marginBottom:4}}>🎂 Date of Birth (optional)</div>
+              <input style={{...IS,background:"#fff"}} type="date" value={newClientDob} onChange={e=>setNewClientDob(e.target.value)}/>
+            </div>
             <div>
-              <div style={{fontSize:12,fontWeight:800,color:"#2563eb"}}>New Client Detected!</div>
-              <div style={{fontSize:11,color:"#3b82f6",marginTop:1}}>After saving, add their birthday & details in the Customers tab</div>
+              <div style={{fontSize:11,fontWeight:800,color:"#3b82f6",marginBottom:4}}>Gender</div>
+              <div style={{display:"flex",gap:6}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClientGender(g.id)} style={{flex:1,padding:"7px",borderRadius:9,border:`2px solid ${newClientGender===g.id?"#2563eb":"#bfdbfe"}`,background:newClientGender===g.id?"#dbeafe":"#fff",color:newClientGender===g.id?"#1d4ed8":"#60a5fa",fontFamily:"inherit",fontSize:12,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div>
             </div>
           </div>
         )}
@@ -701,8 +710,12 @@ function AttendanceTab({staff, logs, setLogs, attendance, setAttendance, showRev
             <button key={t.k} onClick={()=>setWorkTab(t.k)} style={{padding:"7px 0",border:"none",background:workTab===t.k?"#5b3fc4":"transparent",color:workTab===t.k?"#fff":"#9ca3af",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>
           ))}
         </div>
-        <div style={{padding:"9px 12px",borderBottom:"1px solid #f1f0f5"}}>
+        <div style={{padding:"9px 12px",borderBottom:"1px solid #f1f0f5",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{fontSize:12,fontWeight:800,color:N.t}}>Work Entries</div>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#16a34a"}}>{fc(filtered.filter(l=>l.status!=="rejected"&&l.status!=="pending").reduce((s,l)=>s+(l.amount||0),0))}</div>
+            <div style={{fontSize:10,color:N.m}}>· {filtered.length} logs</div>
+          </div>
         </div>
         <div>
           {filtered.length===0
@@ -905,3 +918,4 @@ export function StaffLoginPage({salonId, onLogin, onBack}){
     </div>
   );
 }
+ test
