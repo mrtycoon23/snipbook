@@ -442,7 +442,7 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
             </div>
             <div style={{marginBottom:10}}>
               <div style={{fontSize:11,fontWeight:800,color:"#3b82f6",marginBottom:4}}>🎂 Date of Birth (optional)</div>
-              <input style={{...IS,background:"#fff",minHeight:44,borderColor:"#93c5fd"}} type="date" value={newClientDob} onChange={e=>setNewClientDob(e.target.value)}/>
+              <input style={{...IS,background:"#fff",minHeight:44,borderColor:"#93c5fd",color:newClientDob?"#1a1a2e":"#9ca3af"}} type="date" value={newClientDob} onChange={e=>setNewClientDob(e.target.value)}/>
               {!newClientDob&&<div style={{fontSize:10,color:"#93c5fd",marginTop:3}}>Tap to select date of birth</div>}
             </div>
             <div>
