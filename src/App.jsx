@@ -458,31 +458,9 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
     return()=>{cancelled=true;};
   },[clientPhone,salonId]);
 
-  // Detect new client
-  useEffect(()=>{
-    if(!salonId||clientPhone.length!==10){setIsNewClient(false);return;}
-    let cancelled=false;
-    (async()=>{
-      try{
-        const{data}=await supabase.from("customers").select("id").eq("salon_id",salonId).ilike("phone",`%${clientPhone}%`).limit(1);
-        if(!cancelled)setIsNewClient(!data||data.length===0);
-      }catch(e){if(!cancelled)setIsNewClient(false);}
-    })();
-    return()=>{cancelled=true;};
-  },[clientPhone,salonId]);
+  
 
-  // Detect new client
-  useEffect(()=>{
-    if(!salonId||clientPhone.length!==10){setIsNewClient(false);return;}
-    let cancelled=false;
-    (async()=>{
-      try{
-        const{data}=await supabase.from("customers").select("id").eq("salon_id",salonId).ilike("phone",`%${clientPhone}%`).limit(1);
-        if(!cancelled)setIsNewClient(!data||data.length===0);
-      }catch(e){if(!cancelled)setIsNewClient(false);}
-    })();
-    return()=>{cancelled=true;};
-  },[clientPhone,salonId]);
+  
 
   function pickSuggestion(cu){
     setSuppressSuggest(true);
@@ -758,6 +736,15 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
             <OwnerStagedAddPhotoBtn tempId={tempVisitId} onAdd={ph=>setPhotos(prev=>[...prev,ph])}/>
           </div>
         </div>
+        {isNewClient&&clientPhone.length===10&&(
+          <div style={{background:"#eff6ff",border:"1.5px solid #93c5fd",borderRadius:11,padding:"12px 13px",marginBottom:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+              <span style={{fontSize:16}}>🆕</span>
+              <div style={{fontSize:12,fontWeight:800,color:"#2563eb"}}>New Client Detected! Add details:</div>
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#3b82f6",marginBottom:4}}>🎂 Date of Birth (optional)</div>
+              <input style={{width:"100%",padding:"10px 12px",border:"1.5px solid #93c5fd",borderRadius:10,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fff",boxSizing:"border-box",color:TP.text,minHeight:44}} type="date" value={newClientDob} onChange={e=>setNewClientDob(e.target.value)}/>
               {!newClientDob&&<div style={{fontSize:10,color:"#93c5fd",marginTop:3}}>Tap to select date of birth</div>}
             </div>
             <div>
@@ -766,6 +753,15 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
             </div>
           </div>
         )}
+        {isNewClient&&clientPhone.length===10&&(
+          <div style={{background:"#eff6ff",border:"1.5px solid #93c5fd",borderRadius:11,padding:"12px 13px",marginBottom:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+              <span style={{fontSize:16}}>🆕</span>
+              <div style={{fontSize:12,fontWeight:800,color:"#2563eb"}}>New Client Detected! Add details:</div>
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#3b82f6",marginBottom:4}}>🎂 Date of Birth (optional)</div>
+              <input style={{width:"100%",padding:"10px 12px",border:"1.5px solid #93c5fd",borderRadius:10,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fff",boxSizing:"border-box",color:TP.text,minHeight:44}} type="date" value={newClientDob} onChange={e=>setNewClientDob(e.target.value)}/>
               {!newClientDob&&<div style={{fontSize:10,color:"#93c5fd",marginTop:3}}>Tap to select date of birth</div>}
             </div>
             <div>
