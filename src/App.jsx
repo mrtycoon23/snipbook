@@ -401,6 +401,9 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
   const [notes,setNotes]=useState("");
   const [photos,setPhotos]=useState([]);
   const [tempVisitId]=useState(()=>`owner_${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
+  const [isNewClient,setIsNewClient]=useState(false);
+  const [newClientDob,setNewClientDob]=useState("");
+  const [newClientGender,setNewClientGender]=useState("male");
 
   useEffect(()=>{
     const prevOverflow=document.body.style.overflow;
@@ -441,6 +444,19 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
     })();
     return()=>{cancelled=true;};
   },[clientPhone,clientName,salonId]);
+
+  // Detect new client
+  useEffect(()=>{
+    if(!salonId||clientPhone.length!==10){setIsNewClient(false);return;}
+    let cancelled=false;
+    (async()=>{
+      try{
+        const{data}=await supabase.from("customers").select("id").eq("salon_id",salonId).ilike("phone",`%${clientPhone}%`).limit(1);
+        if(!cancelled)setIsNewClient(!data||data.length===0);
+      }catch(e){if(!cancelled)setIsNewClient(false);}
+    })();
+    return()=>{cancelled=true;};
+  },[clientPhone,salonId]);
 
   function pickSuggestion(cu){
     setSuppressSuggest(true);
@@ -506,7 +522,7 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
         if(byPhone&&byPhone.length>0){
           await saveLog({...base,customerId:byPhone[0].id});
         }else{
-          const{data:newCust}=await supabase.from("customers").insert({salon_id:salonId,name:base.clientName,phone:phone10,gender:"male"}).select().single();
+          const{data:newCust}=await supabase.from("customers").insert({salon_id:salonId,name:base.clientName,phone:phone10,gender:newClientGender||"male",birthday:newClientDob||null}).select().single();
           await saveLog({...base,customerId:newCust?.id||null});
         }
         return;
@@ -716,6 +732,23 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
             <OwnerStagedAddPhotoBtn tempId={tempVisitId} onAdd={ph=>setPhotos(prev=>[...prev,ph])}/>
           </div>
         </div>
+        {isNewClient&&clientPhone.length===10&&(
+          <div style={{background:"#eff6ff",border:"1.5px solid #93c5fd",borderRadius:11,padding:"12px 13px",marginBottom:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+              <span style={{fontSize:16}}>🆕</span>
+              <div style={{fontSize:12,fontWeight:800,color:"#2563eb"}}>New Client Detected! Add details:</div>
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#3b82f6",marginBottom:4}}>🎂 Date of Birth (optional)</div>
+              <input style={{width:"100%",padding:"10px 12px",border:"1.5px solid #93c5fd",borderRadius:10,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fff",boxSizing:"border-box",color:TP.text,minHeight:44}} type="date" value={newClientDob} onChange={e=>setNewClientDob(e.target.value)}/>
+              {!newClientDob&&<div style={{fontSize:10,color:"#93c5fd",marginTop:3}}>Tap to select date of birth</div>}
+            </div>
+            <div>
+              <div style={{fontSize:11,fontWeight:800,color:"#3b82f6",marginBottom:4}}>Gender</div>
+              <div style={{display:"flex",gap:6}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClientGender(g.id)} style={{flex:1,padding:"7px",borderRadius:9,border:`2px solid ${newClientGender===g.id?"#2563eb":"#bfdbfe"}`,background:newClientGender===g.id?"#dbeafe":"#fff",color:newClientGender===g.id?"#1d4ed8":"#60a5fa",fontFamily:"inherit",fontSize:12,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div>
+            </div>
+          </div>
+        )}
         <div style={{display:"flex",gap:10}}>
           <button onClick={handleCancel} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button>
           <button onClick={save} disabled={saving} style={{flex:2,padding:12,border:"none",borderRadius:12,background:clientName.trim()&&amount?TP.purple:"#d1d5db",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>
