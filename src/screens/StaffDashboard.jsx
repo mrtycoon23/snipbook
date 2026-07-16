@@ -905,3 +905,4 @@ export function StaffLoginPage({salonId,onLogin,onBack}){
     </div>
   );
 }
+  
