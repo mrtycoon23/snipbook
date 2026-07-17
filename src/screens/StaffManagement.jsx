@@ -127,30 +127,57 @@ function StaffCard({staff,idx,salonId,onEdit,showRevenue}){
   const monthLogs=logs.length;
   const pendingCount=logs.filter(l=>l.status==="pending").length;
 
-  const isPresent=true; // simplified for display
+  const[todayPresent,setTodayPresent]=useState(false);
+  const[toggling,setToggling]=useState(false);
+  useEffect(()=>{
+    async function loadToday(){
+      const{data}=await supabase.from("attendance").select("is_present").eq("salon_id",salonId).eq("staff_id",staff.id).eq("date",today).single();
+      setTodayPresent(data?.is_present||false);
+    }
+    loadToday();
+  },[staff.id,salonId]);
+
+  async function toggleAttendance(e){
+    e.stopPropagation();
+    if(toggling)return;
+    setToggling(true);
+    const newVal=!todayPresent;
+    setTodayPresent(newVal);
+    try{
+      await supabase.from("attendance").upsert({salon_id:salonId,staff_id:staff.id,date:today,is_present:newVal},{onConflict:"salon_id,staff_id,date"});
+      setAtt(prev=>newVal?{present:prev.present+1,absent:Math.max(0,prev.absent-1)}:{present:Math.max(0,prev.present-1),absent:prev.absent+1});
+    }catch(err){setTodayPresent(!newVal);}
+    setToggling(false);
+  }
 
   return(
-    <div style={{background:N.white,borderRadius:16,margin:"0 16px 12px",border:`1px solid ${N.border}`,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
-      <div style={{background:`linear-gradient(135deg,${c.bg},${c.av}20)`,padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <div style={{width:44,height:44,borderRadius:14,background:c.av,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:800,color:c.color,flexShrink:0,position:"relative"}}>
+    <div style={{background:N.white,borderRadius:14,margin:"0 14px 8px",border:`1px solid ${N.border}`,overflow:"hidden",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+      <div style={{background:`linear-gradient(135deg,${c.bg},${c.av}20)`,padding:"9px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"center",gap:9}}>
+          <div style={{width:34,height:34,borderRadius:10,background:c.av,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:c.color,flexShrink:0,position:"relative"}}>
             {(staff.name||"?").slice(0,2).toUpperCase()}
-            <div style={{position:"absolute",bottom:-2,right:-2,width:12,height:12,borderRadius:"50%",background:N.green,border:"2px solid #fff"}}/>
+            <div style={{position:"absolute",bottom:-1,right:-1,width:9,height:9,borderRadius:"50%",background:N.green,border:"1.5px solid #fff"}}/>
           </div>
           <div>
-            <div style={{fontSize:15,fontWeight:800,color:N.text}}>{staff.name}</div>
-            <div style={{fontSize:11,color:N.muted,marginTop:1}}>{staff.role}</div>
+            <div style={{fontSize:13,fontWeight:800,color:N.text}}>{staff.name}</div>
+            <div style={{fontSize:10,color:N.muted,marginTop:1}}>{staff.role}</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          {pendingCount>0&&<div style={{background:N.yellow,border:`1px solid ${N.yb}`,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:800,color:N.yt}}>⏳ {pendingCount}</div>}
-          <button onClick={()=>onEdit(staff)} style={{background:"#fff",border:`1px solid ${N.border}`,borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,color:N.muted,cursor:"pointer",fontFamily:"inherit"}}>✏️ Edit</button>
+        <div style={{display:"flex",gap:6,alignItems:"center"}}>
+          {pendingCount>0&&<div style={{background:N.yellow,border:`1px solid ${N.yb}`,borderRadius:20,padding:"3px 8px",fontSize:10,fontWeight:800,color:N.yt}}>⏳ {pendingCount}</div>}
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+            <div onClick={toggleAttendance} style={{width:32,height:18,borderRadius:9,background:todayPresent?N.green:"#d1d5db",position:"relative",cursor:toggling?"wait":"pointer",opacity:toggling?0.6:1,transition:"background 0.2s"}}>
+              <div style={{width:12,height:12,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:todayPresent?17:3,transition:"left 0.2s",boxShadow:"0 1px 2px rgba(0,0,0,0.15)"}}/>
+            </div>
+            <span style={{fontSize:8,fontWeight:700,color:todayPresent?N.green:N.rt}}>{todayPresent?"Present":"Absent"}</span>
+          </div>
+          <button onClick={()=>onEdit(staff)} style={{background:"#fff",border:`1px solid ${N.border}`,borderRadius:8,padding:"5px 9px",fontSize:11,fontWeight:700,color:N.muted,cursor:"pointer",fontFamily:"inherit"}}>✏️</button>
         </div>
       </div>
       {loading
         ?<div style={{padding:16,textAlign:"center",color:N.muted,fontSize:12}}>Loading...</div>
-        :<div style={{padding:"12px 16px"}}>
-          <div style={{display:"flex",gap:6,marginBottom:8}}>
+        :<div style={{padding:"7px 10px"}}>
+          <div style={{display:"flex",gap:5}}>
             {[
               {icon:"✅",val:att.present,label:"Present",color:N.green},
               {icon:"❌",val:att.absent,label:"Absent",color:N.rt},
@@ -330,16 +357,6 @@ export default function StaffManagement({user,currentUser,showRevenue=true,onBac
           ?<div style={{padding:32,textAlign:"center",color:N.muted}}>Loading...</div>
           :tab==="staff"
           ?<>
-            {/* Summary */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,padding:"8px 16px 4px"}}>
-              {[{icon:"👥",val:staff.length,label:"Total Staff",color:N.mid},{icon:"✅",val:staff.length,label:"Active",color:N.green},{icon:"⏳",val:pendingCount,label:"Pending",color:N.yt}].map(s=>(
-                <div key={s.label} style={{background:N.white,borderRadius:12,padding:"12px 8px",textAlign:"center",border:`1px solid ${N.border}`}}>
-                  <div style={{fontSize:18}}>{s.icon}</div>
-                  <div style={{fontSize:18,fontWeight:800,color:s.color,marginTop:4}}>{s.val}</div>
-                  <div style={{fontSize:10,color:N.muted,marginTop:2}}>{s.label}</div>
-                </div>
-              ))}
-            </div>
             {staff.map((s,i)=>(
               <StaffCard key={s.id} staff={s} idx={i} salonId={salonId} onEdit={setEditStaff} showRevenue={showRevenue}/>
             ))}
