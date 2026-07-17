@@ -239,6 +239,98 @@ function EditStaffModal({staff,onSave,onClose}){
   );
 }
 
+// ─── Staff Summary Modal ──────────────────────────────────────────────────────
+function SummaryModal({salonId,staffList,onClose}){
+  const[viewMode,setViewMode]=useState("day");
+  const[selDate,setSelDate]=useState(today);
+  const[selMonth,setSelMonth]=useState(new Date().toISOString().slice(0,7));
+  const[logs,setLogs]=useState([]);
+  const[attMap,setAttMap]=useState({});
+  const[loading,setLoading]=useState(true);
+
+  useEffect(()=>{
+    async function load(){
+      setLoading(true);
+      const start=viewMode==="day"?selDate:selMonth+"-01";
+      const end=viewMode==="day"?selDate:(()=>{const[y,m]=selMonth.split("-").map(Number);return new Date(y,m,0).toISOString().slice(0,10);})();
+      const[logsRes,attRes]=await Promise.all([
+        supabase.from("work_logs").select("*").eq("salon_id",salonId).gte("date",start).lte("date",end),
+        supabase.from("attendance").select("*").eq("salon_id",salonId).gte("date",start).lte("date",end)
+      ]);
+      setLogs(logsRes.data||[]);
+      const am={};
+      (attRes.data||[]).forEach(a=>{if(!am[a.staff_id])am[a.staff_id]={p:0,a:0};if(a.is_present)am[a.staff_id].p++;else am[a.staff_id].a++;});
+      setAttMap(am);
+      setLoading(false);
+    }
+    load();
+  },[salonId,viewMode,selDate,selMonth]);
+
+  const approvedLogs=logs.filter(l=>l.status==="approved"||!l.status);
+  const totalRev=approvedLogs.reduce((s,l)=>s+(l.amount||0),0);
+  const presentCount=Object.values(attMap).filter(a=>a.p>0).length;
+
+  return(
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:300,display:"flex",alignItems:"flex-end"}}>
+      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"88vh",overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+        <div style={{width:36,height:4,background:"#e5e7eb",borderRadius:2,margin:"12px auto 0"}}/>
+        <div style={{padding:"12px 16px 10px",borderBottom:`1px solid ${N.border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div>
+            <div style={{fontSize:15,fontWeight:900,color:N.text}}>📊 Staff Summary</div>
+            <div style={{fontSize:11,color:N.muted,marginTop:2}}>Attendance + Work Logs</div>
+          </div>
+          <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",background:N.bg,border:"none",fontSize:13,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:"10px 16px",display:"flex",gap:8,borderBottom:`1px solid ${N.border}`}}>
+          {[{key:"day",label:"📅 Din Wise"},{key:"month",label:"📆 Mahine Wise"}].map(m=>(
+            <button key={m.key} onClick={()=>setViewMode(m.key)} style={{flex:1,padding:"8px",border:`2px solid ${viewMode===m.key?N.mid:N.border}`,borderRadius:10,background:viewMode===m.key?"#ede9fe":"#fff",color:viewMode===m.key?N.mid:N.muted,fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer"}}>{m.label}</button>
+          ))}
+        </div>
+        <div style={{padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${N.border}`}}>
+          <div style={{fontSize:12,fontWeight:700,color:N.text}}>{viewMode==="day"?"Date":"Month"}</div>
+          {viewMode==="day"
+            ?<input type="date" value={selDate} onChange={e=>setSelDate(e.target.value)} style={{border:`2px solid ${N.mid}`,borderRadius:8,padding:"5px 10px",fontSize:12,fontWeight:700,color:N.mid,outline:"none",fontFamily:"inherit"}}/>
+            :<input type="month" value={selMonth} onChange={e=>setSelMonth(e.target.value)} style={{border:`2px solid ${N.mid}`,borderRadius:8,padding:"5px 10px",fontSize:12,fontWeight:700,color:N.mid,outline:"none",fontFamily:"inherit"}}/>}
+        </div>
+        {loading
+          ?<div style={{padding:32,textAlign:"center",color:N.muted,fontSize:13}}>Loading...</div>
+          :<>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,padding:"12px 16px 4px"}}>
+              {[
+                {label:"Present",val:presentCount,color:N.green,bg:"#f0fdf4"},
+                {label:"Absent",val:staffList.length-presentCount,color:N.rt,bg:"#fff5f5"},
+                {label:"Services",val:approvedLogs.length,color:N.mid,bg:"#f5f3ff"},
+                {label:"Revenue",val:fc(totalRev),color:"#2563eb",bg:"#eff6ff",small:true},
+              ].map(s=>(
+                <div key={s.label} style={{background:s.bg,borderRadius:10,padding:"9px 4px",textAlign:"center"}}>
+                  <div style={{fontSize:s.small?11:15,fontWeight:900,color:s.color,lineHeight:1}}>{s.val}</div>
+                  <div style={{fontSize:8,color:N.muted,marginTop:3}}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{padding:"10px 16px 32px"}}>
+              {staffList.map(s=>{
+                const sLogs=approvedLogs.filter(l=>String(l.staff_id)===String(s.id));
+                const sRev=sLogs.reduce((sum,l)=>sum+(l.amount||0),0);
+                const sAtt=attMap[s.id]||{p:0,a:0};
+                return(
+                  <div key={s.id} style={{background:N.bg,borderRadius:12,padding:"10px 12px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{width:34,height:34,borderRadius:10,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:N.mid,flexShrink:0}}>{(s.name||"?").slice(0,2).toUpperCase()}</div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:800,color:N.text}}>{s.name}</div>
+                      <div style={{fontSize:10,color:N.muted,marginTop:1}}>✅ {sAtt.p} din · ❌ {sAtt.a} din · ✂️ {sLogs.length} services</div>
+                    </div>
+                    <div style={{fontSize:13,fontWeight:900,color:N.green,flexShrink:0}}>{fc(sRev)}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </>}
+      </div>
+    </div>
+  );
+}
+
 // ─── Add Staff Modal ──────────────────────────────────────────────────────────
 function AddStaffModal({salonId,onSave,onClose}){
   const[form,setForm]=useState({name:"",role:"Hairstylist",phone:"",pin:"",salary:"",gender_capability:"both"});
@@ -292,6 +384,7 @@ export default function StaffManagement({user,currentUser,showRevenue=true,onBac
   const[tab,setTab]=useState("staff");
   const[editStaff,setEditStaff]=useState(null);
   const[showAdd,setShowAdd]=useState(false);
+  const[showSummary,setShowSummary]=useState(false);
   const[approvalRequired,setApprovalRequired]=useState(false);
   const[pendingCount,setPendingCount]=useState(0);
   const activeUser=user||currentUser;
@@ -338,7 +431,10 @@ export default function StaffManagement({user,currentUser,showRevenue=true,onBac
             <div style={{fontSize:11,color:N.muted,marginTop:1}}>Manage your team performance</div>
           </div>
         </div>
-        <button onClick={()=>setShowAdd(true)} style={{background:N.mid,color:"#fff",border:"none",borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ Add Staff</button>
+        <div style={{display:"flex",gap:6}}>
+          <button onClick={()=>setShowSummary(true)} style={{background:N.green,color:"#fff",border:"none",borderRadius:10,padding:"8px 11px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📊</button>
+          <button onClick={()=>setShowAdd(true)} style={{background:N.mid,color:"#fff",border:"none",borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ Add Staff</button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -387,6 +483,7 @@ export default function StaffManagement({user,currentUser,showRevenue=true,onBac
 
       {editStaff&&<EditStaffModal staff={editStaff} onSave={updated=>{setStaff(prev=>prev.map(s=>s.id===updated.id?updated:s));setEditStaff(null);}} onClose={()=>setEditStaff(null)}/>}
       {showAdd&&<AddStaffModal salonId={salonId} onSave={newStaff=>{setStaff(prev=>[...prev,newStaff]);setShowAdd(false);}} onClose={()=>setShowAdd(false)}/>}
+      {showSummary&&<SummaryModal salonId={salonId} staffList={staff} onClose={()=>setShowSummary(false)}/>}
     </div>
   );
 }
