@@ -240,93 +240,179 @@ function EditStaffModal({staff,onSave,onClose}){
 }
 
 // ─── Staff Summary Modal ──────────────────────────────────────────────────────
+// ─── Staff Summary Screen (Original Full Design) ─────────────────────────────
 function SummaryModal({salonId,staffList,onClose}){
   const[viewMode,setViewMode]=useState("day");
   const[selDate,setSelDate]=useState(today);
   const[selMonth,setSelMonth]=useState(new Date().toISOString().slice(0,7));
   const[logs,setLogs]=useState([]);
-  const[attMap,setAttMap]=useState({});
+  const[attendance,setAttendance]=useState({});
   const[loading,setLoading]=useState(true);
+
+  const AV_COLORS=[{bg:"#fce7f3",text:"#9d174d"},{bg:"#dbeafe",text:"#1e40af"},{bg:"#d1fae5",text:"#065f46"},{bg:"#fef3c7",text:"#92400e"},{bg:"#ede9fe",text:"#4c1d95"}];
+  function avColor(id){const n=typeof id==="string"?id.charCodeAt(0):(id||1);return AV_COLORS[Math.abs(n)%AV_COLORS.length];}
+  function initials(name){return (name||"?").split(" ").map(w=>w[0]).join("").substring(0,2).toUpperCase();}
+
+  const monthStart=selMonth+"-01";
+  const monthEnd=(()=>{const[y,m]=selMonth.split("-").map(Number);return new Date(y,m,0).toISOString().slice(0,10);})();
 
   useEffect(()=>{
     async function load(){
       setLoading(true);
-      const start=viewMode==="day"?selDate:selMonth+"-01";
-      const end=viewMode==="day"?selDate:(()=>{const[y,m]=selMonth.split("-").map(Number);return new Date(y,m,0).toISOString().slice(0,10);})();
+      const start=viewMode==="day"?selDate:monthStart;
+      const end=viewMode==="day"?selDate:monthEnd;
       const[logsRes,attRes]=await Promise.all([
         supabase.from("work_logs").select("*").eq("salon_id",salonId).gte("date",start).lte("date",end),
         supabase.from("attendance").select("*").eq("salon_id",salonId).gte("date",start).lte("date",end)
       ]);
-      setLogs(logsRes.data||[]);
+      setLogs((logsRes.data||[]).filter(l=>l.status==="approved"||!l.status).map(l=>({id:l.id,staffId:l.staff_id,clientName:l.client_name,service:l.service,amount:l.amount||0,date:l.date})));
       const am={};
-      (attRes.data||[]).forEach(a=>{if(!am[a.staff_id])am[a.staff_id]={p:0,a:0};if(a.is_present)am[a.staff_id].p++;else am[a.staff_id].a++;});
-      setAttMap(am);
+      (attRes.data||[]).forEach(a=>{if(!am[a.date])am[a.date]={};am[a.date][a.staff_id]=a.is_present;if(a.absent_reason)am[a.date][a.staff_id+"_reason"]=a.absent_reason;});
+      setAttendance(am);
       setLoading(false);
     }
     load();
   },[salonId,viewMode,selDate,selMonth]);
 
-  const approvedLogs=logs.filter(l=>l.status==="approved"||!l.status);
-  const totalRev=approvedLogs.reduce((s,l)=>s+(l.amount||0),0);
-  const presentCount=Object.values(attMap).filter(a=>a.p>0).length;
+  const viewAtt=attendance[selDate]||{};
+  const dayLogs=logs.filter(l=>l.date===selDate);
+  const totalRevenue=dayLogs.reduce((s,l)=>s+l.amount,0);
+  const presentCount=staffList.filter(s=>viewAtt[s.id]).length;
 
   return(
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:300,display:"flex",alignItems:"flex-end"}}>
-      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"88vh",overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
-        <div style={{width:36,height:4,background:"#e5e7eb",borderRadius:2,margin:"12px auto 0"}}/>
-        <div style={{padding:"12px 16px 10px",borderBottom:`1px solid ${N.border}`,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div>
-            <div style={{fontSize:15,fontWeight:900,color:N.text}}>📊 Staff Summary</div>
-            <div style={{fontSize:11,color:N.muted,marginTop:2}}>Attendance + Work Logs</div>
-          </div>
-          <button onClick={onClose} style={{width:28,height:28,borderRadius:"50%",background:N.bg,border:"none",fontSize:13,cursor:"pointer"}}>✕</button>
+    <div style={{position:"fixed",inset:0,background:"#f0f4f8",zIndex:300,overflowY:"auto",WebkitOverflowScrolling:"touch",fontFamily:"system-ui,-apple-system,sans-serif"}}>
+      <div style={{background:"#fff",padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:10,borderBottom:"1.5px solid #e0d8ff"}}>
+        <button onClick={onClose} style={{width:32,height:32,borderRadius:9,border:"1.5px solid #e0d8ff",background:"#f4f2ff",fontSize:14,cursor:"pointer",color:"#5b3fc4",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"inherit"}}>←</button>
+        <div style={{textAlign:"center"}}>
+          <div style={{fontSize:15,fontWeight:800,color:"#2d1b69"}}>📊 Staff Summary</div>
+          <div style={{fontSize:10,color:"#9b8ec4",marginTop:1}}>Attendance + Work Logs</div>
         </div>
-        <div style={{padding:"10px 16px",display:"flex",gap:8,borderBottom:`1px solid ${N.border}`}}>
-          {[{key:"day",label:"📅 Din Wise"},{key:"month",label:"📆 Mahine Wise"}].map(m=>(
-            <button key={m.key} onClick={()=>setViewMode(m.key)} style={{flex:1,padding:"8px",border:`2px solid ${viewMode===m.key?N.mid:N.border}`,borderRadius:10,background:viewMode===m.key?"#ede9fe":"#fff",color:viewMode===m.key?N.mid:N.muted,fontFamily:"inherit",fontSize:12,fontWeight:700,cursor:"pointer"}}>{m.label}</button>
+        <div style={{width:32}}/>
+      </div>
+
+      <div style={{background:"white",padding:"10px 14px",borderBottom:"0.5px solid #e8e8e0",display:"flex",gap:8}}>
+        {[{key:"day",label:"📅 Din Wise"},{key:"month",label:"📆 Mahine Wise"}].map(m=>(
+          <button key={m.key} onClick={()=>setViewMode(m.key)} style={{flex:1,padding:"8px",border:`2px solid ${viewMode===m.key?"#22c55e":"#e8edf3"}`,borderRadius:10,background:viewMode===m.key?"#e8fdf0":"white",color:viewMode===m.key?"#16a34a":"#888",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {loading?<div style={{padding:40,textAlign:"center",color:"#888",fontSize:13}}>Loading...</div>:<>
+
+      {viewMode==="day"&&<>
+        <div style={{background:"white",padding:"12px 14px",borderBottom:"0.5px solid #e8e8e0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#1a1a2e"}}>Date</div>
+          <input type="date" value={selDate} onChange={e=>setSelDate(e.target.value)}
+            style={{border:"2px solid #22c55e",borderRadius:8,padding:"6px 10px",fontSize:13,fontWeight:700,color:"#16a34a",outline:"none",cursor:"pointer",fontFamily:"inherit"}}/>
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,padding:"12px 14px 0"}}>
+          {[
+            {label:"Present",val:presentCount,color:"#16a34a"},
+            {label:"Absent",val:staffList.length-presentCount,color:"#dc2626"},
+            {label:"Services",val:dayLogs.length,color:"#1a1a2e"},
+            {label:"Revenue",val:"₹"+totalRevenue.toLocaleString("en-IN"),color:"#2563eb",small:true},
+          ].map(s=>(
+            <div key={s.label} style={{background:"white",borderRadius:10,padding:"12px 10px",textAlign:"center",border:"0.5px solid #e8e8e0"}}>
+              <div style={{fontSize:s.small?12:20,fontWeight:800,color:s.color}}>{s.val}</div>
+              <div style={{fontSize:10,color:"#888",marginTop:2}}>{s.label}</div>
+            </div>
           ))}
         </div>
-        <div style={{padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${N.border}`}}>
-          <div style={{fontSize:12,fontWeight:700,color:N.text}}>{viewMode==="day"?"Date":"Month"}</div>
-          {viewMode==="day"
-            ?<input type="date" value={selDate} onChange={e=>setSelDate(e.target.value)} style={{border:`2px solid ${N.mid}`,borderRadius:8,padding:"5px 10px",fontSize:12,fontWeight:700,color:N.mid,outline:"none",fontFamily:"inherit"}}/>
-            :<input type="month" value={selMonth} onChange={e=>setSelMonth(e.target.value)} style={{border:`2px solid ${N.mid}`,borderRadius:8,padding:"5px 10px",fontSize:12,fontWeight:700,color:N.mid,outline:"none",fontFamily:"inherit"}}/>}
-        </div>
-        {loading
-          ?<div style={{padding:32,textAlign:"center",color:N.muted,fontSize:13}}>Loading...</div>
-          :<>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,padding:"12px 16px 4px"}}>
-              {[
-                {label:"Present",val:presentCount,color:N.green,bg:"#f0fdf4"},
-                {label:"Absent",val:staffList.length-presentCount,color:N.rt,bg:"#fff5f5"},
-                {label:"Services",val:approvedLogs.length,color:N.mid,bg:"#f5f3ff"},
-                {label:"Revenue",val:fc(totalRev),color:"#2563eb",bg:"#eff6ff",small:true},
-              ].map(s=>(
-                <div key={s.label} style={{background:s.bg,borderRadius:10,padding:"9px 4px",textAlign:"center"}}>
-                  <div style={{fontSize:s.small?11:15,fontWeight:900,color:s.color,lineHeight:1}}>{s.val}</div>
-                  <div style={{fontSize:8,color:N.muted,marginTop:3}}>{s.label}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{padding:"10px 16px 32px"}}>
-              {staffList.map(s=>{
-                const sLogs=approvedLogs.filter(l=>String(l.staff_id)===String(s.id));
-                const sRev=sLogs.reduce((sum,l)=>sum+(l.amount||0),0);
-                const sAtt=attMap[s.id]||{p:0,a:0};
-                return(
-                  <div key={s.id} style={{background:N.bg,borderRadius:12,padding:"10px 12px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{width:34,height:34,borderRadius:10,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,color:N.mid,flexShrink:0}}>{(s.name||"?").slice(0,2).toUpperCase()}</div>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:13,fontWeight:800,color:N.text}}>{s.name}</div>
-                      <div style={{fontSize:10,color:N.muted,marginTop:1}}>✅ {sAtt.p} din · ❌ {sAtt.a} din · ✂️ {sLogs.length} services</div>
-                    </div>
-                    <div style={{fontSize:13,fontWeight:900,color:N.green,flexShrink:0}}>{fc(sRev)}</div>
+
+        <div style={{padding:"14px"}}>
+          {staffList.length===0&&<div style={{textAlign:"center",padding:24,color:"#aaa",fontSize:13}}>Koi staff nahi</div>}
+          {staffList.map(s=>{
+            const c=avColor(s.id);
+            const isPresent=!!viewAtt[s.id];
+            const staffLogs=dayLogs.filter(l=>String(l.staffId)===String(s.id));
+            const staffRevenue=staffLogs.reduce((sum,l)=>sum+l.amount,0);
+            const reason=viewAtt[s.id+"_reason"];
+            return(
+              <div key={s.id} style={{background:"white",borderRadius:14,border:`2px solid ${isPresent?"#bbf7d0":"#fecaca"}`,padding:14,marginBottom:10}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:(isPresent&&staffLogs.length>0)?10:0}}>
+                  <div style={{width:38,height:38,borderRadius:12,background:c.bg,color:c.text,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,flexShrink:0}}>{initials(s.name)}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:700,color:"#1a1a2e"}}>{s.name}</div>
+                    <div style={{fontSize:11,color:"#888"}}>{s.role}</div>
                   </div>
-                );
-              })}
-            </div>
-          </>}
-      </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{background:isPresent?"#dcfce7":"#fee2e2",color:isPresent?"#16a34a":"#dc2626",fontSize:10,fontWeight:800,padding:"3px 10px",borderRadius:20}}>
+                      {isPresent?"✅ Present":"❌ Absent"}
+                    </div>
+                    {isPresent&&<div style={{fontSize:11,fontWeight:700,color:"#16a34a",marginTop:4}}>₹{staffRevenue.toLocaleString("en-IN")} · {staffLogs.length} clients</div>}
+                  </div>
+                </div>
+                {!isPresent&&reason&&(
+                  <div style={{background:"#fef2f2",borderRadius:8,padding:"6px 10px",marginTop:8,fontSize:11,color:"#dc2626",fontWeight:600}}>
+                    📝 Reason: {reason}
+                  </div>
+                )}
+                {isPresent&&staffLogs.length>0&&(
+                  <div style={{borderTop:"1px solid #f0f4f8",paddingTop:10}}>
+                    {staffLogs.map((log,i)=>(
+                      <div key={log.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:i<staffLogs.length-1?"0.5px solid #f0f4f8":"none"}}>
+                        <div>
+                          <div style={{fontSize:12,fontWeight:600,color:"#1a1a2e"}}>{log.clientName}</div>
+                          <div style={{fontSize:11,color:"#888"}}>{log.service}</div>
+                        </div>
+                        <div style={{fontSize:12,fontWeight:700,color:"#16a34a"}}>₹{log.amount.toLocaleString("en-IN")}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {isPresent&&staffLogs.length===0&&(
+                  <div style={{fontSize:11,color:"#aaa",marginTop:8,fontStyle:"italic"}}>Koi work log nahi is din ka</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </>}
+
+      {viewMode==="month"&&<>
+        <div style={{background:"white",padding:"12px 14px",borderBottom:"0.5px solid #e8e8e0",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#1a1a2e"}}>Month</div>
+          <input type="month" value={selMonth} onChange={e=>setSelMonth(e.target.value)}
+            style={{border:"2px solid #22c55e",borderRadius:8,padding:"6px 10px",fontSize:13,fontWeight:700,color:"#16a34a",outline:"none",cursor:"pointer",fontFamily:"inherit"}}/>
+        </div>
+
+        <div style={{padding:"14px"}}>
+          {staffList.map(s=>{
+            const c=avColor(s.id);
+            const monthLogs=logs.filter(l=>String(l.staffId)===String(s.id)&&l.date>=monthStart&&l.date<=monthEnd);
+            const monthRevenue=monthLogs.reduce((sum,l)=>sum+l.amount,0);
+            const presentDays=Object.entries(attendance).filter(([d,map])=>d>=monthStart&&d<=monthEnd&&map[s.id]).length;
+            const totalDays=(()=>{const[y,m]=selMonth.split("-").map(Number);return new Date(y,m,0).getDate();})();
+            return(
+              <div key={s.id} style={{background:"white",borderRadius:14,border:"1.5px solid #e8edf3",padding:14,marginBottom:10}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                  <div style={{width:38,height:38,borderRadius:12,background:c.bg,color:c.text,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:800,flexShrink:0}}>{initials(s.name)}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:700,color:"#1a1a2e"}}>{s.name}</div>
+                    <div style={{fontSize:11,color:"#888"}}>{s.role}</div>
+                  </div>
+                </div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6}}>
+                  {[
+                    {label:"Present",val:presentDays,color:"#16a34a",bg:"#f0fdf4"},
+                    {label:"Absent",val:totalDays-presentDays,color:"#dc2626",bg:"#fef2f2"},
+                    {label:"Clients",val:monthLogs.length,color:"#1a1a2e",bg:"#f8fafc"},
+                    {label:"Revenue",val:"₹"+(monthRevenue/1000).toFixed(1)+"k",color:"#2563eb",bg:"#eff6ff"},
+                  ].map(st=>(
+                    <div key={st.label} style={{background:st.bg,borderRadius:8,padding:"8px 4px",textAlign:"center"}}>
+                      <div style={{fontSize:14,fontWeight:800,color:st.color}}>{st.val}</div>
+                      <div style={{fontSize:9,color:"#888",marginTop:2}}>{st.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </>}
+      </>}
     </div>
   );
 }
