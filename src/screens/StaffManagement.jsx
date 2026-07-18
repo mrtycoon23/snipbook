@@ -709,6 +709,112 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
 }
 
 // ─── Owner Dashboard ───────────────────────────────────────────────────────────
+// ─── Pending Approvals Screen ─────────────────────────────────────────────────
+function PendingScreen({salonId,staffList,onClose}){
+  const[pending,setPending]=useState([]);
+  const[loading,setLoading]=useState(true);
+  const[processing,setProcessing]=useState(null);
+  const[rejectId,setRejectId]=useState(null);
+  const[reason,setReason]=useState("");
+  const[approvalOn,setApprovalOn]=useState(false);
+
+  const staffName={};
+  staffList.forEach(s=>{staffName[s.id]=s.name;});
+
+  useEffect(()=>{
+    async function load(){
+      const[logsRes,salonRes]=await Promise.all([
+        supabase.from("work_logs").select("*").eq("salon_id",salonId).eq("status","pending").order("created_at",{ascending:false}),
+        supabase.from("salons").select("approval_required").eq("id",salonId).single()
+      ]);
+      setPending(logsRes.data||[]);
+      setApprovalOn(salonRes.data?.approval_required||false);
+      setLoading(false);
+    }
+    load();
+  },[salonId]);
+
+  async function toggleApproval(){
+    const newVal=!approvalOn;
+    setApprovalOn(newVal);
+    await supabase.from("salons").update({approval_required:newVal}).eq("id",salonId);
+  }
+
+  async function approve(id){
+    setProcessing(id);
+    await supabase.from("work_logs").update({status:"approved"}).eq("id",id);
+    setPending(prev=>prev.filter(l=>l.id!==id));
+    setProcessing(null);
+  }
+
+  async function reject(id){
+    setProcessing(id);
+    await supabase.from("work_logs").update({status:"rejected",rejection_reason:reason}).eq("id",id);
+    setPending(prev=>prev.filter(l=>l.id!==id));
+    setProcessing(null);setRejectId(null);setReason("");
+  }
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"#f5f3ff",zIndex:300,display:"flex",flexDirection:"column",fontFamily:"system-ui,sans-serif"}}>
+      {/* Header with toggle */}
+      <div style={{background:"#fff",padding:"14px 18px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid #f1f0f5",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <button onClick={onClose} style={{width:34,height:34,borderRadius:10,background:"#f5f3ff",border:"1px solid #e0d8ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#5b3fc4",cursor:"pointer",fontWeight:600}}>←</button>
+          <div>
+            <div style={{fontWeight:800,fontSize:16,color:"#0f0a2e"}}>⏳ Pending Approvals</div>
+            <div style={{fontSize:11,color:"#9b8ec4",marginTop:2}}>{pending.length} logs awaiting approval</div>
+          </div>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+          <div onClick={toggleApproval} style={{width:44,height:24,borderRadius:12,background:approvalOn?"#7c3aed":"#d1d5db",position:"relative",cursor:"pointer",transition:"background 0.2s"}}>
+            <div style={{width:18,height:18,borderRadius:"50%",background:"#fff",position:"absolute",top:3,left:approvalOn?23:3,transition:"left 0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
+          </div>
+          <span style={{fontSize:9,fontWeight:700,color:approvalOn?"#7c3aed":"#9ca3af"}}>{approvalOn?"ON":"OFF"}</span>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"14px 16px"}}>
+        {loading?<div style={{padding:32,textAlign:"center",color:"#9b8ec4"}}>Loading...</div>
+        :pending.length===0?(
+          <div style={{textAlign:"center",padding:"48px 24px"}}>
+            <div style={{fontSize:40,marginBottom:12}}>✅</div>
+            <div style={{fontSize:15,fontWeight:800,color:"#0f0a2e"}}>Sab approve ho gaya!</div>
+            <div style={{fontSize:12,color:"#9b8ec4",marginTop:4}}>Koi pending log nahi hai</div>
+          </div>
+        ):pending.map(log=>(
+          <div key={log.id} style={{background:"#fff",border:"1.5px solid #fde68a",borderRadius:14,padding:"14px",marginBottom:10}}>
+            {rejectId===log.id?(
+              <div>
+                <div style={{fontSize:13,fontWeight:800,color:"#0f0a2e",marginBottom:8}}>Reject reason (optional):</div>
+                <textarea value={reason} onChange={e=>setReason(e.target.value)} style={{width:"100%",padding:"9px 11px",border:"1.5px solid #e0d8ff",borderRadius:10,fontSize:13,fontFamily:"inherit",outline:"none",resize:"none",minHeight:70,boxSizing:"border-box"}} placeholder="Reason likhein..."/>
+                <div style={{display:"flex",gap:8,marginTop:10}}>
+                  <button onClick={()=>{setRejectId(null);setReason("");}} style={{flex:1,padding:"10px",border:"1.5px solid #e5e7eb",borderRadius:10,background:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",color:"#6b7280"}}>Cancel</button>
+                  <button onClick={()=>reject(log.id)} disabled={processing===log.id} style={{flex:1,padding:"10px",border:"none",borderRadius:10,background:"#ef4444",color:"#fff",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>Confirm Reject</button>
+                </div>
+              </div>
+            ):(
+              <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                  <div>
+                    <div style={{fontSize:14,fontWeight:800,color:"#0f0a2e"}}>{log.client_name}</div>
+                    <div style={{fontSize:12,color:"#9b8ec4",marginTop:2}}>{log.service} · {staffName[log.staff_id]||"Staff"} · {new Date(log.date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short"})}</div>
+                  </div>
+                  <div style={{fontSize:16,fontWeight:900,color:"#a16207"}}>₹{Number(log.amount||0).toLocaleString("en-IN")}</div>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>approve(log.id)} disabled={processing===log.id} style={{flex:1,padding:"10px",background:"#f0fdf4",border:"1.5px solid #bbf7d0",borderRadius:10,color:"#16a34a",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>✓ Approve</button>
+                  <button onClick={()=>setRejectId(log.id)} disabled={processing===log.id} style={{flex:1,padding:"10px",background:"#fff0f0",border:"1.5px solid #fca5a5",borderRadius:10,color:"#ef4444",fontSize:13,fontWeight:800,cursor:"pointer",fontFamily:"inherit"}}>✕ Reject</button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAttendance,showRevenueToStaff,setShowRevenueToStaff,currentUser,onBack}){
   const [view,setView]=useState("list");
   const [selectedStaff,setSelectedStaff]=useState(null);
@@ -719,6 +825,17 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
   const [fromDate,setFromDate]=useState(today);
   const [toDate,setToDate]=useState(today);
   const [showSummary,setShowSummary]=useState(false);
+  const [showPending,setShowPending]=useState(false);
+  const [pendingCount,setPendingCount]=useState(0);
+
+  useEffect(()=>{
+    async function loadPendingCount(){
+      if(!currentUser?.id)return;
+      const{count}=await supabase.from("work_logs").select("id",{count:"exact",head:true}).eq("salon_id",currentUser.id).eq("status","pending");
+      setPendingCount(count||0);
+    }
+    loadPendingCount();
+  },[currentUser?.id,showPending]);
 
   async function toggleAttendance(staffId,date){
     const currentVal=!!(attendance[date]||{})[staffId];
@@ -776,6 +893,7 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
   const presentToday=staffList.filter(s=>todayAtt[s.id]).length;
 
   if(showSummary)return<StaffSummaryScreen staffList={staffList} logs={logs} attendance={attendance} onBack={()=>setShowSummary(false)}/>;
+  if(showPending)return<PendingScreen salonId={currentUser?.id} staffList={staffList} onClose={()=>setShowPending(false)}/>;
   if(view==="detail"&&selectedStaff){
     return(
       <>
@@ -806,6 +924,20 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
           <button onClick={()=>setShowSummary(true)} style={{background:NP.white,color:NP.purpleMid,border:`1px solid ${NP.purpleBorder}`,borderRadius:9,padding:"7px 13px",fontSize:12,fontWeight:500,cursor:"pointer"}}>📈 Analytics</button>
         </div>
       </div>
+
+      {/* Pending Banner */}
+      {pendingCount>0&&(
+        <div onClick={()=>setShowPending(true)} style={{background:"#fef9c3",borderBottom:"1.5px solid #fde68a",padding:"12px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:20}}>⏳</span>
+            <div>
+              <div style={{fontSize:14,fontWeight:800,color:"#a16207"}}>{pendingCount} Pending Log{pendingCount>1?"s":""} — Approval Chahiye</div>
+              <div style={{fontSize:11,color:"#a16207",marginTop:2}}>Tap karke approve/reject karo</div>
+            </div>
+          </div>
+          <span style={{fontSize:16,color:"#a16207"}}>›</span>
+        </div>
+      )}
 
       {/* Sub header — date filter + stats */}
       <div style={{padding:"10px 16px 0",background:NP.bg,flexShrink:0}}>
