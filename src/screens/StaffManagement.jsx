@@ -925,19 +925,17 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
         </div>
       </div>
 
-      {/* Pending Banner */}
-      {pendingCount>0&&(
-        <div onClick={()=>setShowPending(true)} style={{background:"#fef9c3",borderBottom:"1.5px solid #fde68a",padding:"12px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",flexShrink:0}}>
-          <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <span style={{fontSize:20}}>⏳</span>
-            <div>
-              <div style={{fontSize:14,fontWeight:800,color:"#a16207"}}>{pendingCount} Pending Log{pendingCount>1?"s":""} — Approval Chahiye</div>
-              <div style={{fontSize:11,color:"#a16207",marginTop:2}}>Tap karke approve/reject karo</div>
-            </div>
+      {/* Pending Banner - always visible */}
+      <div onClick={()=>setShowPending(true)} style={{background:pendingCount>0?"#fef9c3":"#f5f3ff",borderBottom:"1.5px solid "+(pendingCount>0?"#fde68a":"#e0d8ff"),padding:"11px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:18}}>{pendingCount>0?"⏳":"✅"}</span>
+          <div>
+            <div style={{fontSize:13,fontWeight:800,color:pendingCount>0?"#a16207":"#5b3fc4"}}>{pendingCount>0?(pendingCount+" Pending Log"+(pendingCount>1?"s":"")+" — Approval Chahiye"):"Approval Settings"}</div>
+            <div style={{fontSize:11,color:pendingCount>0?"#a16207":"#9b8ec4",marginTop:2}}>{pendingCount>0?"Tap karke approve/reject karo":"Approval toggle yahan manage karo"}</div>
           </div>
-          <span style={{fontSize:16,color:"#a16207"}}>›</span>
         </div>
-      )}
+        <span style={{fontSize:16,color:pendingCount>0?"#a16207":"#9b8ec4"}}>›</span>
+      </div>
 
       {/* Sub header — date filter + stats */}
       <div style={{padding:"10px 16px 0",background:NP.bg,flexShrink:0}}>
