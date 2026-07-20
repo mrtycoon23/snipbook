@@ -294,7 +294,7 @@ const NAV=[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",
 
 const OWNER_LOG_SERVICES=["Haircut","Hair Color","Facial","Waxing","Bridal Makeup","Manicure","Pedicure","Head Massage","Threading","Blowdry","Keratin","Hair Spa"];
 
-function RevenueDetailModal({rows,staffMap,onClose}){
+function RevenueDetailModal({rows,staffMap,onClose}){ 
   const total=rows.reduce((s,r)=>s+(r.amount||0),0);
   return(
     <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:900,display:"flex",alignItems:"flex-end"}}>
@@ -395,15 +395,79 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
   const [waError,setWaError]=useState("");
   const [ambiguousCustomers,setAmbiguousCustomers]=useState([]);
   const [showPickCustomer,setShowPickCustomer]=useState(false); // idle | sending | sent | error
+  const [suggestions,setSuggestions]=useState([]);
+  const [suppressSuggest,setSuppressSuggest]=useState(false);
+  const [phoneConflict,setPhoneConflict]=useState(null);
   const [notes,setNotes]=useState("");
   const [photos,setPhotos]=useState([]);
   const [tempVisitId]=useState(()=>`owner_${Date.now()}_${Math.random().toString(36).slice(2,8)}`);
+  const [isNewClient,setIsNewClient]=useState(false);
+  const [newClientDob,setNewClientDob]=useState("");
+  const [newClientGender,setNewClientGender]=useState("male");
 
   useEffect(()=>{
     const prevOverflow=document.body.style.overflow;
     document.body.style.overflow="hidden";
     return()=>{document.body.style.overflow=prevOverflow;};
   },[]);
+
+  useEffect(()=>{
+    if(!salonId||suppressSuggest){setSuggestions([]);return;}
+    const term=clientName.trim();
+    const ph=clientPhone.replace(/\D/g,"");
+    if(term.length<2&&ph.length<3){setSuggestions([]);return;}
+    const t=setTimeout(async()=>{
+      try{
+        let q=supabase.from("customers").select("id,name,phone").eq("salon_id",salonId).limit(5);
+        if(ph.length>=3)q=q.ilike("phone",`%${ph}%`);
+        else q=q.ilike("name",`%${term}%`);
+        const{data}=await q;
+        setSuggestions(data||[]);
+      }catch(e){setSuggestions([]);}
+    },300);
+    return()=>clearTimeout(t);
+  },[clientName,clientPhone,salonId,suppressSuggest]);
+
+  useEffect(()=>{
+    if(!salonId){setPhoneConflict(null);return;}
+    const ph=clientPhone.replace(/\D/g,"");
+    if(ph.length!==10){setPhoneConflict(null);return;}
+    let cancelled=false;
+    (async()=>{
+      try{
+        const{data}=await supabase.from("customers").select("id,name,phone").eq("salon_id",salonId).ilike("phone",`%${ph}%`).limit(1);
+        if(cancelled)return;
+        const ex=data?.[0];
+        if(ex&&clientName.trim()&&(ex.name||"").trim().toLowerCase()!==clientName.trim().toLowerCase())setPhoneConflict(ex);
+        else setPhoneConflict(null);
+      }catch(e){}
+    })();
+    return()=>{cancelled=true;};
+  },[clientPhone,clientName,salonId]);
+
+  // Detect new client
+  useEffect(()=>{
+    if(!salonId||clientPhone.length!==10){setIsNewClient(false);return;}
+    let cancelled=false;
+    (async()=>{
+      try{
+        const{data}=await supabase.from("customers").select("id").eq("salon_id",salonId).ilike("phone",`%${clientPhone}%`).limit(1);
+        if(!cancelled)setIsNewClient(!data||data.length===0);
+      }catch(e){if(!cancelled)setIsNewClient(false);}
+    })();
+    return()=>{cancelled=true;};
+  },[clientPhone,salonId]);
+
+  
+
+  
+
+  function pickSuggestion(cu){
+    setSuppressSuggest(true);
+    setClientName(cu.name||"");
+    if(cu.phone)setClientPhone((cu.phone||"").replace(/\D/g,"").slice(-10));
+    setSuggestions([]);
+  }
 
   async function handleCancel(){
     if(photos.length>0){
@@ -462,7 +526,7 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
         if(byPhone&&byPhone.length>0){
           await saveLog({...base,customerId:byPhone[0].id});
         }else{
-          const{data:newCust}=await supabase.from("customers").insert({salon_id:salonId,name:base.clientName,phone:phone10,gender:"male"}).select().single();
+          const{data:newCust}=await supabase.from("customers").insert({salon_id:salonId,name:base.clientName,phone:phone10,gender:newClientGender||"male",birthday:newClientDob||null}).select().single();
           await saveLog({...base,customerId:newCust?.id||null});
         }
         return;
@@ -616,16 +680,36 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
         <div style={{width:36,height:4,background:TP.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{fontWeight:900,fontSize:16,marginBottom:4,color:TP.text}}>➕ Add Your Work Log</div>
         <div style={{fontSize:12,color:TP.ts,marginBottom:16}}>Record the service you provided</div>
-        <div style={{marginBottom:12}}>
+        <div style={{marginBottom:12,position:"relative"}}>
           <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Client Name *</div>
-          <input style={is} placeholder="e.g. Anjali Mehta" value={clientName} onChange={e=>setClientName(e.target.value)} autoFocus/>
-        </div>
+          <input style={is} placeholder="e.g. Anjali Mehta" value={clientName} onChange={e=>{setClientName(e.target.value);setSuppressSuggest(false);}} autoFocus/>
+          {suggestions.length>0&&(
+            <div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:50,background:"#fff",border:`2px solid ${TP.border}`,borderRadius:12,marginTop:4,boxShadow:"0 8px 24px rgba(0,0,0,0.12)",overflow:"hidden"}}>
+              <div style={{fontSize:10,fontWeight:800,color:TP.tf,padding:"7px 12px 4px",borderBottom:`1px solid ${TP.border}`}}>EXISTING CUSTOMERS</div>
+              {suggestions.map(cu=>(
+                <div key={cu.id} onClick={()=>pickSuggestion(cu)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",borderBottom:"1px solid #f6f8fa",cursor:"pointer"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
+                    <div style={{width:28,height:28,borderRadius:9,background:TP.purpleLight,color:TP.purpleMid,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,flexShrink:0}}>{(cu.name||"?").slice(0,2).toUpperCase()}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:TP.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{cu.name}</div>
+                  </div>
+                  <div style={{fontSize:11,color:TP.ts,fontWeight:600,flexShrink:0,marginLeft:8}}>{cu.phone?`📱 ${(cu.phone||"").replace(/\D/g,"").slice(-10)}`:"No phone"}</div>
+                </div>
+              ))}
+            </div>
+          )} 
+        </div> 
         <div style={{marginBottom:12}}>
           <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Phone Number <span style={{color:TP.tf,fontWeight:600}}>(optional, recommended)</span></div>
-          <input style={is} type="tel" placeholder="e.g. 9876543210" value={clientPhone} onChange={e=>setClientPhone(e.target.value.replace(/\D/g,"").slice(0,10))}/>
-          <div style={{fontSize:10,color:TP.tf,marginTop:4}}>Helps identify customers with the same name</div>
+          <input style={{...is,...(phoneConflict?{borderColor:"#f59e0b"}:{})}} type="tel" placeholder="e.g. 9876543210" value={clientPhone} onChange={e=>{setClientPhone(e.target.value.replace(/\D/g,"").slice(0,10));setSuppressSuggest(false);}}/>
+          {phoneConflict
+            ?<div style={{background:TP.yellow,border:`1.5px solid ${TP.yb}`,borderRadius:10,padding:"9px 12px",marginTop:6}}>
+              <div style={{fontSize:12,color:TP.yt,fontWeight:800,marginBottom:6}}>⚠️ This number is already saved as "{phoneConflict.name}"</div>
+              <div style={{fontSize:11,color:TP.yt,marginBottom:8}}>Saving with a different name will link this log to {phoneConflict.name}'s history.</div>
+              <button onClick={()=>{setSuppressSuggest(true);setClientName(phoneConflict.name);setPhoneConflict(null);setSuggestions([]);}} style={{padding:"7px 12px",background:"#fff",border:`1.5px solid ${TP.yb}`,borderRadius:9,fontSize:12,fontWeight:800,color:TP.yt,cursor:"pointer",fontFamily:"inherit"}}>✓ Use "{phoneConflict.name}" instead</button>
+            </div>
+            :<div style={{fontSize:10,color:TP.tf,marginTop:4}}>Helps identify customers with the same name</div>} 
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}> 
           <div style={{minWidth:0}}>
             <div style={{fontSize:12,fontWeight:800,color:TP.tm,marginBottom:5}}>Service</div>
             <select style={{...is,cursor:"pointer",width:"100%",boxSizing:"border-box"}} value={service} onChange={e=>setService(e.target.value)}>
@@ -652,6 +736,25 @@ function OwnerWorkLogModal({salonId,salonName,onSave,onClose}){
             <OwnerStagedAddPhotoBtn tempId={tempVisitId} onAdd={ph=>setPhotos(prev=>[...prev,ph])}/>
           </div>
         </div>
+        {isNewClient&&clientPhone.length===10&&(
+          <div style={{background:"#eff6ff",border:"1.5px solid #93c5fd",borderRadius:11,padding:"12px 13px",marginBottom:12}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+              <span style={{fontSize:16}}>🆕</span>
+              <div style={{fontSize:12,fontWeight:800,color:"#2563eb"}}>New Client Detected! Add details:</div>
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#3b82f6",marginBottom:4}}>🎂 Date of Birth (optional)</div>
+              <input style={{width:"100%",padding:"10px 12px",border:"1.5px solid #93c5fd",borderRadius:10,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fff",boxSizing:"border-box",color:TP.text,minHeight:44}} type="date" value={newClientDob} onChange={e=>setNewClientDob(e.target.value)}/>
+              {!newClientDob&&<div style={{fontSize:10,color:"#93c5fd",marginTop:3}}>Tap to select date of birth</div>}
+            </div>
+            <div>
+              <div style={{fontSize:11,fontWeight:800,color:"#3b82f6",marginBottom:4}}>Gender</div>
+              <div style={{display:"flex",gap:6}}>{[{id:"male",label:"👨 Male"},{id:"female",label:"👩 Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClientGender(g.id)} style={{flex:1,padding:"7px",borderRadius:9,border:`2px solid ${newClientGender===g.id?"#2563eb":"#bfdbfe"}`,background:newClientGender===g.id?"#dbeafe":"#fff",color:newClientGender===g.id?"#1d4ed8":"#60a5fa",fontFamily:"inherit",fontSize:12,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div>
+            </div>
+          </div>
+        )}
+        
+        
         <div style={{display:"flex",gap:10}}>
           <button onClick={handleCancel} style={{flex:1,padding:12,border:`2px solid ${TP.border}`,borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:TP.tm}}>Cancel</button>
           <button onClick={save} disabled={saving} style={{flex:2,padding:12,border:"none",borderRadius:12,background:clientName.trim()&&amount?TP.purple:"#d1d5db",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>
@@ -677,7 +780,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
   useEffect(()=>{
     async function loadEarnedRevenue(){
       try{
-        const{data}=await supabase.from("work_logs").select("*").eq("salon_id",user.id).eq("date",todayKey);
+        const{data:wlRaw}=await supabase.from("work_logs").select("*").eq("salon_id",user.id).eq("date",todayKey);const data=(wlRaw||[]).filter(l=>l.status==="approved"||!l.status);
         setTodayWorkLogs(data||[]);
         setEarnedRevenue(data?data.reduce((s,l)=>s+(l.amount||0),0):0);
       }catch(e){}
@@ -858,8 +961,8 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
             {welcomeModal&&selClient&&(<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.55)",zIndex:800,display:"flex",alignItems:"center",justifyContent:"center",padding:"20px"}}><div style={{background:"#fff",borderRadius:20,padding:"26px 22px",width:"100%",maxWidth:340}}>{welcomeModal==="confirm"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{width:64,height:64,borderRadius:20,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:30,margin:"0 auto 12px"}}>💬</div><div style={{fontWeight:900,fontSize:17,color:"#1a0a4a",marginBottom:6}}>Welcome Message?</div><div style={{fontSize:13,color:"#666"}}>{selClient.name} ko WhatsApp pe message jayega</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setWelcomeModal(null)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}>Cancel</button><button onClick={sendWelcomeMessage} style={{flex:2,padding:"12px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Bhejo</button></div></>)}{welcomeModal==="success"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{fontSize:50,marginBottom:8}}>✅</div><div style={{fontWeight:900,fontSize:17,color:"#16a34a",marginBottom:8}}>Message Bhej Diya!</div><div style={{fontSize:13,color:"#555"}}>{welcomeModalMsg}</div></div><button onClick={()=>setWelcomeModal(null)} style={{width:"100%",padding:"13px",background:"#2d1b69",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Done</button></>)}{welcomeModal==="error"&&(<><div style={{textAlign:"center",marginBottom:20}}><div style={{fontSize:50,marginBottom:8}}>❌</div><div style={{fontWeight:900,fontSize:17,color:"#dc2626",marginBottom:8}}>Message Nahi Gaya</div><div style={{fontSize:13,color:"#555"}}>{welcomeModalMsg}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setWelcomeModal(null)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#888"}}>Close</button><button onClick={()=>setWelcomeModal("confirm")} style={{flex:1,padding:"12px",background:"#ef4444",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:800,cursor:"pointer"}}>Retry</button></div></>)}</div></div>)}
             {showEditClient&&editClient&&(<div onClick={()=>setShowEditClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,marginBottom:16,color:"#1a0a4a"}}>Edit Customer</div>{[{label:"Full Name",key:"name",ph:"Priya Sharma",type:"text"},{label:"Phone",key:"phone",ph:"9876543210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"},{label:"Email",key:"email",ph:"customer@gmail.com",type:"email"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:4}}>{f.label}</div><input type={f.type} value={editClient[f.key]||""} onChange={e=>setEditClient(p=>({...p,[f.key]:e.target.value}))} placeholder={f.ph} style={is} onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e0d8ff"}/></div>))}<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"Male"},{id:"female",label:"Female"}].map(g=>(<button key={g.id} onClick={()=>setEditClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.gender===g.id?"#5b3fc4":"#e0d8ff"}`,background:editClient.gender===g.id?"#ede9fe":"#fff",color:editClient.gender===g.id?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setEditClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${editClient.tag===t?"#5b3fc4":"#e0d8ff"}`,background:editClient.tag===t?"#ede9fe":"#fff",color:editClient.tag===t?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowEditClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Cancel</button><button onClick={async()=>{if(!editClient.name.trim())return;await supabase.from("customers").update({name:editClient.name.trim(),phone:editClient.phone||"",city:editClient.city||"",birthday:editClient.dob||null,email:editClient.email||"",tag:editClient.tag||"Regular",gender:editClient.gender||"male"}).eq("id",editClient.id);setClients(prev=>prev.map(c=>c.id===editClient.id?{...c,...editClient,name:editClient.name.trim()}:c));setSelClient(prev=>prev?{...prev,...editClient,name:editClient.name.trim()}:null);setShowEditClient(false);}} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:editClient.name.trim()?"#2d1b69":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
             {showAddClient&&(<div onClick={()=>setShowAddClient(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%",maxHeight:"90vh",overflowY:"auto"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 14px"}}/><div style={{fontWeight:900,fontSize:16,marginBottom:16,color:"#1a0a4a"}}>Add New Customer</div>{[{label:"Full Name *",key:"name",ph:"Priya Sharma",type:"text"},{label:"Phone *",key:"phone",ph:"9876543210",type:"tel"},{label:"City",key:"city",ph:"Delhi",type:"text"},{label:"Date of Birth",key:"dob",ph:"",type:"date"}].map(f=>(<div key={f.key} style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:4}}>{f.label}</div><input type={f.type} value={newClient[f.key]} onChange={e=>setNewClient(p=>({...p,[f.key]:f.key==="phone"?e.target.value.replace(/\D/g,"").slice(0,10):e.target.value}))} placeholder={f.ph} maxLength={f.key==="phone"?10:undefined} inputMode={f.key==="phone"?"numeric":undefined} style={is} onFocus={e=>e.target.style.borderColor="#5b3fc4"} onBlur={e=>e.target.style.borderColor="#e0d8ff"}/></div>))}<div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Gender</div><div style={{display:"flex",gap:8}}>{[{id:"male",label:"Male"},{id:"female",label:"Female"}].map(g=>(<button key={g.id} onClick={()=>setNewClient(p=>({...p,gender:g.id}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.gender===g.id?"#5b3fc4":"#e0d8ff"}`,background:newClient.gender===g.id?"#ede9fe":"#fff",color:newClient.gender===g.id?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{g.label}</button>))}</div></div><div style={{marginBottom:16}}><div style={{fontSize:13,fontWeight:800,color:"#4a3580",marginBottom:8}}>Tag</div><div style={{display:"flex",gap:8}}>{["New","Regular","VIP"].map(t=>(<button key={t} onClick={()=>setNewClient(p=>({...p,tag:t}))} style={{flex:1,padding:"9px",borderRadius:10,border:`2px solid ${newClient.tag===t?"#5b3fc4":"#e0d8ff"}`,background:newClient.tag===t?"#ede9fe":"#fff",color:newClient.tag===t?"#5b3fc4":"#888",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>{t}</button>))}</div></div><div style={{display:"flex",gap:10}}><button onClick={()=>setShowAddClient(false)} style={{flex:1,padding:"12px",border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Cancel</button><button onClick={async()=>{if(!newClient.name.trim()||!newClient.phone.trim())return;await supabase.from("customers").insert({salon_id:user.id,name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"",tag:newClient.tag,source:"walk",birthday:newClient.dob||null,gender:newClient.gender||"male"});const ini=newClient.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();setClients(prev=>[{id:Date.now(),name:newClient.name.trim(),phone:newClient.phone.trim(),city:newClient.city||"—",src:"walk",avatar:ini,joined:new Date().toLocaleDateString("en-IN",{month:"short",year:"numeric"}),visits:0,totalSpent:0,lastVisit:"—",tag:newClient.tag,history:[]},...prev]);setNewClient({name:"",phone:"",city:"",dob:"",tag:"Regular",gender:"male"});setShowAddClient(false);}} style={{flex:2,padding:"12px",border:"none",borderRadius:12,background:newClient.name.trim()&&newClient.phone.trim()?"#2d1b69":"#ccc",color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>Save</button></div></div></div>)}
-          </div>
-        )}
+          </div> 
+        )} 
         {screen==="staff"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><div style={{flex:1,overflowY:"auto"}}><StaffManagement role="owner" currentUser={user} showRevenue={showRevenue} setShowRevenue={setShowRevenue} onBack={()=>setScreen("dashboard")}/></div></div>)}
         {screen==="history"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><CustomerHistory key={screen} currentUser={{...user,role:"owner"}} onBack={()=>setScreen("dashboard")} onBookAppointment={()=>setScreen("calendar")}/></div>)}
         {screen==="chats"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><ChatHistory salonId={user.id}/></div>)}
@@ -867,11 +970,11 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         {screen==="settings"&&(<div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column"}}><Settings user={user} onBack={()=>setScreen("dashboard")} onLogout={onLogout} onSalonUpdate={(newName,newLogoUrl)=>setUser(prev=>({...prev,salon:newName,logo_url:newLogoUrl||prev.logo_url}))} showRevenue={showRevenue} setShowRevenue={setShowRevenue}/></div>)}
       </div>
       <div style={{background:"#fff",borderTop:"0.5px solid #e0d8ff",paddingBottom:"env(safe-area-inset-bottom,0px)",display:"flex",alignItems:"center",flexShrink:0,boxShadow:"0 -4px 20px rgba(45,27,105,0.07)",position:"relative",height:62}}>
-        {[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",label:"Calendar"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>{active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}<div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div><span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span></div>);})}
+        {[{id:"dashboard",icon:"🏠",label:"Home"},{id:"history",icon:"📋",label:"History"}].map((item,idx)=>{const active=screen===item.id;return(<div key={idx} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>{active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}<div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div><span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span></div>);})}
         <div style={{flex:1,display:"flex",justifyContent:"center",alignItems:"center"}}><div onClick={()=>setShowQuickAdd(true)} style={{width:50,height:50,borderRadius:"50%",background:"linear-gradient(135deg,#2d1b69,#5b3fc4)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,color:"#fff",boxShadow:"0 4px 16px rgba(45,27,105,0.4)",cursor:"pointer",marginBottom:8}}>+</div></div>
         {[{id:"staff",icon:"👨‍💼",label:"Staff"},{id:"settings",icon:"⚙️",label:"Settings"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>setScreen(item.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:1,cursor:"pointer",padding:"8px 4px 6px",position:"relative",height:"100%",justifyContent:"center"}}>{active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:3,borderRadius:"0 0 4px 4px",background:"#2d1b69"}}/>}<div style={{width:30,height:30,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",background:active?"#ede9fe":"transparent"}}><span style={{fontSize:16}}>{item.icon}</span></div><span style={{fontSize:9,fontWeight:active?800:600,color:active?"#2d1b69":"#9b8ec4"}}>{item.label}</span></div>);})}
       </div>
-      {showDrawer&&(<><div onClick={()=>setShowDrawer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:700}}/><div style={{position:"fixed",top:0,left:0,bottom:0,width:280,background:"#fff",zIndex:800,display:"flex",flexDirection:"column",boxShadow:"4px 0 24px rgba(0,0,0,0.15)"}}><div style={{background:"#f4f2ff",padding:"44px 16px 12px",borderBottom:"0.5px solid #e0d8ff"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:10,background:"#ede9fe",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:"#5b3fc4",flexShrink:0}}>{user?.salon?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>✂️ {user?.salon}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{user?.name}</div></div></div></div><div style={{flex:1,overflowY:"auto",padding:"4px 0"}}>{[{id:"dashboard",icon:"🏠",label:"Home"},{id:"calendar",icon:"📅",label:"Calendar"},{id:"clients",icon:"👥",label:"Clients"},{id:"staff",icon:"👨‍💼",label:"Staff"},{id:"history",icon:"📋",label:"Customer History"},{id:"engage",icon:"💫",label:"Engagement"},{id:"chats",icon:"💬",label:"Bot Chats"},{id:"settings",icon:"⚙️",label:"Settings"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>{if(item.id==="chats")openChats();else setScreen(item.id);setShowDrawer(false);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 16px",cursor:"pointer",background:active?"#f4f2ff":"transparent",borderLeft:active?"3px solid #2d1b69":"3px solid transparent"}}><div style={{width:30,height:30,borderRadius:8,background:active?"#ede9fe":"#f4f2ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{item.icon}</div><div style={{fontWeight:active?800:500,fontSize:13,color:active?"#2d1b69":"#1a0a4a",flex:1}}>{item.label}</div>{item.id==="chats"&&botChatUnread>0&&<div style={{minWidth:18,height:18,padding:"0 4px",borderRadius:9,background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:"#fff"}}>{botChatUnread>9?"9+":botChatUnread}</div>}{active&&<div style={{marginLeft:item.id==="chats"&&botChatUnread>0?6:"auto",width:5,height:5,borderRadius:"50%",background:"#2d1b69"}}/>}</div>);})}</div><div style={{padding:"12px 16px",borderTop:"1px solid #f1f0f5"}}><button onClick={()=>{setShowDrawer(false);onLogout();}} style={{width:"100%",padding:"11px 16px",background:"#fff5f5",border:"1px solid #fca5a5",borderRadius:12,display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontFamily:"inherit"}}><div style={{width:32,height:32,borderRadius:9,background:"#fee2e2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🚪</div><span style={{fontSize:14,fontWeight:700,color:"#dc2626"}}>Logout</span></button><div style={{fontSize:10,color:"#c4b8f0",textAlign:"center",marginTop:10}}>SnipBook · {user?.salon}</div></div></div></>)}
+      {showDrawer&&(<><div onClick={()=>setShowDrawer(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:700}}/><div style={{position:"fixed",top:0,left:0,bottom:0,width:280,background:"#fff",zIndex:800,display:"flex",flexDirection:"column",boxShadow:"4px 0 24px rgba(0,0,0,0.15)"}}><div style={{background:"#f4f2ff",padding:"44px 16px 12px",borderBottom:"0.5px solid #e0d8ff"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:10,background:"#ede9fe",border:"1.5px solid #c4b8f0",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:"#5b3fc4",flexShrink:0}}>{user?.salon?.split(" ").map(w=>w[0]).join("").slice(0,2)||"S"}</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>✂️ {user?.salon}</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>{user?.name}</div></div></div></div><div style={{flex:1,overflowY:"auto",padding:"4px 0"}}>{[{id:"dashboard",icon:"🏠",label:"Home"},{id:"dashboard",icon:"🏠",label:"Home"},{id:"history",icon:"📋",label:"History"},{id:"clients",icon:"👥",label:"Clients"},{id:"staff",icon:"👨‍💼",label:"Staff"},{id:"history",icon:"📋",label:"Customer History"},{id:"engage",icon:"💫",label:"Engagement"},{id:"chats",icon:"💬",label:"Bot Chats"},{id:"settings",icon:"⚙️",label:"Settings"}].map(item=>{const active=screen===item.id;return(<div key={item.id} onClick={()=>{if(item.id==="chats")openChats();else setScreen(item.id);setShowDrawer(false);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 16px",cursor:"pointer",background:active?"#f4f2ff":"transparent",borderLeft:active?"3px solid #2d1b69":"3px solid transparent"}}><div style={{width:30,height:30,borderRadius:8,background:active?"#ede9fe":"#f4f2ff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>{item.icon}</div><div style={{fontWeight:active?800:500,fontSize:13,color:active?"#2d1b69":"#1a0a4a",flex:1}}>{item.label}</div>{item.id==="chats"&&botChatUnread>0&&<div style={{minWidth:18,height:18,padding:"0 4px",borderRadius:9,background:"#ef4444",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:900,color:"#fff"}}>{botChatUnread>9?"9+":botChatUnread}</div>}{active&&<div style={{marginLeft:item.id==="chats"&&botChatUnread>0?6:"auto",width:5,height:5,borderRadius:"50%",background:"#2d1b69"}}/>}</div>);})}</div><div style={{padding:"12px 16px",borderTop:"1px solid #f1f0f5"}}><button onClick={()=>{setShowDrawer(false);onLogout();}} style={{width:"100%",padding:"11px 16px",background:"#fff5f5",border:"1px solid #fca5a5",borderRadius:12,display:"flex",alignItems:"center",gap:10,cursor:"pointer",fontFamily:"inherit"}}><div style={{width:32,height:32,borderRadius:9,background:"#fee2e2",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🚪</div><span style={{fontSize:14,fontWeight:700,color:"#dc2626"}}>Logout</span></button><div style={{fontSize:10,color:"#c4b8f0",textAlign:"center",marginTop:10}}>SnipBook · {user?.salon}</div></div></div></>)}
       {bookingToast&&(<div onClick={()=>{setScreen("calendar");if(bookingToast.date)setSelDate(new Date(bookingToast.date));setBookingToast(null);}} style={{position:"fixed",top:"calc(12px + env(safe-area-inset-top,0px))",left:12,right:12,zIndex:999,background:"linear-gradient(135deg,#16a34a,#22c55e)",borderRadius:16,padding:"14px 16px",boxShadow:"0 8px 24px rgba(0,0,0,0.3)",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
         <div style={{fontSize:24,flexShrink:0}}>🎉</div>
         <div style={{flex:1,minWidth:0}}>
@@ -881,7 +984,7 @@ function MainApp({user,setUser,onLogout,showRevenue,setShowRevenue}){
         <div onClick={e=>{e.stopPropagation();setBookingToast(null);}} style={{color:"#fff",fontSize:14,flexShrink:0,padding:4}}>✕</div>
       </div>)}
       {showNotifs&&(<div onClick={()=>setShowNotifs(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:600,display:"flex",alignItems:"flex-start",justifyContent:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",width:"90%",maxWidth:360,height:"100vh",overflowY:"auto"}}><div style={{padding:"16px",borderBottom:`2px solid ${TP.border}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:TP.purple,position:"sticky",top:0}}><div style={{fontWeight:900,fontSize:16,color:"#fff"}}>🔔 Notifications</div><button onClick={()=>setShowNotifs(false)} style={{background:"rgba(255,255,255,0.15)",border:"none",fontSize:18,cursor:"pointer",color:"#fff",borderRadius:8,width:32,height:32,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button></div>{notifications.length===0?(<div style={{padding:32,textAlign:"center",color:TP.ts}}>No notifications</div>):notifications.map((n,i)=>(<div key={i} onClick={()=>{setScreen("calendar");setSelDate(new Date(n.date));setShowNotifs(false);}} style={{padding:"14px 16px",borderBottom:`2px solid ${TP.bg}`,cursor:"pointer"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:38,height:38,borderRadius:12,background:TP.purpleLight,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>📅</div><div style={{flex:1}}><div style={{fontWeight:800,fontSize:13,color:TP.text}}>{n.customer_name||"Customer"}</div><div style={{fontSize:11,color:TP.ts,marginTop:2}}>{n.service} · ₹{n.amount||0}</div><div style={{fontSize:11,color:TP.purple,marginTop:2,fontWeight:700}}>{n.date} at {n.time_slot}</div></div></div></div>))}</div></div>)}
-      {showShareLink&&(<div onClick={()=>setShowShareLink(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:700,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"22px 20px 36px",width:"100%",boxSizing:"border-box",textAlign:"center"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 18px"}}/><div style={{fontSize:36,marginBottom:8}}>🔗</div><div style={{fontWeight:900,fontSize:17,marginBottom:4,color:"#1a0a4a"}}>Share Booking Link</div><div style={{fontSize:12,color:"#9b8ec4",marginBottom:18}}>Share with customers or let them scan the QR</div><img src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(shareBookingLink)}`} alt="QR" style={{width:200,height:200,borderRadius:14,border:"2px solid #e0d8ff",marginBottom:18}}/><div style={{background:"#f4f2ff",border:"1.5px solid #e0d8ff",borderRadius:12,padding:"11px 14px",display:"flex",alignItems:"center",gap:8,marginBottom:14}}><span style={{flex:1,minWidth:0,fontSize:11,color:"#4a3580",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"left"}}>{shareBookingLink}</span><button onClick={()=>navigator.clipboard.writeText(shareBookingLink)} style={{background:"none",border:"none",cursor:"pointer",fontSize:16,flexShrink:0}}>📋</button></div><button onClick={()=>setShowShareLink(false)} style={{width:"100%",padding:13,border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Close</button></div></div>)}
+      {showShareLink&&(<div onClick={()=>setShowShareLink(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:700,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"22px 20px 36px",width:"100%",boxSizing:"border-box",textAlign:"center"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 18px"}}/><div style={{fontSize:36,marginBottom:8}}>🔗</div><div style={{fontWeight:900,fontSize:17,marginBottom:4,color:"#1a0a4a"}}>Share Booking Link</div><div style={{fontSize:12,color:"#9b8ec4",marginBottom:18}}>Share with customers or let them scan the QR</div><img src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(shareBookingLink)}`} alt="QR" style={{width:200,height:200,borderRadius:14,border:"2px solid #e0d8ff",marginBottom:18}}/><div style={{background:"#f4f2ff",border:"1.5px solid #e0d8ff",borderRadius:12,padding:"11px 14px",display:"flex",alignItems:"center",gap:8,marginBottom:14}}><span style={{flex:1,minWidth:0,fontSize:11,color:"#4a3580",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",textAlign:"left"}}>{shareBookingLink}</span><button onClick={async()=>{await navigator.clipboard.writeText(shareBookingLink);const btn=document.getElementById('copy-btn');if(btn){btn.textContent='✅';setTimeout(()=>{btn.textContent='📋';},2000);}}} id="copy-btn" style={{background:"none",border:"none",cursor:"pointer",fontSize:16,flexShrink:0,transition:"all 0.2s"}}>📋</button></div><button onClick={()=>setShowShareLink(false)} style={{width:"100%",padding:13,border:"2px solid #e0d8ff",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer",color:"#4a3580"}}>Close</button></div></div>)}
       {showQuickAdd&&(<div onClick={()=>setShowQuickAdd(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:650,display:"flex",alignItems:"flex-end"}}><div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:"20px 20px 0 0",padding:"18px 18px 32px",width:"100%"}}><div style={{width:36,height:4,background:"#e0d8ff",borderRadius:2,margin:"0 auto 16px"}}/><div style={{fontWeight:900,fontSize:15,marginBottom:14,color:"#1a0a4a"}}>What would you like to add?</div><div onClick={()=>{setShowQuickAdd(false);setScreen("clients");setShowAddClient(true);}} style={{display:"flex",alignItems:"center",gap:12,padding:"14px",background:"#f4f2ff",borderRadius:14,marginBottom:10,cursor:"pointer",border:"0.5px solid #e0d8ff"}}><div style={{width:42,height:42,borderRadius:12,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>👥</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>Add Client</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>Add new customer</div></div></div><div onClick={()=>{setShowQuickAdd(false);setShowOwnerWorkLog(true);}} style={{display:"flex",alignItems:"center",gap:12,padding:"14px",background:"#f4f2ff",borderRadius:14,cursor:"pointer",border:"0.5px solid #e0d8ff"}}><div style={{width:42,height:42,borderRadius:12,background:"#ede9fe",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>✂️</div><div><div style={{fontWeight:800,fontSize:14,color:"#1a0a4a"}}>Add Work Log</div><div style={{fontSize:11,color:"#9b8ec4",marginTop:1}}>Describe the service provided</div></div></div></div></div>)}
       {showOwnerWorkLog&&<OwnerWorkLogModal salonId={user.id} salonName={user.salon||"Salon"} onSave={(logData)=>{if(logData.date===todayKey){setEarnedRevenue(prev=>prev+logData.amount);setTodayWorkLogs(prev=>[...prev,logData]);}}} onClose={()=>setShowOwnerWorkLog(false)}/>}
       {showRevenueDetail&&<RevenueDetailModal rows={todayWorkLogs} staffMap={staffMap} onClose={()=>setShowRevenueDetail(false)}/>}
