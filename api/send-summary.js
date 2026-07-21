@@ -13,9 +13,11 @@ const TEMPLATES = {
     vars: (n, s, svc, amt) => [n, s]
   },
   visit_summary: {
-    name: "template_utility_20260709181203", // Active ✅ (3 vars: name, salon, service) + "Send My Photos" quick-reply button
+    name: "template_utility_20260711215756", // Active-Quality pending ✅ HEADER={{1}} salon name uppercase, BODY: Namaste {{2}}, Service: {{3}} + "Send My Photos" quick-reply button
     label: "📋 Visit Summary",
-    vars: (n, s, svc, amt) => [n, s, svc]
+    hasHeader: true,
+    headerVar: (n, s, svc, amt) => s.toUpperCase(), // {{1}} in header = salon name uppercase
+    vars: (n, s, svc, amt) => [n, svc] // {{2}}=customerName, {{3}}=service in body
   },
   bill_summary: {
     name: "template_utility_20260708103129", // Active ✅ (4 vars: name, salon, service, amount)
@@ -47,6 +49,22 @@ async function sendTemplate(to, templateKey, customerName, salonName, service, a
   let lastError = null;
 
   for (const lang of LANG_CODES) {
+    const components = [
+      {
+        type: "body",
+        parameters: variables.map(text => ({ type: "text", text }))
+      }
+    ];
+
+    // Templates with a HEADER variable (e.g. salon name) need an extra header component
+    if (tpl.hasHeader) {
+      const headerText = tpl.headerVar(customerName || "Customer", salonName || "Salon", service || "Service", amount || 0);
+      components.unshift({
+        type: "header",
+        parameters: [{ type: "text", text: String(headerText) }]
+      });
+    }
+
     const body = {
       from: BOT_NUMBER,
       to,
@@ -54,12 +72,7 @@ async function sendTemplate(to, templateKey, customerName, salonName, service, a
       template: {
         name: tpl.name,
         language: { code: lang },
-        components: [
-          {
-            type: "body",
-            parameters: variables.map(text => ({ type: "text", text }))
-          }
-        ]
+        components
       }
     };
 
@@ -152,4 +165,4 @@ export default async function handler(req, res) {
     console.error("[send-summary] error:", e.message);
     return res.status(500).json({ error: e.message });
   }
-} 
+}
