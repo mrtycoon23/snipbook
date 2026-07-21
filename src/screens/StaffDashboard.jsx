@@ -50,6 +50,22 @@ function StagedPhotoItem({photo,onRemove}){
   );
 }
 
+async function normalizePhotoOrientation(file){
+  try{
+    const bitmap=await createImageBitmap(file,{imageOrientation:"from-image"});
+    const canvas=document.createElement("canvas");
+    canvas.width=bitmap.width;
+    canvas.height=bitmap.height;
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(bitmap,0,0);
+    return await new Promise(resolve=>{
+      canvas.toBlob(blob=>resolve(blob||file),"image/jpeg",0.92);
+    });
+  }catch(e){
+    return file;
+  }
+}
+
 function StagedAddPhotoBtn({tempId,onAdd}){
   const fileRef=useRef();
   const [uploading,setUploading]=useState(false);
@@ -58,9 +74,9 @@ function StagedAddPhotoBtn({tempId,onAdd}){
     if(!file)return;
     setUploading(true);
     try{
-      const ext=file.name.split(".").pop()||"jpg";
-      const path=`${tempId}/photo_${Date.now()}.${ext}`;
-      const {error}=await supabase.storage.from(BUCKET).upload(path,file,{upsert:true});
+      const normalized=await normalizePhotoOrientation(file);
+      const path=`${tempId}/photo_${Date.now()}.jpg`;
+      const {error}=await supabase.storage.from(BUCKET).upload(path,normalized,{upsert:true,contentType:"image/jpeg"});
       if(error){setUploading(false);return;}
       const {data:urlData}=supabase.storage.from(BUCKET).getPublicUrl(path);
       onAdd({url:urlData.publicUrl,path});
