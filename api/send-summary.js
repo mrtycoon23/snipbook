@@ -141,20 +141,14 @@ export default async function handler(req, res) {
 
       const photos = (visit?.photos || []).filter(p => p?.url);
       if (photos.length > 0) {
-        // Store as pending — webhook delivers them the moment the customer replies
-        // or taps the "Send My Photos" quick-reply button (either opens the 24h window).
+        // No auto-send — photos are delivered ONLY when the customer taps
+        // "Send My Photos" or replies (webhook.js handles the actual delivery).
         // Key is digits-only (no +) — webhook strips + from inbound `from` to match.
         await fetch(`${SUPABASE_URL}/rest/v1/bot_sessions`, {
           method: "POST",
           headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates" },
           body: JSON.stringify({ phone: `photos_${to}`, step: "pending_photos", data: { photos, salonId, customerName }, updated_at: new Date().toISOString() })
         }).catch(e => console.error("[send-summary] photo store error:", e.message));
-
-        // Best-effort immediate send — works if a 24h window is already open
-        for (const photo of photos) {
-          await new Promise(r => setTimeout(r, 700));
-          await sendPhoto(to, photo.url);
-        }
       }
 
       return res.status(200).json({ sent: true, method: "template", template: tKey });
@@ -165,4 +159,4 @@ export default async function handler(req, res) {
     console.error("[send-summary] error:", e.message);
     return res.status(500).json({ error: e.message });
   }
-} 
+}
