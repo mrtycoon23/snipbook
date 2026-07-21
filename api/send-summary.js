@@ -165,4 +165,4 @@ export default async function handler(req, res) {
     console.error("[send-summary] error:", e.message);
     return res.status(500).json({ error: e.message });
   }
-}
+} 
