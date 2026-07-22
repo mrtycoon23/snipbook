@@ -379,8 +379,9 @@ function CustomerList({customers,isStaff,onSelect,onAddCustomer}){
   );
 }
 
-export default function CustomerHistory({currentUser,onBack}){
+export default function CustomerHistory({currentUser,onBack,initialCustomerId}){
   const[customers,setCustomers]=useState([]);const[selectedId,setSelectedId]=useState(null);const[ownerTab,setOwnerTab]=useState("customers");const[loading,setLoading]=useState(true);const[showAddCustomer,setShowAddCustomer]=useState(false);const[newCustomer,setNewCustomer]=useState({name:"",phone:"",dob:"",gender:"male",email:""});const[savingCustomer,setSavingCustomer]=useState(false);
+  const appliedInitialRef=useRef(false);
   const[staffMap,setStaffMap]=useState({});
   const[salonName,setSalonName]=useState("");
   const isStaff=currentUser?.role==="staff";const isOwner=currentUser?.role==="owner";
@@ -411,6 +412,12 @@ export default function CustomerHistory({currentUser,onBack}){
   }
 
   useEffect(()=>{if(currentUser?.id)loadData();},[currentUser?.id]);
+  useEffect(()=>{
+    if(initialCustomerId&&!loading&&!appliedInitialRef.current&&customers.length>0){
+      setSelectedId(initialCustomerId);
+      appliedInitialRef.current=true;
+    }
+  },[initialCustomerId,loading,customers]);
   function handleUpdate(cId,changes){setCustomers(prev=>prev.map(c=>c.id===cId?{...c,...changes}:c));}
   async function handleAddCustomer(){if(!newCustomer.name.trim()||newCustomer.phone.length<10)return;setSavingCustomer(true);try{const{data:res}=await supabase.from("customers").insert({salon_id:salonId,name:newCustomer.name.trim(),phone:newCustomer.phone.trim(),birthday:newCustomer.dob||null,gender:newCustomer.gender||"male",email:newCustomer.email.trim()||null,tag:"New",source:"walk"}).select().single();if(res){setCustomers(prev=>[{...res,avatar:(res.name?.slice(0,2)||"??").toUpperCase(),color:T.purple,visitHistory:[],totalSpent:0,lastVisit:"-",favServices:[],tag:"New",src:"walk",email:res.email||"",visits:0},...prev]);}setNewCustomer({name:"",phone:"",dob:"",gender:"male",email:""});setShowAddCustomer(false);}catch(e){console.error(e);}setSavingCustomer(false);}
   const selected=customers.find(c=>c.id===selectedId)||null;
