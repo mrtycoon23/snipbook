@@ -667,9 +667,6 @@ function EntryDetailModal({log,onClose,onSave,onDelete}){
 // ─── Attendance Tab ────────────────────────────────────────────────────────────
 function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,absentNotes,setAbsentNotes,salonId,salonName,setSelectedLog,onAddLog}){
   const [showOwnDashboard,setShowOwnDashboard]=useState(false);
-  if(showOwnDashboard){
-    return<StaffDetailScreen staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} onBack={()=>setShowOwnDashboard(false)} onAddLog={()=>{setShowOwnDashboard(false);onAddLog&&onAddLog();}} currentUser={{id:salonId}} readOnly={true}/>;
-  }
   const [workTab,setWorkTab]=useState("today");
   const [showAddLog,setShowAddLog]=useState(false);
   const [showPendingModal,setShowPendingModal]=useState(false);
@@ -715,6 +712,10 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
     if(t.includes("facial")||t.includes("face"))return{icon:"💆",bg:"#fdf4ff",bd:"#e9d5ff",c:"#9333ea"};
     return{icon:"✂️",bg:"#f0eeff",bd:"#ddd6fe",c:"#5b3fc4"};}
   const N={w:"#fff",bg:"#f8f7ff",br:"#f1f0f5",t:"#0f0a2e",m:"#6b7280",p:"#5b3fc4"};
+
+  if(showOwnDashboard){
+    return<StaffDetailScreen staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} onBack={()=>setShowOwnDashboard(false)} onAddLog={()=>{setShowOwnDashboard(false);onAddLog&&onAddLog();}} currentUser={{id:salonId}} readOnly={true}/>;
+  }
 
   return(
     <div style={{padding:"12px 14px 80px",background:N.bg}}>
