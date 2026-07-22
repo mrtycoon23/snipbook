@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import CustomerHistory from "./CustomerHistoryApp";
 import { StaffDetailScreen } from "./StaffManagement";
@@ -106,9 +107,9 @@ function PendingLogsModal({logs,onClose}){
     if(t.includes("beard")||t.includes("shave"))return{icon:"🪒",bg:"#f0fdf4",bd:"#bbf7d0",c:"#16a34a"};
     if(t.includes("facial")||t.includes("face"))return{icon:"💆",bg:"#fdf4ff",bd:"#e9d5ff",c:"#9333ea"};
     return{icon:"✂️",bg:"#f0eeff",bd:"#ddd6fe",c:"#5b3fc4"};}
-  return(
-    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:300,display:"flex",alignItems:"flex-end"}}>
-      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",overflowY:"auto",WebkitOverflowScrolling:"touch"}}>
+  return createPortal(
+    <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"flex-end"}}>
+      <div style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",overflowY:"auto",WebkitOverflowScrolling:"touch",paddingBottom:"env(safe-area-inset-bottom,0px)"}}>
         <div style={{width:36,height:4,background:"#e5e7eb",borderRadius:2,margin:"12px auto 0"}}/>
         <div style={{padding:"14px 18px 10px",borderBottom:"1px solid #f1f0f5",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div>
