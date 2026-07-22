@@ -1113,15 +1113,23 @@ export default function StaffManagement({role="owner",currentUser,showRevenue=fa
 
   useEffect(()=>{
     async function loadStaff(){
-      const{data}=await supabase.from("staff").select("*").eq("salon_id",currentUser?.id);
-      const all=data||[];
-      let owner=all.find(s=>s.role==="Owner");
-      if(!owner&&currentUser?.id){
-        const{data:created}=await supabase.from("staff").insert({salon_id:currentUser.id,name:"Owner",role:"Owner",phone:"",salary:0,pin:"0000"}).select().single();
-        owner=created||null;
+      try{
+        const{data}=await supabase.from("staff").select("*").eq("salon_id",currentUser?.id);
+        const all=data||[];
+        let owner=all.find(s=>s.role==="Owner");
+        if(!owner&&currentUser?.id){
+          try{
+            const{data:created,error}=await supabase.from("staff").insert({salon_id:currentUser.id,name:"Owner",role:"Owner",phone:"",salary:0,pin:"0000",gender_capability:"both"}).select().single();
+            if(error)console.error("[owner-staff-create]",error.message);
+            owner=created||null;
+          }catch(e){console.error("[owner-staff-create]",e.message);}
+        }
+        setOwnerStaff(owner||null);
+        setStaffList(all.filter(s=>s.role!=="Owner"));
+      }catch(e){
+        console.error("[loadStaff]",e.message);
+        setStaffList([]);
       }
-      setOwnerStaff(owner||null);
-      setStaffList(all.filter(s=>s.role!=="Owner"));
     }
     if(currentUser?.id)loadStaff();
   },[currentUser?.id]);
