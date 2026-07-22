@@ -562,6 +562,7 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
   const [showAttModal,setShowAttModal]=useState(false);
   const [showRevenueModal,setShowRevenueModal]=useState(false);
   const c=avatarColor(staff.id);
+  const isOwner=staff.role==="Owner";
 
   const filtered=useMemo(()=>{
     return logs.filter(l=>l.staffId===staff.id&&l.date>=fromDate&&l.date<=toDate).sort((a,b)=>b.date.localeCompare(a.date));
@@ -632,8 +633,8 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
           <DateRangePicker fromDate={fromDate} toDate={toDate} onFromChange={setFromDate} onToChange={setToDate}/>
         </div>
 
-        {/* 3 Stat boxes — all clickable */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+        {/* Stat boxes — 2 for owner (no attendance), 3 for staff */}
+        <div style={{display:"grid",gridTemplateColumns:isOwner?"1fr 1fr":"1fr 1fr 1fr",gap:8,marginBottom:12}}>
           <div onClick={()=>setShowRevenueModal(true)} style={{background:NP.greenBg,borderRadius:14,padding:"14px 8px",textAlign:"center",cursor:"pointer"}}>
             <div style={{fontSize:22,fontWeight:700,color:NP.green}}>{filtered.length}</div>
             <div style={{fontSize:10,color:NP.green,marginTop:4,fontWeight:500}}>Clients 👥</div>
@@ -642,14 +643,14 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
             <div style={{fontSize:filtered.length>0&&totalRevenue>=10000?13:20,fontWeight:700,color:"#2563eb"}}>{fc(totalRevenue)}</div>
             <div style={{fontSize:10,color:"#2563eb",marginTop:4,fontWeight:500}}>Revenue 💰</div>
           </div>
-          <div onClick={()=>setShowAttModal(true)} style={{background:attPct>=80?NP.greenBg:attPct>=60?"#fef9c3":NP.redBg,borderRadius:14,padding:"14px 8px",textAlign:"center",cursor:"pointer"}}>
+          {!isOwner&&<div onClick={()=>setShowAttModal(true)} style={{background:attPct>=80?NP.greenBg:attPct>=60?"#fef9c3":NP.redBg,borderRadius:14,padding:"14px 8px",textAlign:"center",cursor:"pointer"}}>
             <div style={{fontSize:22,fontWeight:700,color:attPct>=80?NP.green:attPct>=60?"#a16207":NP.red}}>{attPct}%</div>
             <div style={{fontSize:10,color:attPct>=80?NP.green:attPct>=60?"#a16207":NP.red,marginTop:4,fontWeight:500}}>Attendance 📅</div>
-          </div>
+          </div>}
         </div>
 
-        {/* Attendance bar */}
-        <div style={{background:NP.white,borderRadius:12,padding:"12px 14px",border:`1px solid ${NP.border}`,marginBottom:12}}>
+        {/* Attendance bar — staff only */}
+        {!isOwner&&<div style={{background:NP.white,borderRadius:12,padding:"12px 14px",border:`1px solid ${NP.border}`,marginBottom:12}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
             <span style={{fontSize:12,color:NP.green,fontWeight:600}}>● {attendedDays} days present</span>
             <span style={{fontSize:12,color:NP.red,fontWeight:600}}>{totalDays-attendedDays} days absent ●</span>
@@ -657,18 +658,18 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
           <div style={{height:7,background:"#fee2e2",borderRadius:4,overflow:"hidden"}}>
             <div style={{width:`${attPct}%`,height:"100%",background:NP.green,borderRadius:4,transition:"width 0.5s"}}/>
           </div>
-        </div>
+        </div>}
 
-        {/* Action buttons */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
+        {/* Action buttons — 2 for owner (no attendance), 3 for staff */}
+        <div style={{display:"grid",gridTemplateColumns:isOwner?"1fr 1fr":"1fr 1fr 1fr",gap:8,marginBottom:14}}>
           <button onClick={()=>{if(staff.phone)window.open(`https://wa.me/91${staff.phone.replace(/\D/g,"")}`)}} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
             <span style={{fontSize:20}}>💬</span>
             <span style={{fontSize:12,color:NP.purpleMid,fontWeight:500}}>Message</span>
           </button>
-          <button onClick={()=>setShowAttModal(true)} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
+          {!isOwner&&<button onClick={()=>setShowAttModal(true)} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
             <span style={{fontSize:20}}>📅</span>
             <span style={{fontSize:12,color:NP.purpleMid,fontWeight:500}}>Attendance</span>
-          </button>
+          </button>}
           <button onClick={()=>setShowRevenueModal(true)} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
             <span style={{fontSize:20}}>📊</span>
             <span style={{fontSize:12,color:NP.purpleMid,fontWeight:500}}>Revenue</span>
