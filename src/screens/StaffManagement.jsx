@@ -662,21 +662,7 @@ export function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog
           </div>
         </div>}
 
-        {/* Action buttons — 2 for owner (no attendance), 3 for staff */}
-        <div style={{display:"grid",gridTemplateColumns:isOwner?"1fr 1fr":"1fr 1fr 1fr",gap:8,marginBottom:14}}>
-          <button onClick={()=>{if(staff.phone)window.open(`https://wa.me/91${staff.phone.replace(/\D/g,"")}`)}} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
-            <span style={{fontSize:20}}>💬</span>
-            <span style={{fontSize:12,color:NP.purpleMid,fontWeight:500}}>Message</span>
-          </button>
-          {!isOwner&&<button onClick={()=>setShowAttModal(true)} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
-            <span style={{fontSize:20}}>📅</span>
-            <span style={{fontSize:12,color:NP.purpleMid,fontWeight:500}}>Attendance</span>
-          </button>}
-          <button onClick={()=>setShowRevenueModal(true)} style={{background:NP.white,border:`1px solid ${NP.border}`,borderRadius:12,padding:"12px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer"}}>
-            <span style={{fontSize:20}}>📊</span>
-            <span style={{fontSize:12,color:NP.purpleMid,fontWeight:500}}>Revenue</span>
-          </button>
-        </div>
+
 
         {/* Work Entries */}
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
