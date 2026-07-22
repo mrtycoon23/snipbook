@@ -20,9 +20,11 @@ const TEMPLATES = {
     vars: (n, s, svc, amt) => [n, svc] // {{2}}=customerName, {{3}}=service in body
   },
   bill_summary: {
-    name: "template_utility_20260708103129", // Active ✅ (4 vars: name, salon, service, amount)
+    name: "template_utility_20260721201024", // Active-Quality pending ✅ HEADER={{1}} salon name uppercase, BODY: Namaste {{2}}, Service: {{3}}, Bill Amount: ₹{{4}} + "Send My Photos" quick-reply button
     label: "💰 Bill + Summary",
-    vars: (n, s, svc, amt) => [n, s, svc, String(amt || 0)]
+    hasHeader: true,
+    headerVar: (n, s, svc, amt) => s.toUpperCase(), // {{1}} in header = salon name uppercase
+    vars: (n, s, svc, amt) => [n, svc, String(amt || 0)] // {{2}}=customerName, {{3}}=service, {{4}}=amount
   }
 };
 
