@@ -838,6 +838,7 @@ function PendingScreen({salonId,staffList,onClose,currentUser}){
 function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAttendance,showRevenueToStaff,setShowRevenueToStaff,currentUser,onBack}){
   const [view,setView]=useState("list");
   const [selectedStaff,setSelectedStaff]=useState(null);
+  const [ownerStaff,setOwnerStaff]=useState(null);
   const [showAddStaff,setShowAddStaff]=useState(false);
   const [showAddLog,setShowAddLog]=useState(false);
   const [logForStaff,setLogForStaff]=useState(null);
@@ -978,6 +979,29 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
 
       {/* Staff List */}
       <div style={{flex:1,overflowY:"auto",padding:"0 16px 80px",WebkitOverflowScrolling:"touch"}}>
+        {/* Owner profile — always pinned at top */}
+        {ownerStaff&&(()=>{
+          const ownerRangeLogs=logs.filter(l=>l.staffId===ownerStaff.id&&l.date>=fromDate&&l.date<=toDate);
+          const ownerRevenue=ownerRangeLogs.reduce((a,l)=>a+l.amount,0);
+          const displayName=currentUser?.name||"Owner";
+          return(
+            <div key="owner" onClick={()=>{setSelectedStaff({...ownerStaff,name:displayName});setView("detail");}} style={{background:"linear-gradient(135deg,#f5f3ff,#ede9fe)",borderRadius:12,padding:"10px 12px",border:`1.5px solid ${NP.purpleMid}`,display:"flex",alignItems:"center",gap:8,marginBottom:12,cursor:"pointer"}}>
+              <div style={{position:"relative",flexShrink:0}}>
+                <div style={{width:40,height:40,borderRadius:"50%",background:NP.purpleMid,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13}}>{initials(displayName)}</div>
+                <span style={{position:"absolute",bottom:-2,right:-2,fontSize:13}}>👑</span>
+              </div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontWeight:700,fontSize:13,color:NP.text,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{displayName}</div>
+                <div style={{fontSize:10,color:NP.purpleMid,fontWeight:600}}>👑 Owner</div>
+              </div>
+              <div style={{background:"#fff",borderRadius:7,padding:"5px 8px",textAlign:"center",flexShrink:0,border:`1px solid ${NP.purpleBorder}`}}>
+                <div style={{fontWeight:700,fontSize:11,color:NP.purpleMid}}>{ownerRevenue>=1000?`₹${(ownerRevenue/1000).toFixed(1)}k`:fc(ownerRevenue)}</div>
+                <div style={{fontSize:8,color:NP.muted,marginTop:1}}>{ownerRangeLogs.length} services</div>
+              </div>
+              <span style={{color:NP.purpleMid,fontSize:16,cursor:"pointer",flexShrink:0}}>›</span>
+            </div>
+          );
+        })()}
         {staffList.length===0&&<div style={{textAlign:"center",color:NP.light,fontSize:13,padding:"40px 0"}}>No staff yet — Add Staff</div>}
         {staffList.map(s=>{
           const c=avatarColor(s.id);
@@ -1090,7 +1114,14 @@ export default function StaffManagement({role="owner",currentUser,showRevenue=fa
   useEffect(()=>{
     async function loadStaff(){
       const{data}=await supabase.from("staff").select("*").eq("salon_id",currentUser?.id);
-      setStaffList(data&&data.length>0?data.filter(s=>s.role!=="Owner"):[]);
+      const all=data||[];
+      let owner=all.find(s=>s.role==="Owner");
+      if(!owner&&currentUser?.id){
+        const{data:created}=await supabase.from("staff").insert({salon_id:currentUser.id,name:"Owner",role:"Owner",phone:"",salary:0,pin:"0000"}).select().single();
+        owner=created||null;
+      }
+      setOwnerStaff(owner||null);
+      setStaffList(all.filter(s=>s.role!=="Owner"));
     }
     if(currentUser?.id)loadStaff();
   },[currentUser?.id]);
