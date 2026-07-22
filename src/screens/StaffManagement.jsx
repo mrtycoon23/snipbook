@@ -553,7 +553,7 @@ function StaffSummaryScreen({staffList,logs,attendance,onBack}){
 }
 
 // ─── Staff Detail Screen — REDESIGNED ─────────────────────────────────────────
-function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEditStaff,onDeleteStaff,currentUser}){
+export function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEditStaff,onDeleteStaff,currentUser,readOnly=false}){
   const [fromDate,setFromDate]=useState(thisMonthStart);
   const [toDate,setToDate]=useState(today);
   const [editingLog,setEditingLog]=useState(null);
@@ -602,10 +602,12 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
           <span style={{fontSize:15,color:"#fff"}}>←</span>
           <span style={{fontSize:13,color:"#fff",fontWeight:500}}>Back</span>
         </button>
-        <span style={{fontSize:16,fontWeight:700,color:"#fff"}}>Staff Profile</span>
-        <button onClick={()=>setShowEditStaff(true)} style={{background:"rgba(255,255,255,0.12)",border:"none",borderRadius:10,padding:"7px 14px",cursor:"pointer"}}>
-          <span style={{fontSize:13,color:"#fff",fontWeight:500}}>✏️ Edit</span>
-        </button>
+        <span style={{fontSize:16,fontWeight:700,color:"#fff"}}>{readOnly?"My Dashboard":"Staff Profile"}</span>
+        {!readOnly?(
+          <button onClick={()=>setShowEditStaff(true)} style={{background:"rgba(255,255,255,0.12)",border:"none",borderRadius:10,padding:"7px 14px",cursor:"pointer"}}>
+            <span style={{fontSize:13,color:"#fff",fontWeight:500}}>✏️ Edit</span>
+          </button>
+        ):(<div style={{width:60}}/>)}
       </div>
 
       <div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch",padding:"14px 16px"}}>

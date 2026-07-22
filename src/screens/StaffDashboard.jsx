@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import CustomerHistory from "./CustomerHistoryApp";
+import { StaffDetailScreen } from "./StaffManagement";
 
 const T = {
   bg:"#f0f4f8", surface:"#ffffff", border:"#e8edf3",
@@ -135,7 +136,8 @@ function PendingLogsModal({logs,onClose}){
           }
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -663,7 +665,11 @@ function EntryDetailModal({log,onClose,onSave,onDelete}){
 }
 
 // ─── Attendance Tab ────────────────────────────────────────────────────────────
-function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,absentNotes,setAbsentNotes,salonId,salonName,setSelectedLog}){
+function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,absentNotes,setAbsentNotes,salonId,salonName,setSelectedLog,onAddLog}){
+  const [showOwnDashboard,setShowOwnDashboard]=useState(false);
+  if(showOwnDashboard){
+    return<StaffDetailScreen staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} onBack={()=>setShowOwnDashboard(false)} onAddLog={()=>{setShowOwnDashboard(false);onAddLog&&onAddLog();}} currentUser={{id:salonId}} readOnly={true}/>;
+  }
   const [workTab,setWorkTab]=useState("today");
   const [showAddLog,setShowAddLog]=useState(false);
   const [showPendingModal,setShowPendingModal]=useState(false);
@@ -757,16 +763,13 @@ function AttendanceTab({staff,logs,setLogs,attendance,setAttendance,showRevenue,
               </div>
             </div>
             <div style={{height:1,background:"#f1f0f5"}}/>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
-              {/* Revenue box - clickable */}
-              <div onClick={()=>setShowStatsModal(true)} style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:9,padding:"8px",cursor:"pointer",position:"relative"}}>
-                <div style={{fontSize:13,fontWeight:800,color:"#16a34a",lineHeight:1}}>{fc(mRev)}</div>
-                <div style={{fontSize:9,color:"#6b7280",marginTop:2}}>Revenue 📊</div>
+            <div onClick={()=>setShowOwnDashboard(true)} style={{background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",borderRadius:9,padding:"10px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:18}}>📊</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:12,fontWeight:800,color:"#fff"}}>My Dashboard</div>
+                <div style={{fontSize:9,color:"rgba(255,255,255,0.7)",marginTop:1}}>Revenue, attendance, logs — sab dekho</div>
               </div>
-              <div style={{background:"#f5f3ff",border:"1px solid #ddd6fe",borderRadius:9,padding:"8px"}}>
-                <div style={{fontSize:13,fontWeight:800,color:N.p,lineHeight:1}}>{mLogs} logs</div>
-                <div style={{fontSize:9,color:"#6b7280",marginTop:2}}>Work Entries</div>
-              </div>
+              <span style={{fontSize:14,color:"#fff"}}>›</span>
             </div>
             {/* Pending banner - clickable */}
             {mPendingLogs.length>0&&(
@@ -909,7 +912,7 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
         </div>
       </div>
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",position:"relative"}}>
-        {tab==="attendance"&&(<div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}><AttendanceTab staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance} showRevenue={showRevenue} absentNotes={absentNotes} setAbsentNotes={setAbsentNotes} salonId={salonId} salonName={salonName} setSelectedLog={setSelectedLog}/></div>)}
+        {tab==="attendance"&&(<div style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}><AttendanceTab staff={staff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance} showRevenue={showRevenue} absentNotes={absentNotes} setAbsentNotes={setAbsentNotes} salonId={salonId} salonName={salonName} setSelectedLog={setSelectedLog} onAddLog={()=>setShowAddLogFab(true)}/></div>)}
         {tab==="customers"&&salonId&&(<CustomerHistory key={salonId} currentUser={{id:salonId,salon_id:salonId,role:"staff",name:staff?.name||"Staff"}}/>)}
         {tab==="attendance"&&!selectedLog&&(
           <div style={{position:"absolute",right:14,bottom:14,display:"flex",flexDirection:"column",alignItems:"center",gap:3,zIndex:10}}>
