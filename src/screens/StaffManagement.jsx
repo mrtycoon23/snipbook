@@ -710,7 +710,7 @@ function StaffDetailScreen({staff,logs,setLogs,attendance,onBack,onAddLog,onEdit
 
 // ─── Owner Dashboard ───────────────────────────────────────────────────────────
 // ─── Pending Approvals Screen ─────────────────────────────────────────────────
-function PendingScreen({salonId,staffList,onClose}){
+function PendingScreen({salonId,staffList,onClose,currentUser}){
   const[pending,setPending]=useState([]);
   const[loading,setLoading]=useState(true);
   const[processing,setProcessing]=useState(null);
@@ -913,7 +913,7 @@ function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAtten
   const presentToday=staffList.filter(s=>todayAtt[s.id]).length;
 
   if(showSummary)return<StaffSummaryScreen staffList={staffList} logs={logs} attendance={attendance} onBack={()=>setShowSummary(false)}/>;
-  if(showPending)return<PendingScreen salonId={currentUser?.id} staffList={staffList} onClose={()=>setShowPending(false)}/>;
+  if(showPending)return<PendingScreen salonId={currentUser?.id} staffList={staffList} onClose={()=>setShowPending(false)} currentUser={currentUser}/>;
   if(view==="detail"&&selectedStaff){
     return(
       <>
