@@ -835,10 +835,9 @@ function PendingScreen({salonId,staffList,onClose,currentUser}){
   );
 }
 
-function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAttendance,showRevenueToStaff,setShowRevenueToStaff,currentUser,onBack}){
+function OwnerDashboard({staffList,setStaffList,logs,setLogs,attendance,setAttendance,showRevenueToStaff,setShowRevenueToStaff,currentUser,onBack,ownerStaff}){
   const [view,setView]=useState("list");
   const [selectedStaff,setSelectedStaff]=useState(null);
-  const [ownerStaff,setOwnerStaff]=useState(null);
   const [showAddStaff,setShowAddStaff]=useState(false);
   const [showAddLog,setShowAddLog]=useState(false);
   const [logForStaff,setLogForStaff]=useState(null);
@@ -1107,6 +1106,7 @@ function StaffSelfView({staff,logs,setLogs,attendance,setAttendance,nextLogId,se
 // ─── Main Export ───────────────────────────────────────────────────────────────
 export default function StaffManagement({role="owner",currentUser,showRevenue=false,setShowRevenue,onBack}){
   const [staffList,setStaffList]=useState([]);
+  const [ownerStaff,setOwnerStaff]=useState(null);
   const [logs,setLogs]=useState([]);
   const [attendance,setAttendance]=useState({});
   const [nextLogId,setNextLogId]=useState(100);
@@ -1164,7 +1164,7 @@ export default function StaffManagement({role="owner",currentUser,showRevenue=fa
     return<OwnerDashboard staffList={staffList} setStaffList={setStaffList} logs={logs} setLogs={setLogs}
       attendance={attendance} setAttendance={setAttendance}
       showRevenueToStaff={showRevenue} setShowRevenueToStaff={setShowRevenue||(()=>{})}
-      currentUser={currentUser} onBack={onBack}/>;
+      currentUser={currentUser} onBack={onBack} ownerStaff={ownerStaff}/>;
   }
   if(role==="staff"&&loggedInStaff){
     return<StaffSelfView staff={loggedInStaff} logs={logs} setLogs={setLogs} attendance={attendance} setAttendance={setAttendance}
