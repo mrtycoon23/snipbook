@@ -515,8 +515,8 @@ function CampaignsTab({customers}){
   );
 }
 
-export default function EngagementCenter({currentUser,onBack,onAddBirthday}){
-  const [tab,setTab]=useState("reengagement");
+export default function EngagementCenter({currentUser,onBack,onAddBirthday,initialTab="reengagement"}){
+  const [tab,setTab]=useState(initialTab);
   const [customers,setCustomers]=useState([]);
   const [loading,setLoading]=useState(true);
 
