@@ -742,28 +742,29 @@ function PendingScreen({salonId,staffList,onClose}){
 
   async function approve(id){
     setProcessing(id);
-    const log=pending.find(l=>l.id===id);
     await supabase.from("work_logs").update({status:"approved"}).eq("id",id);
     setPending(prev=>prev.filter(l=>l.id!==id));
     setProcessing(null);
 
-    // Send the WhatsApp template the staff had chosen — only now that it's approved
-    if(log?.client_phone&&log.client_phone.length===10&&log.template_type){
-      try{
+    // Re-fetch fresh — staff may have picked a WA template AFTER this list was loaded,
+    // so the cached `pending` row in state could be stale.
+    try{
+      const{data:freshLog}=await supabase.from("work_logs").select("client_phone,template_type,client_name,service,amount,date,photos").eq("id",id).single();
+      if(freshLog?.client_phone&&freshLog.client_phone.length===10&&freshLog.template_type){
         await fetch("/api/send-summary",{
           method:"POST",
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({
-            customerPhone:log.client_phone,
-            customerName:log.client_name,
+            customerPhone:freshLog.client_phone,
+            customerName:freshLog.client_name,
             salonName:currentUser?.salon||"Salon",
             salonId:salonId,
-            templateType:log.template_type,
-            visit:{date:log.date,services:[log.service],amount:log.amount,notes:"",photos:log.photos||[]}
+            templateType:freshLog.template_type,
+            visit:{date:freshLog.date,services:[freshLog.service],amount:freshLog.amount,notes:"",photos:freshLog.photos||[]}
           })
         });
-      }catch(e){console.error("[approve] auto WA send failed:",e.message);}
-    }
+      }
+    }catch(e){console.error("[approve] auto WA send failed:",e.message);}
   }
 
   async function reject(id){
