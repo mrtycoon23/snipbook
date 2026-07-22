@@ -274,6 +274,15 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
     }catch(e){setWaError(e.message);setWaStatus("error");}
   }
 
+  async function scheduleWASummary(pd){
+    setWaStatus("sending");
+    try{
+      await supabase.from("work_logs").update({template_type:pd.templateType}).eq("id",pd.logId);
+      setWaStatus("scheduled");
+      setTimeout(()=>onClose(),1800);
+    }catch(e){setWaError(e.message);setWaStatus("error");}
+  }
+
   useEffect(()=>{
     if(!salonId||suppressSuggest){setSuggestions([]);return;}
     const term=clientName.trim();
@@ -367,11 +376,14 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
       if(salonId){
         const{data:salonData}=await supabase.from("salons").select("approval_required,notification_number").eq("id",salonId).single();
         const needsApproval=salonData?.approval_required||false;
+        const phone10=(logData.clientPhone||"").replace(/\D/g,"").slice(0,10);
         const{data:res}=await supabase.from("work_logs").insert({
           salon_id:salonId,staff_id:logData.staffId,
           client_name:logData.clientName,service:logData.service,
           amount:logData.amount,date:logData.date,
-          status:needsApproval?"pending":"approved"
+          status:needsApproval?"pending":"approved",
+          client_phone:phone10.length===10?phone10:null,
+          photos:logData.photos||[]
         }).select().single();
         let customerId=logData.customerId||null;
         if(!customerId){
@@ -387,9 +399,12 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
         }
         if(res){
           onSave({id:res.id,staffId:res.staff_id,clientName:res.client_name,service:res.service,amount:res.amount,date:res.date,status:res.status||"approved"});
-          const phone10=(logData.clientPhone||"").replace(/\D/g,"").slice(0,10);
-          if(phone10.length===10){setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||"",photos:logData.photos||[],salonId,salonName:salonName||""});setWaStatus("idle");}
-          else onClose();
+          if(phone10.length===10){
+            setWaPromptData({phone:phone10,name:logData.clientName,service:logData.service,amount:logData.amount,date:logData.date,notes:logData.notes||"",photos:logData.photos||[],salonId,salonName:salonName||"",logId:res.id,needsApproval});
+            setWaStatus("idle");
+          } else {
+            onClose();
+          }
           return;
         }
       }
@@ -464,21 +479,23 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
         <div style={{width:36,height:4,background:T.border,borderRadius:2,margin:"0 auto 16px"}}/>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
           <div style={{width:44,height:44,borderRadius:14,background:T.gl,border:`2px solid ${T.gm}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22}}>✅</div>
-          <div><div style={{fontWeight:900,fontSize:15,color:T.text}}>Work log saved!</div><div style={{fontSize:12,color:T.ts,marginTop:2}}>Send WhatsApp to {waPromptData.name}?</div></div>
+          <div><div style={{fontWeight:900,fontSize:15,color:T.text}}>Work log saved!</div><div style={{fontSize:12,color:T.ts,marginTop:2}}>{waPromptData.needsApproval?`Choose message for ${waPromptData.name}`:`Send WhatsApp to ${waPromptData.name}?`}</div></div>
         </div>
         {waStatus==="idle"&&<>
           <div style={{fontSize:11,fontWeight:700,color:T.ts,marginBottom:8}}>Choose message type:</div>
           <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
             {[{key:"thankyou",label:"💬 Thank You",desc:"Simple thank you"},{key:"visit_summary",label:"📋 Visit Summary",desc:"Service details"},{key:"bill_summary",label:"💰 Bill + Summary",desc:"Service + bill"}].map(t=>(
-              <button key={t.key} onClick={()=>sendWASummary({...waPromptData,templateType:t.key})} style={{width:"100%",padding:"11px 14px",background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <button key={t.key} onClick={()=>waPromptData.needsApproval?scheduleWASummary({...waPromptData,templateType:t.key}):sendWASummary({...waPromptData,templateType:t.key})} style={{width:"100%",padding:"11px 14px",background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <span>{t.label}</span><span style={{fontSize:11,opacity:0.85}}>{t.desc}</span>
               </button>
             ))}
           </div>
+          {waPromptData.needsApproval&&<div style={{background:"#fef9c3",border:"1.5px solid #fde68a",borderRadius:10,padding:"8px 12px",marginBottom:10,fontSize:11,color:"#a16207",fontWeight:700,textAlign:"center"}}>⏳ Sent only after owner approves this log</div>}
           <button onClick={onClose} style={{width:"100%",padding:11,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Skip</button>
         </>}
-        {waStatus==="sending"&&<div style={{background:"#ede9fe",borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:"#5b3fc4"}}>📤 Sending...</div>}
+        {waStatus==="sending"&&<div style={{background:"#ede9fe",borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:"#5b3fc4"}}>📤 {waPromptData.needsApproval?"Saving...":"Sending..."}</div>}
         {waStatus==="sent"&&<div style={{background:T.gl,border:`2px solid ${T.gm}`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:T.gd}}>✅ Sent!</div>}
+        {waStatus==="scheduled"&&<div style={{background:"#fef9c3",border:`2px solid #fde68a`,borderRadius:12,padding:14,textAlign:"center",fontWeight:800,color:"#a16207"}}>⏳ Will send once approved!</div>}
         {waStatus==="error"&&<div style={{display:"flex",flexDirection:"column",gap:8}}><div style={{background:T.red,border:`2px solid ${T.rb}`,borderRadius:12,padding:10,textAlign:"center",fontSize:12,color:T.rt,fontWeight:700}}>⚠️ Failed{waError?<div style={{fontSize:10,marginTop:4}}>{waError}</div>:null}</div><div style={{display:"flex",gap:10}}><button onClick={onClose} style={{flex:1,padding:11,border:`2px solid ${T.border}`,borderRadius:12,background:T.surface,fontFamily:"inherit",fontSize:13,fontWeight:700,cursor:"pointer"}}>Close</button><button onClick={()=>setWaStatus("idle")} style={{flex:1,padding:11,background:T.wa,border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:13,fontWeight:800,cursor:"pointer"}}>🔄 Retry</button></div></div>}
       </div>
     </div>
@@ -556,40 +573,89 @@ function AddLogModal({staffId,salonId,salonName,isPresent,onSave,onClose}){
 }
 
 // ─── Entry Detail Modal ────────────────────────────────────────────────────────
-function EntryDetailModal({log,onClose}){
+function EntryDetailModal({log,onClose,onSave,onDelete}){
   function si(svc){const s=(svc||"").toLowerCase();
     if(s.includes("color")||s.includes("colour"))return{icon:"🎨",bg:"#fff7ed",border:"#fed7aa",color:"#ea580c"};
     if(s.includes("beard")||s.includes("shave"))return{icon:"🪒",bg:"#f0fdf4",border:"#bbf7d0",color:"#16a34a"};
     if(s.includes("facial")||s.includes("face"))return{icon:"💆",bg:"#fdf4ff",border:"#e9d5ff",color:"#9333ea"};
     return{icon:"✂️",bg:"#f0eeff",border:"#ddd6fe",color:"#5b3fc4"};}
   const ic=si(log.service);
+  const [editing,setEditing]=useState(false);
+  const [confirmDelete,setConfirmDelete]=useState(false);
+  const [clientName,setClientName]=useState(log.clientName);
+  const [service,setService]=useState(log.service);
+  const [amount,setAmount]=useState(log.amount);
+  const [date,setDate]=useState(log.date);
+  const [saving,setSaving]=useState(false);
+  const editIs={width:"100%",padding:"10px 12px",border:"1.5px solid #e5e7eb",borderRadius:10,fontSize:14,fontFamily:"inherit",outline:"none",background:"#fff",boxSizing:"border-box",color:"#0f0a2e"};
+  async function handleSave(){
+    if(!clientName.trim()){alert("Please enter the client name!");return;}
+    setSaving(true);
+    await onSave({...log,clientName:clientName.trim(),service,amount:Number(amount),date});
+    setSaving(false);
+    setEditing(false);
+    onClose();
+  }
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"flex-end",zIndex:999}} onClick={onClose}>
       <div style={{background:"#fff",borderRadius:"20px 20px 0 0",width:"100%",maxHeight:"85vh",overflowY:"auto",paddingBottom:"calc(28px + env(safe-area-inset-bottom,0px))"}} onClick={e=>e.stopPropagation()}>
         <div style={{width:34,height:4,background:"#e5e7eb",borderRadius:2,margin:"12px auto 0"}}/>
         <div style={{background:"linear-gradient(135deg,#3d2490,#5b3fc4)",padding:"14px 18px",margin:"10px 0 0"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <div style={{fontSize:15,fontWeight:800,color:"#fff"}}>Service Details</div>
+            <div style={{fontSize:15,fontWeight:800,color:"#fff"}}>{editing?"✏️ Edit Entry":"Service Details"}</div>
             <div onClick={onClose} style={{width:28,height:28,borderRadius:"50%",background:"rgba(255,255,255,0.2)",display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer",color:"#fff",fontSize:13}}>✕</div>
           </div>
         </div>
         <div style={{padding:"16px 18px"}}>
-          <div style={{display:"flex",alignItems:"center",gap:12,padding:"11px",background:"#f8f7ff",borderRadius:12,marginBottom:12}}>
+          {!editing&&<div style={{display:"flex",alignItems:"center",gap:12,padding:"11px",background:"#f8f7ff",borderRadius:12,marginBottom:12}}>
             <div style={{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#fff"}}>{(log.clientName||"?").slice(0,2).toUpperCase()}</div>
             <div><div style={{fontSize:14,fontWeight:800,color:"#0f0a2e"}}>{log.clientName}</div></div>
-          </div>
+          </div>}
           {log.status==="pending"&&<div style={{background:"#fef9c3",border:"1.5px solid #fde68a",borderRadius:10,padding:"10px 12px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}><span>⏳</span><div style={{fontSize:12,fontWeight:800,color:"#a16207"}}>Pending Approval</div></div>}
           {log.status==="rejected"&&<div style={{background:"#fff0f0",border:"1.5px solid #fca5a5",borderRadius:10,padding:"10px 12px",marginBottom:8,display:"flex",alignItems:"center",gap:8}}><span>❌</span><div style={{fontSize:12,fontWeight:800,color:"#dc2626"}}>Rejected</div></div>}
-          {[{bg:ic.bg,border:ic.border,icon:ic.icon,label:"Service",val:log.service,color:ic.color},
-            {bg:"#f0fdf4",border:"#bbf7d0",icon:"💰",label:"Amount",val:"₹"+Number(log.amount||0).toLocaleString("en-IN"),color:"#16a34a"},
-            {bg:"#f8f7ff",border:"#e5e7eb",icon:"📅",label:"Date",val:new Date(log.date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}),color:"#0f0a2e"}
-          ].map(r=>(
-            <div key={r.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:r.bg,borderRadius:10,border:`1px solid ${r.border}`,marginBottom:8}}>
-              <div style={{display:"flex",alignItems:"center",gap:8}}><span>{r.icon}</span><span style={{fontSize:13,color:"#374151"}}>{r.label}</span></div>
-              <span style={{fontSize:13,fontWeight:700,color:r.color}}>{r.val}</span>
+
+          {!editing?(<>
+            {[{bg:ic.bg,border:ic.border,icon:ic.icon,label:"Service",val:log.service,color:ic.color},
+              {bg:"#f0fdf4",border:"#bbf7d0",icon:"💰",label:"Amount",val:"₹"+Number(log.amount||0).toLocaleString("en-IN"),color:"#16a34a"},
+              {bg:"#f8f7ff",border:"#e5e7eb",icon:"📅",label:"Date",val:new Date(log.date+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}),color:"#0f0a2e"}
+            ].map(r=>(
+              <div key={r.label} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 12px",background:r.bg,borderRadius:10,border:`1px solid ${r.border}`,marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}><span>{r.icon}</span><span style={{fontSize:13,color:"#374151"}}>{r.label}</span></div>
+                <span style={{fontSize:13,fontWeight:700,color:r.color}}>{r.val}</span>
+              </div>
+            ))}
+            <div style={{display:"flex",gap:8,marginTop:12}}>
+              <button onClick={()=>setEditing(true)} style={{flex:1,padding:"12px",background:"#f0eeff",border:"1.5px solid #ddd6fe",borderRadius:12,color:"#5b3fc4",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer"}}>✏️ Edit</button>
+              <button onClick={onClose} style={{flex:1,padding:"12px",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer"}}>Done</button>
             </div>
-          ))}
-          <button onClick={onClose} style={{width:"100%",padding:"12px",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",marginTop:4}}>Done</button>
+            {!confirmDelete
+              ?<button onClick={()=>setConfirmDelete(true)} style={{width:"100%",marginTop:10,padding:10,border:"1px solid #fecaca",background:"white",borderRadius:10,fontSize:13,fontWeight:700,color:"#dc2626",cursor:"pointer"}}>🗑 Delete Entry</button>
+              :<div style={{marginTop:10,background:"#fef2f2",borderRadius:10,padding:12}}>
+                <div style={{fontSize:13,color:"#dc2626",fontWeight:600,marginBottom:10}}>Are you sure? This can't be undone.</div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setConfirmDelete(false)} style={{flex:1,padding:9,border:"1px solid #e2e8f0",background:"white",borderRadius:8,fontSize:13,cursor:"pointer"}}>Cancel</button>
+                  <button onClick={async()=>{await onDelete(log.id);onClose();}} style={{flex:1,padding:9,border:"none",background:"#dc2626",borderRadius:8,fontSize:13,fontWeight:700,color:"white",cursor:"pointer"}}>Delete</button>
+                </div>
+              </div>
+            }
+          </>):(<>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#6b7280",marginBottom:5}}>Client Name</div>
+              <input style={editIs} value={clientName} onChange={e=>setClientName(e.target.value)}/>
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#6b7280",marginBottom:5}}>Service</div>
+              <select style={editIs} value={service} onChange={e=>setService(e.target.value)}>{SERVICES.map(s=><option key={s}>{s}</option>)}</select>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+              <div><div style={{fontSize:12,fontWeight:700,color:"#6b7280",marginBottom:5}}>Amount (₹)</div><input style={editIs} type="number" value={amount} onChange={e=>setAmount(e.target.value)}/></div>
+              <div><div style={{fontSize:12,fontWeight:700,color:"#6b7280",marginBottom:5}}>Date</div><input style={editIs} type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setEditing(false)} style={{flex:1,padding:"12px",border:"1.5px solid #e5e7eb",borderRadius:12,background:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer",color:"#6b7280"}}>Cancel</button>
+              <button onClick={handleSave} disabled={saving} style={{flex:2,padding:"12px",background:"linear-gradient(135deg,#5b3fc4,#2d1b69)",border:"none",borderRadius:12,color:"#fff",fontFamily:"inherit",fontSize:14,fontWeight:700,cursor:"pointer"}}>{saving?"Saving...":"✓ Save Changes"}</button>
+            </div>
+          </>)}
         </div>
       </div>
     </div>
@@ -790,6 +856,15 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
   const [showAddLogFab,setShowAddLogFab]=useState(false);
   const [selectedLog,setSelectedLog]=useState(null);
   const [logs,setLogs]=useState([]);
+
+  async function handleEditLog(updated){
+    await supabase.from("work_logs").update({client_name:updated.clientName,service:updated.service,amount:updated.amount,date:updated.date}).eq("id",updated.id);
+    setLogs(prev=>prev.map(l=>l.id===updated.id?updated:l));
+  }
+  async function handleDeleteLog(id){
+    await supabase.from("work_logs").delete().eq("id",id);
+    setLogs(prev=>prev.filter(l=>l.id!==id));
+  }
   const [attendance,setAttendance]=useState({});
   const [absentNotes,setAbsentNotes]=useState({});
   const [loading,setLoading]=useState(true);
@@ -843,7 +918,7 @@ export default function StaffDashboard({staff,showRevenue=false,onLogout}){
           </div>
         )}
       </div>
-      {selectedLog&&<EntryDetailModal log={selectedLog} onClose={()=>setSelectedLog(null)}/>}
+      {selectedLog&&<EntryDetailModal log={selectedLog} onClose={()=>setSelectedLog(null)} onSave={handleEditLog} onDelete={handleDeleteLog}/>}
       {showAddLogFab&&<AddLogModal staffId={staff.id} salonId={salonId} salonName={salonName} isPresent={!!(attendance[today]||{})[staff.id]} onSave={log=>setLogs(prev=>[...prev,log])} onClose={()=>setShowAddLogFab(false)}/>}
       <div style={{background:"#fff",borderTop:"1px solid #f1f0f5",display:"flex",flexShrink:0,padding:"6px 0 8px"}}>
         {[{id:"attendance",icon:"📅",label:"Attendance"},{id:"customers",icon:"👥",label:"Customers"}].map(t=>(
