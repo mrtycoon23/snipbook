@@ -195,10 +195,13 @@ async function getAbsentStaffIds(salonId, date) {
       console.error("[absent-check] non-array response:", JSON.stringify(d));
       return [];
     }
-    const presentIds = new Set(d.filter(a => a.is_present === true).map(a => a.staff_id).filter(Boolean));
-    const allStaff = await getStaffList(salonId);
-    const absentIds = allStaff.map(s => s.id).filter(id => !presentIds.has(id));
-    console.log(`[absent-check] presentIds:`, [...presentIds], `absentIds:`, absentIds);
+    // Only staff EXPLICITLY marked absent (is_present === false) are excluded.
+    // Staff with no attendance record at all (e.g. future dates, where
+    // attendance simply hasn't been taken yet) are treated as available —
+    // NOT auto-absent. This fixes future-dated bookings being wrongly
+    // blocked just because that day's attendance hadn't been logged yet.
+    const absentIds = d.filter(a => a.is_present === false).map(a => a.staff_id).filter(Boolean);
+    console.log(`[absent-check] explicitlyAbsentIds:`, absentIds);
     return absentIds;
   } catch(e) {
     console.error("[absent-check] error:", e.message);
